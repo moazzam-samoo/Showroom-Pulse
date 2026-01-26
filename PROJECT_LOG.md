@@ -14,7 +14,9 @@
 | 2026-01-26 | Core | Created FinancialCalculator (markup, EMI) | Moazzam | ✅ Complete |
 | 2026-01-26 | Core | Created Formatters (currency, CNIC, dates) | Moazzam | ✅ Complete |
 | 2026-01-26 | Core | Created core widgets (Card, Button, Badge, etc.) | Moazzam | ✅ Complete |
-| 2026-01-26 | Core | Creating data models | Moazzam | 🔄 In Progress |
+| 2026-01-26 | Core | Created data models (7 Isar collections) | Moazzam | ✅ Complete |
+| 2026-01-26 | Core | Ran Isar code generation | Moazzam | ✅ Complete |
+| 2026-01-26 | Core | **Phase 1 Committed** (58 files, 28k+ insertions) | Moazzam | ✅ Complete |
 
 ---
 
