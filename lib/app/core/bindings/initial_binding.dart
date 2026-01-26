@@ -22,7 +22,7 @@ Future<void> initializeAsyncServices() async {
   final fileService = await FileService().init();
   Get.put(fileService);
   
-  // Initialize IsarService (opens database)
+  // Initialize IsarService (database)
   final isarService = await IsarService().init();
   Get.put(isarService);
 }
