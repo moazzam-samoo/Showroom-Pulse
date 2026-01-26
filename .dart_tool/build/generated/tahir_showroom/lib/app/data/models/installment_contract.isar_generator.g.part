@@ -1,0 +1,2239 @@
+// **************************************************************************
+// IsarCollectionGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+extension GetInstallmentContractCollection on Isar {
+  IsarCollection<InstallmentContract> get installmentContracts =>
+      this.collection();
+}
+
+const InstallmentContractSchema = CollectionSchema(
+  name: r'InstallmentContract',
+  id: -8815295066666458563,
+  properties: {
+    r'bikeId': PropertySchema(
+      id: 0,
+      name: r'bikeId',
+      type: IsarType.long,
+    ),
+    r'cashPrice': PropertySchema(
+      id: 1,
+      name: r'cashPrice',
+      type: IsarType.double,
+    ),
+    r'contractDate': PropertySchema(
+      id: 2,
+      name: r'contractDate',
+      type: IsarType.dateTime,
+    ),
+    r'customerId': PropertySchema(
+      id: 3,
+      name: r'customerId',
+      type: IsarType.long,
+    ),
+    r'downPayment': PropertySchema(
+      id: 4,
+      name: r'downPayment',
+      type: IsarType.double,
+    ),
+    r'firstDueDate': PropertySchema(
+      id: 5,
+      name: r'firstDueDate',
+      type: IsarType.dateTime,
+    ),
+    r'lateFeeEnabled': PropertySchema(
+      id: 6,
+      name: r'lateFeeEnabled',
+      type: IsarType.bool,
+    ),
+    r'lateFeePercentage': PropertySchema(
+      id: 7,
+      name: r'lateFeePercentage',
+      type: IsarType.double,
+    ),
+    r'markupPercentage': PropertySchema(
+      id: 8,
+      name: r'markupPercentage',
+      type: IsarType.double,
+    ),
+    r'monthlyEMI': PropertySchema(
+      id: 9,
+      name: r'monthlyEMI',
+      type: IsarType.double,
+    ),
+    r'months': PropertySchema(
+      id: 10,
+      name: r'months',
+      type: IsarType.long,
+    ),
+    r'notes': PropertySchema(
+      id: 11,
+      name: r'notes',
+      type: IsarType.string,
+    ),
+    r'paymentProgress': PropertySchema(
+      id: 12,
+      name: r'paymentProgress',
+      type: IsarType.double,
+    ),
+    r'remainingBalance': PropertySchema(
+      id: 13,
+      name: r'remainingBalance',
+      type: IsarType.double,
+    ),
+    r'status': PropertySchema(
+      id: 14,
+      name: r'status',
+      type: IsarType.byte,
+      enumMap: _InstallmentContractstatusEnumValueMap,
+    ),
+    r'totalAmount': PropertySchema(
+      id: 15,
+      name: r'totalAmount',
+      type: IsarType.double,
+    ),
+    r'totalPaid': PropertySchema(
+      id: 16,
+      name: r'totalPaid',
+      type: IsarType.double,
+    )
+  },
+  estimateSize: _installmentContractEstimateSize,
+  serialize: _installmentContractSerialize,
+  deserialize: _installmentContractDeserialize,
+  deserializeProp: _installmentContractDeserializeProp,
+  idName: r'id',
+  indexes: {},
+  links: {},
+  embeddedSchemas: {},
+  getId: _installmentContractGetId,
+  getLinks: _installmentContractGetLinks,
+  attach: _installmentContractAttach,
+  version: '3.1.0+1',
+);
+
+int _installmentContractEstimateSize(
+  InstallmentContract object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  {
+    final value = object.notes;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _installmentContractSerialize(
+  InstallmentContract object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.bikeId);
+  writer.writeDouble(offsets[1], object.cashPrice);
+  writer.writeDateTime(offsets[2], object.contractDate);
+  writer.writeLong(offsets[3], object.customerId);
+  writer.writeDouble(offsets[4], object.downPayment);
+  writer.writeDateTime(offsets[5], object.firstDueDate);
+  writer.writeBool(offsets[6], object.lateFeeEnabled);
+  writer.writeDouble(offsets[7], object.lateFeePercentage);
+  writer.writeDouble(offsets[8], object.markupPercentage);
+  writer.writeDouble(offsets[9], object.monthlyEMI);
+  writer.writeLong(offsets[10], object.months);
+  writer.writeString(offsets[11], object.notes);
+  writer.writeDouble(offsets[12], object.paymentProgress);
+  writer.writeDouble(offsets[13], object.remainingBalance);
+  writer.writeByte(offsets[14], object.status.index);
+  writer.writeDouble(offsets[15], object.totalAmount);
+  writer.writeDouble(offsets[16], object.totalPaid);
+}
+
+InstallmentContract _installmentContractDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = InstallmentContract();
+  object.bikeId = reader.readLong(offsets[0]);
+  object.cashPrice = reader.readDouble(offsets[1]);
+  object.contractDate = reader.readDateTime(offsets[2]);
+  object.customerId = reader.readLong(offsets[3]);
+  object.downPayment = reader.readDouble(offsets[4]);
+  object.firstDueDate = reader.readDateTime(offsets[5]);
+  object.id = id;
+  object.lateFeeEnabled = reader.readBool(offsets[6]);
+  object.lateFeePercentage = reader.readDouble(offsets[7]);
+  object.markupPercentage = reader.readDouble(offsets[8]);
+  object.monthlyEMI = reader.readDouble(offsets[9]);
+  object.months = reader.readLong(offsets[10]);
+  object.notes = reader.readStringOrNull(offsets[11]);
+  object.status = _InstallmentContractstatusValueEnumMap[
+          reader.readByteOrNull(offsets[14])] ??
+      ContractStatusEnum.active;
+  object.totalAmount = reader.readDouble(offsets[15]);
+  object.totalPaid = reader.readDouble(offsets[16]);
+  return object;
+}
+
+P _installmentContractDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readDouble(offset)) as P;
+    case 2:
+      return (reader.readDateTime(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readDouble(offset)) as P;
+    case 5:
+      return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readDouble(offset)) as P;
+    case 8:
+      return (reader.readDouble(offset)) as P;
+    case 9:
+      return (reader.readDouble(offset)) as P;
+    case 10:
+      return (reader.readLong(offset)) as P;
+    case 11:
+      return (reader.readStringOrNull(offset)) as P;
+    case 12:
+      return (reader.readDouble(offset)) as P;
+    case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
+      return (_InstallmentContractstatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          ContractStatusEnum.active) as P;
+    case 15:
+      return (reader.readDouble(offset)) as P;
+    case 16:
+      return (reader.readDouble(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+const _InstallmentContractstatusEnumValueMap = {
+  'active': 0,
+  'completed': 1,
+  'defaulted': 2,
+};
+const _InstallmentContractstatusValueEnumMap = {
+  0: ContractStatusEnum.active,
+  1: ContractStatusEnum.completed,
+  2: ContractStatusEnum.defaulted,
+};
+
+Id _installmentContractGetId(InstallmentContract object) {
+  return object.id;
+}
+
+List<IsarLinkBase<dynamic>> _installmentContractGetLinks(
+    InstallmentContract object) {
+  return [];
+}
+
+void _installmentContractAttach(
+    IsarCollection<dynamic> col, Id id, InstallmentContract object) {
+  object.id = id;
+}
+
+extension InstallmentContractQueryWhereSort
+    on QueryBuilder<InstallmentContract, InstallmentContract, QWhere> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhere> anyId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+}
+
+extension InstallmentContractQueryWhere
+    on QueryBuilder<InstallmentContract, InstallmentContract, QWhereClause> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhereClause>
+      idEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhereClause>
+      idNotEqualTo(Id id) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            )
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            );
+      } else {
+        return query
+            .addWhereClause(
+              IdWhereClause.greaterThan(lower: id, includeLower: false),
+            )
+            .addWhereClause(
+              IdWhereClause.lessThan(upper: id, includeUpper: false),
+            );
+      }
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhereClause>
+      idGreaterThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.greaterThan(lower: id, includeLower: include),
+      );
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhereClause>
+      idLessThan(Id id, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        IdWhereClause.lessThan(upper: id, includeUpper: include),
+      );
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterWhereClause>
+      idBetween(
+    Id lowerId,
+    Id upperId, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
+    InstallmentContract, QFilterCondition> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      bikeIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bikeId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      bikeIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bikeId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      bikeIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bikeId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      bikeIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bikeId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      cashPriceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cashPrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      cashPriceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cashPrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      cashPriceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cashPrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      cashPriceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cashPrice',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      contractDateEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'contractDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      contractDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'contractDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      contractDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'contractDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      contractDateBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'contractDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      customerIdEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'customerId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      customerIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'customerId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      customerIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'customerId',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      customerIdBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'customerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      downPaymentEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'downPayment',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      downPaymentGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'downPayment',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      downPaymentLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'downPayment',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      downPaymentBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'downPayment',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      firstDueDateEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'firstDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      firstDueDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'firstDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      firstDueDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'firstDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      firstDueDateBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'firstDueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      idEqualTo(Id value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      idBetween(
+    Id lower,
+    Id upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lateFeeEnabledEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lateFeeEnabled',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lateFeePercentageEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lateFeePercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lateFeePercentageGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lateFeePercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lateFeePercentageLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lateFeePercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lateFeePercentageBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lateFeePercentage',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupPercentageEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'markupPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupPercentageGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'markupPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupPercentageLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'markupPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupPercentageBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'markupPercentage',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthlyEMIEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'monthlyEMI',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthlyEMIGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'monthlyEMI',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthlyEMILessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'monthlyEMI',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthlyEMIBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'monthlyEMI',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'months',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'months',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'months',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      monthsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'months',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'notes',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'notes',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'notes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'notes',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'notes',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'notes',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      notesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'notes',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentProgressEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paymentProgress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentProgressGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paymentProgress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentProgressLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paymentProgress',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentProgressBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paymentProgress',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      remainingBalanceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      remainingBalanceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      remainingBalanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      remainingBalanceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'remainingBalance',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      statusEqualTo(ContractStatusEnum value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      statusGreaterThan(
+    ContractStatusEnum value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      statusLessThan(
+    ContractStatusEnum value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      statusBetween(
+    ContractStatusEnum lower,
+    ContractStatusEnum upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalPaidEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalPaid',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalPaidGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalPaid',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalPaidLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalPaid',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalPaidBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalPaid',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+}
+
+extension InstallmentContractQueryObject on QueryBuilder<InstallmentContract,
+    InstallmentContract, QFilterCondition> {}
+
+extension InstallmentContractQueryLinks on QueryBuilder<InstallmentContract,
+    InstallmentContract, QFilterCondition> {}
+
+extension InstallmentContractQuerySortBy
+    on QueryBuilder<InstallmentContract, InstallmentContract, QSortBy> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByBikeId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByBikeIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByCashPrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashPrice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByCashPriceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashPrice', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByContractDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contractDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByContractDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contractDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByCustomerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByCustomerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByDownPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downPayment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByDownPaymentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downPayment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByFirstDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'firstDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByFirstDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'firstDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLateFeeEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeeEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLateFeeEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeeEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLateFeePercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeePercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLateFeePercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeePercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMarkupPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMarkupPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupPercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMonthlyEMI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monthlyEMI', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMonthlyEMIDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monthlyEMI', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMonths() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'months', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMonthsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'months', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByNotes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByNotesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentProgress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentProgressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentProgress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByRemainingBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPaid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalPaidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPaid', Sort.desc);
+    });
+  }
+}
+
+extension InstallmentContractQuerySortThenBy
+    on QueryBuilder<InstallmentContract, InstallmentContract, QSortThenBy> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByBikeId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByBikeIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByCashPrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashPrice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByCashPriceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashPrice', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByContractDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contractDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByContractDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'contractDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByCustomerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByCustomerIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByDownPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downPayment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByDownPaymentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'downPayment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByFirstDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'firstDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByFirstDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'firstDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenById() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLateFeeEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeeEnabled', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLateFeeEnabledDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeeEnabled', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLateFeePercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeePercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLateFeePercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lateFeePercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMarkupPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMarkupPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupPercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMonthlyEMI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monthlyEMI', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMonthlyEMIDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'monthlyEMI', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMonths() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'months', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMonthsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'months', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByNotes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByNotesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'notes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentProgress', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentProgressDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentProgress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByRemainingBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByStatusDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'status', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPaid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalPaidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalPaid', Sort.desc);
+    });
+  }
+}
+
+extension InstallmentContractQueryWhereDistinct
+    on QueryBuilder<InstallmentContract, InstallmentContract, QDistinct> {
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByBikeId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bikeId');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByCashPrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cashPrice');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByContractDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'contractDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByCustomerId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'customerId');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByDownPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'downPayment');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByFirstDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'firstDueDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByLateFeeEnabled() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lateFeeEnabled');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByLateFeePercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lateFeePercentage');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByMarkupPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'markupPercentage');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByMonthlyEMI() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'monthlyEMI');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByMonths() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'months');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByNotes({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByPaymentProgress() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'paymentProgress');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'remainingBalance');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByStatus() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'status');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByTotalAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalAmount');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByTotalPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalPaid');
+    });
+  }
+}
+
+extension InstallmentContractQueryProperty
+    on QueryBuilder<InstallmentContract, InstallmentContract, QQueryProperty> {
+  QueryBuilder<InstallmentContract, int, QQueryOperations> idProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, int, QQueryOperations> bikeIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bikeId');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      cashPriceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cashPrice');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, DateTime, QQueryOperations>
+      contractDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'contractDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, int, QQueryOperations>
+      customerIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'customerId');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      downPaymentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'downPayment');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, DateTime, QQueryOperations>
+      firstDueDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'firstDueDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, bool, QQueryOperations>
+      lateFeeEnabledProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lateFeeEnabled');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      lateFeePercentageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lateFeePercentage');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      markupPercentageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'markupPercentage');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      monthlyEMIProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'monthlyEMI');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, int, QQueryOperations> monthsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'months');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, String?, QQueryOperations> notesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'notes');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      paymentProgressProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'paymentProgress');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      remainingBalanceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'remainingBalance');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, ContractStatusEnum, QQueryOperations>
+      statusProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'status');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      totalAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalAmount');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      totalPaidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalPaid');
+    });
+  }
+}
