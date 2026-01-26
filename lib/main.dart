@@ -4,26 +4,25 @@ import 'package:window_manager/window_manager.dart';
 
 import 'app/core/bindings/initial_binding.dart';
 import 'app/core/theme/app_theme.dart';
-import 'app/core/services/theme_service.dart';
 import 'app/features/auth/presentation/views/login_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize window manager for Windows Desktop
+  // Initialize window manager for desktop
   await windowManager.ensureInitialized();
   
   WindowOptions windowOptions = const WindowOptions(
     size: Size(1280, 720),
-    minimumSize: Size(1024, 600),
+    minimumSize: Size(800, 600),
     center: true,
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
+    titleBarStyle: TitleBarStyle.normal,
     title: 'Tahir Showroom',
   );
   
-  await windowManager.waitUntilReadyToShow(windowOptions, () async {
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
   });
