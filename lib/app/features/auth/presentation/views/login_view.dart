@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_spacing.dart';
-import '../../../core/constants/app_radius.dart';
-import '../widgets/login_card.dart';
+import 'package:tahir_showroom/app/core/constants/app_colors.dart';
+import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/features/auth/presentation/widgets/login_card.dart';
 
 /// Login View - Entry point for authentication
 /// 
