@@ -5,6 +5,7 @@ import 'package:window_manager/window_manager.dart';
 import 'app/core/bindings/initial_binding.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/core/services/theme_service.dart';
+import 'app/features/auth/presentation/views/login_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,46 +48,8 @@ class TahirShowroomApp extends StatelessWidget {
       // Initial Bindings
       initialBinding: InitialBinding(),
       
-      // Initial Route
-      home: const SplashScreen(),
-    );
-  }
-}
-
-/// Temporary Splash Screen - will be replaced with Login
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.two_wheeler,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Tahir Showroom',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Inventory Management System',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-            ),
-          ],
-        ),
-      ),
+      // Initial Route - Login Screen
+      home: const LoginView(),
     );
   }
 }

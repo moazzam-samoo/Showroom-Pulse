@@ -42,13 +42,9 @@ class AppTheme {
     ),
     
     // Card
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: AppColors.darkSurface,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.darkBorder),
-      ),
     ),
     
     // Input Decoration
@@ -135,11 +131,8 @@ class AppTheme {
     ),
     
     // Dialog
-    dialogTheme: DialogTheme(
+    dialogTheme: const DialogThemeData(
       backgroundColor: AppColors.darkSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
     ),
     
     // Text Theme
@@ -224,13 +217,9 @@ class AppTheme {
     ),
     
     // Card
-    cardTheme: CardTheme(
+    cardTheme: const CardThemeData(
       color: AppColors.lightSurface,
       elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.05),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
     ),
     
     // Input Decoration
@@ -306,11 +295,8 @@ class AppTheme {
     ),
     
     // Dialog
-    dialogTheme: DialogTheme(
+    dialogTheme: const DialogThemeData(
       backgroundColor: AppColors.lightSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
     ),
     
     // Text Theme
