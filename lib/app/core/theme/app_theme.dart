@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
 /// Tahir Showroom Theme Configuration
 /// Dark Theme is DEFAULT (Executive Command Center)
+/// Font Family: Segoe UI (primary), Roboto (fallback)
 class AppTheme {
   AppTheme._();
+
+  // Primary font family for Windows 11 Fluent design
+  static const String fontFamily = 'Segoe UI';
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DARK THEME (DEFAULT)
@@ -14,6 +17,7 @@ class AppTheme {
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
+    fontFamily: fontFamily,
     
     // Colors
     colorScheme: const ColorScheme.dark(
@@ -29,12 +33,13 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.darkBackground,
     
     // AppBar
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.darkSurface,
       foregroundColor: AppColors.darkTextPrimary,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: GoogleFonts.roboto(
+      titleTextStyle: TextStyle(
+        fontFamily: 'Roboto',
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: AppColors.darkTextPrimary,
@@ -63,11 +68,11 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.darkPrimary, width: 2),
       ),
-      hintStyle: GoogleFonts.roboto(
+      hintStyle: const TextStyle(
         color: AppColors.darkTextDisabled,
         fontSize: 14,
       ),
-      labelStyle: GoogleFonts.roboto(
+      labelStyle: const TextStyle(
         color: AppColors.darkTextSecondary,
         fontSize: 14,
       ),
@@ -84,7 +89,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        textStyle: GoogleFonts.roboto(
+        textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -100,7 +105,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        textStyle: GoogleFonts.roboto(
+        textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -111,7 +116,7 @@ class AppTheme {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.darkPrimary,
-        textStyle: GoogleFonts.roboto(
+        textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
@@ -139,43 +144,43 @@ class AppTheme {
     textTheme: _darkTextTheme,
   );
   
-  static TextTheme get _darkTextTheme => TextTheme(
-    displayLarge: GoogleFonts.roboto(
+  static TextTheme get _darkTextTheme => const TextTheme(
+    displayLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.w700,
       color: AppColors.darkTextPrimary,
     ),
-    headlineLarge: GoogleFonts.roboto(
+    headlineLarge: TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w700,
       color: AppColors.darkTextPrimary,
     ),
-    headlineMedium: GoogleFonts.roboto(
+    headlineMedium: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w700,
       color: AppColors.darkTextPrimary,
     ),
-    headlineSmall: GoogleFonts.roboto(
+    headlineSmall: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: AppColors.darkTextPrimary,
     ),
-    bodyLarge: GoogleFonts.roboto(
+    bodyLarge: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w400,
       color: AppColors.darkTextPrimary,
     ),
-    bodyMedium: GoogleFonts.roboto(
+    bodyMedium: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
       color: AppColors.darkTextPrimary,
     ),
-    bodySmall: GoogleFonts.roboto(
+    bodySmall: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       color: AppColors.darkTextSecondary,
     ),
-    labelSmall: GoogleFonts.roboto(
+    labelSmall: TextStyle(
       fontSize: 10,
       fontWeight: FontWeight.w400,
       color: AppColors.darkTextMuted,
@@ -189,6 +194,7 @@ class AppTheme {
   static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
+    fontFamily: fontFamily,
     
     // Colors
     colorScheme: const ColorScheme.light(
@@ -204,12 +210,13 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.lightBackground,
     
     // AppBar
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.lightSurface,
       foregroundColor: AppColors.lightTextPrimary,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: GoogleFonts.roboto(
+      titleTextStyle: TextStyle(
+        fontFamily: 'Roboto',
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: AppColors.lightTextPrimary,
@@ -238,11 +245,11 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.lightPrimary, width: 2),
       ),
-      hintStyle: GoogleFonts.roboto(
+      hintStyle: const TextStyle(
         color: AppColors.lightTextMuted,
         fontSize: 14,
       ),
-      labelStyle: GoogleFonts.roboto(
+      labelStyle: const TextStyle(
         color: AppColors.lightTextSecondary,
         fontSize: 14,
       ),
@@ -259,7 +266,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        textStyle: GoogleFonts.roboto(
+        textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -275,7 +282,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        textStyle: GoogleFonts.roboto(
+        textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -303,43 +310,43 @@ class AppTheme {
     textTheme: _lightTextTheme,
   );
   
-  static TextTheme get _lightTextTheme => TextTheme(
-    displayLarge: GoogleFonts.roboto(
+  static TextTheme get _lightTextTheme => const TextTheme(
+    displayLarge: TextStyle(
       fontSize: 30,
       fontWeight: FontWeight.w700,
       color: AppColors.lightTextPrimary,
     ),
-    headlineLarge: GoogleFonts.roboto(
+    headlineLarge: TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.w700,
       color: AppColors.lightTextPrimary,
     ),
-    headlineMedium: GoogleFonts.roboto(
+    headlineMedium: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w700,
       color: AppColors.lightTextPrimary,
     ),
-    headlineSmall: GoogleFonts.roboto(
+    headlineSmall: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: AppColors.lightTextPrimary,
     ),
-    bodyLarge: GoogleFonts.roboto(
+    bodyLarge: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w400,
       color: AppColors.lightTextPrimary,
     ),
-    bodyMedium: GoogleFonts.roboto(
+    bodyMedium: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w500,
       color: AppColors.lightTextPrimary,
     ),
-    bodySmall: GoogleFonts.roboto(
+    bodySmall: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w400,
       color: AppColors.lightTextSecondary,
     ),
-    labelSmall: GoogleFonts.roboto(
+    labelSmall: TextStyle(
       fontSize: 10,
       fontWeight: FontWeight.w400,
       color: AppColors.lightTextMuted,
