@@ -22,71 +22,66 @@ const BikeSchema = CollectionSchema(
       name: r'brand',
       type: IsarType.string,
     ),
-    r'chassisNumber': PropertySchema(
+    r'cashSalePrice': PropertySchema(
       id: 1,
+      name: r'cashSalePrice',
+      type: IsarType.double,
+    ),
+    r'chassisNumber': PropertySchema(
+      id: 2,
       name: r'chassisNumber',
       type: IsarType.string,
     ),
     r'color': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'color',
       type: IsarType.string,
     ),
     r'dateAdded': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'dateAdded',
       type: IsarType.dateTime,
     ),
     r'dateSold': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'dateSold',
       type: IsarType.dateTime,
     ),
     r'engineNumber': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'engineNumber',
       type: IsarType.string,
     ),
     r'imageFilename': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'imageFilename',
       type: IsarType.string,
     ),
     r'model': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'model',
       type: IsarType.string,
     ),
+    r'modelYear': PropertySchema(
+      id: 9,
+      name: r'modelYear',
+      type: IsarType.long,
+    ),
     r'notes': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'notes',
       type: IsarType.string,
     ),
     r'purchasePrice': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'purchasePrice',
       type: IsarType.double,
     ),
-    r'sellingPrice': PropertySchema(
-      id: 10,
-      name: r'sellingPrice',
-      type: IsarType.double,
-    ),
     r'status': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'status',
       type: IsarType.byte,
       enumMap: _BikestatusEnumValueMap,
-    ),
-    r'stock': PropertySchema(
-      id: 12,
-      name: r'stock',
-      type: IsarType.long,
-    ),
-    r'year': PropertySchema(
-      id: 13,
-      name: r'year',
-      type: IsarType.long,
     )
   },
   estimateSize: _bikeEstimateSize,
@@ -120,9 +115,29 @@ const BikeSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'cashSalePrice': IndexSchema(
+      id: -9111366412202465075,
+      name: r'cashSalePrice',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'cashSalePrice',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
     )
   },
-  links: {},
+  links: {
+    r'batch': LinkSchema(
+      id: 2826581587529319531,
+      name: r'batch',
+      target: r'PurchaseBatch',
+      single: true,
+    )
+  },
   embeddedSchemas: {},
   getId: _bikeGetId,
   getLinks: _bikeGetLinks,
@@ -163,19 +178,18 @@ void _bikeSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.brand);
-  writer.writeString(offsets[1], object.chassisNumber);
-  writer.writeString(offsets[2], object.color);
-  writer.writeDateTime(offsets[3], object.dateAdded);
-  writer.writeDateTime(offsets[4], object.dateSold);
-  writer.writeString(offsets[5], object.engineNumber);
-  writer.writeString(offsets[6], object.imageFilename);
-  writer.writeString(offsets[7], object.model);
-  writer.writeString(offsets[8], object.notes);
-  writer.writeDouble(offsets[9], object.purchasePrice);
-  writer.writeDouble(offsets[10], object.sellingPrice);
-  writer.writeByte(offsets[11], object.status.index);
-  writer.writeLong(offsets[12], object.stock);
-  writer.writeLong(offsets[13], object.year);
+  writer.writeDouble(offsets[1], object.cashSalePrice);
+  writer.writeString(offsets[2], object.chassisNumber);
+  writer.writeString(offsets[3], object.color);
+  writer.writeDateTime(offsets[4], object.dateAdded);
+  writer.writeDateTime(offsets[5], object.dateSold);
+  writer.writeString(offsets[6], object.engineNumber);
+  writer.writeString(offsets[7], object.imageFilename);
+  writer.writeString(offsets[8], object.model);
+  writer.writeLong(offsets[9], object.modelYear);
+  writer.writeString(offsets[10], object.notes);
+  writer.writeDouble(offsets[11], object.purchasePrice);
+  writer.writeByte(offsets[12], object.status.index);
 }
 
 Bike _bikeDeserialize(
@@ -186,21 +200,20 @@ Bike _bikeDeserialize(
 ) {
   final object = Bike();
   object.brand = reader.readString(offsets[0]);
-  object.chassisNumber = reader.readString(offsets[1]);
-  object.color = reader.readString(offsets[2]);
-  object.dateAdded = reader.readDateTime(offsets[3]);
-  object.dateSold = reader.readDateTimeOrNull(offsets[4]);
-  object.engineNumber = reader.readString(offsets[5]);
+  object.cashSalePrice = reader.readDouble(offsets[1]);
+  object.chassisNumber = reader.readString(offsets[2]);
+  object.color = reader.readString(offsets[3]);
+  object.dateAdded = reader.readDateTime(offsets[4]);
+  object.dateSold = reader.readDateTimeOrNull(offsets[5]);
+  object.engineNumber = reader.readString(offsets[6]);
   object.id = id;
-  object.imageFilename = reader.readStringOrNull(offsets[6]);
-  object.model = reader.readString(offsets[7]);
-  object.notes = reader.readStringOrNull(offsets[8]);
-  object.purchasePrice = reader.readDouble(offsets[9]);
-  object.sellingPrice = reader.readDouble(offsets[10]);
-  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[11])] ??
+  object.imageFilename = reader.readStringOrNull(offsets[7]);
+  object.model = reader.readString(offsets[8]);
+  object.modelYear = reader.readLong(offsets[9]);
+  object.notes = reader.readStringOrNull(offsets[10]);
+  object.purchasePrice = reader.readDouble(offsets[11]);
+  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[12])] ??
       BikeStatusEnum.available;
-  object.stock = reader.readLong(offsets[12]);
-  object.year = reader.readLongOrNull(offsets[13]);
   return object;
 }
 
@@ -214,32 +227,30 @@ P _bikeDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readStringOrNull(offset)) as P;
-    case 7:
       return (reader.readString(offset)) as P;
-    case 8:
+    case 7:
       return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 10:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 11:
+      return (reader.readDouble(offset)) as P;
+    case 12:
       return (_BikestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           BikeStatusEnum.available) as P;
-    case 12:
-      return (reader.readLong(offset)) as P;
-    case 13:
-      return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -261,11 +272,12 @@ Id _bikeGetId(Bike object) {
 }
 
 List<IsarLinkBase<dynamic>> _bikeGetLinks(Bike object) {
-  return [];
+  return [object.batch];
 }
 
 void _bikeAttach(IsarCollection<dynamic> col, Id id, Bike object) {
   object.id = id;
+  object.batch.attach(col, col.isar.collection<PurchaseBatch>(), r'batch', id);
 }
 
 extension BikeByIndex on IsarCollection<Bike> {
@@ -380,6 +392,14 @@ extension BikeQueryWhereSort on QueryBuilder<Bike, Bike, QWhere> {
   QueryBuilder<Bike, Bike, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterWhere> anyCashSalePrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'cashSalePrice'),
+      );
     });
   }
 }
@@ -539,6 +559,96 @@ extension BikeQueryWhere on QueryBuilder<Bike, Bike, QWhereClause> {
       }
     });
   }
+
+  QueryBuilder<Bike, Bike, QAfterWhereClause> cashSalePriceEqualTo(
+      double cashSalePrice) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'cashSalePrice',
+        value: [cashSalePrice],
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterWhereClause> cashSalePriceNotEqualTo(
+      double cashSalePrice) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'cashSalePrice',
+              lower: [],
+              upper: [cashSalePrice],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'cashSalePrice',
+              lower: [cashSalePrice],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'cashSalePrice',
+              lower: [cashSalePrice],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'cashSalePrice',
+              lower: [],
+              upper: [cashSalePrice],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterWhereClause> cashSalePriceGreaterThan(
+    double cashSalePrice, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'cashSalePrice',
+        lower: [cashSalePrice],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterWhereClause> cashSalePriceLessThan(
+    double cashSalePrice, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'cashSalePrice',
+        lower: [],
+        upper: [cashSalePrice],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterWhereClause> cashSalePriceBetween(
+    double lowerCashSalePrice,
+    double upperCashSalePrice, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'cashSalePrice',
+        lower: [lowerCashSalePrice],
+        includeLower: includeLower,
+        upper: [upperCashSalePrice],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
@@ -666,6 +776,68 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'brand',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> cashSalePriceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cashSalePrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> cashSalePriceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cashSalePrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> cashSalePriceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cashSalePrice',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> cashSalePriceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cashSalePrice',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1506,6 +1678,58 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> modelYearEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'modelYear',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> modelYearGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'modelYear',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> modelYearLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'modelYear',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> modelYearBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'modelYear',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterFilterCondition> notesIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1712,68 +1936,6 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> sellingPriceEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sellingPrice',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> sellingPriceGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'sellingPrice',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> sellingPriceLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'sellingPrice',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> sellingPriceBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'sellingPrice',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
   QueryBuilder<Bike, Bike, QAfterFilterCondition> statusEqualTo(
       BikeStatusEnum value) {
     return QueryBuilder.apply(this, (query) {
@@ -1826,131 +1988,24 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
       ));
     });
   }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> stockEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'stock',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> stockGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'stock',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> stockLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'stock',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> stockBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'stock',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'year',
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'year',
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearEqualTo(int? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'year',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearGreaterThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'year',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearLessThan(
-    int? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'year',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterFilterCondition> yearBetween(
-    int? lower,
-    int? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'year',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
 }
 
 extension BikeQueryObject on QueryBuilder<Bike, Bike, QFilterCondition> {}
 
-extension BikeQueryLinks on QueryBuilder<Bike, Bike, QFilterCondition> {}
+extension BikeQueryLinks on QueryBuilder<Bike, Bike, QFilterCondition> {
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> batch(
+      FilterQuery<PurchaseBatch> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.link(q, r'batch');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> batchIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.linkLength(r'batch', 0, true, 0, true);
+    });
+  }
+}
 
 extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByBrand() {
@@ -1962,6 +2017,18 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByBrandDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'brand', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByCashSalePrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashSalePrice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByCashSalePriceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashSalePrice', Sort.desc);
     });
   }
 
@@ -2049,6 +2116,18 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByModelYear() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'modelYear', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByModelYearDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'modelYear', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -2073,18 +2152,6 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
     });
   }
 
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortBySellingPrice() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sellingPrice', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortBySellingPriceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sellingPrice', Sort.desc);
-    });
-  }
-
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -2094,30 +2161,6 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortByStock() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stock', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortByStockDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stock', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortByYear() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'year', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> sortByYearDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'year', Sort.desc);
     });
   }
 }
@@ -2132,6 +2175,18 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByBrandDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'brand', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByCashSalePrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashSalePrice', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByCashSalePriceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cashSalePrice', Sort.desc);
     });
   }
 
@@ -2231,6 +2286,18 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByModelYear() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'modelYear', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByModelYearDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'modelYear', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -2255,18 +2322,6 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenBySellingPrice() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sellingPrice', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenBySellingPriceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sellingPrice', Sort.desc);
-    });
-  }
-
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -2278,30 +2333,6 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenByStock() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stock', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenByStockDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stock', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenByYear() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'year', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QAfterSortBy> thenByYearDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'year', Sort.desc);
-    });
-  }
 }
 
 extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
@@ -2309,6 +2340,12 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'brand', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByCashSalePrice() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cashSalePrice');
     });
   }
 
@@ -2361,6 +2398,12 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QDistinct> distinctByModelYear() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'modelYear');
+    });
+  }
+
   QueryBuilder<Bike, Bike, QDistinct> distinctByNotes(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2374,27 +2417,9 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
     });
   }
 
-  QueryBuilder<Bike, Bike, QDistinct> distinctBySellingPrice() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sellingPrice');
-    });
-  }
-
   QueryBuilder<Bike, Bike, QDistinct> distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QDistinct> distinctByStock() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'stock');
-    });
-  }
-
-  QueryBuilder<Bike, Bike, QDistinct> distinctByYear() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'year');
     });
   }
 }
@@ -2409,6 +2434,12 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
   QueryBuilder<Bike, String, QQueryOperations> brandProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'brand');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> cashSalePriceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cashSalePrice');
     });
   }
 
@@ -2454,6 +2485,12 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Bike, int, QQueryOperations> modelYearProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'modelYear');
+    });
+  }
+
   QueryBuilder<Bike, String?, QQueryOperations> notesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notes');
@@ -2466,27 +2503,9 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Bike, double, QQueryOperations> sellingPriceProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sellingPrice');
-    });
-  }
-
   QueryBuilder<Bike, BikeStatusEnum, QQueryOperations> statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
-    });
-  }
-
-  QueryBuilder<Bike, int, QQueryOperations> stockProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'stock');
-    });
-  }
-
-  QueryBuilder<Bike, int?, QQueryOperations> yearProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'year');
     });
   }
 }
