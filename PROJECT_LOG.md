@@ -44,11 +44,14 @@
 
 ---
 
-## Phase 2: Dashboard (`feature/dashboard`)
+## Phase 2: Dashboard (`feature/auth` branch)
 
 | Commit | Date | Day | Description | Status |
 |--------|------|-----|-------------|--------|
-| — | — | — | *Not started* | ⏳ |
+| `5a00f14` | 2026-01-27 | Monday | feat(dashboard): Implement Dashboard UI with all components | ✅ |
+
+**Dashboard UI:** ✅ Complete  
+**Dashboard Logic:** ⏳ Pending
 
 ---
 
