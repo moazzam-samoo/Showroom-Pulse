@@ -7,6 +7,8 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_button.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 
+import '../controllers/login_controller.dart';
+
 /// Login Card Widget - Main authentication card
 /// 
 /// Analyzed from: Dark Theme UI/Login Page.png
@@ -16,47 +18,10 @@ import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 /// - "Inventory Management System" subtitle
 /// - Username input with user icon
 /// - Password input with lock icon
+/// - Keep me logged in checkbox
 /// - Sign In button (full width, cyan/blue)
-class LoginCard extends StatefulWidget {
+class LoginCard extends GetView<LoginController> {
   const LoginCard({super.key});
-
-  @override
-  State<LoginCard> createState() => _LoginCardState();
-}
-
-class _LoginCardState extends State<LoginCard> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _handleSignIn() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
-      
-      // TODO: Implement actual login logic in Phase 2 Logic step
-      // For now, simulate login and navigate to dashboard
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          // Navigate to dashboard (will be implemented later)
-          Get.snackbar(
-            'Login',
-            'Login functionality will be added after UI approval',
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +46,7 @@ class _LoginCardState extends State<LoginCard> {
         ],
       ),
       child: Form(
-        key: _formKey,
+        key: controller.formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -128,52 +93,74 @@ class _LoginCardState extends State<LoginCard> {
             AppTextField(
               label: 'Username',
               hint: 'Enter your username',
-              controller: _usernameController,
+              controller: controller.usernameController,
               prefixIcon: LucideIcons.user,
               textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your username';
-                }
-                return null;
-              },
+              validator: controller.validateUsername,
             ),
             
             const SizedBox(height: AppSpacing.base),
             
             // Password Field
-            AppTextField(
+            Obx(() => AppTextField(
               label: 'Password',
               hint: 'Enter your password',
-              controller: _passwordController,
-              obscureText: _obscurePassword,
+              controller: controller.passwordController,
+              obscureText: controller.obscurePassword.value,
               prefixIcon: LucideIcons.lock,
-              suffixIcon: _obscurePassword 
+              suffixIcon: controller.obscurePassword.value 
                   ? LucideIcons.eyeOff 
                   : LucideIcons.eye,
-              onSuffixTap: () {
-                setState(() => _obscurePassword = !_obscurePassword);
-              },
+              onSuffixTap: controller.togglePasswordVisibility,
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _handleSignIn(),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
-                }
-                return null;
-              },
-            ),
+              onSubmitted: (_) => controller.login(),
+              validator: controller.validatePassword,
+            )),
+            
+            const SizedBox(height: AppSpacing.md),
+            
+            // Keep Me Logged In Checkbox
+            Obx(() => Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: controller.keepMeLoggedIn.value,
+                    onChanged: controller.toggleKeepMeLoggedIn,
+                    activeColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () => controller.toggleKeepMeLoggedIn(
+                    !controller.keepMeLoggedIn.value,
+                  ),
+                  child: Text(
+                    'Keep me logged in',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: isDark 
+                          ? AppColors.darkTextSecondary 
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            )),
             
             const SizedBox(height: AppSpacing.lg),
             
             // Sign In Button
-            AppButton(
+            Obx(() => AppButton(
               text: 'Sign In',
-              onPressed: _handleSignIn,
-              isLoading: _isLoading,
+              onPressed: controller.login,
+              isLoading: controller.isLoading.value,
               isFullWidth: true,
               variant: AppButtonVariant.primary,
-            ),
+            )),
           ],
         ),
       ),

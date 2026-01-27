@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import '../services/file_service.dart';
 import '../services/isar_service.dart';
 import '../services/theme_service.dart';
+import '../../features/auth/data/auth_service.dart';
+import '../../features/auth/presentation/controllers/login_controller.dart';
 
 /// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
@@ -9,9 +11,6 @@ class InitialBinding extends Bindings {
   void dependencies() {
     // Theme Service (immediately available)
     Get.put(ThemeService());
-    
-    // Async services will be initialized in splash/startup
-    // FileService and IsarService need async initialization
   }
 }
 
@@ -25,6 +24,21 @@ Future<void> initializeAsyncServices() async {
   // Initialize IsarService (database)
   final isarService = await IsarService().init();
   Get.put(isarService);
+  
+  // Initialize AuthService (authentication + session)
+  final authService = await AuthService().init();
+  Get.put(authService);
+  
+  // Ensure default admin user exists
+  await authService.ensureDefaultUser();
+}
+
+/// Register Login page dependencies
+class LoginBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut(() => LoginController());
+  }
 }
 
 // Authored by: Moazzam Samoo

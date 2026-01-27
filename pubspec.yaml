@@ -41,6 +41,12 @@ dependencies:
   
   # Internationalization
   intl: ^0.18.1
+  
+  # Session Management (Keep me logged in)
+  shared_preferences: ^2.2.2
+  
+  # Password Hashing
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
