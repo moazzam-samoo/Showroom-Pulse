@@ -49,8 +49,8 @@ class AppColors {
   static const Color lightGradientLight = Color(0xFF2980b9); // KPI gradient end
 
   // Background Colors (Light)
-  static const Color lightBackground = Color(0xFFF3F3F3);    // Mica effect
-  static const Color lightSurface = Color(0xFFFFFFFF);       // Cards, sidebar
+  static const Color lightBackground = Color(0xFFE8E8E8);    // Dimmed Mica effect
+  static const Color lightSurface = Color(0xFFFAFAFA);       // Cards, sidebar (slightly off-white)
   static const Color lightFormBgStart = Color(0xFFE3F2FD);   // Form gradient start
   static const Color lightFormBgEnd = Color(0xFFBBDEFB);     // Form gradient end
   static const Color lightRowAlternate = Color(0xFFF9FAFB);  // Table rows

@@ -11,50 +11,49 @@ dependencies:
     sdk: flutter
   
   # State Management
-  get: ^4.6.6
+  get: ^4.7.2
+  
+  # Icons
+  lucide_icons: ^0.257.0
+  
+  # Path (for app data folder)
+  path_provider: ^2.1.1
+  path: ^1.8.3
   
   # Database
   isar: ^3.1.0+1
   isar_flutter_libs: ^3.1.0+1
   
-  # File System & Paths
-  path_provider: ^2.1.1
-  path: ^1.8.3
+  # Fonts
+  google_fonts: ^6.1.0
+  
+  # Image Processing
+  image: ^4.1.3
+  
+  # File Picker
   file_picker: ^6.1.1
   
-  # Window Management (Windows Desktop)
+  # Window Management (Desktop)
   window_manager: ^0.3.7
   
   # Charts
   fl_chart: ^0.66.0
   
-  # Date/Time & Formatting
+  # Internationalization
   intl: ^0.18.1
   
-  # Fonts
-  google_fonts: ^6.1.0
+  # Session Management (Keep me logged in)
+  shared_preferences: ^2.2.2
   
-  # Icons
-  lucide_icons: ^0.257.0
-  
-  # Image handling
-  image: ^4.1.3
+  # Password Hashing
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.1
   isar_generator: ^3.1.0+1
-  build_runner: ^2.4.7
+  build_runner: ^2.4.6
 
 flutter:
   uses-material-design: true
-  
-  fonts:
-    - family: Segoe UI
-      fonts:
-        - asset: assets/fonts/SegoeUI-Regular.ttf
-        - asset: assets/fonts/SegoeUI-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/SegoeUI-SemiBold.ttf
-          weight: 600
