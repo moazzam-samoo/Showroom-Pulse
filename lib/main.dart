@@ -7,6 +7,7 @@ import 'app/core/theme/app_theme.dart';
 import 'app/core/constants/app_colors.dart';
 import 'app/features/auth/presentation/views/login_view.dart';
 import 'app/features/auth/data/auth_service.dart';
+import 'app/features/dashboard/presentation/views/dashboard_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +62,7 @@ class TahirShowroomApp extends StatelessWidget {
         ),
         GetPage(
           name: '/dashboard',
-          page: () => const DashboardPlaceholder(), // Placeholder until dashboard is built
+          page: () => const DashboardView(),
         ),
       ],
     );
