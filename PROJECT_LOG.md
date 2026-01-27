@@ -36,9 +36,11 @@
 | `ab3cd8d` | 2026-01-27 | Monday | feat(auth): Implement Login UI (dark/light theme) | ✅ |
 | `5e447d0` | 2026-01-27 | Monday | test: Update widget_test.dart placeholder | ✅ |
 | `e69ffdd` | 2026-01-27 | Monday | chore(gitignore): Add *.exe, remove cached files | ✅ |
+| `206cd0d` | 2026-01-27 | Monday | docs: Update PROJECT_LOG.md with new format | ✅ |
+| `8a697ae` | 2026-01-27 | Monday | feat(auth): Complete login logic with Keep Me Logged In | ✅ |
 
 **Login UI:** ✅ Complete  
-**Login Logic:** ⏳ Pending
+**Login Logic:** ✅ Complete
 
 ---
 
