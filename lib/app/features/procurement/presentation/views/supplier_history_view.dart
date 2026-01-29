@@ -9,6 +9,7 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/controllers/supplier_controller.dart';
+import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
@@ -270,14 +271,19 @@ class SupplierHistoryView extends GetView<SupplierController> {
               onPressed: () async {
                 final confirm = await showDialog<bool>(
                   context: Get.context!,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Delete Batch?'),
-                    content: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
+                  builder: (ctx) => AppDialog(
+                    title: 'Delete Batch?',
+                    subtitle: 'Warning',
+                    width: 400,
+                    onSubmit: () => Get.back(result: true),
+                    onCancel: () => Get.back(result: false),
+                    child: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
                     actions: [
-                      TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
-                      TextButton(
+                      TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel (Esc)')),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                         onPressed: () => Get.back(result: true), 
-                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                        child: const Text('Delete (Enter)'),
                       ),
                     ],
                   ),
@@ -355,29 +361,48 @@ class SupplierHistoryView extends GetView<SupplierController> {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        child: Container(
-          width: 500,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
+      AppDialog(
+        title: supplier == null ? 'Add New Supplier' : 'Edit Supplier',
+        subtitle: 'Manage Supplier Details',
+        width: 500,
+        onSubmit: () async {
+            // Replicating Save Logic for Enter Key
+            if (controller.newSupplierName.text.isEmpty || 
+                controller.newSupplierPhone.text.isEmpty) {
+              Get.snackbar('Error', 'Name and Phone are required');
+              return;
+            }
+            if (supplier != null) {
+              await controller.updateSupplier(
+                supplier,
+                controller.newSupplierName.text,
+                controller.newSupplierCnic.text,
+                controller.newSupplierPhone.text,
+                profilePic: controller.newSupplierProfilePic.value,
+                cnicPic: controller.newSupplierCnicPic.value,
+              );
+              Get.snackbar('Success', 'Supplier updated successfully');
+            } else {
+              await controller.createSupplier(
+                controller.newSupplierName.text,
+                controller.newSupplierCnic.text,
+                controller.newSupplierPhone.text,
+                controller.newSupplierProfilePic.value, 
+                cnicPic: controller.newSupplierCnicPic.value,
+              );
+              Get.snackbar('Success', 'Supplier added successfully');
+            }
+            Get.back();
+        },
+        child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                supplier == null ? 'Add New Supplier' : 'Edit Supplier',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              
               // Form
               TextFormField(
                 controller: controller.newSupplierName,
+                autofocus: true, // Auto-focus first field
+                textInputAction: TextInputAction.next,
                 decoration: _inputDecoration('Supplier Name', isDark),
                 style: TextStyle(color: isDark ? Colors.white : Colors.black),
               ),
@@ -387,6 +412,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                   Expanded(
                     child: TextFormField(
                       controller: controller.newSupplierPhone,
+                      textInputAction: TextInputAction.next,
                       decoration: _inputDecoration('Phone', isDark),
                       style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       keyboardType: TextInputType.phone,
@@ -396,6 +422,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                   Expanded(
                     child: TextFormField(
                       controller: controller.newSupplierCnic,
+                      textInputAction: TextInputAction.done,
                       decoration: _inputDecoration('CNIC', isDark),
                       style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     ),
@@ -441,7 +468,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 children: [
                    TextButton(
                     onPressed: () => Get.back(),
-                    child: const Text('Cancel'),
+                    child: const Text('Cancel (Esc)'),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   ElevatedButton(
@@ -479,13 +506,12 @@ class SupplierHistoryView extends GetView<SupplierController> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    child: Text(supplier == null ? 'Add Supplier' : 'Update Supplier'),
+                    child: Text(supplier == null ? 'Add Supplier (Enter)' : 'Update Supplier (Enter)'),
                   ),
                 ],
               ),
             ],
           ),
-        ),
       ),
     );
   }

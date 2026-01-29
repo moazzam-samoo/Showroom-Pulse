@@ -32,7 +32,7 @@ class SidebarNavigation extends StatelessWidget {
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         border: Border(
           right: BorderSide(
-            color: isDark ? AppColors.darkBorder : Colors.grey.shade200,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
             width: 1,
           ),
         ),

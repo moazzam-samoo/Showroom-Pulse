@@ -105,6 +105,28 @@ class InventoryController extends GetxController {
     }
   }
 
+  /// Update bike price
+  Future<void> updateBikePrice(Bike bike, double newPrice) async {
+    try {
+      bike.cashSalePrice = newPrice;
+      await _inventoryService.updateBike(bike);
+      bikes.refresh(); // Trigger UI update
+      Get.snackbar(
+        'Success',
+        'Price updated successfully',
+        backgroundColor: Colors.green.withOpacity(0.1),
+        colorText: Colors.green,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to update price: $e',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+    }
+  }
+
   /// Pick an image from gallery/filesystem
   Future<File?> pickImage() async {
     try {

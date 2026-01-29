@@ -153,7 +153,7 @@ class _DashboardViewState extends State<DashboardView> {
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         border: Border(
           bottom: BorderSide(
-            color: isDark ? AppColors.darkBorder : Colors.grey.shade200,
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
           ),
         ),
       ),

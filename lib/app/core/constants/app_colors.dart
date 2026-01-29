@@ -49,16 +49,16 @@ class AppColors {
   static const Color lightGradientLight = Color(0xFF2980b9); // KPI gradient end
 
   // Background Colors (Light)
-  static const Color lightBackground = Color(0xFFE8E8E8);    // Dimmed Mica effect
-  static const Color lightSurface = Color(0xFFFAFAFA);       // Cards, sidebar (slightly off-white)
+  static const Color lightBackground = Color(0xFFF3F4F6);    // Grey 100 (Off-white background)
+  static const Color lightSurface = Color(0xFFFFFFFF);       // Pure White (Cards, Sidebar)
   static const Color lightFormBgStart = Color(0xFFE3F2FD);   // Form gradient start
   static const Color lightFormBgEnd = Color(0xFFBBDEFB);     // Form gradient end
   static const Color lightRowAlternate = Color(0xFFF9FAFB);  // Table rows
 
   // Text Colors (Light)
-  static const Color lightTextPrimary = Color(0xFF1F2937);   // Gray 800
-  static const Color lightTextSecondary = Color(0xFF6B7280); // Gray 500
-  static const Color lightTextMuted = Color(0xFF9CA3AF);     // Gray 400
+  static const Color lightTextPrimary = Color(0xFF111827);   // Grey 900 (High contrast)
+  static const Color lightTextSecondary = Color(0xFF4B5563); // Grey 600
+  static const Color lightTextMuted = Color(0xFF9CA3AF);     // Grey 400
   static const Color lightTextWhite = Color(0xFFFFFFFF);
   static const Color lightTextWhiteMuted = Color(0xCCFFFFFF); // 80% opacity
 
@@ -69,9 +69,9 @@ class AppColors {
   static const Color lightError = Color(0xFFDC2626);         // Red 600
 
   // Border Colors (Light)
-  static const Color lightBorder = Color(0xFFE5E7EB);        // Gray 200
-  static const Color lightBorderLight = Color(0xFFF3F4F6);   // Gray 100
-  static const Color lightBorderDashed = Color(0xFFD1D5DB);  // Gray 300
+  static const Color lightBorder = Color(0xFFD1D5DB);        // Grey 300 (Visible border)
+  static const Color lightBorderLight = Color(0xFFE5E7EB);   // Grey 200
+  static const Color lightBorderDashed = Color(0xFF9CA3AF);  // Grey 400
 
   // ═══════════════════════════════════════════════════════════════════════════
   // STATUS BADGE COLORS

@@ -4,21 +4,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
-import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
-import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 
-/// Add New Bike Dialog
-/// 
-/// Analyzed from: Dark Theme UI/Add New Bike Page.png
-/// Layout:
-/// - Modal dialog (centered)
-/// - Title: "Add New Motorcycle"  
-/// - 3 sections with cyan headers:
-///   1. Basic Details (Model, Color, Stock)
-///   2. Technical Specs (Engine No, Chassis No)
-///   3. Financials (Purchase Price, Selling Price)
-/// - Upload Bike Image area
-/// - "Save to Inventory" button
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
 
@@ -36,20 +23,19 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   
   // Form controllers
   final _modelController = TextEditingController();
-  final _colorController = TextEditingController();
-  final _stockController = TextEditingController(text: '1');
   final _engineNoController = TextEditingController();
   final _chassisNoController = TextEditingController();
   final _purchasePriceController = TextEditingController();
   final _sellingPriceController = TextEditingController();
+
+  String? _selectedColor;
+  final List<String> _colors = ['Red', 'Black', 'Blue', 'Silver', 'White', 'Grey', 'Green', 'Other'];
 
   File? _selectedImage;
 
   @override
   void dispose() {
     _modelController.dispose();
-    _colorController.dispose();
-    _stockController.dispose();
     _engineNoController.dispose();
     _chassisNoController.dispose();
     _purchasePriceController.dispose();
@@ -57,196 +43,160 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _selectedImage = File(result.files.single.path!);
+      });
+    }
+  }
+
+  void _handleSave() {
+    if (_formKey.currentState!.validate()) {
+      if (widget.onSave != null) {
+        widget.onSave!({
+          'model': _modelController.text,
+          'color': _selectedColor,
+          'engineNumber': _engineNoController.text,
+          'chassisNumber': _chassisNoController.text,
+          'purchasePrice': double.tryParse(_purchasePriceController.text) ?? 0.0,
+          'sellingPrice': double.tryParse(_sellingPriceController.text) ?? 0.0,
+          'imageFile': _selectedImage,
+        });
+        Navigator.pop(context);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final sectionHeaderText = Colors.white;
+    // Updated to use AppColors directly for consistency
+    final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
+    final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
 
-    return Dialog(
-      backgroundColor: isDark ? AppColors.darkSurface : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-      ),
-      child: Container(
-        width: 500,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+    return AppDialog(
+      title: 'Add New Motorcycle',
+      subtitle: 'Tahir Showroom Inventory Management',
+      onSubmit: _handleSave, // Binds ENTER key to this
+      actions: [
+        Expanded(
+          child: SizedBox(
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _handleSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: sectionHeaderBg,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text(
+                'Save to Inventory (Enter)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column
+                Expanded(
+                  flex: 1,
+                  child: Column(
                     children: [
-                      Icon(
-                        LucideIcons.bike,
-                        color: primaryColor,
-                        size: 20,
+                      _buildSection(
+                        title: 'Basic Details',
+                        color: sectionHeaderBg,
+                        textColor: sectionHeaderText,
+                        children: [
+                          _buildInputGroup('Model:', _modelController, 'e.g. Honda CG125', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                          const SizedBox(height: 16),
+                          _buildDropdownGroup('Color:', isDark, inputBg, inputBorder, labelColor),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Tahir Showroom Inventory Management',
-                        style: TextStyle(
-                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                          fontSize: 11,
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        title: 'Technical Specs',
+                        color: sectionHeaderBg,
+                        textColor: sectionHeaderText,
+                        children: [
+                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor),
+                          const SizedBox(height: 16),
+                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                // Right Column
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    children: [
+                      _buildSection(
+                        title: 'Financials',
+                        color: sectionHeaderBg,
+                        textColor: sectionHeaderText,
+                        children: [
+                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
+                          const SizedBox(height: 16),
+                          _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      // Image Upload
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 180,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: inputBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: inputBorder, width: 2),
+                          ),
+                          child: _selectedImage != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.file(_selectedImage!, fit: BoxFit.cover),
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(LucideIcons.camera, size: 48, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Upload Bike Image',
+                                      style: TextStyle(
+                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: Icon(
-                      LucideIcons.x,
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.base),
-              // Title
-              Text(
-                'Add New Motorcycle',
-                style: TextStyle(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Form Content - Two columns
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left Column - Basic Details + Technical Specs
-                  Expanded(
-                    child: Column(
-                      children: [
-                        // Basic Details Section
-                        _buildSection(
-                          title: 'Basic Details',
-                          isDark: isDark,
-                          primaryColor: primaryColor,
-                          children: [
-                            _buildTextField(
-                              label: 'Model:',
-                              controller: _modelController,
-                              hint: 'Honda CG125',
-                              isDark: isDark,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildTextField(
-                              label: 'Color:',
-                              controller: _colorController,
-                              hint: 'Red',
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildTextField(
-                              label: 'Stock:',
-                              controller: _stockController,
-                              hint: '1',
-                              isDark: isDark,
-                              keyboardType: TextInputType.number,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                        // Technical Specs Section
-                        _buildSection(
-                          title: 'Technical Specs',
-                          isDark: isDark,
-                          primaryColor: primaryColor,
-                          children: [
-                            _buildTextField(
-                              label: 'Engine\nNo.:',
-                              controller: _engineNoController,
-                              hint: 'HCG125E-987654321',
-                              isDark: isDark,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildTextField(
-                              label: 'Chassis\nNo.:',
-                              controller: _chassisNoController,
-                              hint: 'HCG125F-123456789',
-                              isDark: isDark,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.base),
-                  // Right Column - Financials + Image
-                  Expanded(
-                    child: Column(
-                      children: [
-                        // Financials Section
-                        _buildSection(
-                          title: 'Financials',
-                          isDark: isDark,
-                          primaryColor: primaryColor,
-                          children: [
-                            _buildTextField(
-                              label: 'Purchase\nPrice:',
-                              controller: _purchasePriceController,
-                              hint: 'Rs 250,000',
-                              isDark: isDark,
-                              keyboardType: TextInputType.number,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildTextField(
-                              label: 'Selling\nPrice:',
-                              controller: _sellingPriceController,
-                              hint: 'Rs 280,000',
-                              isDark: isDark,
-                              keyboardType: TextInputType.number,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                        // Image Upload
-                        _buildImageUpload(isDark, primaryColor),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _handleSave,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                    ),
-                  ),
-                  child: const Text(
-                    'Save to Inventory',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -254,188 +204,158 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
   Widget _buildSection({
     required String title,
-    required bool isDark,
-    required Color primaryColor,
+    required Color color,
+    required Color textColor,
     required List<Widget> children,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkElevated : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.base,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppRadius.md),
-                topRight: Radius.circular(AppRadius.md),
-              ),
-            ),
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          // Section Content
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.base),
-            child: Column(children: children),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    required bool isDark,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          width: 60,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(8),
+              topRight: Radius.circular(8),
+            ),
+          ),
           child: Text(
-            label,
+            title,
             style: TextStyle(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-              fontSize: 12,
+              color: textColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
             ),
           ),
         ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0x0DFFFFFF),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(8),
+              bottomRight: Radius.circular(8),
+            ),
+            border: Border.all(color: const Color(0xFF374151).withOpacity(0.5)),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInputGroup(
+    String label,
+    TextEditingController controller,
+    String hint,
+    bool isDark,
+    Color bg,
+    Color border,
+    Color? labelColor,
+    {bool isNumber = false, bool autofocus = false}
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label.replaceAll(':', ''),
+            style: TextStyle(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
         Expanded(
-          child: Container(
-            height: 36,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(
-                color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
+          child: TextFormField(
+            controller: controller,
+            autofocus: autofocus,
+            textInputAction: TextInputAction.next, // Important for keyboard nav
+            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+              filled: true,
+              fillColor: bg,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
               ),
             ),
-            child: TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              validator: validator,
-              style: TextStyle(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                fontSize: 13,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  fontSize: 13,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                isDense: true,
-              ),
-            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'Required';
+              return null;
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildImageUpload(bool isDark, Color primaryColor) {
-    return Container(
-      height: 140,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkElevated : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
-          style: BorderStyle.solid,
+  Widget _buildDropdownGroup(
+    String label,
+    bool isDark,
+    Color bg,
+    Color border,
+    Color? labelColor,
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label.replaceAll(':', ''),
+            style: TextStyle(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
         ),
-      ),
-      child: InkWell(
-        onTap: _pickImage,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: _selectedImage != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                child: Image.file(
-                  _selectedImage!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.camera,
-                    size: 32,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Upload Bike Image',
-                    style: TextStyle(
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+        const SizedBox(width: 12),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            value: _selectedColor,
+            dropdownColor: bg,
+            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+            decoration: InputDecoration(
+              hintText: 'Select Color',
+              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+              filled: true,
+              fillColor: bg,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: border),
               ),
-      ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
+              ),
+            ),
+            items: _colors.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+            onChanged: (v) => setState(() => _selectedColor = v),
+            validator: (v) => v == null ? 'Required' : null,
+          ),
+        ),
+      ],
     );
   }
-
-  Future<void> _pickImage() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-      );
-
-      if (result != null && result.files.single.path != null) {
-        setState(() {
-          _selectedImage = File(result.files.single.path!);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to pick image')),
-      );
-    }
-  }
-
-  void _handleSave() {
-    if (_formKey.currentState?.validate() == true) {
-      final data = {
-        'model': _modelController.text,
-        'color': _colorController.text,
-        'stock': int.tryParse(_stockController.text) ?? 1,
-        'engineNumber': _engineNoController.text,
-        'chassisNumber': _chassisNoController.text,
-        'purchasePrice': double.tryParse(_purchasePriceController.text.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0,
-        'sellingPrice': double.tryParse(_sellingPriceController.text.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0,
-        'imageFile': _selectedImage,
-      };
-      widget.onSave?.call(data);
-      Navigator.of(context).pop(data);
-    }
-  }
 }
-
-// Authored by: Moazzam Samoo
