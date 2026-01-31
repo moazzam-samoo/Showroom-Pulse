@@ -58,49 +58,60 @@ const InstallmentContractSchema = CollectionSchema(
       name: r'lateFeePercentage',
       type: IsarType.double,
     ),
-    r'markupPercentage': PropertySchema(
+    r'markupType': PropertySchema(
       id: 8,
-      name: r'markupPercentage',
+      name: r'markupType',
+      type: IsarType.byte,
+      enumMap: _InstallmentContractmarkupTypeEnumValueMap,
+    ),
+    r'markupValue': PropertySchema(
+      id: 9,
+      name: r'markupValue',
       type: IsarType.double,
     ),
     r'monthlyEMI': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'monthlyEMI',
       type: IsarType.double,
     ),
     r'months': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'months',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'notes',
       type: IsarType.string,
     ),
     r'paymentProgress': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'paymentProgress',
       type: IsarType.double,
     ),
     r'remainingBalance': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'remainingBalance',
       type: IsarType.double,
     ),
     r'status': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'status',
       type: IsarType.byte,
       enumMap: _InstallmentContractstatusEnumValueMap,
     ),
     r'totalAmount': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'totalAmount',
       type: IsarType.double,
     ),
+    r'totalMarkupAmount': PropertySchema(
+      id: 17,
+      name: r'totalMarkupAmount',
+      type: IsarType.double,
+    ),
     r'totalPaid': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'totalPaid',
       type: IsarType.double,
     )
@@ -148,15 +159,17 @@ void _installmentContractSerialize(
   writer.writeDateTime(offsets[5], object.firstDueDate);
   writer.writeBool(offsets[6], object.lateFeeEnabled);
   writer.writeDouble(offsets[7], object.lateFeePercentage);
-  writer.writeDouble(offsets[8], object.markupPercentage);
-  writer.writeDouble(offsets[9], object.monthlyEMI);
-  writer.writeLong(offsets[10], object.months);
-  writer.writeString(offsets[11], object.notes);
-  writer.writeDouble(offsets[12], object.paymentProgress);
-  writer.writeDouble(offsets[13], object.remainingBalance);
-  writer.writeByte(offsets[14], object.status.index);
-  writer.writeDouble(offsets[15], object.totalAmount);
-  writer.writeDouble(offsets[16], object.totalPaid);
+  writer.writeByte(offsets[8], object.markupType.index);
+  writer.writeDouble(offsets[9], object.markupValue);
+  writer.writeDouble(offsets[10], object.monthlyEMI);
+  writer.writeLong(offsets[11], object.months);
+  writer.writeString(offsets[12], object.notes);
+  writer.writeDouble(offsets[13], object.paymentProgress);
+  writer.writeDouble(offsets[14], object.remainingBalance);
+  writer.writeByte(offsets[15], object.status.index);
+  writer.writeDouble(offsets[16], object.totalAmount);
+  writer.writeDouble(offsets[17], object.totalMarkupAmount);
+  writer.writeDouble(offsets[18], object.totalPaid);
 }
 
 InstallmentContract _installmentContractDeserialize(
@@ -175,15 +188,19 @@ InstallmentContract _installmentContractDeserialize(
   object.id = id;
   object.lateFeeEnabled = reader.readBool(offsets[6]);
   object.lateFeePercentage = reader.readDouble(offsets[7]);
-  object.markupPercentage = reader.readDouble(offsets[8]);
-  object.monthlyEMI = reader.readDouble(offsets[9]);
-  object.months = reader.readLong(offsets[10]);
-  object.notes = reader.readStringOrNull(offsets[11]);
+  object.markupType = _InstallmentContractmarkupTypeValueEnumMap[
+          reader.readByteOrNull(offsets[8])] ??
+      MarkupType.percentage;
+  object.markupValue = reader.readDouble(offsets[9]);
+  object.monthlyEMI = reader.readDouble(offsets[10]);
+  object.months = reader.readLong(offsets[11]);
+  object.notes = reader.readStringOrNull(offsets[12]);
   object.status = _InstallmentContractstatusValueEnumMap[
-          reader.readByteOrNull(offsets[14])] ??
+          reader.readByteOrNull(offsets[15])] ??
       ContractStatusEnum.active;
-  object.totalAmount = reader.readDouble(offsets[15]);
-  object.totalPaid = reader.readDouble(offsets[16]);
+  object.totalAmount = reader.readDouble(offsets[16]);
+  object.totalMarkupAmount = reader.readDouble(offsets[17]);
+  object.totalPaid = reader.readDouble(offsets[18]);
   return object;
 }
 
@@ -211,30 +228,44 @@ P _installmentContractDeserializeProp<P>(
     case 7:
       return (reader.readDouble(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
+      return (_InstallmentContractmarkupTypeValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          MarkupType.percentage) as P;
     case 9:
       return (reader.readDouble(offset)) as P;
     case 10:
-      return (reader.readLong(offset)) as P;
-    case 11:
-      return (reader.readStringOrNull(offset)) as P;
-    case 12:
       return (reader.readDouble(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
+      return (reader.readStringOrNull(offset)) as P;
     case 13:
       return (reader.readDouble(offset)) as P;
     case 14:
+      return (reader.readDouble(offset)) as P;
+    case 15:
       return (_InstallmentContractstatusValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ContractStatusEnum.active) as P;
-    case 15:
-      return (reader.readDouble(offset)) as P;
     case 16:
+      return (reader.readDouble(offset)) as P;
+    case 17:
+      return (reader.readDouble(offset)) as P;
+    case 18:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
+const _InstallmentContractmarkupTypeEnumValueMap = {
+  'percentage': 0,
+  'fixed': 1,
+};
+const _InstallmentContractmarkupTypeValueEnumMap = {
+  0: MarkupType.percentage,
+  1: MarkupType.fixed,
+};
 const _InstallmentContractstatusEnumValueMap = {
   'active': 0,
   'completed': 1,
@@ -831,13 +862,69 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
-      markupPercentageEqualTo(
+      markupTypeEqualTo(MarkupType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'markupType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupTypeGreaterThan(
+    MarkupType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'markupType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupTypeLessThan(
+    MarkupType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'markupType',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupTypeBetween(
+    MarkupType lower,
+    MarkupType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'markupType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      markupValueEqualTo(
     double value, {
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'markupPercentage',
+        property: r'markupValue',
         value: value,
         epsilon: epsilon,
       ));
@@ -845,7 +932,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
-      markupPercentageGreaterThan(
+      markupValueGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -853,7 +940,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'markupPercentage',
+        property: r'markupValue',
         value: value,
         epsilon: epsilon,
       ));
@@ -861,7 +948,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
-      markupPercentageLessThan(
+      markupValueLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -869,7 +956,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'markupPercentage',
+        property: r'markupValue',
         value: value,
         epsilon: epsilon,
       ));
@@ -877,7 +964,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
-      markupPercentageBetween(
+      markupValueBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -886,7 +973,7 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'markupPercentage',
+        property: r'markupValue',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1427,6 +1514,72 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalMarkupAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalMarkupAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalMarkupAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalMarkupAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalMarkupAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalMarkupAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      totalMarkupAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalMarkupAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
       totalPaidEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -1614,16 +1767,30 @@ extension InstallmentContractQuerySortBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
-      sortByMarkupPercentage() {
+      sortByMarkupType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'markupPercentage', Sort.asc);
+      return query.addSortBy(r'markupType', Sort.asc);
     });
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
-      sortByMarkupPercentageDesc() {
+      sortByMarkupTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'markupPercentage', Sort.desc);
+      return query.addSortBy(r'markupType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMarkupValue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupValue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByMarkupValueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupValue', Sort.desc);
     });
   }
 
@@ -1722,6 +1889,20 @@ extension InstallmentContractQuerySortBy
       sortByTotalAmountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalMarkupAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalMarkupAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByTotalMarkupAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalMarkupAmount', Sort.desc);
     });
   }
 
@@ -1869,16 +2050,30 @@ extension InstallmentContractQuerySortThenBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
-      thenByMarkupPercentage() {
+      thenByMarkupType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'markupPercentage', Sort.asc);
+      return query.addSortBy(r'markupType', Sort.asc);
     });
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
-      thenByMarkupPercentageDesc() {
+      thenByMarkupTypeDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'markupPercentage', Sort.desc);
+      return query.addSortBy(r'markupType', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMarkupValue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupValue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByMarkupValueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markupValue', Sort.desc);
     });
   }
 
@@ -1981,6 +2176,20 @@ extension InstallmentContractQuerySortThenBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalMarkupAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalMarkupAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByTotalMarkupAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalMarkupAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       thenByTotalPaid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalPaid', Sort.asc);
@@ -2054,9 +2263,16 @@ extension InstallmentContractQueryWhereDistinct
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
-      distinctByMarkupPercentage() {
+      distinctByMarkupType() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'markupPercentage');
+      return query.addDistinctBy(r'markupType');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByMarkupValue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'markupValue');
     });
   }
 
@@ -2106,6 +2322,13 @@ extension InstallmentContractQueryWhereDistinct
       distinctByTotalAmount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalAmount');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByTotalMarkupAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalMarkupAmount');
     });
   }
 
@@ -2180,10 +2403,17 @@ extension InstallmentContractQueryProperty
     });
   }
 
-  QueryBuilder<InstallmentContract, double, QQueryOperations>
-      markupPercentageProperty() {
+  QueryBuilder<InstallmentContract, MarkupType, QQueryOperations>
+      markupTypeProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'markupPercentage');
+      return query.addPropertyName(r'markupType');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      markupValueProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'markupValue');
     });
   }
 
@@ -2231,6 +2461,13 @@ extension InstallmentContractQueryProperty
       totalAmountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalAmount');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, double, QQueryOperations>
+      totalMarkupAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalMarkupAmount');
     });
   }
 

@@ -12,6 +12,7 @@ import '../../data/models/user.dart';
 import '../../data/models/app_settings.dart';
 import '../../data/models/supplier.dart';
 import '../../data/models/purchase_batch.dart';
+import '../../data/models/sale.dart';
 
 /// IsarService - Handles Isar database operations
 /// 
@@ -36,6 +37,7 @@ class IsarService extends GetxService {
         AppSettingsSchema,
         SupplierSchema,
         PurchaseBatchSchema,
+        SaleSchema,
       ],
       directory: fileService.databasePath,
       name: 'default',

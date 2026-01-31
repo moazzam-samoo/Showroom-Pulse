@@ -9,6 +9,11 @@ enum ContractStatusEnum {
   defaulted,
 }
 
+enum MarkupType {
+  percentage, // % Logic
+  fixed,      // Fixed Amount Logic
+}
+
 /// Installment Contract Collection - Represents an installment sale agreement
 @collection
 class InstallmentContract {
@@ -23,8 +28,17 @@ class InstallmentContract {
   /// Cash price of the bike
   late double cashPrice;
 
-  /// Markup percentage applied (default 40%)
-  double markupPercentage = 40.0;
+  /// Type of markup applied
+  @enumerated
+  MarkupType markupType = MarkupType.percentage;
+
+  /// Value of the markup
+  /// If percentage: e.g. 40.0 (40%)
+  /// If fixed: e.g. 15000.0 (Rs 15,000)
+  double markupValue = 40.0;
+
+  /// The actual calculated markup amount in currency
+  late double totalMarkupAmount;
 
   /// Total amount after markup
   late double totalAmount;
