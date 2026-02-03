@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
 
 class SalesCardGrid extends StatelessWidget {
@@ -72,55 +74,99 @@ class SalesCardGrid extends StatelessWidget {
       ),
     ];
 
-    // 1. Sort Data by Date Descending
-    mockSales.sort((a, b) {
-       final dateA = _parseDate(a.saleDate);
-       final dateB = _parseDate(b.saleDate);
-       return dateB.compareTo(dateA);
-    });
-
-    final cashSales = mockSales.where((s) => s.isCash).toList();
-    final installmentSales = mockSales.where((s) => !s.isCash).toList();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = Get.find<SalesController>();
 
     return Expanded(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Cash Sales Column
-          Expanded(
-            child: Column(
-              children: [
-                _buildColumnHeader('Cash Sales', const Color(0xFF22C55E), isDark),
+      child: Obx(() {
+        // 1. Filter Data based on Date Range
+        final filteredSales = mockSales.where((sale) {
+          final saleDate = _parseDate(sale.saleDate);
+          final now = DateTime.now();
+          final range = controller.selectedDateRange.value;
+
+          if (range == 'This Month') {
+            return saleDate.month == now.month && saleDate.year == now.year;
+          } else if (range == 'Last Month') {
+            final lastMonth = DateTime(now.year, now.month - 1);
+            return saleDate.month == lastMonth.month && saleDate.year == lastMonth.year;
+          } else if (range == 'This Year') {
+             return saleDate.year == now.year;
+          }
+          return true; // All Time
+        }).toList();
+
+        // 2. Sort Data by Date Descending
+        filteredSales.sort((a, b) {
+           final dateA = _parseDate(a.saleDate);
+           final dateB = _parseDate(b.saleDate);
+           return dateB.compareTo(dateA);
+        });
+        
+        // 3. Filter by Status
+        final status = controller.selectedStatus.value;
+        final showCash = status == 'All Status' || status == 'Cash';
+        final showInstallment = status == 'All Status' || status == 'Installment';
+        
+        final cashSales = filteredSales.where((s) => s.isCash).toList();
+        final installmentSales = filteredSales.where((s) => !s.isCash).toList();
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        // If filtering by specific status, we show full width
+        // If All Status, we show split view
+        if (status == 'All Status') {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cash Sales Column
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildColumnHeader('Cash Sales', const Color(0xFF22C55E), isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: _buildGroupedList(cashSales, isDark, crossAxisCount: 2),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Center Divider
+              Container(
+                width: 1,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300,
+              ),
+
+              // Installment Sales Column
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildColumnHeader('Installment Sales', const Color(0xFFD946EF), isDark),
+                     const SizedBox(height: AppSpacing.md),
+                    Expanded(
+                      child: _buildGroupedList(installmentSales, isDark, crossAxisCount: 2),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Single Column View (Full Width)
+          final salesToShow = status == 'Cash' ? cashSales : installmentSales;
+          final color = status == 'Cash' ? const Color(0xFF22C55E) : const Color(0xFFD946EF);
+          
+          return Column(
+             children: [
+                _buildColumnHeader('$status Sales', color, isDark),
                 const SizedBox(height: AppSpacing.md),
                 Expanded(
-                  child: _buildGroupedList(cashSales, isDark),
+                  child: _buildGroupedList(salesToShow, isDark, crossAxisCount: 4),
                 ),
-              ],
-            ),
-          ),
-
-          // Center Divider
-          Container(
-            width: 1,
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-            color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300,
-          ),
-
-          // Installment Sales Column
-          Expanded(
-            child: Column(
-              children: [
-                _buildColumnHeader('Installment Sales', const Color(0xFFD946EF), isDark),
-                 const SizedBox(height: AppSpacing.md),
-                Expanded(
-                  child: _buildGroupedList(installmentSales, isDark),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+             ],
+          );
+        }
+      }),
     );
   }
 
@@ -146,7 +192,7 @@ class SalesCardGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupedList(List<SaleCardData> salesList, bool isDark) {
+  Widget _buildGroupedList(List<SaleCardData> salesList, bool isDark, {required int crossAxisCount}) {
     // Grouping Logic
     final Map<String, List<SaleCardData>> groupedSales = {};
     for (var sale in salesList) {
@@ -158,6 +204,25 @@ class SalesCardGrid extends StatelessWidget {
         }
         groupedSales[monthKey]!.add(sale);
       }
+    }
+
+    if (groupedSales.isEmpty) {
+      return Center(
+         child: Column(
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+             Icon(Icons.inbox_outlined, size: 48, color: isDark ? Colors.white24 : Colors.black26),
+             const SizedBox(height: 16),
+             Text(
+               "No sales found",
+               style: TextStyle(
+                 color: isDark ? Colors.white54 : Colors.black45,
+                 fontSize: 16,
+               ),
+             ),
+           ],
+         ),
+      );
     }
 
     return ListView.builder(
@@ -206,7 +271,7 @@ class SalesCardGrid extends StatelessWidget {
             MasonryGridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2, // 2 column within the half-screen split = 4 total effectively? No, split screen is smaller. 2 cols is safe.
+              crossAxisCount: crossAxisCount, 
               mainAxisSpacing: AppSpacing.lg,
               crossAxisSpacing: AppSpacing.lg,
               itemCount: monthSales.length,
