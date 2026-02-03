@@ -25,4 +25,13 @@ class SalesController extends GetxController {
     // Placeholder for export logic
     Get.snackbar('Export', 'Generating report for ${selectedDateRange.value}...');
   }
+
+  String currencyFormat(double amount) {
+    if (amount >= 1000000) {
+      return '${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount >= 1000) {
+      return '${(amount / 1000).toStringAsFixed(0)},000';
+    }
+    return amount.toStringAsFixed(0);
+  }
 }
