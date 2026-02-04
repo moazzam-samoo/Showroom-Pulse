@@ -24,7 +24,7 @@ class SalesFilterBar extends GetView<SalesController> {
             hint: 'Search invoice, customer, or bike...',
             prefixIcon: LucideIcons.search,
             onChanged: (val) {
-              // TODO: connect to controller
+              controller.setSearchQuery(val);
             },
           ),
         ),

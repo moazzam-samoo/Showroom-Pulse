@@ -2,8 +2,9 @@ import 'package:get/get.dart';
 
 class SalesController extends GetxController {
   // Filters
-  final selectedDateRange = 'This Month'.obs;
+  final selectedDateRange = 'All Time'.obs; // Default: All Time
   final selectedStatus = 'All Status'.obs;
+  final searchQuery = ''.obs;
 
   // Options
   final dateRangeOptions = ['This Month', 'Last Month', 'This Year', 'All Time'];
@@ -19,6 +20,10 @@ class SalesController extends GetxController {
     selectedStatus.value = status;
     // TODO: Trigger data refresh based on status
     print('Status Changed: $status');
+  }
+
+  void setSearchQuery(String query) {
+    searchQuery.value = query;
   }
 
   void exportReport() {

@@ -40,10 +40,14 @@ class SalesCardGrid extends StatelessWidget {
         saleDate: '28/01/2026',
         amountPaid: 45000,
         bikePrice: 130000,
+        sellingPrice: 135000,
         amountRemaining: 85000,
         installmentDuration: 12,
         installmentMonthlyPayment: 7100,
         installmentDueDate: '10/02/2026',
+        witnessName: 'Ahmed Raza',
+        witnessCnic: '35201-1112223-3',
+        witnessPhone: '0300-9988776',
         isCash: false,
       ),
       SaleCardData(
@@ -86,10 +90,14 @@ class SalesCardGrid extends StatelessWidget {
         saleDate: '15/12/2025',
         amountPaid: 25000,
         bikePrice: 120000,
+        sellingPrice: 125000,
         amountRemaining: 95000,
         installmentDuration: 10,
         installmentMonthlyPayment: 9500,
         installmentDueDate: '15/01/2026',
+        witnessName: 'Kamran Akmal',
+        witnessCnic: '35202-4445556-9',
+        witnessPhone: '0333-1122334',
         isCash: false,
       ),
     ];
@@ -99,7 +107,8 @@ class SalesCardGrid extends StatelessWidget {
     return Expanded(
       child: Obx(() {
         // 1. Filter Data based on Date Range
-        final filteredSales = mockSales.where((sale) {
+        // 1. Filter Data based on Date Range
+        var filteredSales = mockSales.where((sale) {
           final saleDate = _parseDate(sale.saleDate);
           final now = DateTime.now();
           final range = controller.selectedDateRange.value;
@@ -115,6 +124,19 @@ class SalesCardGrid extends StatelessWidget {
           return true; // All Time
         }).toList();
 
+        // 1.5 Filter by Search Query
+        final query = controller.searchQuery.value.toLowerCase();
+        if (query.isNotEmpty) {
+          filteredSales = filteredSales.where((sale) {
+            return sale.customerName.toLowerCase().contains(query) ||
+                   sale.bikeModel.toLowerCase().contains(query) ||
+                   sale.bikeChassisNumber.toLowerCase().contains(query) ||
+                   sale.bikeEngineNumber.toLowerCase().contains(query) ||
+                   sale.customerCnic.contains(query) ||
+                   sale.customerContact.contains(query);
+          }).toList();
+        }
+
         // 2. Sort Data by Date Descending
         filteredSales.sort((a, b) {
            final dateA = _parseDate(a.saleDate);
@@ -124,8 +146,6 @@ class SalesCardGrid extends StatelessWidget {
         
         // 3. Filter by Status
         final status = controller.selectedStatus.value;
-        final showCash = status == 'All Status' || status == 'Cash';
-        final showInstallment = status == 'All Status' || status == 'Installment';
         
         final cashSales = filteredSales.where((s) => s.isCash).toList();
         final installmentSales = filteredSales.where((s) => !s.isCash).toList();

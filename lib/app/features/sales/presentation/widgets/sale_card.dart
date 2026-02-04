@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/cash_sale_detail_dialog.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/widgets/installment_sale_detail_dialog.dart';
 
 class SaleCardData {
   final String bikeModel;
@@ -21,11 +22,18 @@ class SaleCardData {
   final String saleDate;
   final double amountPaid;
   final double? bikePrice; // Original Price
+  final double? sellingPrice; // Markup Price
   final double? amountRemaining;
   final bool isCash;
   final int? installmentDuration;
   final double? installmentMonthlyPayment;
   final String? installmentDueDate;
+  
+  // Witness Details
+  final String? witnessName;
+  final String? witnessCnic;
+  final String? witnessPhone;
+  final String? witnessImage;
 
   SaleCardData({
     required this.bikeModel,
@@ -40,11 +48,16 @@ class SaleCardData {
     required this.saleDate,
     required this.amountPaid,
     this.bikePrice,
+    this.sellingPrice,
     this.amountRemaining,
     required this.isCash,
     this.installmentDuration,
     this.installmentMonthlyPayment,
     this.installmentDueDate,
+    this.witnessName,
+    this.witnessCnic,
+    this.witnessPhone,
+    this.witnessImage,
   });
 }
 
@@ -66,14 +79,7 @@ class SaleCard extends StatelessWidget {
         if (data.isCash) {
           Get.dialog(CashSaleDetailDialog(data: data));
         } else {
-          Get.snackbar(
-            'Installment Details', 
-            'Detailed view for installments coming soon!',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: isDark ? Colors.white12 : Colors.black12,
-            colorText: isDark ? Colors.white : Colors.black,
-            margin: const EdgeInsets.all(16),
-          );
+          Get.dialog(InstallmentSaleDetailDialog(data: data));
         }
       },
       child: Container(
