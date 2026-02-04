@@ -7,6 +7,8 @@ import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
+import 'package:isar/isar.dart';
+
 
 class NewSaleController extends GetxController {
   // Stepper State
@@ -18,13 +20,18 @@ class NewSaleController extends GetxController {
   // Step 2: Customer Data
   final selectedCustomer = Rxn<Customer>();
   final customerSearchController = TextEditingController();
-  final isNewCustomer = false.obs;
+  final isNewCustomer = true.obs; // Default: New Customer
   
   // New Customer Form Controllers
   final customerNameController = TextEditingController();
+  final customerFatherNameController = TextEditingController();
   final customerPhoneController = TextEditingController();
   final customerCnicController = TextEditingController();
   final customerAddressController = TextEditingController();
+
+  // Scroll Controller for auto-scroll on bike selection
+  final scrollController = ScrollController();
+  final customerSectionKey = GlobalKey();
   
   // Step 3: Payment Plan
   final saleType = SaleType.cash.obs; // Enum to be defined or inferred
@@ -36,24 +43,59 @@ class NewSaleController extends GetxController {
   final markupType = MarkupType.percentage.obs;
   final markupValueController = TextEditingController(text: '40');
   
-  // Witnesses
-  final witness1Name = TextEditingController();
-  final witness1Cnic = TextEditingController();
-  final witness2Name = TextEditingController();
-  final witness2Cnic = TextEditingController();
+  // Witness 1 (Mandatory)
+  final witness1NameController = TextEditingController();
+  final witness1CnicController = TextEditingController();
+  final witness1PhoneController = TextEditingController();
+  final witness1AddressController = TextEditingController();
+  final witness1CnicFrontPath = RxnString();
+  final witness1CnicBackPath = RxnString();
+  
+  // Witness 2 (Optional)
+  final showWitness2 = false.obs;
+  final witness2NameController = TextEditingController();
+  final witness2CnicController = TextEditingController();
+  final witness2PhoneController = TextEditingController();
+  final witness2AddressController = TextEditingController();
+  final witness2CnicFrontPath = RxnString();
+  final witness2CnicBackPath = RxnString();
 
   // Calculations
   final calculationResult = Rxn<InstallmentCalculationResult>();
 
+  // Available Inventory
+  final availableBikes = <Bike>[].obs;
+
+  Map<String, List<Bike>> get groupedBikes {
+    final grouped = <String, List<Bike>>{};
+    for (var bike in availableBikes) {
+      if (!grouped.containsKey(bike.model)) {
+        grouped[bike.model] = [];
+      }
+      grouped[bike.model]!.add(bike);
+    }
+    return grouped;
+  }
+
   @override
   void onInit() {
     super.onInit();
+    loadAvailableBikes();
     // Listen to changes for auto-calculation
     downPaymentController.addListener(_calculateInstallment);
     monthsController.addListener(_calculateInstallment);
     markupValueController.addListener(_calculateInstallment);
     ever(markupType, (_) => _calculateInstallment());
     ever(selectedBike, (_) => _calculateInstallment()); // Recalculate if bike changes (price changes)
+  }
+
+  Future<void> loadAvailableBikes() async {
+    final service = Get.find<IsarService>();
+    final bikes = await service.isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.available)
+        .findAll();
+    availableBikes.assignAll(bikes);
   }
 
   void _calculateInstallment() {
@@ -113,11 +155,14 @@ class NewSaleController extends GetxController {
       await _isarService.isar.writeTxn(() async {
         // A. Create/Get Customer
         final customer = Customer()
-          ..fullName = customerNameController.text  // Fixed: name -> fullName
+          ..fullName = customerNameController.text
+          ..fatherName = customerFatherNameController.text.isNotEmpty 
+              ? customerFatherNameController.text 
+              : null
           ..cnicNumber = customerCnicController.text 
           ..phoneNumber = customerPhoneController.text
           ..address = customerAddressController.text
-          ..dateRegistered = DateTime.now();        // Fixed: registrationDate -> dateRegistered
+          ..dateRegistered = DateTime.now();
         
         await _isarService.isar.customers.put(customer);
 

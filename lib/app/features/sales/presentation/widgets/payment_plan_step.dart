@@ -67,7 +67,7 @@ class PaymentPlanStep extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: 200.ms,
-        height: 40, // Reduced from 50
+        height: 40,
         decoration: BoxDecoration(
           color: isSelected ? primary : (isDark ? Colors.grey[800] : Colors.grey[200]),
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -108,7 +108,7 @@ class PaymentPlanStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // MARKUP CONFIGURATION (FLEXIBLE)
+        // MARKUP CONFIGURATION
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
@@ -190,7 +190,7 @@ class PaymentPlanStep extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _summaryRow('Base Price', 'Rs ???', isDark), // Need bike price here
+                  _summaryRow('Base Price', 'Rs ???', isDark),
                   _summaryRow('Total Markup', 'Rs ${result.totalMarkup.toStringAsFixed(0)}', isDark),
                   _summaryRow('Grand Total', 'Rs ${result.grandTotal.toStringAsFixed(0)}', isDark, isBold: true),
                   const Divider(),
@@ -214,28 +214,6 @@ class PaymentPlanStep extends StatelessWidget {
               ),
             );
         }),
-
-        const SizedBox(height: AppSpacing.lg),
-        const Text('Witnesses', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: AppSpacing.sm),
-        
-        // Witness 1
-        Row(
-          children: [
-            Expanded(child: AppTextField(label: 'Witness 1 Name', prefixIcon: LucideIcons.user, controller: controller.witness1Name)),
-            const SizedBox(width: 16),
-            Expanded(child: AppTextField(label: 'Msg/CNIC', prefixIcon: LucideIcons.messageSquare, controller: controller.witness1Cnic)),
-          ],
-        ),
-        const SizedBox(height: 8),
-        // Witness 2
-        Row(
-          children: [
-            Expanded(child: AppTextField(label: 'Witness 2 Name', prefixIcon: LucideIcons.user, controller: controller.witness2Name)),
-            const SizedBox(width: 16),
-            Expanded(child: AppTextField(label: 'Msg/CNIC', prefixIcon: LucideIcons.messageSquare, controller: controller.witness2Cnic)),
-          ],
-        ),
       ],
     );
   }

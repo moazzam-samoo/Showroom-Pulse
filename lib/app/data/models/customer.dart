@@ -12,6 +12,9 @@ class Customer {
   /// Customer's full name
   late String fullName;
 
+  /// Father's name
+  String? fatherName;
+
   /// CNIC number (unique - used as folder name for documents)
   @Index(unique: true)
   late String cnicNumber;

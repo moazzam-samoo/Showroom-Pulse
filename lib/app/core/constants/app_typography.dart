@@ -146,6 +146,6 @@ class AppTypography {
     color: color,
   );
 }
-}
+
 
 // Authored by: Moazzam Samoo

@@ -22,33 +22,43 @@ const WitnessSchema = CollectionSchema(
       name: r'address',
       type: IsarType.string,
     ),
-    r'cnicImageFilename': PropertySchema(
+    r'cnicBackFilename': PropertySchema(
       id: 1,
-      name: r'cnicImageFilename',
+      name: r'cnicBackFilename',
+      type: IsarType.string,
+    ),
+    r'cnicFrontFilename': PropertySchema(
+      id: 2,
+      name: r'cnicFrontFilename',
       type: IsarType.string,
     ),
     r'cnicNumber': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'cnicNumber',
       type: IsarType.string,
     ),
     r'contractId': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'contractId',
       type: IsarType.long,
     ),
     r'fullName': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'fullName',
       type: IsarType.string,
     ),
+    r'isPrimary': PropertySchema(
+      id: 6,
+      name: r'isPrimary',
+      type: IsarType.bool,
+    ),
     r'phoneNumber': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'phoneNumber',
       type: IsarType.string,
     ),
     r'relationship': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'relationship',
       type: IsarType.string,
     )
@@ -80,7 +90,13 @@ int _witnessEstimateSize(
     }
   }
   {
-    final value = object.cnicImageFilename;
+    final value = object.cnicBackFilename;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.cnicFrontFilename;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -104,12 +120,14 @@ void _witnessSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.address);
-  writer.writeString(offsets[1], object.cnicImageFilename);
-  writer.writeString(offsets[2], object.cnicNumber);
-  writer.writeLong(offsets[3], object.contractId);
-  writer.writeString(offsets[4], object.fullName);
-  writer.writeString(offsets[5], object.phoneNumber);
-  writer.writeString(offsets[6], object.relationship);
+  writer.writeString(offsets[1], object.cnicBackFilename);
+  writer.writeString(offsets[2], object.cnicFrontFilename);
+  writer.writeString(offsets[3], object.cnicNumber);
+  writer.writeLong(offsets[4], object.contractId);
+  writer.writeString(offsets[5], object.fullName);
+  writer.writeBool(offsets[6], object.isPrimary);
+  writer.writeString(offsets[7], object.phoneNumber);
+  writer.writeString(offsets[8], object.relationship);
 }
 
 Witness _witnessDeserialize(
@@ -120,13 +138,15 @@ Witness _witnessDeserialize(
 ) {
   final object = Witness();
   object.address = reader.readStringOrNull(offsets[0]);
-  object.cnicImageFilename = reader.readStringOrNull(offsets[1]);
-  object.cnicNumber = reader.readString(offsets[2]);
-  object.contractId = reader.readLong(offsets[3]);
-  object.fullName = reader.readString(offsets[4]);
+  object.cnicBackFilename = reader.readStringOrNull(offsets[1]);
+  object.cnicFrontFilename = reader.readStringOrNull(offsets[2]);
+  object.cnicNumber = reader.readString(offsets[3]);
+  object.contractId = reader.readLong(offsets[4]);
+  object.fullName = reader.readString(offsets[5]);
   object.id = id;
-  object.phoneNumber = reader.readString(offsets[5]);
-  object.relationship = reader.readStringOrNull(offsets[6]);
+  object.isPrimary = reader.readBool(offsets[6]);
+  object.phoneNumber = reader.readString(offsets[7]);
+  object.relationship = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -142,14 +162,18 @@ P _witnessDeserializeProp<P>(
     case 1:
       return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
-    case 4:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readBool(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -392,31 +416,30 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameIsNull() {
+      cnicBackFilenameIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
       ));
     });
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameIsNotNull() {
+      cnicBackFilenameIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
       ));
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameEqualTo(
+  QueryBuilder<Witness, Witness, QAfterFilterCondition> cnicBackFilenameEqualTo(
     String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -424,7 +447,7 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameGreaterThan(
+      cnicBackFilenameGreaterThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -432,7 +455,7 @@ extension WitnessQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -440,7 +463,7 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameLessThan(
+      cnicBackFilenameLessThan(
     String? value, {
     bool include = false,
     bool caseSensitive = true,
@@ -448,15 +471,14 @@ extension WitnessQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameBetween(
+  QueryBuilder<Witness, Witness, QAfterFilterCondition> cnicBackFilenameBetween(
     String? lower,
     String? upper, {
     bool includeLower = true,
@@ -465,7 +487,7 @@ extension WitnessQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -476,13 +498,13 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameStartsWith(
+      cnicBackFilenameStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -490,13 +512,13 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameEndsWith(
+      cnicBackFilenameEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -504,21 +526,22 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameContains(String value, {bool caseSensitive = true}) {
+      cnicBackFilenameContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<Witness, Witness, QAfterFilterCondition> cnicBackFilenameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -526,20 +549,174 @@ extension WitnessQueryFilter
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameIsEmpty() {
+      cnicBackFilenameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
         value: '',
       ));
     });
   }
 
   QueryBuilder<Witness, Witness, QAfterFilterCondition>
-      cnicImageFilenameIsNotEmpty() {
+      cnicBackFilenameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'cnicImageFilename',
+        property: r'cnicBackFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cnicFrontFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cnicFrontFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cnicFrontFilename',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'cnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'cnicFrontFilename',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cnicFrontFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterFilterCondition>
+      cnicFrontFilenameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'cnicFrontFilename',
         value: '',
       ));
     });
@@ -910,6 +1087,16 @@ extension WitnessQueryFilter
     });
   }
 
+  QueryBuilder<Witness, Witness, QAfterFilterCondition> isPrimaryEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPrimary',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Witness, Witness, QAfterFilterCondition> phoneNumberEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1209,15 +1396,27 @@ extension WitnessQuerySortBy on QueryBuilder<Witness, Witness, QSortBy> {
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicImageFilename() {
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicBackFilename() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cnicImageFilename', Sort.asc);
+      return query.addSortBy(r'cnicBackFilename', Sort.asc);
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicImageFilenameDesc() {
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicBackFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cnicImageFilename', Sort.desc);
+      return query.addSortBy(r'cnicBackFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicFrontFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cnicFrontFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByCnicFrontFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cnicFrontFilename', Sort.desc);
     });
   }
 
@@ -1254,6 +1453,18 @@ extension WitnessQuerySortBy on QueryBuilder<Witness, Witness, QSortBy> {
   QueryBuilder<Witness, Witness, QAfterSortBy> sortByFullNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByIsPrimary() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPrimary', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> sortByIsPrimaryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPrimary', Sort.desc);
     });
   }
 
@@ -1296,15 +1507,27 @@ extension WitnessQuerySortThenBy
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicImageFilename() {
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicBackFilename() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cnicImageFilename', Sort.asc);
+      return query.addSortBy(r'cnicBackFilename', Sort.asc);
     });
   }
 
-  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicImageFilenameDesc() {
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicBackFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cnicImageFilename', Sort.desc);
+      return query.addSortBy(r'cnicBackFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicFrontFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cnicFrontFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByCnicFrontFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cnicFrontFilename', Sort.desc);
     });
   }
 
@@ -1356,6 +1579,18 @@ extension WitnessQuerySortThenBy
     });
   }
 
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByIsPrimary() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPrimary', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QAfterSortBy> thenByIsPrimaryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPrimary', Sort.desc);
+    });
+  }
+
   QueryBuilder<Witness, Witness, QAfterSortBy> thenByPhoneNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phoneNumber', Sort.asc);
@@ -1390,10 +1625,18 @@ extension WitnessQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Witness, Witness, QDistinct> distinctByCnicImageFilename(
+  QueryBuilder<Witness, Witness, QDistinct> distinctByCnicBackFilename(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'cnicImageFilename',
+      return query.addDistinctBy(r'cnicBackFilename',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QDistinct> distinctByCnicFrontFilename(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cnicFrontFilename',
           caseSensitive: caseSensitive);
     });
   }
@@ -1415,6 +1658,12 @@ extension WitnessQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'fullName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Witness, Witness, QDistinct> distinctByIsPrimary() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPrimary');
     });
   }
 
@@ -1447,9 +1696,15 @@ extension WitnessQueryProperty
     });
   }
 
-  QueryBuilder<Witness, String?, QQueryOperations> cnicImageFilenameProperty() {
+  QueryBuilder<Witness, String?, QQueryOperations> cnicBackFilenameProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'cnicImageFilename');
+      return query.addPropertyName(r'cnicBackFilename');
+    });
+  }
+
+  QueryBuilder<Witness, String?, QQueryOperations> cnicFrontFilenameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cnicFrontFilename');
     });
   }
 
@@ -1468,6 +1723,12 @@ extension WitnessQueryProperty
   QueryBuilder<Witness, String, QQueryOperations> fullNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fullName');
+    });
+  }
+
+  QueryBuilder<Witness, bool, QQueryOperations> isPrimaryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPrimary');
     });
   }
 

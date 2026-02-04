@@ -30,41 +30,85 @@ class BikeSelector extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         
-        // Grid
+        // Grouped List
         Expanded(
           child: Obx(() {
-            // Filter only available bikes
-            final bikes = invController.filteredBikes
-                .where((b) => b.status == 'available')
-                .toList();
+            final groupedBikes = saleController.groupedBikes;
 
-            if (bikes.isEmpty) {
+            if (groupedBikes.isEmpty) {
               return const Center(child: Text('No available bikes found.'));
             }
 
-            return GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                 crossAxisCount: 3,
-                 childAspectRatio: 0.8,
-                 crossAxisSpacing: 16,
-                 mainAxisSpacing: 16,
-              ),
-              itemCount: bikes.length,
+            return ListView.builder(
+              itemCount: groupedBikes.length,
               itemBuilder: (context, index) {
-                final bike = bikes[index];
-                return Obx(() {
-                    final isSelected = saleController.selectedBike.value == bike;
-                    return GestureDetector(
-                      onTap: () => saleController.selectedBike.value = bike,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: isSelected ? Border.all(color: AppColors.darkPrimary, width: 3) : null,
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
-                        child: BikeCard(bike: bike),
+                final model = groupedBikes.keys.elementAt(index);
+                final bikes = groupedBikes[model]!;
+                
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ExpansionTile(
+                    title: Text(model, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: (Get.isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    );
-                });
+                      child: Text(
+                        '${bikes.length}', 
+                        style: TextStyle(
+                          color: Get.isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary, 
+                          fontWeight: FontWeight.bold
+                        )
+                      ),
+                    ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                             crossAxisCount: 3,
+                             childAspectRatio: 0.8,
+                             crossAxisSpacing: 8,
+                             mainAxisSpacing: 8,
+                          ),
+                          itemCount: bikes.length,
+                          itemBuilder: (context, bikeIndex) {
+                            final bike = bikes[bikeIndex];
+                            return Obx(() {
+                                final isSelected = saleController.selectedBike.value == bike;
+                                return GestureDetector(
+                                  onTap: () {
+                                    saleController.selectedBike.value = bike;
+                                    // Auto-scroll to customer section
+                                    Future.delayed(const Duration(milliseconds: 300), () {
+                                      if (saleController.customerSectionKey.currentContext != null) {
+                                        Scrollable.ensureVisible(
+                                          saleController.customerSectionKey.currentContext!,
+                                          duration: const Duration(milliseconds: 500),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      }
+                                    });
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: isSelected ? Border.all(color: AppColors.darkPrimary, width: 3) : null,
+                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                    ),
+                                    child: BikeCard(bike: bike),
+                                  ),
+                                );
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               },
             );
           }),

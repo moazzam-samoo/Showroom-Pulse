@@ -71,7 +71,7 @@ class CustomerFormStep extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Row(
+        Row(
             children: [
               Expanded(child: AppTextField(
                 label: 'Full Name', 
@@ -80,17 +80,29 @@ class CustomerFormStep extends StatelessWidget {
               )),
               const SizedBox(width: 16),
               Expanded(child: AppTextField(
-                label: 'Phone Number', 
-                prefixIcon: LucideIcons.phone,
-                controller: controller.customerPhoneController,
+                label: 'Father Name', 
+                prefixIcon: LucideIcons.users,
+                controller: controller.customerFatherNameController,
               )),
             ],
           ),
           const SizedBox(height: 16),
-          AppTextField(
-            label: 'CNIC Number', 
-            prefixIcon: LucideIcons.creditCard,
-            controller: controller.customerCnicController,
+          Row(
+            children: [
+              Expanded(child: AppTextField(
+                label: 'Phone Number', 
+                hint: '03XX-XXXXXXX',
+                prefixIcon: LucideIcons.phone,
+                controller: controller.customerPhoneController,
+              )),
+              const SizedBox(width: 16),
+              Expanded(child: AppTextField(
+                label: 'CNIC Number', 
+                hint: '35201-1234567-8',
+                prefixIcon: LucideIcons.creditCard,
+                controller: controller.customerCnicController,
+              )),
+            ],
           ),
           const SizedBox(height: 16),
           AppTextField(
