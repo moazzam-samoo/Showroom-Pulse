@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 /// FileService - Handles Windows file system operations
 /// 
@@ -137,6 +139,129 @@ class FileService extends GetxService {
     return p.join(customersMediaPath, sanitizedCnic, 'Witness', filename);
   }
 
+  // --- Supplier Media ---
+
+  String get suppliersMediaPath => p.join(mediaPath, 'Suppliers');
+
+  /// Get (and create) the path for a supplier's media folder
+  Future<String> getSupplierBasePath(String supplierName) async {
+    final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    final path = p.join(suppliersMediaPath, sanitized);
+    
+    final directory = Directory(path);
+    if (!await Directory(path).exists()) {
+      await Directory(path).create(recursive: true);
+    }
+    return path;
+  }
+
+  Future<void> deleteSupplierDirectory(String supplierName) async {
+    final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    final path = p.join(suppliersMediaPath, sanitized);
+    final directory = Directory(path);
+    if (await directory.exists()) {
+      await directory.delete(recursive: true);
+    }
+  }
+
+  Future<void> renameSupplierDirectory(String oldName, String newName) async {
+    final oldSanitized = oldName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    final newSanitized = newName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    
+    if (oldSanitized == newSanitized) return; // No change in folder name
+
+    final oldPath = p.join(suppliersMediaPath, oldSanitized);
+    final newPath = p.join(suppliersMediaPath, newSanitized);
+    
+    final oldDir = Directory(oldPath);
+    if (await oldDir.exists()) {
+      await oldDir.rename(newPath);
+    }
+  }
+
+  /// Save supplier profile picture
+  /// Path: Media/Suppliers/{Name}/Profile/profile.jpg
+  Future<String> saveSupplierProfile(File sourceFile, String supplierName) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    final profilePath = p.join(basePath, 'Profile');
+    
+    if (!await Directory(profilePath).exists()) {
+      await Directory(profilePath).create(recursive: true);
+    }
+
+    final extension = p.extension(sourceFile.path);
+    final filename = 'profile$extension';
+    final destPath = p.join(profilePath, filename);
+    
+    await sourceFile.copy(destPath);
+    return filename; // We only store filename, logic knows it's in Profile/
+  }
+
+  /// Save supplier CNIC picture
+  /// Path: Media/Suppliers/{Name}/CNIC/cnic.jpg
+  Future<String> saveSupplierCnic(File sourceFile, String supplierName) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    final cnicPath = p.join(basePath, 'CNIC');
+    
+    if (!await Directory(cnicPath).exists()) {
+      await Directory(cnicPath).create(recursive: true);
+    }
+
+    final extension = p.extension(sourceFile.path);
+    final filename = 'cnic$extension';
+    final destPath = p.join(cnicPath, filename);
+    
+    await sourceFile.copy(destPath);
+    return filename;
+  }
+
+  /// Save purchase batch invoice image
+  /// Path: Media/Suppliers/{Name}/{YYYY-MM-DD}/inv_{batchId}.jpg
+  Future<String> saveInvoiceImage(File sourceFile, String supplierName, String batchId) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    
+    // Create Date Folder
+    final now = DateTime.now();
+    final dateFolder = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final invoicePath = p.join(basePath, dateFolder);
+
+    if (!await Directory(invoicePath).exists()) {
+      await Directory(invoicePath).create(recursive: true);
+    }
+
+    final extension = p.extension(sourceFile.path);
+    final filename = 'inv_$batchId$extension'; // Filename
+    // Store relative path from Supplier Base for easier retrieval or just use logic?
+    // User asked for "one dated folder of sales that have receipt".
+    // We will return the relative path from the Supplier Base so we can find it later easily,
+    // OR we just store the filename and reconstructed the path if we have the date?
+    // PurchaseBatch model has `billImageFilename`.
+    // It has `purchaseDate`.
+    // So we can reconstruct `Suppliers/{Name}/{Date}/Filename`.
+    
+    final destPath = p.join(invoicePath, filename);
+    await sourceFile.copy(destPath);
+    return filename;
+  }
+
+  // --- Retrievers ---
+
+  Future<String> getSupplierProfilePath(String supplierName, String filename) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    return p.join(basePath, 'Profile', filename);
+  }
+
+  Future<String> getSupplierCnicPath(String supplierName, String filename) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    return p.join(basePath, 'CNIC', filename);
+  }
+
+  Future<String> getInvoiceImagePath(String supplierName, DateTime date, String filename) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    final dateFolder = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return p.join(basePath, dateFolder, filename);
+  }
+
   /// Check if a file exists
   Future<bool> fileExists(String path) async {
     return await File(path).exists();
@@ -148,6 +273,47 @@ class FileService extends GetxService {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  /// Rename a batch directory when the date changes
+  Future<void> renameBatchDirectory(String supplierName, DateTime oldDate, DateTime newDate) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    final oldFolderName = '${oldDate.year}-${oldDate.month.toString().padLeft(2, '0')}-${oldDate.day.toString().padLeft(2, '0')}';
+    final newFolderName = '${newDate.year}-${newDate.month.toString().padLeft(2, '0')}-${newDate.day.toString().padLeft(2, '0')}';
+
+    final oldPath = p.join(basePath, oldFolderName);
+    final newPath = p.join(basePath, newFolderName);
+
+    if (oldPath != newPath && await Directory(oldPath).exists()) {
+       await Directory(oldPath).rename(newPath);
+    }
+  }
+
+  /// Delete a batch directory
+  Future<void> deleteBatchDirectory(String supplierName, DateTime date) async {
+    final basePath = await getSupplierBasePath(supplierName);
+    final folderName = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final path = p.join(basePath, folderName);
+
+    if (await Directory(path).exists()) {
+      await Directory(path).delete(recursive: true);
+    }
+  }
+
+  /// Pick an image from gallery/filesystem
+  Future<File?> pickImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        return File(result.files.single.path!);
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+    return null;
   }
 }
 

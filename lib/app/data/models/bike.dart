@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 
 part 'bike.g.dart';
 
@@ -24,33 +25,30 @@ class Bike {
   @Index(unique: true)
   late String chassisNumber;
 
-  /// Brand name (Honda, Suzuki, Yamaha, etc.)
+  // -- Specs --
+  late String model; // Changed from modelName to match UI convention
   late String brand;
-
-  /// Model name (CG125, GS150, YBR125, etc.)
-  late String model;
-
-  /// Color of the bike
   late String color;
+  
+  /// Manufacturing Year (V2)
+  late int modelYear;
 
-  /// Year of manufacture
-  int? year;
-
-  /// Stock quantity (usually 1)
-  int stock = 1;
-
-  /// Purchase price (dealer cost)
+  // -- Financials --
+  /// Purchase Price per unit (V2) - Source of truth for cost
   late double purchasePrice;
 
-  /// Selling price (cash price)
-  late double sellingPrice;
+  @Index() 
+  late double cashSalePrice;
 
-  /// Current status
+  // -- Media --
+  String? imageFilename; // Stored as [engineNumber].jpg in Media/Bikes/
+
+  // -- Status --
   @enumerated
   BikeStatusEnum status = BikeStatusEnum.available;
 
-  /// Image filename (stored in Media/Bikes/)
-  String? imageFilename;
+  // -- Relationships --
+  final batch = IsarLink<PurchaseBatch>(); // Link to source batch (V2)
 
   /// Date added to inventory
   DateTime dateAdded = DateTime.now();

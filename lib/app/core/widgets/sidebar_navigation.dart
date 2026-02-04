@@ -48,17 +48,18 @@ class SidebarNavigation extends StatelessWidget {
             child: Column(
               children: [
                 _buildNavItem(0, LucideIcons.layoutDashboard, 'Dashboard', isDark),
-                _buildNavItem(1, LucideIcons.bike, 'Inventory', isDark),
-                _buildNavItem(2, LucideIcons.shoppingCart, 'Sales', isDark),
-                _buildNavItem(3, LucideIcons.users, 'Customers', isDark),
-                _buildNavItem(4, LucideIcons.barChart3, 'Reports', isDark),
+                _buildNavItem(1, LucideIcons.truck, 'Dealers', isDark), // New Tab
+                _buildNavItem(2, LucideIcons.bike, 'Inventory', isDark),
+                _buildNavItem(3, LucideIcons.shoppingCart, 'Sales', isDark),
+                _buildNavItem(4, LucideIcons.users, 'Customers', isDark),
+                _buildNavItem(5, LucideIcons.barChart3, 'Reports', isDark),
               ],
             ),
           ),
           // Bottom Items
-          _buildNavItem(5, LucideIcons.settings, 'Settings', isDark),
+          _buildNavItem(6, LucideIcons.settings, 'Settings', isDark),
           const SizedBox(height: AppSpacing.base),
-          _buildNavItem(6, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
+          _buildNavItem(7, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
           const SizedBox(height: AppSpacing.base),
         ],
       ),

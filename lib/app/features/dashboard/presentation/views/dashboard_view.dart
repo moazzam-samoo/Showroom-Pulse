@@ -46,6 +46,29 @@ class _DashboardViewState extends State<DashboardView> {
             selectedIndex: _selectedNavIndex,
             onItemSelected: (index) {
               setState(() => _selectedNavIndex = index);
+              switch (index) {
+                case 0:
+                  // Already on Dashboard
+                  break;
+                case 1:
+                   Get.offNamed('/procurement');
+                   break;
+                case 2:
+                  Get.offNamed('/inventory');
+                  break;
+                case 3:
+                  Get.offNamed('/sales');
+                  break;
+                case 4:
+                  Get.offNamed('/customers');
+                  break;
+                case 5:
+                  Get.offNamed('/reports');
+                  break;
+                case 6:
+                  Get.offNamed('/settings');
+                  break;
+              }
             },
           ),
           // Main Content

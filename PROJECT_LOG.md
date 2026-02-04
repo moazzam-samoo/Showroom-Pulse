@@ -57,13 +57,44 @@
 
 ## Upcoming Phases
 
+## Phase 3: Inventory Management (`feature/inventory` branch)
+
+| Commit | Date | Day | Description | Status |
+|--------|------|-----|-------------|--------|
+| `pending` | 2026-01-27 | Monday | feat(inventory): Implement Inventory UI & Logic | ✅ |
+| `pending` | 2026-01-27 | Monday | fix(nav): Fix sidebar navigation switching | ✅ |
+
+**Inventory UI:** ✅ Complete
+**Inventory Logic:** ✅ Complete
+
+---
+
+## Phase 4: Procurement (`feature/procurement` branch)
+
+| Commit | Date | Day | Description | Status |
+|--------|------|-----|-------------|--------|
+| `pending` | 2026-01-27 | Monday | feat(procurement): Create AddStockView with batch entry logic | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(procurement): Create SupplierHistoryView with purchase lists | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(procurement): Implement Supplier Service & Controller | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(files): Implement FileService for Supplier/Batch Media | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(procurement): Add Supplier Images (Profile & CNIC) | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(procurement): Implement Full Batch Edit & Delete | ✅ |
+| `pending` | 2026-01-27 | Monday | feat(procurement): Implement Supplier Edit & Cascading Delete | ✅ |
+
+**Procurement UI:** ✅ Complete
+**Procurement Logic:** ✅ Complete
+**File System Sync:** ✅ Complete
+
+---
+
+## Upcoming Phases
+
 | Phase | Branch | Status |
 |-------|--------|--------|
-| Phase 3 | `feature/inventory` | ⏳ Pending |
-| Phase 4 | `feature/sales` | ⏳ Pending |
-| Phase 5 | `feature/customers` | ⏳ Pending |
-| Phase 5 | `feature/reports` | ⏳ Pending |
-| Phase 6 | `feature/settings` | ⏳ Pending |
+| Phase 5 | `feature/sales` | ⏳ Pending |
+| Phase 6 | `feature/customers` | ⏳ Pending |
+| Phase 7 | `feature/reports` | ⏳ Pending |
+| Phase 8 | `feature/settings` | ⏳ Pending |
 
 ---
 

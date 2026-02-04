@@ -10,6 +10,8 @@ import '../../data/models/payment.dart';
 import '../../data/models/witness.dart';
 import '../../data/models/user.dart';
 import '../../data/models/app_settings.dart';
+import '../../data/models/supplier.dart';
+import '../../data/models/purchase_batch.dart';
 
 /// IsarService - Handles Isar database operations
 /// 
@@ -32,6 +34,8 @@ class IsarService extends GetxService {
         WitnessSchema,
         UserSchema,
         AppSettingsSchema,
+        SupplierSchema,
+        PurchaseBatchSchema,
       ],
       directory: fileService.databasePath,
       name: 'default',
