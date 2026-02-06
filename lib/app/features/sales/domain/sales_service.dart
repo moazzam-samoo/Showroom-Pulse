@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
@@ -124,9 +125,16 @@ class SalesService {
       isPrimary: w.isPrimary,
     )).toList();
 
+    // Convert bike image filename to full path
+    final fileService = Get.find<FileService>();
+    String bikeImagePath = '';
+    if (bike.imageFilename != null && bike.imageFilename!.isNotEmpty) {
+      bikeImagePath = fileService.getBikeImagePath(bike.imageFilename!);
+    }
+
     return SaleCardData(
       bikeModel: '${bike.brand} ${bike.model}',
-      bikeImage: bike.imageFilename ?? 'assets/Placeholders/bike_placeholder.png',
+      bikeImage: bikeImagePath,
       bikeChassisNumber: bike.chassisNumber,
       bikeEngineNumber: bike.engineNumber,
       customerName: customer.fullName,

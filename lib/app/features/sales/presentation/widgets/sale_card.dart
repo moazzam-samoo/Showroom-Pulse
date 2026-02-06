@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -126,28 +127,38 @@ class SaleCard extends StatelessWidget {
             // 1. Image Header with Badge
             Stack(
               children: [
-                // Bike Image
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-                  child: SizedBox(
-                    height: 140,
-                    width: double.infinity,
-                    child: Image.asset(
-                      data.bikeImage,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
-                        child: Center(
-                          child: Icon(
-                            LucideIcons.bike,
-                            size: 48,
-                            color: isDark ? Colors.white12 : Colors.grey,
-                          ),
-                        ),
-                      ),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+                    child: SizedBox(
+                      height: 140,
+                      width: double.infinity,
+                      child: data.bikeImage.isNotEmpty
+                          ? Image.file(
+                              File(data.bikeImage),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
+                                child: Center(
+                                  child: Icon(
+                                    LucideIcons.bike,
+                                    size: 48,
+                                    color: isDark ? Colors.white12 : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
+                              child: Center(
+                                child: Icon(
+                                  LucideIcons.bike,
+                                  size: 48,
+                                  color: isDark ? Colors.white12 : Colors.grey,
+                                ),
+                              ),
+                            ),
                     ),
                   ),
-                ),
                 // Gradient Overlay
                 Positioned.fill(
                   child: DecoratedBox(
