@@ -48,8 +48,8 @@ class NewSaleController extends GetxController {
   // Installment Controllers
   final downPaymentController = TextEditingController();
   final monthsController = TextEditingController(text: '12');
-  final markupType = MarkupType.percentage.obs;
-  final markupValueController = TextEditingController(text: '40');
+  final markupType = MarkupType.fixed.obs;
+  final markupValueController = TextEditingController(text: '0');
   
   // Witness 1 (Mandatory)
   final witness1NameController = TextEditingController();
