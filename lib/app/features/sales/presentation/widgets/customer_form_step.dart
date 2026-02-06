@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_sale_controller.dart';
@@ -113,14 +115,35 @@ class CustomerFormStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
-          // Image Upload Placeholders
+          // Image Upload Pickers (Now Clickable!)
           Row(
             children: [
-              Expanded(child: _imagePlaceholder('Profile Photo')),
+              Expanded(
+                child: _buildImagePicker(
+                  context,
+                  label: 'Profile Photo',
+                  imagePath: controller.customerProfileImagePath,
+                  onPick: () => _pickImage(controller.customerProfileImagePath),
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: _imagePlaceholder('CNIC Front')),
+              Expanded(
+                child: _buildImagePicker(
+                  context,
+                  label: 'CNIC Front',
+                  imagePath: controller.customerCnicFrontPath,
+                  onPick: () => _pickImage(controller.customerCnicFrontPath),
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: _imagePlaceholder('CNIC Back')),
+              Expanded(
+                child: _buildImagePicker(
+                  context,
+                  label: 'CNIC Back',
+                  imagePath: controller.customerCnicBackPath,
+                  onPick: () => _pickImage(controller.customerCnicBackPath),
+                ),
+              ),
             ],
           ),
         ],
@@ -128,22 +151,98 @@ class CustomerFormStep extends StatelessWidget {
     );
   }
 
-  Widget _imagePlaceholder(String label) {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(LucideIcons.camera, color: Colors.grey),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: Colors.grey)),
-        ],
-      ),
+  Widget _buildImagePicker(
+    BuildContext context, {
+    required String label,
+    required RxnString imagePath,
+    required VoidCallback onPick,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Obx(() {
+      final hasImage = imagePath.value != null;
+
+      return GestureDetector(
+        onTap: onPick,
+        child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hasImage
+                  ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+                  : Colors.grey.withOpacity(0.3),
+              width: hasImage ? 2 : 1,
+            ),
+          ),
+          child: hasImage
+              ? Stack(
+                  children: [
+                    // Image Preview
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(imagePath.value!),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
+                    ),
+                    // Remove Button
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => imagePath.value = null,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            LucideIcons.x,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(LucideIcons.camera, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Click to upload',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _pickImage(RxnString pathVariable) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
     );
+
+    if (result != null && result.files.isNotEmpty) {
+      pathVariable.value = result.files.first.path;
+    }
   }
 }

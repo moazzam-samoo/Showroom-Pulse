@@ -6,6 +6,7 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
+import '../controllers/dashboard_controller.dart';
 
 import '../widgets/kpi_section.dart';
 import '../widgets/performance_chart.dart';
@@ -31,6 +32,7 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   int _selectedNavIndex = 0;
+  final DashboardController controller = Get.put(DashboardController());
 
   @override
   Widget build(BuildContext context) {
@@ -84,17 +86,17 @@ class _DashboardViewState extends State<DashboardView> {
                     child: Column(
                       children: [
                         // KPI Section
-                        const KpiSection(
-                          totalAssetValue: 'Rs. 54.5M',
-                          totalAssetGrowth: '+5.2% MTD Growth',
-                          unitsInStock: 145,
-                          lowStockAlert: 4,
-                          monthlySalesRevenue: 'Rs. 8.2M',
+                        Obx(() => KpiSection(
+                          totalAssetValue: 'Rs. ${(controller.totalAssetValue.value / 1000000).toStringAsFixed(1)}M',
+                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD Growth',
+                          unitsInStock: controller.unitsInStock.value,
+                          lowStockAlert: controller.lowStockAlert.value,
+                          monthlySalesRevenue: 'Rs. ${(controller.monthlyRevenue.value / 1000000).toStringAsFixed(1)}M',
                           salesTarget: 'Rs. 10.0M',
-                          salesProgress: 82,
-                          criticalArrears: 'Rs. 1.25M',
-                          accountsOverdue: 5,
-                        ),
+                          salesProgress: controller.revenueOnTrack.value ? 82 : 50,
+                          criticalArrears: 'Rs. ${(controller.pendingInstallments.value / 1000000).toStringAsFixed(2)}M',
+                          accountsOverdue: controller.overdueInstallments.value,
+                        )),
                         const SizedBox(height: AppSpacing.lg),
                         // Charts Row
                         SizedBox(
@@ -104,31 +106,33 @@ class _DashboardViewState extends State<DashboardView> {
                               // Performance Chart
                               Expanded(
                                 flex: 2,
-                                child: PerformanceChart(
-                                  weeklyData: [30, 50, 20, 60, 40, 80, 70],
-                                  todaySales: 12,
-                                ),
+                                child: Obx(() => PerformanceChart(
+                                  weeklyData: controller.weeklySalesData.isNotEmpty 
+                                      ? controller.weeklySalesData.toList() 
+                                      : [0, 0, 0, 0, 0, 0, 0],
+                                  todaySales: controller.todaySalesCount.value,
+                                )),
                               ),
                               const SizedBox(width: AppSpacing.lg),
                               // Stock Allocation
-                              const Expanded(
+                              Expanded(
                                 flex: 1,
-                                child: StockAllocationChart(
-                                  newModelsPercent: 70,
-                                  newModelsCount: 82,
-                                  preOwnedPercent: 30,
-                                  preOwnedCount: 63,
-                                ),
+                                child: Obx(() => StockAllocationChart(
+                                  newModelsPercent: controller.newModelsPercent.value,
+                                  newModelsCount: controller.newModelsCount.value,
+                                  preOwnedPercent: controller.preOwnedPercent.value,
+                                  preOwnedCount: controller.preOwnedCount.value,
+                                )),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        // Transaction Feed
-                        SizedBox(
+                        // Transaction Feed (using Recent Sales data)
+                        const SizedBox(
                           height: 350,
                           child: LiveTransactionFeed(
-                            transactions: _getSampleTransactions(),
+                            transactions: [], // Empty for now - could add getRecentTransactions method
                           ),
                         ),
                       ],
@@ -264,46 +268,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  List<Transaction> _getSampleTransactions() {
-    return [
-      const Transaction(
-        id: '1',
-        assetModel: 'Honda CD70',
-        vin: 'A827',
-        stakeholder: 'Ali Khan',
-        stakeholderContact: 'Verified Buyer',
-        reference: 'INV-2023-1042',
-        referenceDate: 'Oct 24, 10:30',
-        value: 'Rs. 155,000',
-        valueType: 'Full Cash Payment',
-        status: 'COMPLETED',
-      ),
-      const Transaction(
-        id: '2',
-        assetModel: 'Honda CG125',
-        vin: 'A921',
-        stakeholder: 'Ahmed Hassan',
-        stakeholderContact: 'Verified @ A201+',
-        reference: 'INV-2023-1041',
-        referenceDate: 'Oct 23, 14:00',
-        value: 'Rs. 280,000',
-        valueType: 'Full Cash Payment',
-        status: 'PENDING',
-      ),
-      const Transaction(
-        id: '3',
-        assetModel: 'Suzuki GS150',
-        vin: 'A102',
-        stakeholder: 'Usman Tariq',
-        stakeholderContact: 'New Customer',
-        reference: 'INV-2023-1040',
-        referenceDate: 'Oct 23, 11:50',
-        value: 'Rs. 320,000',
-        valueType: 'Installment Plan',
-        status: 'COMPLETED',
-      ),
-    ];
-  }
+  // Removed _getSampleTransactions() method - using real data now
 }
 
 // Authored by: Moazzam Samoo

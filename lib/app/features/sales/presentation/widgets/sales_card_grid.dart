@@ -12,103 +12,19 @@ class SalesCardGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Mock Data simulating real Sales
-    final List<SaleCardData> mockSales = [
-      SaleCardData(
-        bikeModel: 'Honda CG125 2024',
-        bikeImage: 'assets/Placeholders/bike_placeholder.png', 
-        bikeChassisNumber: 'H125-24-998877',
-        bikeEngineNumber: 'E125-24-112233',
-        customerName: 'Ali Khan',
-        customerCnic: '35201-1234567-8',
-        customerContact: '0300-1234567',
-        customerAddress: 'House 42, St 5, Model Colony, Lahore',
-        saleDate: '24/10/2023',
-        amountPaid: 280000,
-        bikePrice: 285000,
-        isCash: true,
-      ),
-      SaleCardData(
-        bikeModel: 'United US70 2023',
-        bikeImage: 'assets/Placeholders/bike_placeholder.png',
-        bikeChassisNumber: 'U70-23-445566',
-        bikeEngineNumber: 'EU70-23-778899',
-        customerName: 'Muhammad Hamza',
-        customerCnic: '35201-9876543-1',
-        customerContact: '0321-9876543',
-        customerAddress: 'Shop 12, Motorcycle Market, Multan Road',
-        saleDate: '28/01/2026',
-        amountPaid: 45000,
-        bikePrice: 130000,
-        sellingPrice: 135000,
-        amountRemaining: 85000,
-        installmentDuration: 12,
-        installmentMonthlyPayment: 7100,
-        installmentDueDate: '10/02/2026',
-        witnessName: 'Ahmed Raza',
-        witnessCnic: '35201-1112223-3',
-        witnessPhone: '0300-9988776',
-        isCash: false,
-      ),
-      SaleCardData(
-        bikeModel: 'Suzuki GS150 SE',
-        bikeImage: 'assets/Placeholders/bike_placeholder.png',
-        bikeChassisNumber: 'S150-24-665544',
-        bikeEngineNumber: 'ES150-24-223344',
-        customerName: 'Bilal Ahmed',
-        customerCnic: '35202-5555555-5',
-        customerContact: '0333-5555555',
-        customerAddress: 'Plot 55, Block B, DHA Phase 6',
-        saleDate: '29/01/2026',
-        amountPaid: 365000,
-        bikePrice: 370000,
-        isCash: true,
-      ),
-       SaleCardData(
-        bikeModel: 'Honda CD70 Dream',
-        bikeImage: 'assets/Placeholders/bike_placeholder.png',
-        bikeChassisNumber: 'CD70-24-112233',
-        bikeEngineNumber: 'ECD70-24-445566',
-        customerName: 'Tahir Mehmood',
-        customerCnic: '35201-1112223-4',
-        customerContact: '0301-1112223',
-        customerAddress: 'Village 45, Near Main Road, Kasur',
-        saleDate: '30/01/2026',
-        amountPaid: 158000,
-        bikePrice: 160000,
-        isCash: true,
-      ),
-      SaleCardData(
-        bikeModel: 'Road Prince 70',
-        bikeImage: 'assets/Placeholders/bike_placeholder.png',
-        bikeChassisNumber: 'RP70-24-778899',
-        bikeEngineNumber: 'ERP70-24-112233',
-        customerName: 'Usman Ghani',
-        customerCnic: '35201-7778889-0',
-        customerContact: '0345-7778889',
-        customerAddress: 'Flat 404, Pearl Residency, Gulberg',
-        saleDate: '15/12/2025',
-        amountPaid: 25000,
-        bikePrice: 120000,
-        sellingPrice: 125000,
-        amountRemaining: 95000,
-        installmentDuration: 10,
-        installmentMonthlyPayment: 9500,
-        installmentDueDate: '15/01/2026',
-        witnessName: 'Kamran Akmal',
-        witnessCnic: '35202-4445556-9',
-        witnessPhone: '0333-1122334',
-        isCash: false,
-      ),
-    ];
-
     final controller = Get.find<SalesController>();
 
     return Expanded(
       child: Obx(() {
-        // 1. Filter Data based on Date Range
-        // 1. Filter Data based on Date Range
-        var filteredSales = mockSales.where((sale) {
+        // Show loading indicator while fetching data
+        if (controller.isLoading.value) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        // Use real sales data from controller
+        var filteredSales = controller.allSales.where((sale) {
           final saleDate = _parseDate(sale.saleDate);
           final now = DateTime.now();
           final range = controller.selectedDateRange.value;
@@ -124,7 +40,7 @@ class SalesCardGrid extends StatelessWidget {
           return true; // All Time
         }).toList();
 
-        // 1.5 Filter by Search Query
+        // Filter by Search Query
         final query = controller.searchQuery.value.toLowerCase();
         if (query.isNotEmpty) {
           filteredSales = filteredSales.where((sale) {
@@ -137,14 +53,14 @@ class SalesCardGrid extends StatelessWidget {
           }).toList();
         }
 
-        // 2. Sort Data by Date Descending
+        // Sort Data by Date Descending
         filteredSales.sort((a, b) {
            final dateA = _parseDate(a.saleDate);
            final dateB = _parseDate(b.saleDate);
            return dateB.compareTo(dateA);
         });
         
-        // 3. Filter by Status
+        // Filter by Status
         final status = controller.selectedStatus.value;
         
         final cashSales = filteredSales.where((s) => s.isCash).toList();

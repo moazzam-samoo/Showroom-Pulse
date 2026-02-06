@@ -9,6 +9,25 @@ import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/cash_sale_detail_dialog.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/installment_sale_detail_dialog.dart';
 
+/// WitnessData - Data class for witness information
+class WitnessData {
+  final String fullName;
+  final String cnicNumber;
+  final String phoneNumber;
+  final String? address;
+  final String? cnicFrontFilename;
+  final bool isPrimary;
+
+  WitnessData({
+    required this.fullName,
+    required this.cnicNumber,
+    required this.phoneNumber,
+    this.address,
+    this.cnicFrontFilename,
+    required this.isPrimary,
+  });
+}
+
 class SaleCardData {
   final String bikeModel;
   final String bikeImage; 
@@ -29,11 +48,14 @@ class SaleCardData {
   final double? installmentMonthlyPayment;
   final String? installmentDueDate;
   
-  // Witness Details
+  // Witness Details (for backward compatibility - primary witness)
   final String? witnessName;
   final String? witnessCnic;
   final String? witnessPhone;
   final String? witnessImage;
+  
+  // All witnesses (supports multiple witnesses)
+  final List<WitnessData>? witnesses;
 
   SaleCardData({
     required this.bikeModel,
@@ -58,6 +80,7 @@ class SaleCardData {
     this.witnessCnic,
     this.witnessPhone,
     this.witnessImage,
+    this.witnesses,
   });
 }
 
