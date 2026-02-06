@@ -273,6 +273,11 @@ class PriceSummaryCard extends StatelessWidget {
   }
 
   String _formatCurrency(double value) {
-    return 'Rs ${value.toStringAsFixed(0)}';
+    String price = value.toStringAsFixed(0);
+    String formattedPrice = price.replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
+    return 'Rs $formattedPrice';
   }
 }
