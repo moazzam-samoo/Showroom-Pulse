@@ -8,6 +8,8 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_sale_controller.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 
 class WitnessFormStep extends StatelessWidget {
   const WitnessFormStep({super.key});
@@ -193,6 +195,7 @@ class WitnessFormStep extends StatelessWidget {
                 hint: '35201-1234567-8',
                 prefixIcon: LucideIcons.creditCard,
                 controller: cnicController,
+                inputFormatters: [CnicInputFormatter()],
               ),
             ),
           ],
@@ -208,6 +211,7 @@ class WitnessFormStep extends StatelessWidget {
                 hint: '03XX-XXXXXXX',
                 prefixIcon: LucideIcons.phone,
                 controller: phoneController,
+                inputFormatters: [PhoneNumberInputFormatter()],
               ),
             ),
             const SizedBox(width: 16),

@@ -7,6 +7,8 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_sale_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 
 class CustomerFormStep extends StatelessWidget {
   const CustomerFormStep({super.key});
@@ -96,6 +98,7 @@ class CustomerFormStep extends StatelessWidget {
                 hint: '03XX-XXXXXXX',
                 prefixIcon: LucideIcons.phone,
                 controller: controller.customerPhoneController,
+                inputFormatters: [PhoneNumberInputFormatter()],
               )),
               const SizedBox(width: 16),
               Expanded(child: AppTextField(
@@ -103,6 +106,7 @@ class CustomerFormStep extends StatelessWidget {
                 hint: '35201-1234567-8',
                 prefixIcon: LucideIcons.creditCard,
                 controller: controller.customerCnicController,
+                inputFormatters: [CnicInputFormatter()],
               )),
             ],
           ),

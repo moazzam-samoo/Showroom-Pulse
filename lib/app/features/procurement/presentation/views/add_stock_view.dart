@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
@@ -110,16 +112,18 @@ class AddStockView extends GetView<SupplierController> {
                                      decoration: _inputDecoration('Phone', isDark),
                                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
                                      keyboardType: TextInputType.phone,
+                                     inputFormatters: [PhoneNumberInputFormatter()],
                                    ),
                                  ),
                                  const SizedBox(width: 8),
-                                 Expanded(
-                                   child: TextFormField(
-                                     controller: controller.newSupplierCnic,
-                                     decoration: _inputDecoration('CNIC (Optional)', isDark),
-                                     style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                                   ),
-                                 ),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: controller.newSupplierCnic,
+                                      decoration: _inputDecoration('CNIC (Optional)', isDark),
+                                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                                      inputFormatters: [CnicInputFormatter()],
+                                    ),
+                                  ),
                                ],
                              ),
                              const SizedBox(height: 8),
