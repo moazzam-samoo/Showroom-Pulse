@@ -90,12 +90,28 @@ class NewSaleView extends GetView<NewSaleController> {
           ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: controller.finalizeSale,
-        label: const Text('Complete Sale'),
-        icon: const Icon(LucideIcons.check),
-        backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-      ),
+      floatingActionButton: Obx(() {
+        final isProcessing = controller.isProcessingSale.value;
+        return FloatingActionButton.extended(
+          onPressed: isProcessing ? null : controller.finalizeSale,
+          label: isProcessing 
+            ? const Text('Processing...')
+            : const Text('Complete Sale'),
+          icon: isProcessing
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Icon(LucideIcons.check),
+          backgroundColor: isProcessing
+            ? (isDark ? AppColors.darkPrimary.withOpacity(0.5) : AppColors.lightPrimary.withOpacity(0.5))
+            : (isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+        );
+      }),
     );
   }
 
