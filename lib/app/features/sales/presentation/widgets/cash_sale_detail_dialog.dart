@@ -22,7 +22,7 @@ class CashSaleDetailDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 24),
       child: Container(
-        width: 650, // Slightly wider for better spacing
+        width: 850, // Wider to accommodate witness section
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.xxl),
@@ -44,9 +44,9 @@ class CashSaleDetailDialog extends StatelessWidget {
             // Header
             _buildHeader(context, isDark),
 
-            // Content Body (No Scroll)
+            // Content Body (Scrollable for witnesses)
             Flexible(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.xl, 
                   vertical: AppSpacing.lg
@@ -54,11 +54,12 @@ class CashSaleDetailDialog extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Top Row: Customer and Bike
                     IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Left Column: Customer Details (Wait.. swap? No, Customer left is standard)
+                          // Left Column: Customer Details
                           Expanded(
                             flex: 5,
                             child: _buildCustomerSection(isDark),
@@ -76,6 +77,13 @@ class CashSaleDetailDialog extends StatelessWidget {
                         ],
                       ),
                     ),
+
+                    const SizedBox(height: AppSpacing.xl),
+                    Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Witness Section
+                    _buildWitnessSection(isDark),
 
                     const SizedBox(height: AppSpacing.xl),
                     Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
@@ -197,6 +205,160 @@ class CashSaleDetailDialog extends StatelessWidget {
         const SizedBox(height: 6),
         _buildDetailRow('Engine', data.bikeEngineNumber, isDark, isMono: true),
       ],
+    );
+  }
+
+  Widget _buildWitnessSection(bool isDark) {
+    // Check if we have multiple witnesses
+    final hasMultipleWitnesses = data.witnesses != null && data.witnesses!.length > 1;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          hasMultipleWitnesses ? 'Witnesses Details' : 'Witness Details', 
+          LucideIcons.users, 
+          isDark
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        
+        // Display all witnesses if available
+        if (data.witnesses != null && data.witnesses!.isNotEmpty) ...[
+          // Display witnesses in a row or column based on count
+          if (hasMultipleWitnesses)
+            // Multiple witnesses - display in columns for better space usage
+            Wrap(
+              spacing: AppSpacing.xl,
+              runSpacing: AppSpacing.lg,
+              children: data.witnesses!.asMap().entries.map((entry) {
+                final index = entry.key;
+                final witness = entry.value;
+                final witnessNumber = index + 1;
+                
+                return Container(
+                  width: (850 - (AppSpacing.xl * 4)) / 2, // Two columns
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Witness header
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                        ),
+                        child: Text(
+                          'Witness $witnessNumber',
+                          style: GoogleFonts.outfit(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Photo
+                          _buildPhotoBox(witness.cnicFrontFilename, isDark, icon: LucideIcons.userCheck),
+                          const SizedBox(width: AppSpacing.md),
+                          Flexible(
+                            fit: FlexFit.tight,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildDetailRow('Name', witness.fullName, isDark, isBold: true),
+                                const SizedBox(height: 6),
+                                _buildDetailRow('Contact', witness.phoneNumber.isNotEmpty ? witness.phoneNumber : '-', isDark),
+                                const SizedBox(height: 6),
+                                _buildDetailRow('CNIC', witness.cnicNumber, isDark),
+                                if (witness.address != null && witness.address!.isNotEmpty) ...[
+                                  const SizedBox(height: 6),
+                                  _buildDetailRow('Address', witness.address!, isDark, maxLines: 2),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            )
+          else
+            // Single witness - centered display
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Photo
+                _buildPhotoBox(data.witnesses!.first.cnicFrontFilename, isDark, icon: LucideIcons.userCheck),
+                const SizedBox(width: AppSpacing.md),
+                Flexible(
+                  fit: FlexFit.tight,
+                  child: Column(
+                    children: [
+                      _buildDetailRow('Name', data.witnesses!.first.fullName, isDark, isBold: true),
+                      const SizedBox(height: 6),
+                      _buildDetailRow('Contact', data.witnesses!.first.phoneNumber.isNotEmpty ? data.witnesses!.first.phoneNumber : '-', isDark),
+                      const SizedBox(height: 6),
+                      _buildDetailRow('CNIC', data.witnesses!.first.cnicNumber, isDark),
+                      if (data.witnesses!.first.address != null && data.witnesses!.first.address!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        _buildDetailRow('Address', data.witnesses!.first.address!, isDark, maxLines: 2),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ] else ...[
+          // Fallback to single witness display if witnesses list is not available
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Photo
+              _buildPhotoBox(data.witnessImage, isDark, icon: LucideIcons.userCheck),
+              const SizedBox(width: AppSpacing.md),
+              Flexible(
+                fit: FlexFit.tight,
+                child: Column(
+                  children: [
+                    _buildDetailRow('Name', data.witnessName ?? '-', isDark, isBold: true),
+                    const SizedBox(height: 6),
+                    _buildDetailRow('Contact', data.witnessPhone ?? '-', isDark),
+                    const SizedBox(height: 6),
+                    _buildDetailRow('CNIC', data.witnessCnic ?? '-', isDark),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPhotoBox(String? imagePath, bool isDark, {required IconData icon, bool isAsset = false, double width = 60, double height = 60}) {
+    return Container(
+       width: width,
+       height: height,
+       decoration: BoxDecoration(
+         color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
+         borderRadius: BorderRadius.circular(AppRadius.lg),
+         border: Border.all(
+           color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
+         ),
+       ),
+       child: imagePath != null 
+         ? ClipRRect(
+             borderRadius: BorderRadius.circular(AppRadius.lg),
+             child: isAsset 
+               ? Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey))
+               : Image.network(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey)),
+           )
+         : Center(child: Icon(icon, color: isDark ? Colors.white24 : Colors.black26)),
     );
   }
 

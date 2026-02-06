@@ -135,30 +135,107 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
   }
 
   Widget _buildWitnessSection(bool isDark) {
+    // Check if we have multiple witnesses
+    final hasMultipleWitnesses = data.witnesses != null && data.witnesses!.length > 1;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('Witness Details', LucideIcons.users, isDark),
-        const SizedBox(height: AppSpacing.lg),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             // Photo
-            _buildPhotoBox(data.witnessImage, isDark, icon: LucideIcons.userCheck),
-            const SizedBox(width: AppSpacing.md),
-             Expanded(
-              child: Column(
-                children: [
-                  _buildDetailRow('Name', data.witnessName ?? '-', isDark, isBold: true),
-                  const SizedBox(height: 6),
-                  _buildDetailRow('Contact', data.witnessPhone ?? '-', isDark),
-                  const SizedBox(height: 6),
-                  _buildDetailRow('CNIC', data.witnessCnic ?? '-', isDark),
-                ],
-              ),
-            ),
-          ],
+        _buildSectionHeader(
+          hasMultipleWitnesses ? 'Witnesses Details' : 'Witness Details', 
+          LucideIcons.users, 
+          isDark
         ),
+        const SizedBox(height: AppSpacing.lg),
+        
+        // Display all witnesses if available
+        if (data.witnesses != null && data.witnesses!.isNotEmpty) ...[
+          // Display witnesses in a column
+          Column(
+            children: data.witnesses!.asMap().entries.map((entry) {
+              final index = entry.key;
+              final witness = entry.value;
+              final witnessNumber = index + 1;
+              
+              return Column(
+                children: [
+                  if (index > 0) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  // Witness header if multiple
+                  if (hasMultipleWitnesses) ...[
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: Text(
+                            'Witness $witnessNumber',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Photo
+                      _buildPhotoBox(witness.cnicFrontFilename, isDark, icon: LucideIcons.userCheck),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            _buildDetailRow('Name', witness.fullName, isDark, isBold: true),
+                            const SizedBox(height: 6),
+                            _buildDetailRow('Contact', witness.phoneNumber.isNotEmpty ? witness.phoneNumber : '-', isDark),
+                            const SizedBox(height: 6),
+                            _buildDetailRow('CNIC', witness.cnicNumber, isDark),
+                            if (witness.address != null && witness.address!.isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              _buildDetailRow('Address', witness.address!, isDark, maxLines: 2),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }).toList(),
+          ),
+        ] else ...[
+          // Fallback to single witness display if witnesses list is not available
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Photo
+              _buildPhotoBox(data.witnessImage, isDark, icon: LucideIcons.userCheck),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildDetailRow('Name', data.witnessName ?? '-', isDark, isBold: true),
+                    const SizedBox(height: 6),
+                    _buildDetailRow('Contact', data.witnessPhone ?? '-', isDark),
+                    const SizedBox(height: 6),
+                    _buildDetailRow('CNIC', data.witnessCnic ?? '-', isDark),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

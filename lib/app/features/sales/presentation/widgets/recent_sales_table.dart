@@ -1,12 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
 
-class RecentSalesTable extends StatelessWidget {
+class RecentSalesTable extends StatefulWidget {
   const RecentSalesTable({super.key});
+
+  @override
+  State<RecentSalesTable> createState() => _RecentSalesTableState();
+}
+
+class _RecentSalesTableState extends State<RecentSalesTable> {
+  final SalesService _salesService = SalesService();
+  List<SaleCardData> _recentSales = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSales();
+  }
+
+  Future<void> _loadRecentSales() async {
+    try {
+      final sales = await _salesService.getRecentSales(5);
+      setState(() {
+        _recentSales = sales;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      Get.snackbar(
+        'Error',
+        'Failed to load recent sales: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +83,9 @@ class RecentSalesTable extends StatelessWidget {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(LucideIcons.filter, size: 16),
-                    label: const Text('Filter'),
+                    onPressed: _loadRecentSales,
+                    icon: const Icon(LucideIcons.refreshCw, size: 16),
+                    label: const Text('Refresh'),
                   ),
                 ],
               ),
@@ -74,16 +111,39 @@ class RecentSalesTable extends StatelessWidget {
             const Divider(height: 1),
             // List
             Expanded(
-              child: ListView.separated(
-                itemCount: 5, // Mock data
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  return _buildRow(context, index)
-                      .animate(delay: (50 * index).ms)
-                      .fadeIn(duration: 300.ms)
-                      .slideX(begin: 0.05, end: 0, curve: Curves.easeOut);
-                },
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _recentSales.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                LucideIcons.inbox,
+                                size: 48,
+                                color: isDark ? Colors.white24 : Colors.black26,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No recent sales',
+                                style: TextStyle(
+                                  color: isDark ? Colors.white54 : Colors.black45,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: _recentSales.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            return _buildRow(context, _recentSales[index], isDark)
+                                .animate(delay: (50 * index).ms)
+                                .fadeIn(duration: 300.ms)
+                                .slideX(begin: 0.05, end: 0, curve: Curves.easeOut);
+                          },
+                        ),
             ),
           ],
         ),
@@ -105,9 +165,18 @@ class RecentSalesTable extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(BuildContext context, int index) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+  Widget _buildRow(BuildContext context, SaleCardData sale, bool isDark) {
+    // Extract initials from customer name
+    String getInitials(String name) {
+      final parts = name.split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else if (parts.isNotEmpty) {
+        return parts[0].substring(0, 2).toUpperCase();
+      }
+      return 'NA';
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -118,7 +187,7 @@ class RecentSalesTable extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'Oct 24, 2023',
+              sale.saleDate,
               style: TextStyle(
                 color: isDark ? Colors.white70 : Colors.black87,
                 fontSize: 13,
@@ -132,15 +201,21 @@ class RecentSalesTable extends StatelessWidget {
                 CircleAvatar(
                   radius: 12,
                   backgroundColor: Colors.blue.shade100,
-                  child: const Text('MS', style: TextStyle(fontSize: 10, color: Colors.blue)),
+                  child: Text(
+                    getInitials(sale.customerName),
+                    style: const TextStyle(fontSize: 10, color: Colors.blue),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Moazzam Samoo',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    sale.customerName,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -149,11 +224,12 @@ class RecentSalesTable extends StatelessWidget {
           Expanded(
             flex: 3,
             child: Text(
-              'Honda CG125 (Red)',
+              sale.bikeModel,
               style: TextStyle(
                 color: isDark ? Colors.white70 : Colors.black54,
                 fontSize: 13,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
@@ -163,23 +239,23 @@ class RecentSalesTable extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: index % 2 == 0 
-                    ? Colors.green.withOpacity(0.1) 
-                    : Colors.purple.withOpacity(0.1),
+                  color: sale.isCash
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.purple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppRadius.full), // Pill shape
                   border: Border.all(
-                    color: index % 2 == 0 
-                      ? Colors.green.withOpacity(0.2) 
-                      : Colors.purple.withOpacity(0.2),
+                    color: sale.isCash
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.purple.withOpacity(0.2),
                     width: 0.5,
                   ),
                 ),
                 child: Text(
-                  index % 2 == 0 ? 'Cash' : 'Installment',
+                  sale.isCash ? 'Cash' : 'Installment',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: index % 2 == 0 ? Colors.green : Colors.purple,
+                    color: sale.isCash ? Colors.green : Colors.purple,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -189,7 +265,7 @@ class RecentSalesTable extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              'Rs 235,000',
+              'Rs ${sale.amountPaid.toStringAsFixed(0)}',
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
