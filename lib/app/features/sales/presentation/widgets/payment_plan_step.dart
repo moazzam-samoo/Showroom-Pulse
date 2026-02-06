@@ -9,6 +9,7 @@ import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_s
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
+import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 
 class PaymentPlanStep extends StatelessWidget {
   const PaymentPlanStep({super.key});
@@ -95,6 +96,7 @@ class PaymentPlanStep extends StatelessWidget {
           prefixIcon: LucideIcons.banknote,
           controller: controller.cashAmountController,
           hint: 'Enter full cash amount',
+          inputFormatters: [ThousandsSeparatorInputFormatter()],
         ),
         const SizedBox(height: 20),
         const Text('Cash sale marks bike as SOLD immediately.', style: TextStyle(color: Colors.grey)),
@@ -145,6 +147,7 @@ class PaymentPlanStep extends StatelessWidget {
                       label: 'Markup Value', 
                       prefixIcon: LucideIcons.trendingUp,
                       controller: controller.markupValueController,
+                      inputFormatters: [ThousandsSeparatorInputFormatter()],
                     ),
                   ),
                 ],
@@ -162,6 +165,7 @@ class PaymentPlanStep extends StatelessWidget {
                 label: 'Down Payment (Rs)',
                 prefixIcon: LucideIcons.download,
                 controller: controller.downPaymentController,
+                inputFormatters: [ThousandsSeparatorInputFormatter()],
               ),
             ),
             const SizedBox(width: 16),

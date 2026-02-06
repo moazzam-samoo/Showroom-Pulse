@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
@@ -422,14 +424,15 @@ class AddStockView extends GetView<SupplierController> {
                     Expanded(
                       flex: 2,
                       child: TextFormField(
-                        initialValue: entry.purchasePrice.toStringAsFixed(0),
+                        initialValue: entry.purchasePrice > 0 ? NumberFormat('#,###').format(entry.purchasePrice) : '',
                         onChanged: (v) {
-                          entry.purchasePrice = double.tryParse(v) ?? 0;
+                          entry.purchasePrice = double.tryParse(v.replaceAll(',', '')) ?? 0;
                           controller.calculateTotal(); // Recalculate total on change
                         },
                          decoration: _inputDecoration('Price', isDark),
                         style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
                         keyboardType: TextInputType.number,
+                        inputFormatters: [ThousandsSeparatorInputFormatter()],
                       ),
                     ),
                      const SizedBox(width: 8),

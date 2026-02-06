@@ -117,9 +117,9 @@ class NewSaleController extends GetxController {
     if (bike == null) return;
 
     // Parse inputs
-    final downPayment = double.tryParse(downPaymentController.text) ?? 0;
+    final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
     final months = int.tryParse(monthsController.text) ?? 0;
-    final markupVal = double.tryParse(markupValueController.text) ?? 0;
+    final markupVal = double.tryParse(markupValueController.text.replaceAll(',', '')) ?? 0;
 
     if (months <= 0) {
       calculationResult.value = null;
@@ -166,7 +166,7 @@ class NewSaleController extends GetxController {
 
     // Validate payment details based on sale type
     if (saleType.value == SaleType.cash) {
-      final cashAmount = double.tryParse(cashAmountController.text);
+      final cashAmount = double.tryParse(cashAmountController.text.replaceAll(',', ''));
       if (cashAmount == null || cashAmount <= 0) {
         Get.snackbar(
           'Invalid Amount',
@@ -219,7 +219,7 @@ class NewSaleController extends GetxController {
         return;
       }
       
-      final downPayment = double.tryParse(downPaymentController.text);
+      final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', ''));
       if (downPayment == null || downPayment < 0) {
         Get.snackbar(
           'Invalid Down Payment',
