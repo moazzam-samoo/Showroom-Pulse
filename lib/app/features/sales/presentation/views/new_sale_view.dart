@@ -46,7 +46,7 @@ class NewSaleView extends GetView<NewSaleController> {
             const SizedBox(height: AppSpacing.sm),
             AppCard(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 450),
+                constraints: const BoxConstraints(maxHeight: 550), // Increased to show model name and full card
                 child: const BikeSelector(),
               ),
             ),

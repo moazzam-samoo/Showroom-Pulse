@@ -71,7 +71,7 @@ class BikeSelector extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                              crossAxisCount: 3,
-                             childAspectRatio: 0.8,
+                             childAspectRatio: 1.0, // Balanced for compact but readable cards
                              crossAxisSpacing: 8,
                              mainAxisSpacing: 8,
                           ),
@@ -99,7 +99,7 @@ class BikeSelector extends StatelessWidget {
                                       border: isSelected ? Border.all(color: AppColors.darkPrimary, width: 3) : null,
                                       borderRadius: BorderRadius.circular(AppRadius.md),
                                     ),
-                                    child: BikeCard(bike: bike),
+                                    child: BikeCard(bike: bike, compact: true),
                                   ),
                                 );
                             });

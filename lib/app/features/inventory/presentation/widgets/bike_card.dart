@@ -20,6 +20,7 @@ class BikeCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final bool compact;
 
   const BikeCard({
     super.key,
@@ -27,6 +28,7 @@ class BikeCard extends StatefulWidget {
     this.onTap,
     this.onEdit,
     this.onDelete,
+    this.compact = false,
   });
 
   @override
@@ -74,9 +76,9 @@ class _BikeCardState extends State<BikeCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Image Area (Expanded to fill more space)
+              // 1. Image Area (Reduced in compact mode)
               Expanded(
-                flex: 5, 
+                flex: widget.compact ? 3 : 5, 
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -114,22 +116,25 @@ class _BikeCardState extends State<BikeCard> {
 
                     // Status Badge
                     Positioned(
-                      top: 10,
-                      left: 10,
+                      top: widget.compact ? 4 : 10,
+                      left: widget.compact ? 4 : 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: widget.compact ? 4 : 10,
+                          vertical: widget.compact ? 1 : 4,
+                        ),
                         decoration: BoxDecoration(
                           color: _getStatusColor(widget.bike.status),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(widget.compact ? 8 : 12),
                           boxShadow: [
                             BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
                           ],
                         ),
                         child: Text(
                           widget.bike.status.name.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
+                            fontSize: widget.compact ? 8 : 10,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
                           ),
@@ -137,28 +142,32 @@ class _BikeCardState extends State<BikeCard> {
                       ),
                     ),
 
-                    // Actions
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Row(
-                        children: [
-                          if (widget.onEdit != null)
-                            _buildGlassButton(LucideIcons.pencil, widget.onEdit!, isDark),
-                          if (widget.onDelete != null) 
-                            _buildGlassButton(LucideIcons.trash2, widget.onDelete!, isDark, isDestructive: true),
-                        ],
+                    // Actions (Hide in compact mode)
+                    if (!widget.compact)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Row(
+                          children: [
+                            if (widget.onEdit != null)
+                              _buildGlassButton(LucideIcons.pencil, widget.onEdit!, isDark),
+                            if (widget.onDelete != null) 
+                              _buildGlassButton(LucideIcons.trash2, widget.onDelete!, isDark, isDestructive: true),
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
 
               // 2. Info Area
               Expanded(
-                flex: 4,
+                flex: widget.compact ? 3 : 4,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: widget.compact ? 4 : 10,
+                    vertical: widget.compact ? 4 : 10,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -170,7 +179,7 @@ class _BikeCardState extends State<BikeCard> {
                             child: Text(
                               widget.bike.model,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: widget.compact ? 14 : 16,
                                 fontWeight: FontWeight.bold,
                                 color: isDark ? Colors.white : Colors.black87,
                                 height: 1.1,
@@ -180,8 +189,8 @@ class _BikeCardState extends State<BikeCard> {
                             ),
                           ),
                           Container(
-                            width: 14,
-                            height: 14,
+                            width: widget.compact ? 12 : 14,
+                            height: widget.compact ? 12 : 14,
                             decoration: BoxDecoration(
                               color: _getColor(widget.bike.color),
                               shape: BoxShape.circle,
@@ -190,22 +199,22 @@ class _BikeCardState extends State<BikeCard> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: widget.compact ? 4 : 10),
 
                       // Specs Container
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(widget.compact ? 4 : 8),
                         decoration: BoxDecoration(
                           color: isDark ? Colors.black26 : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(widget.compact ? 4 : 6),
                           border: Border.all(color: isDark ? Colors.white10 : Colors.grey[300]!),
                         ),
                         child: Column(
                           children: [
                             _buildSpecRow("Engine", widget.bike.engineNumber, isDark),
-                            const SizedBox(height: 4),
-                            Divider(height: 4, thickness: 1, color: isDark ? Colors.white10 : Colors.grey[300]),
-                            const SizedBox(height: 4),
+                            SizedBox(height: widget.compact ? 2 : 4),
+                            Divider(height: widget.compact ? 1 : 4, thickness: 1, color: isDark ? Colors.white10 : Colors.grey[300]),
+                            SizedBox(height: widget.compact ? 2 : 4),
                             _buildSpecRow("Chassis", widget.bike.chassisNumber, isDark),
                           ],
                         ),
@@ -224,14 +233,17 @@ class _BikeCardState extends State<BikeCard> {
                             children: [
                               Text(
                                 'Purchase',
-                                style: TextStyle( fontSize: 9, color: isDark ? Colors.grey[500] : Colors.grey[600] ),
+                                style: TextStyle(
+                                  fontSize: widget.compact ? 8 : 9,
+                                  color: isDark ? Colors.grey[500] : Colors.grey[600],
+                                ),
                               ),
                               Text(
                                 currencyFormat.format(widget.bike.purchasePrice),
                                 style: TextStyle(
-                                  fontSize: 12, // Slightly larger
-                                  fontWeight: FontWeight.w600, // Semi-bold
-                                  color: isDark ? Colors.white70 : Colors.black87, // Clearer color
+                                  fontSize: widget.compact ? 11 : 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white70 : Colors.black87,
                                 ),
                               ),
                             ],
@@ -244,12 +256,15 @@ class _BikeCardState extends State<BikeCard> {
                                 children: [
                                   Text(
                                     'Sale Price',
-                                    style: TextStyle( fontSize: 9, color: primaryColor.withOpacity(0.8) ),
+                                    style: TextStyle(
+                                      fontSize: widget.compact ? 8 : 9,
+                                      color: primaryColor.withOpacity(0.8),
+                                    ),
                                   ),
                                   Text(
                                     currencyFormat.format(widget.bike.cashSalePrice),
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: widget.compact ? 14 : 16,
                                       fontWeight: FontWeight.w800,
                                       color: primaryColor,
                                     ),
@@ -259,20 +274,27 @@ class _BikeCardState extends State<BikeCard> {
                             : InkWell(
                                 onTap: () => _showSetPriceDialog(context),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: widget.compact ? 4 : 10,
+                                    vertical: widget.compact ? 2 : 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: primaryColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(widget.compact ? 4 : 6),
                                     border: Border.all(color: primaryColor),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(LucideIcons.plusCircle, size: 14, color: primaryColor),
-                                      const SizedBox(width: 4),
+                                      Icon(
+                                        LucideIcons.plusCircle,
+                                        size: widget.compact ? 12 : 14,
+                                        color: primaryColor,
+                                      ),
+                                      SizedBox(width: widget.compact ? 3 : 4),
                                       Text(
                                         "Set Price",
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: widget.compact ? 10 : 12,
                                           fontWeight: FontWeight.bold,
                                           color: primaryColor,
                                         ),
@@ -335,7 +357,7 @@ class _BikeCardState extends State<BikeCard> {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            fontSize: 9,
+            fontSize: widget.compact ? 8 : 9,
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.grey[500] : Colors.grey[600],
             letterSpacing: 0.5,
@@ -344,7 +366,7 @@ class _BikeCardState extends State<BikeCard> {
         Text(
           value,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: widget.compact ? 10 : 11,
             fontFamily: 'Monospace',
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.grey[300] : Colors.grey[800],
