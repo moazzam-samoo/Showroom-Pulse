@@ -10,6 +10,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/widgets/price_summary_card.dart';
 
 class PaymentPlanStep extends StatelessWidget {
   const PaymentPlanStep({super.key});
@@ -185,56 +186,17 @@ class PaymentPlanStep extends StatelessWidget {
             final result = controller.calculationResult.value;
             if (result == null) return const SizedBox.shrink();
 
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
-              ),
-              child: Column(
-                children: [
-                  _summaryRow('Base Price', 'Rs ???', isDark),
-                  _summaryRow('Total Markup', 'Rs ${result.totalMarkup.toStringAsFixed(0)}', isDark),
-                  _summaryRow('Grand Total', 'Rs ${result.grandTotal.toStringAsFixed(0)}', isDark, isBold: true),
-                  const Divider(),
-                  _summaryRow('Loan Amount', 'Rs ${(result.grandTotal - (double.tryParse(controller.downPaymentController.text) ?? 0)).toStringAsFixed(0)}', isDark),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkPrimary.withOpacity(0.2) : AppColors.lightPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Monthly Installment', style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, fontWeight: FontWeight.bold)),
-                        Text('Rs ${result.monthlyEMI.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ],
+            final downPayment = double.tryParse(controller.downPaymentController.text) ?? 0;
+
+            return Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: PriceSummaryCard(
+                result: result,
+                downPayment: downPayment,
               ),
             );
         }),
       ],
-    );
-  }
-
-  Widget _summaryRow(String label, String value, bool isDark, {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: isDark ? Colors.white70 : Colors.black54)),
-          Text(value, style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87, 
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal
-          )),
-        ],
-      ),
     );
   }
 }

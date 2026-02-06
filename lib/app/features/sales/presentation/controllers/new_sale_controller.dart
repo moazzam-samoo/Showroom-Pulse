@@ -48,8 +48,8 @@ class NewSaleController extends GetxController {
   // Installment Controllers
   final downPaymentController = TextEditingController();
   final monthsController = TextEditingController(text: '12');
-  final markupType = MarkupType.percentage.obs;
-  final markupValueController = TextEditingController(text: '40');
+  final markupType = MarkupType.fixed.obs;
+  final markupValueController = TextEditingController(text: '0');
   
   // Witness 1 (Mandatory)
   final witness1NameController = TextEditingController();
@@ -128,7 +128,7 @@ class NewSaleController extends GetxController {
 
     try {
       final result = InstallmentCalculator.calculate(
-        cashPrice: bike.cashSalePrice ?? 0, // Fallback if 0
+        cashPrice: (bike.cashSalePrice as num?)?.toDouble() ?? 0.0,
         markupType: markupType.value,
         markupValue: markupVal,
         downPayment: downPayment,
