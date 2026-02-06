@@ -10,6 +10,7 @@ import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:isar/isar.dart';
 
 
@@ -79,13 +80,32 @@ class NewSaleController extends GetxController {
 
   Map<String, List<Bike>> get groupedBikes {
     final grouped = <String, List<Bike>>{};
+    final displayNames = <String, String>{}; // Track original capitalization
+    
     for (var bike in availableBikes) {
-      if (!grouped.containsKey(bike.model)) {
-        grouped[bike.model] = [];
+      // Normalize to lowercase for grouping key
+      final normalizedModel = bike.model.toLowerCase().trim();
+      
+      // Track the first occurrence's capitalization for display
+      if (!displayNames.containsKey(normalizedModel)) {
+        displayNames[normalizedModel] = bike.model;
       }
-      grouped[bike.model]!.add(bike);
+      
+      // Group bikes by normalized model name
+      if (!grouped.containsKey(normalizedModel)) {
+        grouped[normalizedModel] = [];
+      }
+      grouped[normalizedModel]!.add(bike);
     }
-    return grouped;
+    
+    // Convert back to Map with original capitalization for keys (for UI display)
+    final result = <String, List<Bike>>{};
+    for (var entry in grouped.entries) {
+      final displayName = displayNames[entry.key]!;
+      result[displayName] = entry.value;
+    }
+    
+    return result;
   }
 
   @override
@@ -102,10 +122,19 @@ class NewSaleController extends GetxController {
 
   Future<void> loadAvailableBikes() async {
     final service = Get.find<IsarService>();
+    final fileService = Get.find<FileService>();
     final bikes = await service.isar.bikes
         .filter()
         .statusEqualTo(BikeStatusEnum.available)
         .findAll();
+    
+    // Convert image filenames to full paths
+    for (var bike in bikes) {
+      if (bike.imageFilename != null) {
+        bike.imageFilename = fileService.getBikeImagePath(bike.imageFilename!);
+      }
+    }
+    
     availableBikes.assignAll(bikes);
   }
 
