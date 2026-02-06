@@ -128,7 +128,7 @@ class NewSaleController extends GetxController {
 
     try {
       final result = InstallmentCalculator.calculate(
-        cashPrice: bike.cashSalePrice ?? 0, // Fallback if 0
+        cashPrice: (bike.cashSalePrice as num?)?.toDouble() ?? 0.0,
         markupType: markupType.value,
         markupValue: markupVal,
         downPayment: downPayment,

@@ -2,18 +2,20 @@
 import '../../data/models/installment_contract.dart';
 
 class InstallmentCalculationResult {
+  final double cashPrice;
   final double totalMarkup;
   final double grandTotal;
   final double monthlyEMI;
 
   InstallmentCalculationResult({
+    required this.cashPrice,
     required this.totalMarkup,
     required this.grandTotal,
     required this.monthlyEMI,
   });
 
   @override
-  String toString() => 'Markup: $totalMarkup, Total: $grandTotal, EMI: $monthlyEMI';
+  String toString() => 'Price: $cashPrice, Markup: $totalMarkup, Total: $grandTotal, EMI: $monthlyEMI';
 }
 
 class InstallmentCalculator {
@@ -53,6 +55,7 @@ class InstallmentCalculator {
     double monthlyEMI = loanAmount / months;
 
     return InstallmentCalculationResult(
+      cashPrice: cashPrice,
       totalMarkup: totalMarkup,
       grandTotal: grandTotal,
       monthlyEMI: monthlyEMI,
