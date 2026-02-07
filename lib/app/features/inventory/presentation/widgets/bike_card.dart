@@ -496,7 +496,13 @@ class _BikeCardState extends State<BikeCard> {
       case 'zebra skin': 
         return [Colors.black, Colors.white]; // Black & White
       case 'cheetah skin': 
-        return [const Color(0xFFD2691E), const Color(0xFFFFD700)]; // Chocolate & Gold (Spots effect simulated by gradient)
+        return [const Color(0xFFD2691E), const Color(0xFFFFD700)]; // Chocolate & Gold
+      case 'tiger skin': 
+        return [const Color(0xFFFFA500), Colors.black]; // Orange & Black
+      case 'leopard skin': 
+        return [const Color(0xFFFFD700), Colors.black]; // Gold & Black
+      case 'snake skin': 
+        return [const Color(0xFF556B2F), const Color(0xFF8B4513)]; // Dark Olive Green & Saddle Brown
       
       default: return [Colors.transparent];
     }
