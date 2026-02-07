@@ -132,6 +132,36 @@ class SalesService {
       bikeImagePath = fileService.getBikeImagePath(bike.imageFilename!);
     }
 
+    // Convert customer profile image filename to full path
+    String? customerImagePath;
+    if (customer.profileImageFilename != null && customer.profileImageFilename!.isNotEmpty) {
+      customerImagePath = fileService.getCustomerProfileImagePath(
+        customer.profileImageFilename!,
+        customer.cnicNumber,
+      );
+    }
+
+    // Convert witness CNIC image filename to full path (for backward compatibility)
+    String? primaryWitnessCnicPath;
+    if (primaryWitness?.cnicFrontFilename != null && primaryWitness!.cnicFrontFilename!.isNotEmpty) {
+      primaryWitnessCnicPath = fileService.getWitnessCnicImagePath(
+        primaryWitness.cnicFrontFilename!,
+        customer.cnicNumber,
+      );
+    }
+
+    // Update witness data list with full image paths
+    final List<WitnessData> witnessDataListWithPaths = witnesses.map((w) => WitnessData(
+      fullName: w.fullName,
+      cnicNumber: w.cnicNumber,
+      phoneNumber: w.phoneNumber,
+      address: w.address,
+      cnicFrontFilename: w.cnicFrontFilename != null && w.cnicFrontFilename!.isNotEmpty
+        ? fileService.getWitnessCnicImagePath(w.cnicFrontFilename!, customer.cnicNumber)
+        : null,
+      isPrimary: w.isPrimary,
+    )).toList();
+
     return SaleCardData(
       bikeModel: '${bike.brand} ${bike.model}',
       bikeImage: bikeImagePath,
@@ -140,7 +170,7 @@ class SalesService {
       customerName: customer.fullName,
       customerCnic: customer.cnicNumber,
       customerContact: customer.phoneNumber,
-      purchaserImage: customer.profileImageFilename,
+      purchaserImage: customerImagePath,
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
       amountPaid: sale.receivedAmount,
@@ -154,8 +184,8 @@ class SalesService {
       witnessName: primaryWitness?.fullName,
       witnessCnic: primaryWitness?.cnicNumber,
       witnessPhone: primaryWitness?.phoneNumber,
-      witnessImage: primaryWitness?.cnicFrontFilename,
-      witnesses: witnessDataList.isNotEmpty ? witnessDataList : null,
+      witnessImage: primaryWitnessCnicPath,
+      witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -128,9 +129,11 @@ class CashSaleDetailDialog extends StatelessWidget {
                child: data.purchaserImage != null 
                  ? ClipRRect(
                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                     child: Image.network(
-                        data.purchaserImage!,
+                     child: Image.file(
+                        File(data.purchaserImage!),
                         fit: BoxFit.cover,
+                        width: 80,
+                        height: 80,
                         errorBuilder: (_,__,___) => _buildPlaceholderIcon(isDark),
                      ),
                    )
@@ -177,14 +180,18 @@ class CashSaleDetailDialog extends StatelessWidget {
                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
                  ),
                ),
-               child: ClipRRect(
-                 borderRadius: BorderRadius.circular(AppRadius.md),
-                 child: Image.asset(
-                    data.bikeImage,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_,__,___) => const Icon(LucideIcons.bike, size: 24, color: Colors.grey),
-                 ),
-               ),
+               child: data.bikeImage.isNotEmpty
+                 ? ClipRRect(
+                     borderRadius: BorderRadius.circular(AppRadius.md),
+                     child: Image.file(
+                        File(data.bikeImage),
+                        fit: BoxFit.cover,
+                        width: 60,
+                        height: 60,
+                        errorBuilder: (_,__,___) => const Icon(LucideIcons.bike, size: 24, color: Colors.grey),
+                     ),
+                   )
+                 : const Icon(LucideIcons.bike, size: 24, color: Colors.grey),
             ),
              const SizedBox(width: AppSpacing.md),
              Expanded(
@@ -351,12 +358,16 @@ class CashSaleDetailDialog extends StatelessWidget {
            color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
          ),
        ),
-       child: imagePath != null 
+       child: imagePath != null && imagePath.isNotEmpty
          ? ClipRRect(
              borderRadius: BorderRadius.circular(AppRadius.lg),
-             child: isAsset 
-               ? Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey))
-               : Image.network(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey)),
+             child: Image.file(
+               File(imagePath),
+               fit: BoxFit.cover,
+               width: width,
+               height: height,
+               errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey),
+             ),
            )
          : Center(child: Icon(icon, color: isDark ? Colors.white24 : Colors.black26)),
     );

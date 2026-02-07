@@ -131,7 +131,7 @@ class _BikeCardState extends State<BikeCard> {
                           ],
                         ),
                         child: Text(
-                          widget.bike.status.name.toUpperCase(),
+                          _getStatusText(widget.bike.status),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: widget.compact ? 8 : 10,
@@ -188,14 +188,19 @@ class _BikeCardState extends State<BikeCard> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Container(
-                            width: widget.compact ? 12 : 14,
-                            height: widget.compact ? 12 : 14,
-                            decoration: BoxDecoration(
-                              color: _getColor(widget.bike.color),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: isDark ? Colors.white38 : Colors.grey[400]!, width: 1.5),
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                widget.bike.color,
+                                style: TextStyle(
+                                  fontSize: widget.compact ? 10 : 12,
+                                  color: isDark ? Colors.white70 : Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(width: widget.compact ? 4 : 6),
+                              _buildColorIndicator(widget.bike.color, widget.compact, isDark),
+                            ],
                           ),
                         ],
                       ),
@@ -428,16 +433,72 @@ class _BikeCardState extends State<BikeCard> {
     }
   }
 
-  Color _getColor(String colorName) {
+  String _getStatusText(BikeStatusEnum status) {
+    if (status.name.toLowerCase() == 'installment') return 'INSTALLMENT (RESERVED)';
+    if (status.name.toLowerCase() == 'sold') return 'SOLD (NOT AVAILABLE)';
+    return status.name.toUpperCase();
+  }
+
+  Widget _buildColorIndicator(String colorName, bool compact, bool isDark) {
+    List<Color> colors = _getColors(colorName);
+    
+    return Container(
+      width: compact ? 12 : 14,
+      height: compact ? 12 : 14,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        // Use gradient if multiple colors, otherwise solid color
+        gradient: colors.length > 1 
+            ? LinearGradient(
+                colors: colors,
+                // Create hard stops for distinct separation (e.g. zebra stripes)
+                stops: _generateStops(colors.length),
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: colors.length == 1 ? colors.first : null,
+        border: Border.all(
+          color: isDark ? Colors.white38 : Colors.grey[400]!, 
+          width: 1.5
+        ),
+      ),
+    );
+  }
+
+  List<double> _generateStops(int count) {
+    // Generate even stops for sharp transitions if needed, 
+    // or smooth gradient. For skins like zebra/lion, sharp transitions look better.
+    // However, LinearGradient wraps smoothly. Text request implied "divided into parts".
+    // Let's use a simpler LinearGradient for now which naturally divides the space.
+    if (count == 2) return [0.4, 0.6]; // Slight blur in middle
+    return List.generate(count, (index) => index / (count - 1));
+  }
+
+  List<Color> _getColors(String colorName) {
     switch (colorName.toLowerCase()) {
-      case 'red': return Colors.red;
-      case 'black': return Colors.black;
-      case 'blue': return Colors.blue;
-      case 'silver': return const Color(0xFFC0C0C0);
-      case 'white': return Colors.white;
-      case 'green': return Colors.green;
-      case 'grey': return Colors.grey;
-      default: return Colors.transparent;
+      // Solid Colors
+      case 'red': return [Colors.red];
+      case 'black': return [Colors.black];
+      case 'blue': return [Colors.blue];
+      case 'silver': return [const Color(0xFFC0C0C0)];
+      case 'white': return [Colors.white];
+      case 'green': return [Colors.green];
+      case 'grey': return [Colors.grey];
+      case 'yellow': return [Colors.yellow];
+      case 'orange': return [Colors.orange];
+      case 'purple': return [Colors.purple];
+      case 'maroon': return [const Color(0xFF800000)];
+      
+      // Skins (Multi-color)
+      case 'lion skin': 
+        return [Colors.black, const Color(0xFFFFD700)]; // Black & Gold/Yellow
+      case 'zebra skin': 
+        return [Colors.black, Colors.white]; // Black & White
+      case 'cheetah skin': 
+        return [const Color(0xFFD2691E), const Color(0xFFFFD700)]; // Chocolate & Gold (Spots effect simulated by gradient)
+      
+      default: return [Colors.transparent];
     }
   }
 }

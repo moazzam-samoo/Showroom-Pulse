@@ -10,6 +10,8 @@ import 'package:tahir_showroom/app/features/inventory/presentation/controllers/i
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_card.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_filter_bar.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_bike_dialog.dart';
+
 
 /// Inventory View
 /// 
@@ -74,9 +76,24 @@ class InventoryView extends StatelessWidget {
                     selectedBrand: controller.selectedBrand.value,
                     selectedCC: controller.selectedCC.value,
                     selectedStatus: controller.selectedStatus.value,
+                    selectedColor: controller.selectedColor.value,
+                    minPrice: controller.minPrice.value,
+                    maxPrice: controller.maxPrice.value,
                     onBrandChanged: (v) => controller.selectedBrand.value = v,
                     onCCChanged: (v) => controller.selectedCC.value = v,
                     onStatusChanged: (v) => controller.selectedStatus.value = v,
+                    onColorChanged: (v) => controller.selectedColor.value = v,
+                    onMinPriceChanged: (v) => controller.minPrice.value = v,
+                    onMaxPriceChanged: (v) => controller.maxPrice.value = v,
+                    onClearFilters: () {
+                      controller.searchController.clear();
+                      controller.selectedBrand.value = null;
+                      controller.selectedCC.value = null;
+                      controller.selectedStatus.value = null;
+                      controller.selectedColor.value = null;
+                      controller.minPrice.value = null;
+                      controller.maxPrice.value = null;
+                    },
                     onAddBike: () => _showAddBikeDialog(context, controller),
                   )),
                   const SizedBox(height: AppSpacing.lg),
@@ -153,7 +170,10 @@ class InventoryView extends StatelessWidget {
             return BikeCard(
               bike: bike,
               onTap: () => _showBikeDetails(bike),
-              onEdit: () => _editBike(bike),
+              // Only prevent editing for sold bikes
+              onEdit: bike.status != BikeStatusEnum.sold 
+                  ? () => _editBike(context, bike) 
+                  : null,
               onDelete: () => _deleteBike(context, controller, bike),
             );
           },
@@ -178,10 +198,19 @@ class InventoryView extends StatelessWidget {
     debugPrint('Show details for: ${bike.model}');
   }
 
-  void _editBike(Bike bike) {
-    // TODO: Open edit dialog
-    debugPrint('Edit bike: ${bike.model}');
+  void _editBike(BuildContext context, Bike bike) {
+    showDialog(
+      context: context,
+      builder: (context) => EditBikeDialog(
+        bike: bike,
+        onSave: (data) {
+          final controller = Get.find<InventoryController>();
+          controller.updateBikeDetails(bike, data);
+        },
+      ),
+    );
   }
+
 
   void _deleteBike(BuildContext context, InventoryController controller, Bike bike) {
     showDialog(

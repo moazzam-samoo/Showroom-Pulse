@@ -5,28 +5,31 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 
-class AddBikeDialog extends StatefulWidget {
+class EditBikeDialog extends StatefulWidget {
+  final Bike bike;
   final Function(Map<String, dynamic>)? onSave;
 
-  const AddBikeDialog({
+  const EditBikeDialog({
     super.key,
+    required this.bike,
     this.onSave,
   });
 
   @override
-  State<AddBikeDialog> createState() => _AddBikeDialogState();
+  State<EditBikeDialog> createState() => _EditBikeDialogState();
 }
 
-class _AddBikeDialogState extends State<AddBikeDialog> {
+class _EditBikeDialogState extends State<EditBikeDialog> {
   final _formKey = GlobalKey<FormState>();
   
   // Form controllers
-  final _modelController = TextEditingController();
-  final _engineNoController = TextEditingController();
-  final _chassisNoController = TextEditingController();
-  final _purchasePriceController = TextEditingController();
-  final _sellingPriceController = TextEditingController();
+  late final TextEditingController _modelController;
+  late final TextEditingController _engineNoController;
+  late final TextEditingController _chassisNoController;
+  late final TextEditingController _purchasePriceController;
+  late final TextEditingController _sellingPriceController;
 
   String? _selectedColor;
   final List<String> _colors = [
@@ -37,6 +40,20 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   ];
 
   File? _selectedImage;
+  String? _existingImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill controllers with existing bike data
+    _modelController = TextEditingController(text: widget.bike.model);
+    _engineNoController = TextEditingController(text: widget.bike.engineNumber);
+    _chassisNoController = TextEditingController(text: widget.bike.chassisNumber);
+    _purchasePriceController = TextEditingController(text: widget.bike.purchasePrice.toString());
+    _sellingPriceController = TextEditingController(text: widget.bike.cashSalePrice.toString());
+    _selectedColor = widget.bike.color;
+    _existingImagePath = widget.bike.imageFilename;
+  }
 
   @override
   void dispose() {
@@ -70,7 +87,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
           'chassisNumber': _chassisNoController.text,
           'purchasePrice': double.tryParse(_purchasePriceController.text) ?? 0.0,
           'sellingPrice': double.tryParse(_sellingPriceController.text) ?? 0.0,
-          'imageFile': _selectedImage,
+          'imageFile': _selectedImage, // null if no new image selected
         });
         Navigator.pop(context);
       }
@@ -83,15 +100,14 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     final sectionHeaderText = Colors.white;
-    // Updated to use AppColors directly for consistency
     final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
     final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
 
     return AppDialog(
-      title: 'Add New Motorcycle',
-      subtitle: 'Tahir Showroom Inventory Management',
-      onSubmit: _handleSave, // Binds ENTER key to this
+      title: 'Edit Motorcycle',
+      subtitle: 'Update ${widget.bike.model} Details',
+      onSubmit: _handleSave,
       actions: [
         Expanded(
           child: SizedBox(
@@ -104,7 +120,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: const Text(
-                'Save to Inventory (Enter)',
+                'Save Changes (Enter)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
@@ -180,20 +196,16 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                   borderRadius: BorderRadius.circular(10),
                                   child: Image.file(_selectedImage!, fit: BoxFit.cover),
                                 )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(LucideIcons.camera, size: 48, color: isDark ? Colors.grey[500] : Colors.grey[400]),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Upload Bike Image',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
+                              : _existingImagePath != null && _existingImagePath!.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.file(
+                                        File(_existingImagePath!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _buildImagePlaceholder(isDark),
                                       ),
-                                    ),
-                                  ],
-                                ),
+                                    )
+                                  : _buildImagePlaceholder(isDark),
                         ),
                       ),
                     ],
@@ -204,6 +216,23 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildImagePlaceholder(bool isDark) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(LucideIcons.camera, size: 48, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+        const SizedBox(height: 8),
+        Text(
+          'Tap to Update Image',
+          style: TextStyle(
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 
@@ -278,7 +307,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
           child: TextFormField(
             controller: controller,
             autofocus: autofocus,
-            textInputAction: TextInputAction.next, // Important for keyboard nav
+            textInputAction: TextInputAction.next,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
             style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
             decoration: InputDecoration(

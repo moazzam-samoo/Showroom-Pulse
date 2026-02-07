@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -249,7 +251,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
         Row(
           children: [
              // Bike Image
-             _buildPhotoBox(data.bikeImage, isDark, isAsset: true, width: 100, height: 70, icon: LucideIcons.bike),
+             _buildPhotoBox(data.bikeImage, isDark, width: 100, height: 70, icon: LucideIcons.bike),
              const SizedBox(width: AppSpacing.lg),
              
              // Details Grid
@@ -384,7 +386,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotoBox(String? imagePath, bool isDark, {required IconData icon, bool isAsset = false, double width = 60, double height = 60}) {
+  Widget _buildPhotoBox(String? imagePath, bool isDark, {required IconData icon, double width = 60, double height = 60}) {
     return Container(
        width: width,
        height: height,
@@ -395,12 +397,16 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
            color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
          ),
        ),
-       child: imagePath != null 
+       child: imagePath != null && imagePath.isNotEmpty
          ? ClipRRect(
              borderRadius: BorderRadius.circular(AppRadius.lg),
-             child: isAsset 
-               ? Image.asset(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey))
-               : Image.network(imagePath, fit: BoxFit.cover, errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey)),
+             child: Image.file(
+               File(imagePath),
+               fit: BoxFit.cover,
+               width: width,
+               height: height,
+               errorBuilder: (_,__,___) => Icon(icon, color: Colors.grey),
+             ),
            )
          : Center(child: Icon(icon, color: isDark ? Colors.white24 : Colors.black26)),
     );

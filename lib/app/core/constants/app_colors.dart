@@ -19,6 +19,7 @@ class AppColors {
   // Background Colors (Dark)
   static const Color darkBackground = Color(0xFF0a0e17);     // Deepest navy
   static const Color darkSurface = Color(0xFF0f172a);        // Cards, panels
+  static const Color darkCard = Color(0xFF1e293b);           // Elevated cards
   static const Color darkElevated = Color(0xFF1e293b);       // Inputs, hover
   static const Color darkBorder = Color(0xFF1e293b);         // Card borders
   static const Color darkBorderInput = Color(0xFF334155);    // Input borders

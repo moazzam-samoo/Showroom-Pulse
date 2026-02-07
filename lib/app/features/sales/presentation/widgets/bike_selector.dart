@@ -45,11 +45,27 @@ class BikeSelector extends StatelessWidget {
                 final model = groupedBikes.keys.elementAt(index);
                 final bikes = groupedBikes[model]!;
                 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ExpansionTile(
-                    title: Text(model, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    trailing: Container(
+                return Obx(() {
+                  final isExpanded = saleController.expandedModel.value == model;
+                  
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ExpansionTile(
+                      // Force rebuild when expansion state changes to respect initiallyExpanded
+                      key: Key('${model}_${isExpanded}'),
+                      initiallyExpanded: isExpanded,
+                      onExpansionChanged: (expanded) {
+                        if (expanded) {
+                          saleController.expandedModel.value = model;
+                        } else {
+                          // Only clear if we are closing the currently expanded one
+                          if (saleController.expandedModel.value == model) {
+                            saleController.expandedModel.value = null;
+                          }
+                        }
+                      },
+                      title: Text(model, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      trailing: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: (Get.isDarkMode ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.1),
@@ -109,9 +125,11 @@ class BikeSelector extends StatelessWidget {
                     ],
                   ),
                 );
-              },
-            );
-          }),
+                },
+              );
+            },
+          );
+        }),
         ),
       ],
     );

@@ -122,22 +122,7 @@ class FileService extends GetxService {
     return filename;
   }
 
-  /// Get the full path for a bike image
-  String getBikeImagePath(String filename) {
-    return p.join(bikesMediaPath, filename);
-  }
 
-  /// Get the full path for a customer image
-  String getCustomerImagePath(String cnic, String filename) {
-    final sanitizedCnic = cnic.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
-    return p.join(customersMediaPath, sanitizedCnic, filename);
-  }
-
-  /// Get the full path for a witness image
-  String getWitnessImagePath(String customerCnic, String filename) {
-    final sanitizedCnic = customerCnic.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
-    return p.join(customersMediaPath, sanitizedCnic, 'Witness', filename);
-  }
 
   // --- Supplier Media ---
 
@@ -298,6 +283,23 @@ class FileService extends GetxService {
     if (await Directory(path).exists()) {
       await Directory(path).delete(recursive: true);
     }
+  }
+
+  /// Get full path to a bike image from just the filename
+  String getBikeImagePath(String filename) {
+    return p.join(bikesMediaPath, filename);
+  }
+
+  /// Get full path to a customer profile image from filename and CNIC
+  String getCustomerProfileImagePath(String filename, String cnic) {
+    final sanitizedCnic = cnic.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    return p.join(customersMediaPath, sanitizedCnic, filename);
+  }
+
+  /// Get full path to a witness CNIC image from filename and customer CNIC
+  String getWitnessCnicImagePath(String filename, String customerCnic) {
+    final sanitizedCnic = customerCnic.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    return p.join(customersMediaPath, sanitizedCnic, 'Witness', filename);
   }
 
   /// Pick an image from gallery/filesystem
