@@ -20,6 +20,9 @@ class InventoryController extends GetxController {
   final RxnString selectedBrand = RxnString();
   final RxnString selectedCC = RxnString();
   final RxnString selectedStatus = RxnString();
+  final RxnString selectedColor = RxnString();
+  final Rxn<double> minPrice = Rxn<double>();
+  final Rxn<double> maxPrice = Rxn<double>();
 
   @override
   void onInit() {
@@ -127,6 +130,65 @@ class InventoryController extends GetxController {
     }
   }
 
+  /// Update complete bike details
+  Future<bool> updateBikeDetails(Bike bike, Map<String, dynamic> data) async {
+    try {
+      // Update bike fields
+      bike.model = data['model'];
+      bike.brand = data['model'].toString().split(' ').first; // Simple brand extraction
+      bike.color = data['color'];
+      bike.engineNumber = data['engineNumber'];
+      bike.chassisNumber = data['chassisNumber'];
+      bike.purchasePrice = data['purchasePrice'];
+      bike.cashSalePrice = data['sellingPrice'];
+
+      // Handle Image update if new file provided
+      if (data['imageFile'] != null && data['imageFile'] is File) {
+        final File imageFile = data['imageFile'];
+        
+        // Delete old image if exists
+        if (bike.imageFilename != null && bike.imageFilename!.isNotEmpty) {
+          try {
+            final oldFile = File(bike.imageFilename!);
+            if (await oldFile.exists()) {
+              await oldFile.delete();
+            }
+          } catch (e) {
+            debugPrint('Could not delete old image: $e');
+          }
+        }
+        
+        // Save new image
+        final filename = await _fileService.saveBikeImage(
+          imageFile,
+          bike.engineNumber,
+        );
+        bike.imageFilename = filename; // Update filename in DB
+      }
+
+      await _inventoryService.updateBike(bike);
+      
+      await loadBikes(); // Refresh list
+      
+      Get.snackbar(
+        'Success',
+        'Bike updated successfully',
+        backgroundColor: Colors.green.withOpacity(0.1),
+        colorText: Colors.green,
+      );
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to update bike: $e',
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
+      return false;
+    }
+  }
+
+
   /// Pick an image from gallery/filesystem
   Future<File?> pickImage() async {
     try {
@@ -181,25 +243,24 @@ class InventoryController extends GetxController {
   /// Get filtered bikes based on current filter state
   List<Bike> get filteredBikes {
     return bikes.where((bike) {
-      // Search filter
+      // Enhanced text search: model, engine, chassis
       final searchQuery = searchController.text.toLowerCase();
       if (searchQuery.isNotEmpty) {
         final matches = bike.model.toLowerCase().contains(searchQuery) ||
-            bike.engineNumber.toLowerCase().contains(searchQuery);
+            bike.engineNumber.toLowerCase().contains(searchQuery) ||
+            bike.chassisNumber.toLowerCase().contains(searchQuery);
         if (!matches) return false;
       }
 
       // Brand filter
       if (selectedBrand.value != null && selectedBrand.value!.isNotEmpty) {
-        // Assuming brand is stored in brand field or part of model name
-        // The implementation ensures brand is set, but fallback to model name check
         if (!bike.brand.toLowerCase().contains(selectedBrand.value!.toLowerCase()) && 
             !bike.model.toLowerCase().contains(selectedBrand.value!.toLowerCase())) {
           return false;
         }
       }
 
-      // CC Filter (Approximation for now based on model name)
+      // CC Filter
       if (selectedCC.value != null && selectedCC.value!.isNotEmpty) {
          final cc = selectedCC.value!.toLowerCase().replaceAll('cc', '');
          if (!bike.model.toLowerCase().contains(cc)) {
@@ -208,7 +269,7 @@ class InventoryController extends GetxController {
       }
 
       // Status filter
-      if (selectedStatus.value != null) {
+      if (selectedStatus.value != null && selectedStatus.value!.isNotEmpty) {
         final statusString = bike.status.toString().split('.').last;
         if (statusString.toLowerCase() != selectedStatus.value!.toLowerCase()) {
           if (selectedStatus.value!.toLowerCase() == 'pending' && statusString == 'installment') {
@@ -219,7 +280,56 @@ class InventoryController extends GetxController {
         }
       }
 
+      // Color filter
+      if (selectedColor.value != null && selectedColor.value!.isNotEmpty) {
+        if (bike.color.toLowerCase() != selectedColor.value!.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Price range filter (checks both purchase and sale price)
+      if (minPrice.value != null || maxPrice.value != null) {
+        final purchasePrice = bike.purchasePrice;
+        final salePrice = bike.cashSalePrice;
+        
+        bool priceMatches = false;
+        
+        // Check if either price falls within range
+        if (minPrice.value != null && maxPrice.value != null) {
+          priceMatches = (purchasePrice >= minPrice.value! && purchasePrice <= maxPrice.value!) ||
+                        (salePrice >= minPrice.value! && salePrice <= maxPrice.value!);
+        } else if (minPrice.value != null) {
+          priceMatches = purchasePrice >= minPrice.value! || salePrice >= minPrice.value!;
+        } else if (maxPrice.value != null) {
+          priceMatches = purchasePrice <= maxPrice.value! || salePrice <= maxPrice.value!;
+        }
+        
+        if (!priceMatches) return false;
+      }
+
       return true;
-    }).toList();
+    }).toList()..sort((a, b) {
+      // Define status priority: Available = 0, Installment = 1, Sold = 2
+      int getStatusPriority(BikeStatusEnum status) {
+        switch (status) {
+          case BikeStatusEnum.available:
+            return 0;
+          case BikeStatusEnum.installment:
+            return 1;
+          case BikeStatusEnum.sold:
+            return 2;
+        }
+      }
+      
+      // First, sort by status priority
+      final statusComparison = getStatusPriority(a.status).compareTo(getStatusPriority(b.status));
+      
+      // If status is the same, sort by price descending (highest price first)
+      if (statusComparison == 0) {
+        return b.cashSalePrice.compareTo(a.cashSalePrice);
+      }
+      
+      return statusComparison;
+    });
   }
 }
