@@ -121,32 +121,27 @@ class CustomerFormStep extends StatelessWidget {
           
           // Image Upload Pickers (Now Clickable!)
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: _buildImagePicker(
-                  context,
-                  label: 'Profile Photo',
-                  imagePath: controller.customerProfileImagePath,
-                  onPick: () => _pickImage(controller.customerProfileImagePath),
-                ),
+              _buildImagePicker(
+                context,
+                label: 'Profile Photo',
+                imagePath: controller.customerProfileImagePath,
+                onPick: () => _pickImage(controller.customerProfileImagePath),
               ),
               const SizedBox(width: 16),
-              Expanded(
-                child: _buildImagePicker(
-                  context,
-                  label: 'CNIC Front',
-                  imagePath: controller.customerCnicFrontPath,
-                  onPick: () => _pickImage(controller.customerCnicFrontPath),
-                ),
+              _buildImagePicker(
+                context,
+                label: 'CNIC Front',
+                imagePath: controller.customerCnicFrontPath,
+                onPick: () => _pickImage(controller.customerCnicFrontPath),
               ),
               const SizedBox(width: 16),
-              Expanded(
-                child: _buildImagePicker(
-                  context,
-                  label: 'CNIC Back',
-                  imagePath: controller.customerCnicBackPath,
-                  onPick: () => _pickImage(controller.customerCnicBackPath),
-                ),
+              _buildImagePicker(
+                context,
+                label: 'CNIC Back',
+                imagePath: controller.customerCnicBackPath,
+                onPick: () => _pickImage(controller.customerCnicBackPath),
               ),
             ],
           ),
@@ -169,7 +164,8 @@ class CustomerFormStep extends StatelessWidget {
       return GestureDetector(
         onTap: onPick,
         child: Container(
-          height: 120,
+          width: 270,
+          height: 148,
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
@@ -188,7 +184,7 @@ class CustomerFormStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: Image.file(
                         File(imagePath.value!),
-                        fit: BoxFit.cover,
+                        fit: BoxFit.fill,
                         width: double.infinity,
                         height: double.infinity,
                       ),

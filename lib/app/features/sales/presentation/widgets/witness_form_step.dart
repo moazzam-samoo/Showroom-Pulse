@@ -228,25 +228,22 @@ class WitnessFormStep extends StatelessWidget {
 
         // Row 3: CNIC Images
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: _buildImagePicker(
-                context,
-                label: 'CNIC Front *',
-                imagePath: cnicFrontPath,
-                onPick: onCnicFrontPick,
-                isRequired: true,
-              ),
+            _buildImagePicker(
+              context,
+              label: 'CNIC Front *',
+              imagePath: cnicFrontPath,
+              onPick: onCnicFrontPick,
+              isRequired: true,
             ),
             const SizedBox(width: 16),
-            Expanded(
-              child: _buildImagePicker(
-                context,
-                label: 'CNIC Back',
-                imagePath: cnicBackPath,
-                onPick: onCnicBackPick,
-                isRequired: false,
-              ),
+            _buildImagePicker(
+              context,
+              label: 'CNIC Back',
+              imagePath: cnicBackPath,
+              onPick: onCnicBackPick,
+              isRequired: false,
             ),
           ],
         ),
@@ -269,7 +266,8 @@ class WitnessFormStep extends StatelessWidget {
       return GestureDetector(
         onTap: onPick,
         child: Container(
-          height: 100,
+          width: 270,
+          height: 148,
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -286,7 +284,7 @@ class WitnessFormStep extends StatelessWidget {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       child: Image.file(
                         File(imagePath.value!),
-                        fit: BoxFit.cover,
+                        fit: BoxFit.fill,
                         width: double.infinity,
                         height: double.infinity,
                       ),
