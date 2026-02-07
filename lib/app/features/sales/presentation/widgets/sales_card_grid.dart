@@ -63,8 +63,42 @@ class SalesCardGrid extends StatelessWidget {
         // Filter by Status
         final status = controller.selectedStatus.value;
         
-        final cashSales = filteredSales.where((s) => s.isCash).toList();
-        final installmentSales = filteredSales.where((s) => !s.isCash).toList();
+        var cashSales = filteredSales.where((s) => s.isCash).toList();
+        var installmentSales = filteredSales.where((s) => !s.isCash).toList();
+        
+        // Sort each list by date first, then by price within same date
+        cashSales.sort((a, b) {
+          final dateA = _parseDate(a.saleDate);
+          final dateB = _parseDate(b.saleDate);
+          final dateComparison = dateB.compareTo(dateA);
+          
+          if (dateComparison == 0) {
+            // For cash sales, use bikePrice (which is sale.totalAmount for cash)
+            // Fall back to amountPaid if bikePrice is null
+            final priceA = a.bikePrice ?? a.amountPaid;
+            final priceB = b.bikePrice ?? b.amountPaid;
+            return priceB.compareTo(priceA);
+          }
+          
+          return dateComparison;
+        });
+        
+        installmentSales.sort((a, b) {
+          final dateA = _parseDate(a.saleDate);
+          final dateB = _parseDate(b.saleDate);
+          final dateComparison = dateB.compareTo(dateA);
+          
+          if (dateComparison == 0) {
+            // For installment sales, use sellingPrice (contract.totalAmount)
+            // Fall back to bikePrice if sellingPrice is null
+            final priceA = a.sellingPrice ?? a.bikePrice ?? a.amountPaid;
+            final priceB = b.sellingPrice ?? b.bikePrice ?? b.amountPaid;
+            return priceB.compareTo(priceA);
+          }
+          
+          return dateComparison;
+        });
+        
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         // If filtering by specific status, we show full width
