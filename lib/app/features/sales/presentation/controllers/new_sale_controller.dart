@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
@@ -11,6 +12,7 @@ import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
+import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:isar/isar.dart';
 
 
@@ -77,6 +79,9 @@ class NewSaleController extends GetxController {
 
   // Available Inventory
   final availableBikes = <Bike>[].obs;
+  
+  // Expansion state for accordion behavior (only one model expanded at a time)
+  final expandedModel = RxnString();
 
   Map<String, List<Bike>> get groupedBikes {
     final grouped = <String, List<Bike>>{};
@@ -359,6 +364,36 @@ class NewSaleController extends GetxController {
             ..dateRegistered = DateTime.now();
         }
         
+        // Save customer images if any are provided
+        final fileService = Get.find<FileService>();
+        
+        if (customerProfileImagePath.value != null) {
+          final profileFile = File(customerProfileImagePath.value!);
+          customer.profileImageFilename = await fileService.saveCustomerImage(
+            profileFile,
+            customer.cnicNumber,
+            'profile',
+          );
+        }
+
+        if (customerCnicFrontPath.value != null) {
+          final cnicFrontFile = File(customerCnicFrontPath.value!);
+          customer.cnicFrontFilename = await fileService.saveCustomerImage(
+            cnicFrontFile,
+            customer.cnicNumber,
+            'cnic_front',
+          );
+        }
+
+        if (customerCnicBackPath.value != null) {
+          final cnicBackFile = File(customerCnicBackPath.value!);
+          customer.cnicBackFilename = await fileService.saveCustomerImage(
+            cnicBackFile,
+            customer.cnicNumber,
+            'cnic_back',
+          );
+        }
+        
         await _isarService.isar.customers.put(customer);
 
         // B. Update Bike Status
@@ -474,24 +509,36 @@ class NewSaleController extends GetxController {
       // IMPORTANT: Close the dialog FIRST, then show success message
       Get.back(); // Close the new sale dialog
 
+      // Get theme info
+      final context = Get.context!;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final successColor = isDark ? AppColors.darkSuccess : Colors.green.shade700;
+      final bgColor = isDark ? AppColors.darkSurface : Colors.green.shade50;
+      final borderColor = isDark ? AppColors.darkSuccess.withOpacity(0.3) : Colors.green.shade200;
+      final titleColor = isDark ? AppColors.darkTextPrimary : Colors.green.shade900;
+      final messageColor = isDark ? AppColors.darkTextSecondary : Colors.green.shade800;
+      final detailBgColor = isDark ? AppColors.darkCard : Colors.white;
+      final labelColor = isDark ? AppColors.darkTextMuted : Colors.grey.shade700;
+      final valueColor = isDark ? AppColors.darkTextPrimary : Colors.grey.shade900;
+
       // Show success confirmation dialog
       await Get.dialog(
         WillPopScope(
           onWillPop: () async => true,
           child: AlertDialog(
-            backgroundColor: Colors.green.shade50,
+            backgroundColor: bgColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.green.shade200, width: 2),
+              side: BorderSide(color: borderColor, width: 2),
             ),
             title: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green.shade700, size: 32),
+                Icon(Icons.check_circle, color: successColor, size: 32),
                 const SizedBox(width: 12),
                 Text(
                   'Sale Completed!',
                   style: TextStyle(
-                    color: Colors.green.shade900,
+                    color: titleColor,
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
                   ),
@@ -505,7 +552,7 @@ class NewSaleController extends GetxController {
                 Text(
                   'The sale has been successfully recorded in the database.',
                   style: TextStyle(
-                    color: Colors.green.shade800,
+                    color: messageColor,
                     fontSize: 16,
                   ),
                 ),
@@ -513,9 +560,9 @@ class NewSaleController extends GetxController {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: detailBgColor,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(color: borderColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -523,16 +570,22 @@ class NewSaleController extends GetxController {
                       _buildSuccessDetailRow(
                         'Customer:', 
                         customerNameController.text,
+                        labelColor,
+                        valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
                         'Bike:', 
                         selectedBike.value?.model ?? 'N/A',
+                        labelColor,
+                        valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
                         'Type:', 
                         saleType.value == SaleType.cash ? 'Cash Sale' : 'Installment Sale',
+                        labelColor,
+                        valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
@@ -540,6 +593,8 @@ class NewSaleController extends GetxController {
                         saleType.value == SaleType.cash
                             ? 'Rs. ${cashAmountController.text}'
                             : 'Rs. ${calculationResult.value?.grandTotal.toStringAsFixed(0) ?? '0'} (Down: Rs. ${downPaymentController.text})',
+                        labelColor,
+                        valueColor,
                       ),
                     ],
                   ),
@@ -552,7 +607,7 @@ class NewSaleController extends GetxController {
                   Get.back(); // Close the success dialog
                 },
                 style: TextButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
+                  backgroundColor: successColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -688,7 +743,7 @@ class NewSaleController extends GetxController {
   }
 
   // Helper method for success dialog detail rows
-  Widget _buildSuccessDetailRow(String label, String value) {
+  Widget _buildSuccessDetailRow(String label, String value, Color labelColor, Color valueColor) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -696,7 +751,7 @@ class NewSaleController extends GetxController {
           label,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.grey.shade700,
+            color: labelColor,
             fontSize: 14,
           ),
         ),
@@ -705,7 +760,7 @@ class NewSaleController extends GetxController {
           child: Text(
             value,
             style: TextStyle(
-              color: Colors.grey.shade900,
+              color: valueColor,
               fontSize: 14,
             ),
             overflow: TextOverflow.ellipsis,
