@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
+import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
 
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
@@ -29,13 +30,6 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _sellingPriceController = TextEditingController();
 
   String? _selectedColor;
-  final List<String> _colors = [
-    'Red', 'Black', 'Blue', 'Silver', 'White', 'Grey', 'Green', 
-    'Yellow', 'Orange', 'Purple', 'Maroon', 
-    'Lion Skin', 'Zebra Skin', 'Cheetah Skin',
-    'Other'
-  ];
-
   File? _selectedImage;
 
   @override
@@ -130,7 +124,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         children: [
                           _buildInputGroup('Model:', _modelController, 'e.g. Honda CG125', isDark, inputBg, inputBorder, labelColor, autofocus: true),
                           const SizedBox(height: 16),
-                          _buildDropdownGroup('Color:', isDark, inputBg, inputBorder, labelColor),
+                          _buildColorSkinGroup('Color:', labelColor),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -310,11 +304,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     );
   }
 
-  Widget _buildDropdownGroup(
+  Widget _buildColorSkinGroup(
     String label,
-    bool isDark,
-    Color bg,
-    Color border,
     Color? labelColor,
   ) {
     return Row(
@@ -332,31 +323,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: DropdownButtonFormField<String>(
-            value: _selectedColor,
-            dropdownColor: bg,
-            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-            decoration: InputDecoration(
-              hintText: 'Select Color',
-              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-              filled: true,
-              fillColor: bg,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
-              ),
-            ),
-            items: _colors.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-            onChanged: (v) => setState(() => _selectedColor = v),
+          child: ColorSkinSelector(
+            initialValue: _selectedColor,
+            onChanged: (value) => setState(() => _selectedColor = value),
             validator: (v) => v == null ? 'Required' : null,
           ),
         ),
