@@ -22,38 +22,49 @@ const PaymentSchema = CollectionSchema(
       name: r'amount',
       type: IsarType.double,
     ),
-    r'contractId': PropertySchema(
+    r'collectorName': PropertySchema(
       id: 1,
+      name: r'collectorName',
+      type: IsarType.string,
+    ),
+    r'contractId': PropertySchema(
+      id: 2,
       name: r'contractId',
       type: IsarType.long,
     ),
     r'dueDate': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'dueDate',
       type: IsarType.dateTime,
     ),
     r'isDownPayment': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'isDownPayment',
       type: IsarType.bool,
     ),
     r'isLateFee': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'isLateFee',
       type: IsarType.bool,
     ),
+    r'method': PropertySchema(
+      id: 6,
+      name: r'method',
+      type: IsarType.byte,
+      enumMap: _PaymentmethodEnumValueMap,
+    ),
     r'notes': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'notes',
       type: IsarType.string,
     ),
     r'paymentDate': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'paymentDate',
       type: IsarType.dateTime,
     ),
     r'receiptNumber': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'receiptNumber',
       type: IsarType.string,
     )
@@ -79,6 +90,12 @@ int _paymentEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
+    final value = object.collectorName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.notes;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -100,13 +117,15 @@ void _paymentSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.amount);
-  writer.writeLong(offsets[1], object.contractId);
-  writer.writeDateTime(offsets[2], object.dueDate);
-  writer.writeBool(offsets[3], object.isDownPayment);
-  writer.writeBool(offsets[4], object.isLateFee);
-  writer.writeString(offsets[5], object.notes);
-  writer.writeDateTime(offsets[6], object.paymentDate);
-  writer.writeString(offsets[7], object.receiptNumber);
+  writer.writeString(offsets[1], object.collectorName);
+  writer.writeLong(offsets[2], object.contractId);
+  writer.writeDateTime(offsets[3], object.dueDate);
+  writer.writeBool(offsets[4], object.isDownPayment);
+  writer.writeBool(offsets[5], object.isLateFee);
+  writer.writeByte(offsets[6], object.method.index);
+  writer.writeString(offsets[7], object.notes);
+  writer.writeDateTime(offsets[8], object.paymentDate);
+  writer.writeString(offsets[9], object.receiptNumber);
 }
 
 Payment _paymentDeserialize(
@@ -117,14 +136,18 @@ Payment _paymentDeserialize(
 ) {
   final object = Payment();
   object.amount = reader.readDouble(offsets[0]);
-  object.contractId = reader.readLong(offsets[1]);
-  object.dueDate = reader.readDateTimeOrNull(offsets[2]);
+  object.collectorName = reader.readStringOrNull(offsets[1]);
+  object.contractId = reader.readLong(offsets[2]);
+  object.dueDate = reader.readDateTimeOrNull(offsets[3]);
   object.id = id;
-  object.isDownPayment = reader.readBool(offsets[3]);
-  object.isLateFee = reader.readBool(offsets[4]);
-  object.notes = reader.readStringOrNull(offsets[5]);
-  object.paymentDate = reader.readDateTime(offsets[6]);
-  object.receiptNumber = reader.readStringOrNull(offsets[7]);
+  object.isDownPayment = reader.readBool(offsets[4]);
+  object.isLateFee = reader.readBool(offsets[5]);
+  object.method =
+      _PaymentmethodValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+          PaymentMethod.cash;
+  object.notes = reader.readStringOrNull(offsets[7]);
+  object.paymentDate = reader.readDateTime(offsets[8]);
+  object.receiptNumber = reader.readStringOrNull(offsets[9]);
   return object;
 }
 
@@ -138,23 +161,43 @@ P _paymentDeserializeProp<P>(
     case 0:
       return (reader.readDouble(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 4:
       return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 6:
-      return (reader.readDateTime(offset)) as P;
+      return (_PaymentmethodValueEnumMap[reader.readByteOrNull(offset)] ??
+          PaymentMethod.cash) as P;
     case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readDateTime(offset)) as P;
+    case 9:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
+
+const _PaymentmethodEnumValueMap = {
+  'cash': 0,
+  'bankTransfer': 1,
+  'jazzCash': 2,
+  'easyPaisa': 3,
+  'cheque': 4,
+};
+const _PaymentmethodValueEnumMap = {
+  0: PaymentMethod.cash,
+  1: PaymentMethod.bankTransfer,
+  2: PaymentMethod.jazzCash,
+  3: PaymentMethod.easyPaisa,
+  4: PaymentMethod.cheque,
+};
 
 Id _paymentGetId(Payment object) {
   return object.id;
@@ -303,6 +346,155 @@ extension PaymentQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'collectorName',
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition>
+      collectorNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'collectorName',
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition>
+      collectorNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'collectorName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'collectorName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'collectorName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> collectorNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'collectorName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition>
+      collectorNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'collectorName',
+        value: '',
       ));
     });
   }
@@ -497,6 +689,59 @@ extension PaymentQueryFilter
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isLateFee',
         value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> methodEqualTo(
+      PaymentMethod value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'method',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> methodGreaterThan(
+    PaymentMethod value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'method',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> methodLessThan(
+    PaymentMethod value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'method',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterFilterCondition> methodBetween(
+    PaymentMethod lower,
+    PaymentMethod upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'method',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -869,6 +1114,18 @@ extension PaymentQuerySortBy on QueryBuilder<Payment, Payment, QSortBy> {
     });
   }
 
+  QueryBuilder<Payment, Payment, QAfterSortBy> sortByCollectorName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectorName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> sortByCollectorNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectorName', Sort.desc);
+    });
+  }
+
   QueryBuilder<Payment, Payment, QAfterSortBy> sortByContractId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'contractId', Sort.asc);
@@ -914,6 +1171,18 @@ extension PaymentQuerySortBy on QueryBuilder<Payment, Payment, QSortBy> {
   QueryBuilder<Payment, Payment, QAfterSortBy> sortByIsLateFeeDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isLateFee', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> sortByMethod() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'method', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> sortByMethodDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'method', Sort.desc);
     });
   }
 
@@ -965,6 +1234,18 @@ extension PaymentQuerySortThenBy
   QueryBuilder<Payment, Payment, QAfterSortBy> thenByAmountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'amount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> thenByCollectorName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectorName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> thenByCollectorNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'collectorName', Sort.desc);
     });
   }
 
@@ -1028,6 +1309,18 @@ extension PaymentQuerySortThenBy
     });
   }
 
+  QueryBuilder<Payment, Payment, QAfterSortBy> thenByMethod() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'method', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QAfterSortBy> thenByMethodDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'method', Sort.desc);
+    });
+  }
+
   QueryBuilder<Payment, Payment, QAfterSortBy> thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -1073,6 +1366,14 @@ extension PaymentQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Payment, Payment, QDistinct> distinctByCollectorName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'collectorName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Payment, Payment, QDistinct> distinctByContractId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'contractId');
@@ -1094,6 +1395,12 @@ extension PaymentQueryWhereDistinct
   QueryBuilder<Payment, Payment, QDistinct> distinctByIsLateFee() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isLateFee');
+    });
+  }
+
+  QueryBuilder<Payment, Payment, QDistinct> distinctByMethod() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'method');
     });
   }
 
@@ -1133,6 +1440,12 @@ extension PaymentQueryProperty
     });
   }
 
+  QueryBuilder<Payment, String?, QQueryOperations> collectorNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'collectorName');
+    });
+  }
+
   QueryBuilder<Payment, int, QQueryOperations> contractIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'contractId');
@@ -1154,6 +1467,12 @@ extension PaymentQueryProperty
   QueryBuilder<Payment, bool, QQueryOperations> isLateFeeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isLateFee');
+    });
+  }
+
+  QueryBuilder<Payment, PaymentMethod, QQueryOperations> methodProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'method');
     });
   }
 

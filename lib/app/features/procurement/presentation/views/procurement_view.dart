@@ -28,12 +28,15 @@ class ProcurementView extends StatelessWidget {
                   Get.offNamed('/sales');
                   break;
                 case 4:
-                  Get.offNamed('/customers');
+                  Get.offNamed('/installments');
                   break;
                 case 5:
-                  Get.offNamed('/reports');
+                  Get.offNamed('/customers');
                   break;
                 case 6:
+                  Get.offNamed('/reports');
+                  break;
+                case 7:
                   Get.offNamed('/settings');
                   break;
               }

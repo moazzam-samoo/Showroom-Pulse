@@ -31,9 +31,6 @@ class SalesView extends GetView<SalesController> {
               switch (index) {
                 case 0:
                   Get.offNamed('/dashboard');
-                  // Or Get.back() if we came from dashboard? 
-                  // Usually Navigation Bar implies replacing routes.
-                  // Implemented consistent logic:
                   break;
                 case 1:
                   Get.offNamed('/procurement');
@@ -45,12 +42,15 @@ class SalesView extends GetView<SalesController> {
                   // Already on Sales
                   break;
                 case 4:
-                  Get.offNamed('/customers');
+                  Get.offNamed('/installments');
                   break;
                 case 5:
-                  Get.offNamed('/reports');
+                  Get.offNamed('/customers');
                   break;
                 case 6:
+                  Get.offNamed('/reports');
+                  break;
+                case 7:
                   Get.offNamed('/settings');
                   break;
               }
