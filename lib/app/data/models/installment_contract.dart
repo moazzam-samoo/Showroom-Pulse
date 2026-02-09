@@ -5,6 +5,8 @@ part 'installment_contract.g.dart';
 /// Contract Status Enum
 enum ContractStatusEnum {
   active,
+  partiallyPaid,
+  overdue,
   completed,
   defaulted,
 }
@@ -58,12 +60,24 @@ class InstallmentContract {
   /// First EMI due date
   late DateTime firstDueDate;
 
+  /// Day of month when payment is due (e.g., 15 = 15th of each month)
+  int dayOfMonth = 1;
+
+  /// Next due date for payment (computed or stored for quick queries)
+  DateTime? nextDueDate;
+
+  /// Date of last payment received
+  DateTime? lastPaymentDate;
+
   /// Contract status
   @enumerated
   ContractStatusEnum status = ContractStatusEnum.active;
 
   /// Total amount paid so far
   double totalPaid = 0;
+
+  /// Number of payments made
+  int paymentsMade = 0;
 
   /// Is late fee enabled?
   bool lateFeeEnabled = false;
@@ -81,6 +95,15 @@ class InstallmentContract {
   double get paymentProgress {
     if (totalAmount <= 0) return 0;
     return (totalPaid / totalAmount).clamp(0.0, 1.0);
+  }
+
+  /// Get the number of payments remaining
+  int get paymentsRemaining => months - paymentsMade;
+
+  /// Check if contract is overdue
+  bool get isOverdue {
+    if (nextDueDate == null) return false;
+    return DateTime.now().isAfter(nextDueDate!) && status != ContractStatusEnum.completed;
   }
 }
 

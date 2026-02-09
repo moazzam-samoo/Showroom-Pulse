@@ -2,6 +2,15 @@ import 'package:isar/isar.dart';
 
 part 'payment.g.dart';
 
+/// Payment Method Enum
+enum PaymentMethod {
+  cash,
+  bankTransfer,
+  jazzCash,
+  easyPaisa,
+  cheque,
+}
+
 /// Payment Collection - Represents a payment on an installment contract
 @collection
 class Payment {
@@ -18,6 +27,13 @@ class Payment {
 
   /// Due date (if scheduled)
   DateTime? dueDate;
+
+  /// Payment method used
+  @enumerated
+  PaymentMethod method = PaymentMethod.cash;
+
+  /// Name of the person who collected the payment
+  String? collectorName;
 
   /// Is this payment for down payment?
   bool isDownPayment = false;

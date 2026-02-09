@@ -38,80 +38,110 @@ const InstallmentContractSchema = CollectionSchema(
       name: r'customerId',
       type: IsarType.long,
     ),
-    r'downPayment': PropertySchema(
+    r'dayOfMonth': PropertySchema(
       id: 4,
+      name: r'dayOfMonth',
+      type: IsarType.long,
+    ),
+    r'downPayment': PropertySchema(
+      id: 5,
       name: r'downPayment',
       type: IsarType.double,
     ),
     r'firstDueDate': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'firstDueDate',
       type: IsarType.dateTime,
     ),
+    r'isOverdue': PropertySchema(
+      id: 7,
+      name: r'isOverdue',
+      type: IsarType.bool,
+    ),
+    r'lastPaymentDate': PropertySchema(
+      id: 8,
+      name: r'lastPaymentDate',
+      type: IsarType.dateTime,
+    ),
     r'lateFeeEnabled': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'lateFeeEnabled',
       type: IsarType.bool,
     ),
     r'lateFeePercentage': PropertySchema(
-      id: 7,
+      id: 10,
       name: r'lateFeePercentage',
       type: IsarType.double,
     ),
     r'markupType': PropertySchema(
-      id: 8,
+      id: 11,
       name: r'markupType',
       type: IsarType.byte,
       enumMap: _InstallmentContractmarkupTypeEnumValueMap,
     ),
     r'markupValue': PropertySchema(
-      id: 9,
+      id: 12,
       name: r'markupValue',
       type: IsarType.double,
     ),
     r'monthlyEMI': PropertySchema(
-      id: 10,
+      id: 13,
       name: r'monthlyEMI',
       type: IsarType.double,
     ),
     r'months': PropertySchema(
-      id: 11,
+      id: 14,
       name: r'months',
       type: IsarType.long,
     ),
+    r'nextDueDate': PropertySchema(
+      id: 15,
+      name: r'nextDueDate',
+      type: IsarType.dateTime,
+    ),
     r'notes': PropertySchema(
-      id: 12,
+      id: 16,
       name: r'notes',
       type: IsarType.string,
     ),
     r'paymentProgress': PropertySchema(
-      id: 13,
+      id: 17,
       name: r'paymentProgress',
       type: IsarType.double,
     ),
+    r'paymentsMade': PropertySchema(
+      id: 18,
+      name: r'paymentsMade',
+      type: IsarType.long,
+    ),
+    r'paymentsRemaining': PropertySchema(
+      id: 19,
+      name: r'paymentsRemaining',
+      type: IsarType.long,
+    ),
     r'remainingBalance': PropertySchema(
-      id: 14,
+      id: 20,
       name: r'remainingBalance',
       type: IsarType.double,
     ),
     r'status': PropertySchema(
-      id: 15,
+      id: 21,
       name: r'status',
       type: IsarType.byte,
       enumMap: _InstallmentContractstatusEnumValueMap,
     ),
     r'totalAmount': PropertySchema(
-      id: 16,
+      id: 22,
       name: r'totalAmount',
       type: IsarType.double,
     ),
     r'totalMarkupAmount': PropertySchema(
-      id: 17,
+      id: 23,
       name: r'totalMarkupAmount',
       type: IsarType.double,
     ),
     r'totalPaid': PropertySchema(
-      id: 18,
+      id: 24,
       name: r'totalPaid',
       type: IsarType.double,
     )
@@ -155,21 +185,27 @@ void _installmentContractSerialize(
   writer.writeDouble(offsets[1], object.cashPrice);
   writer.writeDateTime(offsets[2], object.contractDate);
   writer.writeLong(offsets[3], object.customerId);
-  writer.writeDouble(offsets[4], object.downPayment);
-  writer.writeDateTime(offsets[5], object.firstDueDate);
-  writer.writeBool(offsets[6], object.lateFeeEnabled);
-  writer.writeDouble(offsets[7], object.lateFeePercentage);
-  writer.writeByte(offsets[8], object.markupType.index);
-  writer.writeDouble(offsets[9], object.markupValue);
-  writer.writeDouble(offsets[10], object.monthlyEMI);
-  writer.writeLong(offsets[11], object.months);
-  writer.writeString(offsets[12], object.notes);
-  writer.writeDouble(offsets[13], object.paymentProgress);
-  writer.writeDouble(offsets[14], object.remainingBalance);
-  writer.writeByte(offsets[15], object.status.index);
-  writer.writeDouble(offsets[16], object.totalAmount);
-  writer.writeDouble(offsets[17], object.totalMarkupAmount);
-  writer.writeDouble(offsets[18], object.totalPaid);
+  writer.writeLong(offsets[4], object.dayOfMonth);
+  writer.writeDouble(offsets[5], object.downPayment);
+  writer.writeDateTime(offsets[6], object.firstDueDate);
+  writer.writeBool(offsets[7], object.isOverdue);
+  writer.writeDateTime(offsets[8], object.lastPaymentDate);
+  writer.writeBool(offsets[9], object.lateFeeEnabled);
+  writer.writeDouble(offsets[10], object.lateFeePercentage);
+  writer.writeByte(offsets[11], object.markupType.index);
+  writer.writeDouble(offsets[12], object.markupValue);
+  writer.writeDouble(offsets[13], object.monthlyEMI);
+  writer.writeLong(offsets[14], object.months);
+  writer.writeDateTime(offsets[15], object.nextDueDate);
+  writer.writeString(offsets[16], object.notes);
+  writer.writeDouble(offsets[17], object.paymentProgress);
+  writer.writeLong(offsets[18], object.paymentsMade);
+  writer.writeLong(offsets[19], object.paymentsRemaining);
+  writer.writeDouble(offsets[20], object.remainingBalance);
+  writer.writeByte(offsets[21], object.status.index);
+  writer.writeDouble(offsets[22], object.totalAmount);
+  writer.writeDouble(offsets[23], object.totalMarkupAmount);
+  writer.writeDouble(offsets[24], object.totalPaid);
 }
 
 InstallmentContract _installmentContractDeserialize(
@@ -183,24 +219,28 @@ InstallmentContract _installmentContractDeserialize(
   object.cashPrice = reader.readDouble(offsets[1]);
   object.contractDate = reader.readDateTime(offsets[2]);
   object.customerId = reader.readLong(offsets[3]);
-  object.downPayment = reader.readDouble(offsets[4]);
-  object.firstDueDate = reader.readDateTime(offsets[5]);
+  object.dayOfMonth = reader.readLong(offsets[4]);
+  object.downPayment = reader.readDouble(offsets[5]);
+  object.firstDueDate = reader.readDateTime(offsets[6]);
   object.id = id;
-  object.lateFeeEnabled = reader.readBool(offsets[6]);
-  object.lateFeePercentage = reader.readDouble(offsets[7]);
+  object.lastPaymentDate = reader.readDateTimeOrNull(offsets[8]);
+  object.lateFeeEnabled = reader.readBool(offsets[9]);
+  object.lateFeePercentage = reader.readDouble(offsets[10]);
   object.markupType = _InstallmentContractmarkupTypeValueEnumMap[
-          reader.readByteOrNull(offsets[8])] ??
+          reader.readByteOrNull(offsets[11])] ??
       MarkupType.percentage;
-  object.markupValue = reader.readDouble(offsets[9]);
-  object.monthlyEMI = reader.readDouble(offsets[10]);
-  object.months = reader.readLong(offsets[11]);
-  object.notes = reader.readStringOrNull(offsets[12]);
+  object.markupValue = reader.readDouble(offsets[12]);
+  object.monthlyEMI = reader.readDouble(offsets[13]);
+  object.months = reader.readLong(offsets[14]);
+  object.nextDueDate = reader.readDateTimeOrNull(offsets[15]);
+  object.notes = reader.readStringOrNull(offsets[16]);
+  object.paymentsMade = reader.readLong(offsets[18]);
   object.status = _InstallmentContractstatusValueEnumMap[
-          reader.readByteOrNull(offsets[15])] ??
+          reader.readByteOrNull(offsets[21])] ??
       ContractStatusEnum.active;
-  object.totalAmount = reader.readDouble(offsets[16]);
-  object.totalMarkupAmount = reader.readDouble(offsets[17]);
-  object.totalPaid = reader.readDouble(offsets[18]);
+  object.totalAmount = reader.readDouble(offsets[22]);
+  object.totalMarkupAmount = reader.readDouble(offsets[23]);
+  object.totalPaid = reader.readDouble(offsets[24]);
   return object;
 }
 
@@ -220,38 +260,50 @@ P _installmentContractDeserializeProp<P>(
     case 3:
       return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 8:
-      return (_InstallmentContractmarkupTypeValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          MarkupType.percentage) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 10:
       return (reader.readDouble(offset)) as P;
     case 11:
-      return (reader.readLong(offset)) as P;
+      return (_InstallmentContractmarkupTypeValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          MarkupType.percentage) as P;
     case 12:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 13:
       return (reader.readDouble(offset)) as P;
     case 14:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 15:
-      return (_InstallmentContractstatusValueEnumMap[
-              reader.readByteOrNull(offset)] ??
-          ContractStatusEnum.active) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 16:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 17:
       return (reader.readDouble(offset)) as P;
     case 18:
+      return (reader.readLong(offset)) as P;
+    case 19:
+      return (reader.readLong(offset)) as P;
+    case 20:
+      return (reader.readDouble(offset)) as P;
+    case 21:
+      return (_InstallmentContractstatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          ContractStatusEnum.active) as P;
+    case 22:
+      return (reader.readDouble(offset)) as P;
+    case 23:
+      return (reader.readDouble(offset)) as P;
+    case 24:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -268,13 +320,17 @@ const _InstallmentContractmarkupTypeValueEnumMap = {
 };
 const _InstallmentContractstatusEnumValueMap = {
   'active': 0,
-  'completed': 1,
-  'defaulted': 2,
+  'partiallyPaid': 1,
+  'overdue': 2,
+  'completed': 3,
+  'defaulted': 4,
 };
 const _InstallmentContractstatusValueEnumMap = {
   0: ContractStatusEnum.active,
-  1: ContractStatusEnum.completed,
-  2: ContractStatusEnum.defaulted,
+  1: ContractStatusEnum.partiallyPaid,
+  2: ContractStatusEnum.overdue,
+  3: ContractStatusEnum.completed,
+  4: ContractStatusEnum.defaulted,
 };
 
 Id _installmentContractGetId(InstallmentContract object) {
@@ -608,6 +664,62 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      dayOfMonthEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dayOfMonth',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      dayOfMonthGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dayOfMonth',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      dayOfMonthLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dayOfMonth',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      dayOfMonthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dayOfMonth',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
       downPaymentEqualTo(
     double value, {
     double epsilon = Query.epsilon,
@@ -777,6 +889,90 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      isOverdueEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isOverdue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastPaymentDate',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastPaymentDate',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastPaymentDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastPaymentDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastPaymentDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      lastPaymentDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastPaymentDate',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1106,6 +1302,80 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'nextDueDate',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'nextDueDate',
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      nextDueDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextDueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
       notesIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1321,6 +1591,118 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsMadeEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paymentsMade',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsMadeGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paymentsMade',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsMadeLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paymentsMade',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsMadeBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paymentsMade',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsRemainingEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paymentsRemaining',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsRemainingGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paymentsRemaining',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsRemainingLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paymentsRemaining',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      paymentsRemainingBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paymentsRemaining',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1711,6 +2093,20 @@ extension InstallmentContractQuerySortBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByDayOfMonth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayOfMonth', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByDayOfMonthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayOfMonth', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       sortByDownPayment() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downPayment', Sort.asc);
@@ -1735,6 +2131,34 @@ extension InstallmentContractQuerySortBy
       sortByFirstDueDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'firstDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByIsOverdueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLastPaymentDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPaymentDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByLastPaymentDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPaymentDate', Sort.desc);
     });
   }
 
@@ -1823,6 +2247,20 @@ extension InstallmentContractQuerySortBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByNextDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByNextDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       sortByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -1847,6 +2285,34 @@ extension InstallmentContractQuerySortBy
       sortByPaymentProgressDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentProgress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentsMade() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsMade', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentsMadeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsMade', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentsRemaining() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsRemaining', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByPaymentsRemainingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsRemaining', Sort.desc);
     });
   }
 
@@ -1980,6 +2446,20 @@ extension InstallmentContractQuerySortThenBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByDayOfMonth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayOfMonth', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByDayOfMonthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dayOfMonth', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       thenByDownPayment() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'downPayment', Sort.asc);
@@ -2018,6 +2498,34 @@ extension InstallmentContractQuerySortThenBy
       thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByIsOverdueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLastPaymentDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPaymentDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByLastPaymentDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastPaymentDate', Sort.desc);
     });
   }
 
@@ -2106,6 +2614,20 @@ extension InstallmentContractQuerySortThenBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByNextDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByNextDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'nextDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -2130,6 +2652,34 @@ extension InstallmentContractQuerySortThenBy
       thenByPaymentProgressDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'paymentProgress', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentsMade() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsMade', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentsMadeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsMade', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentsRemaining() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsRemaining', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByPaymentsRemainingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentsRemaining', Sort.desc);
     });
   }
 
@@ -2235,6 +2785,13 @@ extension InstallmentContractQueryWhereDistinct
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByDayOfMonth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dayOfMonth');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
       distinctByDownPayment() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'downPayment');
@@ -2245,6 +2802,20 @@ extension InstallmentContractQueryWhereDistinct
       distinctByFirstDueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'firstDueDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByLastPaymentDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastPaymentDate');
     });
   }
 
@@ -2291,6 +2862,13 @@ extension InstallmentContractQueryWhereDistinct
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByNextDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'nextDueDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
       distinctByNotes({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
@@ -2301,6 +2879,20 @@ extension InstallmentContractQueryWhereDistinct
       distinctByPaymentProgress() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'paymentProgress');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByPaymentsMade() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'paymentsMade');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByPaymentsRemaining() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'paymentsRemaining');
     });
   }
 
@@ -2375,6 +2967,13 @@ extension InstallmentContractQueryProperty
     });
   }
 
+  QueryBuilder<InstallmentContract, int, QQueryOperations>
+      dayOfMonthProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dayOfMonth');
+    });
+  }
+
   QueryBuilder<InstallmentContract, double, QQueryOperations>
       downPaymentProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -2386,6 +2985,20 @@ extension InstallmentContractQueryProperty
       firstDueDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'firstDueDate');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, bool, QQueryOperations>
+      isOverdueProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, DateTime?, QQueryOperations>
+      lastPaymentDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastPaymentDate');
     });
   }
 
@@ -2430,6 +3043,13 @@ extension InstallmentContractQueryProperty
     });
   }
 
+  QueryBuilder<InstallmentContract, DateTime?, QQueryOperations>
+      nextDueDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'nextDueDate');
+    });
+  }
+
   QueryBuilder<InstallmentContract, String?, QQueryOperations> notesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'notes');
@@ -2440,6 +3060,20 @@ extension InstallmentContractQueryProperty
       paymentProgressProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'paymentProgress');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, int, QQueryOperations>
+      paymentsMadeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'paymentsMade');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, int, QQueryOperations>
+      paymentsRemainingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'paymentsRemaining');
     });
   }
 

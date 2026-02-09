@@ -1,0 +1,216 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:tahir_showroom/app/core/constants/app_colors.dart';
+import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+
+/// Payment summary cards showing Total, Paid, Remaining, Next Due
+class PaymentSummaryCards extends StatelessWidget {
+  final double totalAmount;
+  final double paidAmount;
+  final double remainingAmount;
+  final DateTime? nextDueDate;
+
+  const PaymentSummaryCards({
+    super.key,
+    required this.totalAmount,
+    required this.paidAmount,
+    required this.remainingAmount,
+    this.nextDueDate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currencyFormat = NumberFormat.currency(
+      locale: 'en_PK',
+      symbol: 'Rs ',
+      decimalDigits: 0,
+    );
+
+    return Column(
+      children: [
+        // Top Row: Total Amount + Paid
+        Row(
+          children: [
+            Expanded(
+              child: _buildCard(
+                context: context,
+                title: 'Total Amount',
+                value: currencyFormat.format(totalAmount),
+                valueColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                icon: LucideIcons.wallet,
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildCard(
+                context: context,
+                title: 'Paid',
+                value: currencyFormat.format(paidAmount),
+                valueColor: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
+                icon: LucideIcons.checkCircle,
+                isDark: isDark,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        // Bottom Row: Remaining + Next Due
+        Row(
+          children: [
+            Expanded(
+              child: _buildCard(
+                context: context,
+                title: 'Remaining',
+                value: currencyFormat.format(remainingAmount),
+                valueColor: isDark ? AppColors.darkWarning : AppColors.lightWarning,
+                icon: LucideIcons.clock,
+                isDark: isDark,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildNextDueCard(context, isDark),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard({
+    required BuildContext context,
+    required String title,
+    required String value,
+    required Color valueColor,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  fontSize: 12,
+                ),
+              ),
+              Icon(
+                icon,
+                size: 16,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNextDueCard(BuildContext context, bool isDark) {
+    final dateFormat = DateFormat('d MMM, yyyy');
+    final daysUntil = nextDueDate != null
+        ? nextDueDate!.difference(DateTime.now()).inDays
+        : null;
+
+    String? subtitle;
+    Color subtitleColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+
+    if (daysUntil != null) {
+      if (daysUntil < 0) {
+        subtitle = '${daysUntil.abs()} days overdue';
+        subtitleColor = isDark ? AppColors.darkError : AppColors.lightError;
+      } else if (daysUntil == 0) {
+        subtitle = 'Due today';
+        subtitleColor = isDark ? AppColors.darkWarning : AppColors.lightWarning;
+      } else {
+        subtitle = 'in $daysUntil days';
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Next Due',
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  fontSize: 12,
+                ),
+              ),
+              Icon(
+                LucideIcons.calendar,
+                size: 16,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            nextDueDate != null ? dateFormat.format(nextDueDate!) : 'N/A',
+            style: TextStyle(
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(LucideIcons.clock, size: 12, color: subtitleColor),
+                const SizedBox(width: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: subtitleColor,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// Authored by: Moazzam Samoo
