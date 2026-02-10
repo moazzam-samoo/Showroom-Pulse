@@ -8,9 +8,12 @@ import 'app/core/constants/app_colors.dart';
 import 'app/features/auth/presentation/views/login_view.dart';
 import 'app/features/auth/data/auth_service.dart';
 import 'app/features/dashboard/presentation/views/dashboard_view.dart';
+import 'app/features/dashboard/presentation/bindings/dashboard_binding.dart';
 import 'app/features/procurement/presentation/views/procurement_view.dart';
 import 'app/features/procurement/presentation/bindings/procurement_binding.dart';
 import 'app/features/inventory/presentation/views/inventory_view.dart';
+import 'app/features/sales/presentation/views/sales_view.dart';
+import 'app/features/sales/presentation/bindings/sales_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,13 +66,22 @@ class TahirShowroomApp extends StatelessWidget {
           page: () => const LoginView(),
           binding: LoginBinding(),
         ),
-        GetPage(name: '/dashboard', page: () => const DashboardView()),
+        GetPage(
+          name: '/dashboard', 
+          page: () => const DashboardView(),
+          binding: DashboardBinding(),
+        ),
         GetPage(
           name: '/procurement',
           page: () => const ProcurementView(),
           binding: ProcurementBinding(),
         ),
         GetPage(name: '/inventory', page: () => const InventoryView()),
+        GetPage(
+          name: '/sales',
+          page: () => const SalesView(),
+          binding: SalesBinding(),
+        ),
       ],
     );
   }

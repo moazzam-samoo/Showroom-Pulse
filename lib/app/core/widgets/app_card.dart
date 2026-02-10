@@ -29,17 +29,28 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = color ?? Theme.of(context).cardTheme.color;
     
+    // Pro Max Aesthetic: Slate 800 for Dark, White for Light
+    final defaultColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final cardColor = color ?? defaultColor;
+
     Widget card = Container(
       margin: margin,
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.lg),
         border: isDark 
-            ? Border.all(color: Theme.of(context).dividerColor)
-            : null,
-        boxShadow: hasShadow && !isDark ? AppShadows.sm : null,
+            ? Border.all(color: Colors.white.withOpacity(0.1), width: 1.0) 
+            : Border.all(color: Colors.black.withOpacity(0.05)),
+        boxShadow: hasShadow 
+          ? [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ]
+          : null,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.lg),

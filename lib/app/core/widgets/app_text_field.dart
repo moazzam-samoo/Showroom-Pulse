@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_radius.dart';
 
 /// AppTextField - Standard text input component
@@ -22,6 +23,7 @@ class AppTextField extends StatelessWidget {
   final VoidCallback? onSuffixTap;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AppTextField({
     super.key,
@@ -44,6 +46,7 @@ class AppTextField extends StatelessWidget {
     this.onSuffixTap,
     this.focusNode,
     this.textInputAction,
+    this.inputFormatters,
   });
 
   @override
@@ -74,6 +77,7 @@ class AppTextField extends StatelessWidget {
           maxLength: maxLength,
           focusNode: focusNode,
           textInputAction: textInputAction,
+          inputFormatters: inputFormatters,
           style: Theme.of(context).textTheme.bodyLarge,
           decoration: InputDecoration(
             hintText: hint,

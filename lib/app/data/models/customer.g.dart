@@ -47,23 +47,28 @@ const CustomerSchema = CollectionSchema(
       name: r'dateRegistered',
       type: IsarType.dateTime,
     ),
-    r'fullName': PropertySchema(
+    r'fatherName': PropertySchema(
       id: 6,
+      name: r'fatherName',
+      type: IsarType.string,
+    ),
+    r'fullName': PropertySchema(
+      id: 7,
       name: r'fullName',
       type: IsarType.string,
     ),
     r'notes': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'notes',
       type: IsarType.string,
     ),
     r'phoneNumber': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'phoneNumber',
       type: IsarType.string,
     ),
     r'profileImageFilename': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'profileImageFilename',
       type: IsarType.string,
     )
@@ -127,6 +132,12 @@ int _customerEstimateSize(
     }
   }
   bytesCount += 3 + object.cnicNumber.length * 3;
+  {
+    final value = object.fatherName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.fullName.length * 3;
   {
     final value = object.notes;
@@ -156,10 +167,11 @@ void _customerSerialize(
   writer.writeString(offsets[3], object.cnicFrontFilename);
   writer.writeString(offsets[4], object.cnicNumber);
   writer.writeDateTime(offsets[5], object.dateRegistered);
-  writer.writeString(offsets[6], object.fullName);
-  writer.writeString(offsets[7], object.notes);
-  writer.writeString(offsets[8], object.phoneNumber);
-  writer.writeString(offsets[9], object.profileImageFilename);
+  writer.writeString(offsets[6], object.fatherName);
+  writer.writeString(offsets[7], object.fullName);
+  writer.writeString(offsets[8], object.notes);
+  writer.writeString(offsets[9], object.phoneNumber);
+  writer.writeString(offsets[10], object.profileImageFilename);
 }
 
 Customer _customerDeserialize(
@@ -175,11 +187,12 @@ Customer _customerDeserialize(
   object.cnicFrontFilename = reader.readStringOrNull(offsets[3]);
   object.cnicNumber = reader.readString(offsets[4]);
   object.dateRegistered = reader.readDateTime(offsets[5]);
-  object.fullName = reader.readString(offsets[6]);
+  object.fatherName = reader.readStringOrNull(offsets[6]);
+  object.fullName = reader.readString(offsets[7]);
   object.id = id;
-  object.notes = reader.readStringOrNull(offsets[7]);
-  object.phoneNumber = reader.readString(offsets[8]);
-  object.profileImageFilename = reader.readStringOrNull(offsets[9]);
+  object.notes = reader.readStringOrNull(offsets[8]);
+  object.phoneNumber = reader.readString(offsets[9]);
+  object.profileImageFilename = reader.readStringOrNull(offsets[10]);
   return object;
 }
 
@@ -203,12 +216,14 @@ P _customerDeserializeProp<P>(
     case 5:
       return (reader.readDateTime(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
-    case 7:
       return (reader.readStringOrNull(offset)) as P;
-    case 8:
+    case 7:
       return (reader.readString(offset)) as P;
+    case 8:
+      return (reader.readStringOrNull(offset)) as P;
     case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1198,6 +1213,154 @@ extension CustomerQueryFilter
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fatherName',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      fatherNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fatherName',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fatherName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'fatherName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'fatherName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> fatherNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fatherName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      fatherNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'fatherName',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterFilterCondition> fullNameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1892,6 +2055,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByFatherName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatherName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByFatherNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatherName', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByFullName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullName', Sort.asc);
@@ -2016,6 +2191,18 @@ extension CustomerQuerySortThenBy
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByFatherName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatherName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByFatherNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fatherName', Sort.desc);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByFullName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fullName', Sort.asc);
@@ -2124,6 +2311,13 @@ extension CustomerQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Customer, Customer, QDistinct> distinctByFatherName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fatherName', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Customer, Customer, QDistinct> distinctByFullName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2196,6 +2390,12 @@ extension CustomerQueryProperty
   QueryBuilder<Customer, DateTime, QQueryOperations> dateRegisteredProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dateRegistered');
+    });
+  }
+
+  QueryBuilder<Customer, String?, QQueryOperations> fatherNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fatherName');
     });
   }
 

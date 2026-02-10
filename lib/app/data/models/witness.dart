@@ -13,20 +13,26 @@ class Witness {
   /// Witness CNIC number
   late String cnicNumber;
 
-  /// Witness phone number
+  /// Witness phone number (Pakistani format: 03XX-XXXXXXX)
   late String phoneNumber;
 
   /// Relationship to customer
   String? relationship;
 
-  /// Address
+  /// Full address
   String? address;
 
-  /// CNIC image filename (stored in customer's Witness folder)
-  String? cnicImageFilename;
+  /// CNIC Front image filename (required)
+  String? cnicFrontFilename;
+
+  /// CNIC Back image filename (optional)
+  String? cnicBackFilename;
 
   /// ID of the contract this witness is associated with
   late int contractId;
+
+  /// Is this the primary witness (Witness 1)?
+  bool isPrimary = true;
 }
 
 // Authored by: Moazzam Samoo
