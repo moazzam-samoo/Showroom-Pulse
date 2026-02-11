@@ -14,6 +14,8 @@ import 'app/features/procurement/presentation/bindings/procurement_binding.dart'
 import 'app/features/inventory/presentation/views/inventory_view.dart';
 import 'app/features/sales/presentation/views/sales_view.dart';
 import 'app/features/sales/presentation/bindings/sales_binding.dart';
+import 'app/features/installments/presentation/views/installments_view.dart';
+import 'app/features/installments/presentation/bindings/installments_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +84,56 @@ class TahirShowroomApp extends StatelessWidget {
           page: () => const SalesView(),
           binding: SalesBinding(),
         ),
+        GetPage(
+          name: '/installments',
+          page: () => const InstallmentsView(),
+          binding: InstallmentsBinding(),
+        ),
+        // Placeholders for missing features
+        GetPage(name: '/customers', page: () => const FeaturePlaceholder(title: 'Customers')),
+        GetPage(name: '/reports', page: () => const FeaturePlaceholder(title: 'Reports')),
+        GetPage(name: '/settings', page: () => const FeaturePlaceholder(title: 'Settings')),
       ],
+    );
+  }
+}
+
+/// Placeholder for features not yet implemented
+class FeaturePlaceholder extends StatelessWidget {
+  final String title;
+  const FeaturePlaceholder({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          onPressed: () => Get.offNamed('/dashboard'),
+        ),
+      ),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.construction, size: 64, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+            const SizedBox(height: 16),
+            Text(
+              '$title Feature Coming Soon',
+              style: TextStyle(
+                fontSize: 20, 
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

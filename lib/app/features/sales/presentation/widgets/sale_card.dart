@@ -57,6 +57,9 @@ class SaleCardData {
   
   // All witnesses (supports multiple witnesses)
   final List<WitnessData>? witnesses;
+  
+  // Installment completion status
+  final bool isInstallmentCompleted;
 
   SaleCardData({
     required this.bikeModel,
@@ -82,6 +85,7 @@ class SaleCardData {
     this.witnessPhone,
     this.witnessImage,
     this.witnesses,
+    this.isInstallmentCompleted = false,
   });
 }
 
@@ -180,27 +184,64 @@ class SaleCard extends StatelessWidget {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: badgeColor,
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                      boxShadow: [
-                        BoxShadow(
-                          color: badgeColor.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: badgeColor,
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          boxShadow: [
+                            BoxShadow(
+                              color: badgeColor.withOpacity(0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          badgeLabel,
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                      if (data.isInstallmentCompleted) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF22C55E).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.check_circle, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Completed',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                    child: Text(
-                      badgeLabel,
-                      style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ],
