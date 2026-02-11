@@ -18,6 +18,7 @@ class CashSaleDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    print('Cash Dialog - Purchaser Image: ${data.purchaserImage}');
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -126,7 +127,7 @@ class CashSaleDetailDialog extends StatelessWidget {
                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
                  ),
                ),
-               child: data.purchaserImage != null 
+               child: data.purchaserImage != null && data.purchaserImage!.isNotEmpty
                  ? ClipRRect(
                      borderRadius: BorderRadius.circular(AppRadius.lg),
                      child: Image.file(
@@ -134,7 +135,10 @@ class CashSaleDetailDialog extends StatelessWidget {
                         fit: BoxFit.cover,
                         width: 80,
                         height: 80,
-                        errorBuilder: (_,__,___) => _buildPlaceholderIcon(isDark),
+                        errorBuilder: (_,__,___) {
+                          print('Error loading purchaser image (Cash): ${data.purchaserImage}');
+                          return _buildPlaceholderIcon(isDark);
+                        },
                      ),
                    )
                  : _buildPlaceholderIcon(isDark),

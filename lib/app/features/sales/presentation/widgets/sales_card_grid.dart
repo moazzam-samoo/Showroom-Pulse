@@ -14,8 +14,7 @@ class SalesCardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<SalesController>();
 
-    return Expanded(
-      child: Obx(() {
+    return Obx(() {
         // Show loading indicator while fetching data
         if (controller.isLoading.value) {
           return const Center(
@@ -156,8 +155,7 @@ class SalesCardGrid extends StatelessWidget {
              ],
           );
         }
-      }),
-    );
+      });
   }
 
   Widget _buildColumnHeader(String title, Color color, bool isDark) {

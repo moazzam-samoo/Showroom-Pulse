@@ -13,6 +13,7 @@ class PaymentSummaryCards extends StatelessWidget {
   final DateTime? nextDueDate;
   final double downPayment;
   final double monthlyEMI;
+  final bool isCompleted;
 
   const PaymentSummaryCards({
     super.key,
@@ -22,6 +23,7 @@ class PaymentSummaryCards extends StatelessWidget {
     this.nextDueDate,
     required this.downPayment,
     required this.monthlyEMI,
+    this.isCompleted = false,
   });
 
   @override
@@ -80,8 +82,12 @@ class PaymentSummaryCards extends StatelessWidget {
               child: _buildCard(
                 context: context,
                 title: 'Remaining',
-                value: currencyFormat.format(remainingAmount),
-                valueColor: isDark ? AppColors.darkWarning : AppColors.lightWarning,
+                value: isCompleted && remainingAmount <= 0
+                    ? 'Rs 0 - All payment done'
+                    : currencyFormat.format(remainingAmount),
+                valueColor: isCompleted && remainingAmount <= 0
+                    ? (isDark ? AppColors.darkSuccess : AppColors.lightSuccess)
+                    : (isDark ? AppColors.darkWarning : AppColors.lightWarning),
                 icon: LucideIcons.clock,
                 isDark: isDark,
               ),
@@ -220,9 +226,13 @@ class PaymentSummaryCards extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              nextDueDate != null ? dateFormat.format(nextDueDate!) : 'N/A',
+              isCompleted
+                  ? 'Completed'
+                  : (nextDueDate != null ? dateFormat.format(nextDueDate!) : 'N/A'),
               style: TextStyle(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isCompleted
+                    ? (isDark ? AppColors.darkSuccess : AppColors.lightSuccess)
+                    : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
