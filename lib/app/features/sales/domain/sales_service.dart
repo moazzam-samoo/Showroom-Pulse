@@ -167,7 +167,6 @@ class SalesService {
       purchaserImage: customerImagePath,
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
-      // Removed duplicate saleDate
       amountPaid: await _calculateAmountPaid(sale, contract, isar),
       bikePrice: contract?.cashPrice ?? sale.totalAmount,
       sellingPrice: contract?.totalAmount,
@@ -181,6 +180,7 @@ class SalesService {
       witnessPhone: primaryWitness?.phoneNumber,
       witnessImage: primaryWitnessCnicPath,
       witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
+      isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
     );
   }
 
@@ -189,18 +189,8 @@ class SalesService {
       // For cash sales, if receivedAmount is 0, assume full payment (migration fix)
       return sale.receivedAmount > 0 ? sale.receivedAmount : sale.totalAmount;
     } else if (contract != null) {
-      // For installment sales: Down Payment + All Payments
-      double totalPaid = contract.downPayment;
-      
-      final payments = await isar.payments
-          .filter()
-          .contractIdEqualTo(contract.id)
-          .findAll();
-      
-      for (var payment in payments) {
-        totalPaid += payment.amount;
-      }
-      return totalPaid;
+      // Use the cached totalPaid from the contract model
+      return contract.totalPaid;
     }
     return 0;
   }

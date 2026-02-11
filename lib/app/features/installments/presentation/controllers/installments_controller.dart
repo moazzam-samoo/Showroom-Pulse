@@ -6,6 +6,7 @@ import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/services/statement_service.dart';
 
 /// Data class for displaying contract with related info
 class ContractDisplayData {
@@ -79,6 +80,9 @@ class InstallmentsController extends GetxController {
     try {
       // Update overdue status first
       await _repository.updateOverdueContracts();
+      
+      // Repair legacy data (fix 0 down payments)
+      await _repository.repairLegacyData();
 
       List<InstallmentContract> rawContracts;
       
@@ -98,6 +102,11 @@ class InstallmentsController extends GetxController {
         final payments = await _repository.getPaymentsForContract(contract.id);
 
         if (customer != null && bike != null) {
+          // Fallback: fix legacy contracts missing nextDueDate
+          if (contract.nextDueDate == null && contract.status != ContractStatusEnum.completed) {
+            contract.nextDueDate = contract.firstDueDate;
+            contract.dayOfMonth = contract.firstDueDate.day;
+          }
           displayData.add(ContractDisplayData(
             contract: contract,
             customer: customer,
@@ -189,6 +198,41 @@ class InstallmentsController extends GetxController {
       Get.snackbar('Success', 'Payment recorded successfully');
     } catch (e) {
       Get.snackbar('Error', 'Failed to record payment: $e');
+    }
+  }
+
+  /// Download individual customer's installment statement
+  Future<void> downloadStatement() async {
+    final data = selectedContract;
+    if (data == null) return;
+
+    final service = StatementService();
+    final path = await service.generateSingleStatement(data);
+    if (path != null) {
+      Get.snackbar('Success', 'Statement saved to Downloads folder',
+        duration: const Duration(seconds: 3));
+    } else {
+      Get.snackbar('Error', 'Failed to generate statement');
+    }
+  }
+
+  /// Download all installment statements (combined PDF + ZIP)
+  Future<void> downloadAllStatements() async {
+    if (contracts.isEmpty) return;
+
+    final service = StatementService();
+
+    // Generate combined PDF
+    final pdfPath = await service.generateGlobalStatement(contracts.toList());
+
+    // Generate ZIP with individual PDFs
+    final zipPath = await service.generateGlobalZip(contracts.toList());
+
+    if (pdfPath != null && zipPath != null) {
+      Get.snackbar('Success', 'All statements saved to Downloads folder',
+        duration: const Duration(seconds: 3));
+    } else {
+      Get.snackbar('Error', 'Failed to generate statements');
     }
   }
 }
