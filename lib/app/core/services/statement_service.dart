@@ -253,12 +253,62 @@ class StatementService {
           ),
           pw.Row(
             children: [
-              pw.Expanded(child: _pdfInfoRow('Status', contract.status.name.toUpperCase())),
+              pw.Expanded(child: _buildPdfStatusBadge(contract.status)),
               pw.Expanded(child: _pdfInfoRow('Start Date', _dateFormat.format(contract.contractDate))),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  /// Colored box badge for contract status in PDF
+  pw.Widget _buildPdfStatusBadge(ContractStatusEnum status) {
+    PdfColor bgColor;
+    String label;
+
+    switch (status) {
+      case ContractStatusEnum.active:
+        bgColor = PdfColors.blue;
+        label = 'ACTIVE';
+        break;
+      case ContractStatusEnum.partiallyPaid:
+        bgColor = PdfColors.blueGrey;
+        label = 'PARTIAL';
+        break;
+      case ContractStatusEnum.overdue:
+        bgColor = PdfColors.orange;
+        label = 'OVERDUE';
+        break;
+      case ContractStatusEnum.completed:
+        bgColor = PdfColors.green;
+        label = 'COMPLETED';
+        break;
+      case ContractStatusEnum.defaulted:
+        bgColor = PdfColors.red;
+        label = 'DEFAULTED';
+        break;
+    }
+
+    return pw.Row(
+      children: [
+        pw.Text('Status: ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: pw.BoxDecoration(
+            color: bgColor,
+            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+          ),
+          child: pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
