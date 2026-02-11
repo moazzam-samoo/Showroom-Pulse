@@ -293,7 +293,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
                    children: [
                      _buildPriceRow('Total Actual Price', data.bikePrice, controller, isDark),
                      const SizedBox(height: 8),
-                     _buildPriceRow('Selling Price (Markup)', data.sellingPrice, controller, isDark, isBold: true, color: const Color(0xFFD946EF)),
+                     _buildPriceRow('Selling Price (Markup)', data.sellingPrice, controller, isDark, isBold: true, color: const Color(0xFFF59E0B)),
                    ],
                  ),
                ),
@@ -431,10 +431,10 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD946EF).withOpacity(0.1),
+                  color: const Color(0xFFF59E0B).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.calendarClock, color: Color(0xFFD946EF), size: 20),
+                child: const Icon(LucideIcons.calendarClock, color: Color(0xFFF59E0B), size: 20),
               ),
               const SizedBox(width: 12),
               Column(

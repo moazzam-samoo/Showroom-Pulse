@@ -512,10 +512,10 @@ class CashSaleDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF22C55E).withOpacity(0.1),
+                  color: const Color(0xFFEF4444).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(LucideIcons.checkCircle, color: Color(0xFF22C55E), size: 20),
+                child: const Icon(LucideIcons.checkCircle, color: Color(0xFFEF4444), size: 20),
               ),
               const SizedBox(width: 12),
               Column(

@@ -5,6 +5,7 @@ import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
+import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/witness.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
@@ -115,15 +116,8 @@ class SalesService {
       );
     }
 
-    // Create list of WitnessData for all witnesses
-    final List<WitnessData> witnessDataList = witnesses.map((w) => WitnessData(
-      fullName: w.fullName,
-      cnicNumber: w.cnicNumber,
-      phoneNumber: w.phoneNumber,
-      address: w.address,
-      cnicFrontFilename: w.cnicFrontFilename,
-      isPrimary: w.isPrimary,
-    )).toList();
+    // Create list of WitnessData for all witnesses (with paths, so just skip this one)
+    // final List<WitnessData> witnessDataList = ... (Removed as unused)
 
     // Convert bike image filename to full path
     final fileService = Get.find<FileService>();
@@ -173,7 +167,8 @@ class SalesService {
       purchaserImage: customerImagePath,
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
-      amountPaid: sale.receivedAmount,
+      // Removed duplicate saleDate
+      amountPaid: await _calculateAmountPaid(sale, contract, isar),
       bikePrice: contract?.cashPrice ?? sale.totalAmount,
       sellingPrice: contract?.totalAmount,
       amountRemaining: contract?.remainingBalance,
@@ -187,6 +182,27 @@ class SalesService {
       witnessImage: primaryWitnessCnicPath,
       witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
     );
+  }
+
+  Future<double> _calculateAmountPaid(Sale sale, InstallmentContract? contract, Isar isar) async {
+    if (sale.saleType == SaleType.cash) {
+      // For cash sales, if receivedAmount is 0, assume full payment (migration fix)
+      return sale.receivedAmount > 0 ? sale.receivedAmount : sale.totalAmount;
+    } else if (contract != null) {
+      // For installment sales: Down Payment + All Payments
+      double totalPaid = contract.downPayment;
+      
+      final payments = await isar.payments
+          .filter()
+          .contractIdEqualTo(contract.id)
+          .findAll();
+      
+      for (var payment in payments) {
+        totalPaid += payment.amount;
+      }
+      return totalPaid;
+    }
+    return 0;
   }
 
   /// Calculate dashboard statistics
@@ -349,7 +365,7 @@ class SalesService {
     double total = 0;
     
     for (var bike in bikes) {
-      total += bike.purchasePrice ?? 0;
+      total += bike.purchasePrice;
     }
     
     return total;
