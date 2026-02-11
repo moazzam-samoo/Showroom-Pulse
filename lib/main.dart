@@ -16,6 +16,8 @@ import 'app/features/sales/presentation/views/sales_view.dart';
 import 'app/features/sales/presentation/bindings/sales_binding.dart';
 import 'app/features/installments/presentation/views/installments_view.dart';
 import 'app/features/installments/presentation/bindings/installments_binding.dart';
+import 'app/features/customers/presentation/views/customers_view.dart';
+import 'app/features/customers/presentation/bindings/customers_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -89,10 +91,11 @@ class TahirShowroomApp extends StatelessWidget {
           page: () => const InstallmentsView(),
           binding: InstallmentsBinding(),
         ),
-        // Placeholders for missing features
-        GetPage(name: '/customers', page: () => const FeaturePlaceholder(title: 'Customers')),
-        GetPage(name: '/reports', page: () => const FeaturePlaceholder(title: 'Reports')),
-        GetPage(name: '/settings', page: () => const FeaturePlaceholder(title: 'Settings')),
+        GetPage(
+          name: '/customers',
+          page: () => const CustomersView(),
+          binding: CustomersBinding(),
+        ),
       ],
     );
   }
