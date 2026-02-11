@@ -172,6 +172,21 @@ class InstallmentsView extends StatelessWidget {
               ),
             ),
           )),
+          const SizedBox(width: AppSpacing.sm),
+          // Export All Button
+          ElevatedButton.icon(
+            onPressed: () => controller.downloadAllStatements(),
+            icon: const Icon(LucideIcons.download, size: 16),
+            label: const Text('Export All'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -273,11 +288,13 @@ class InstallmentsView extends StatelessWidget {
                 paidAmount: selected.contract.totalPaid,
                 remainingAmount: selected.contract.remainingBalance,
                 nextDueDate: selected.contract.nextDueDate,
+                downPayment: selected.contract.downPayment,
+                monthlyEMI: selected.contract.monthlyEMI,
               ),
               const SizedBox(height: AppSpacing.base),
-              // Payment Timeline
+              // Payment Timeline (exclude initial Down Payment record)
               PaymentTimeline(
-                payments: selected.payments,
+                payments: selected.payments.where((p) => !p.isDownPayment && p.notes != 'Down Payment').toList(),
                 onRecordPayment: () => _showRecordPaymentDialog(controller),
               ),
             ],
@@ -348,10 +365,24 @@ class InstallmentsView extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(LucideIcons.creditCard, size: 14, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    const SizedBox(width: 4),
+                    Text(
+                      'CNIC: ${data.customer.cnicNumber}',
+                      style: TextStyle(
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          // Bike Info
+          // Bike Info + Download
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -359,6 +390,17 @@ class InstallmentsView extends StatelessWidget {
               const SizedBox(height: 4),
               _buildInfoChip('Chassis: ${data.bike.chassisNumber ?? 'N/A'}', isDark),
             ],
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Download Statement Button
+          IconButton(
+            onPressed: () => Get.find<InstallmentsController>().downloadStatement(),
+            icon: Icon(
+              LucideIcons.fileDown,
+              size: 22,
+              color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+            ),
+            tooltip: 'Download Statement',
           ),
         ],
       ),
@@ -383,8 +425,10 @@ class InstallmentsView extends StatelessWidget {
   }
 
   void _showRecordPaymentDialog(InstallmentsController controller) {
+    final selected = controller.selectedContract;
     Get.dialog(
       RecordPaymentDialog(
+        defaultAmount: selected?.contract.monthlyEMI,
         onSubmit: (amount, method, collector, notes) {
           controller.recordPayment(
             amount: amount,

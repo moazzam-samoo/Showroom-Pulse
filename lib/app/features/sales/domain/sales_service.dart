@@ -173,7 +173,7 @@ class SalesService {
       purchaserImage: customerImagePath,
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
-      amountPaid: sale.receivedAmount,
+      amountPaid: contract?.totalPaid ?? sale.receivedAmount,
       bikePrice: contract?.cashPrice ?? sale.totalAmount,
       sellingPrice: contract?.totalAmount,
       amountRemaining: contract?.remainingBalance,
@@ -186,6 +186,7 @@ class SalesService {
       witnessPhone: primaryWitness?.phoneNumber,
       witnessImage: primaryWitnessCnicPath,
       witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
+      isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
     );
   }
 
