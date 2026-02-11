@@ -25,10 +25,12 @@ class InstallmentRepository {
         .findAll();
   }
 
-  /// Get all contracts (for display purposes)
+  /// Get ALL contracts (active + completed + defaulted)
   Future<List<InstallmentContract>> getAllContracts() async {
     return await _isar.installmentContracts.where().findAll();
   }
+
+
 
   /// Get contracts by status
   Future<List<InstallmentContract>> getContractsByStatus(ContractStatusEnum status) async {

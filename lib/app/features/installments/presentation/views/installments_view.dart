@@ -290,6 +290,7 @@ class InstallmentsView extends StatelessWidget {
                 nextDueDate: selected.contract.nextDueDate,
                 downPayment: selected.contract.downPayment,
                 monthlyEMI: selected.contract.monthlyEMI,
+                isCompleted: selected.contract.status == ContractStatusEnum.completed,
               ),
               const SizedBox(height: AppSpacing.base),
               // Payment Timeline (exclude initial Down Payment record)
