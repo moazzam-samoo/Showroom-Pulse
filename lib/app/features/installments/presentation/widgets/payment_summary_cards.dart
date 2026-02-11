@@ -5,12 +5,14 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 
-/// Payment summary cards showing Total, Paid, Remaining, Next Due
+/// Payment summary cards showing Total, Paid, Down Payment, Remaining, Next Due, Monthly EMI
 class PaymentSummaryCards extends StatelessWidget {
   final double totalAmount;
   final double paidAmount;
   final double remainingAmount;
   final DateTime? nextDueDate;
+  final double downPayment;
+  final double monthlyEMI;
 
   const PaymentSummaryCards({
     super.key,
@@ -18,6 +20,8 @@ class PaymentSummaryCards extends StatelessWidget {
     required this.paidAmount,
     required this.remainingAmount,
     this.nextDueDate,
+    required this.downPayment,
+    required this.monthlyEMI,
   });
 
   @override
@@ -31,7 +35,7 @@ class PaymentSummaryCards extends StatelessWidget {
 
     return Column(
       children: [
-        // Top Row: Total Amount + Paid
+        // Row 1: Total Amount + Paid + Down Payment
         Row(
           children: [
             Expanded(
@@ -55,10 +59,21 @@ class PaymentSummaryCards extends StatelessWidget {
                 isDark: isDark,
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildCard(
+                context: context,
+                title: 'Down Payment',
+                value: currencyFormat.format(downPayment),
+                valueColor: const Color(0xFF8B5CF6),
+                icon: LucideIcons.banknote,
+                isDark: isDark,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        // Bottom Row: Remaining + Next Due
+        // Row 2: Remaining + Next Due + Monthly EMI
         Row(
           children: [
             Expanded(
@@ -74,6 +89,17 @@ class PaymentSummaryCards extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: _buildNextDueCard(context, isDark),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _buildCard(
+                context: context,
+                title: 'Monthly EMI',
+                value: currencyFormat.format(monthlyEMI),
+                valueColor: const Color(0xFF06B6D4),
+                icon: LucideIcons.calendar,
+                isDark: isDark,
+              ),
             ),
           ],
         ),
@@ -104,11 +130,14 @@ class PaymentSummaryCards extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  fontSize: 12,
+              Flexible(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    fontSize: 11,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Icon(
@@ -119,12 +148,16 @@ class PaymentSummaryCards extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                color: valueColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -172,23 +205,27 @@ class PaymentSummaryCards extends StatelessWidget {
                 'Next Due',
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                  fontSize: 12,
+                  fontSize: 11,
                 ),
               ),
               Icon(
-                LucideIcons.calendar,
+                LucideIcons.calendarClock,
                 size: 16,
                 color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            nextDueDate != null ? dateFormat.format(nextDueDate!) : 'N/A',
-            style: TextStyle(
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              nextDueDate != null ? dateFormat.format(nextDueDate!) : 'N/A',
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           if (subtitle != null) ...[

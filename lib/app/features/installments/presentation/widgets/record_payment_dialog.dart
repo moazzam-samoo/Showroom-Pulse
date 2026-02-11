@@ -10,8 +10,9 @@ import 'package:tahir_showroom/app/data/models/payment.dart';
 /// Dialog for recording a new payment
 class RecordPaymentDialog extends StatefulWidget {
   final Function(double amount, PaymentMethod method, String? collector, String? notes) onSubmit;
+  final double? defaultAmount;
 
-  const RecordPaymentDialog({super.key, required this.onSubmit});
+  const RecordPaymentDialog({super.key, required this.onSubmit, this.defaultAmount});
 
   @override
   State<RecordPaymentDialog> createState() => _RecordPaymentDialogState();
@@ -23,6 +24,14 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
   final _collectorController = TextEditingController();
   final _notesController = TextEditingController();
   PaymentMethod _selectedMethod = PaymentMethod.cash;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.defaultAmount != null && widget.defaultAmount! > 0) {
+      _amountController.text = widget.defaultAmount!.toStringAsFixed(0);
+    }
+  }
 
   @override
   void dispose() {

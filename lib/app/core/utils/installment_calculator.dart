@@ -52,7 +52,20 @@ class InstallmentCalculator {
     // Ensure loan amount isn't negative (edge case where down payment > total)
     if (loanAmount < 0) loanAmount = 0;
 
-    double monthlyEMI = loanAmount / months;
+    double rawEMI = loanAmount / months;
+    
+    // Round EMI to nearest 50 (e.g. 25833 -> 25850)
+    double monthlyEMI = (rawEMI / 50).ceil() * 50.0;
+    
+    // Recalculate totals based on rounded EMI to ensure consistency
+    // New Loan Amount = EMI * Months
+    double newLoanAmount = monthlyEMI * months;
+    
+    // New Grand Total = Down Payment + New Loan Amount
+    grandTotal = downPayment + newLoanAmount;
+    
+    // Update markup to reflect the rounded total
+    totalMarkup = grandTotal - cashPrice;
 
     return InstallmentCalculationResult(
       cashPrice: cashPrice,

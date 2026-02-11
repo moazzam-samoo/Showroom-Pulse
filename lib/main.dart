@@ -101,6 +101,46 @@ class TahirShowroomApp extends StatelessWidget {
   }
 }
 
+/// Placeholder for features not yet implemented
+class FeaturePlaceholder extends StatelessWidget {
+  final String title;
+  const FeaturePlaceholder({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          onPressed: () => Get.offNamed('/dashboard'),
+        ),
+      ),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.construction, size: 64, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+            const SizedBox(height: 16),
+            Text(
+              '$title Feature Coming Soon',
+              style: TextStyle(
+                fontSize: 20, 
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Splash Screen - Initializes services and checks session
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

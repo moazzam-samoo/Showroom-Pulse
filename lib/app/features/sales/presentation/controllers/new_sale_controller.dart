@@ -408,28 +408,34 @@ class NewSaleController extends GetxController {
           ..bikeId = bike.id
           ..customerId = customer.id
           ..totalAmount = saleType.value == SaleType.cash 
-              ? (double.tryParse(cashAmountController.text) ?? 0)
+              ? (double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0)
               : (calculationResult.value?.grandTotal ?? 0)
           ..receivedAmount = saleType.value == SaleType.cash 
-              ? (double.tryParse(cashAmountController.text) ?? 0) 
-              : (double.tryParse(downPaymentController.text) ?? 0);
+              ? (double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0) 
+              : (double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0);
         
         await _isarService.isar.sales.put(sale);
 
         // D. If Installment, Create Contract & Witnesses
         if (saleType.value == SaleType.installment && calculationResult.value != null) {
+           final firstDue = DateTime.now().add(const Duration(days: 30));
+           final dpAmount = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
            final contract = InstallmentContract()
              ..bikeId = bike.id
              ..customerId = customer.id
              ..cashPrice = bike.cashSalePrice
              ..markupType = markupType.value
-             ..markupValue = double.tryParse(markupValueController.text) ?? 0
+             ..markupValue = double.tryParse(markupValueController.text.replaceAll(',', '')) ?? 0
              ..totalMarkupAmount = calculationResult.value!.totalMarkup
              ..totalAmount = calculationResult.value!.grandTotal
-             ..downPayment = double.tryParse(downPaymentController.text) ?? 0
+             ..downPayment = dpAmount
              ..months = int.tryParse(monthsController.text) ?? 0
              ..monthlyEMI = calculationResult.value!.monthlyEMI
-             ..firstDueDate = DateTime.now().add(const Duration(days: 30))
+             ..firstDueDate = firstDue
+             ..nextDueDate = firstDue
+             ..dayOfMonth = firstDue.day
+             ..totalPaid = dpAmount
+             ..paymentsMade = 1
              ..status = ContractStatusEnum.active;
            
            await _isarService.isar.installmentContracts.put(contract);
@@ -480,6 +486,7 @@ class NewSaleController extends GetxController {
           ..amount = sale.receivedAmount
           ..paymentDate = DateTime.now()
           ..notes = saleType.value == SaleType.cash ? 'Full Cash Payment' : 'Down Payment'
+          ..isDownPayment = saleType.value == SaleType.installment
           ..contractId = (saleType.value == SaleType.installment && sale.installmentContractId != null)
               ? sale.installmentContractId!
               : 0; // For cash sales, use 0 as there's no contract

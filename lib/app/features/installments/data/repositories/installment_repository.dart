@@ -3,6 +3,7 @@ import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:collection/collection.dart'; // For firstWhereOrNull
 
 /// Repository for managing installment contracts and payments
 class InstallmentRepository {
@@ -199,6 +200,154 @@ class InstallmentRepository {
       }
     });
   }
-}
 
-// Authored by: Moazzam Samoo
+  // ==================== DATA REPAIR ====================
+
+  /// Repair legacy data (aggressive fix for missing down payments)
+  Future<void> repairLegacyData() async {
+    print('Starting Legacy Data Repair...');
+    try {
+      await _isar.writeTxn(() async {
+        // 1. Check ALL contracts to avoid filter issues
+        final allContracts = await _isar.installmentContracts.where().findAll();
+        print('Found ${allContracts.length} contracts to check.');
+
+        int fixedCount = 0;
+
+        for (final contract in allContracts) {
+          // Check if down payment is 0 or missing
+          if (contract.downPayment <= 0) {
+            // Find payments for this contract
+            final payments = await _isar.payments
+                .filter()
+                .contractIdEqualTo(contract.id)
+                .sortByPaymentDate() // Get earliest first
+                .findAll();
+
+            if (payments.isNotEmpty) {
+              // Find first payment with amount > 0
+              final validPayment = payments.firstWhereOrNull((p) => p.amount > 0);
+              
+              if (validPayment != null) {
+                print('Fixing Contract #${contract.id}: Found 0 down payment. Using payment #${validPayment.id} of ${validPayment.amount}');
+                
+                // Update Contract
+                contract.downPayment = validPayment.amount;
+                await _isar.installmentContracts.put(contract);
+                fixedCount++;
+
+                // Update Payment visibility
+                if (!validPayment.isDownPayment) {
+                  validPayment.isDownPayment = true;
+                  if (validPayment.notes == null || validPayment.notes!.isEmpty || validPayment.notes == 'Purchase') {
+                     validPayment.notes = 'Down Payment (Repaired)';
+                  }
+                  await _isar.payments.put(validPayment);
+                  print('  - Marked Payment #${validPayment.id} as Down Payment');
+                }
+              } else {
+                 print('Skipping Contract #${contract.id}: No valid (>0) payments found.');
+              }
+            } else {
+               print('Skipping Contract #${contract.id}: No payments found.');
+            }
+          }
+        }
+        print('Legacy Repair Complete. Fixed $fixedCount contracts.');
+      });
+      
+      // Run the Rounding & Overpayment Fix
+      await fixOverpaymentAndRounding();
+      
+    } catch (e) {
+      print('Error in legacy repair: $e');
+    }
+  }
+
+  /// Fixes rounding issues (EMI to nearest 50) and recalculates totals/counts
+  Future<void> fixOverpaymentAndRounding() async {
+    try {
+      print('Starting Rounding & Overpayment Fix...');
+      int fixedCount = 0;
+      
+      final contracts = await _isar.installmentContracts
+          .filter()
+          .statusEqualTo(ContractStatusEnum.active)
+          .or()
+          .statusEqualTo(ContractStatusEnum.partiallyPaid)
+          .or()
+          .statusEqualTo(ContractStatusEnum.overdue)
+          .findAll();
+          
+      await _isar.writeTxn(() async {
+        for (var contract in contracts) {
+          bool changed = false;
+          
+          // 1. Fix Rounding (EMI)
+          // Round existing EMI to nearest 50
+          double currentEMI = contract.monthlyEMI;
+          double roundedEMI = (currentEMI / 50).ceil() * 50.0;
+          
+          if (roundedEMI != currentEMI) {
+            print('Fixing Contract #${contract.id} EMI: $currentEMI -> $roundedEMI');
+            contract.monthlyEMI = roundedEMI;
+            
+            // Recalculate Grand Total based on new EMI
+            // Total = DownPayment + (EMI * Months)
+            double newTotal = contract.downPayment + (roundedEMI * contract.months);
+            if (newTotal != contract.totalAmount) {
+               print('  - Updated Total Amount: ${contract.totalAmount} -> $newTotal');
+               contract.totalAmount = newTotal;
+            }
+            changed = true;
+          }
+          
+          // 2. Fix Counts & Totals (13/12 Issue)
+          final payments = await _isar.payments
+              .filter()
+              .contractIdEqualTo(contract.id)
+              .findAll();
+              
+          // Calculate true totals from payment records
+          double validTotalPaid = payments.fold(0, (sum, p) => sum + p.amount);
+          
+          // Count only INSTALLMENT payments (exclude down payment)
+          int installmentCount = payments.where((p) => !p.isDownPayment).length;
+          
+          if (contract.totalPaid != validTotalPaid || contract.paymentsMade != installmentCount) {
+             print('Fixing Contract #${contract.id} Counts:');
+             print('  - TotalPaid: ${contract.totalPaid} -> $validTotalPaid');
+             print('  - PaymentsMade: ${contract.paymentsMade} -> $installmentCount');
+             
+             contract.totalPaid = validTotalPaid;
+             contract.paymentsMade = installmentCount;
+             changed = true;
+          }
+          
+          // 3. Update Remaining Balance & Status
+          double remaining = contract.totalAmount - contract.totalPaid;
+          if (remaining < 0) remaining = 0; // Handle overpayment
+          
+
+          
+          // Check Completion
+          if (remaining <= 0) {
+             print('  - marking as COMPLETED (Balance 0)');
+             contract.status = ContractStatusEnum.completed;
+             changed = true;
+          }
+          
+          if (changed) {
+            await _isar.installmentContracts.put(contract);
+            fixedCount++;
+          }
+        }
+      });
+      
+      print('Rounding & Overpayment Fix Complete. Updated $fixedCount contracts.');
+      
+    } catch (e) {
+      print('Error in Rounding/Overpayment fix: $e');
+    }
+  }
+}
