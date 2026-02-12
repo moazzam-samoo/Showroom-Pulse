@@ -11,6 +11,7 @@ import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:isar/isar.dart';
@@ -87,7 +88,13 @@ class NewSaleController extends GetxController {
     final grouped = <String, List<Bike>>{};
     final displayNames = <String, String>{}; // Track original capitalization
     
-    for (var bike in availableBikes) {
+    // Use InventoryController's filtered bikes for comprehensive search support
+    final invController = Get.find<InventoryController>();
+    final bikesToDisplay = invController.filteredBikes
+        .where((bike) => bike.status == BikeStatusEnum.available)
+        .toList();
+    
+    for (var bike in bikesToDisplay) {
       // Normalize to lowercase for grouping key
       final normalizedModel = bike.model.toLowerCase().trim();
       
