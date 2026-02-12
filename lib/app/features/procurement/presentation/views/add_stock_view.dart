@@ -12,6 +12,7 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/controllers/supplier_controller.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
+import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
 
 class AddStockView extends GetView<SupplierController> {
   const AddStockView({super.key});
@@ -346,8 +347,9 @@ class AddStockView extends GetView<SupplierController> {
               children: const [
                 Expanded(flex: 2, child: Text('Engine #')),
                 Expanded(flex: 2, child: Text('Chassis #')),
+                Expanded(flex: 2, child: Text('Brand')),
                 Expanded(flex: 2, child: Text('Model')),
-                Expanded(flex: 1, child: Text('Color')),
+                Expanded(flex: 2, child: Text('Color')),
                 Expanded(flex: 1, child: Text('Year')),
                 Expanded(flex: 2, child: Text('Purchase Price')),
                 Expanded(flex: 1, child: Text('Image')),
@@ -390,6 +392,17 @@ class AddStockView extends GetView<SupplierController> {
                       ),
                     ),
                      const SizedBox(width: 8),
+                    // Brand
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        initialValue: entry.brand,
+                        onChanged: (v) => entry.brand = v,
+                        decoration: _inputDecoration('Brand', isDark),
+                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     // Model
                     Expanded(
                       flex: 2,
@@ -403,12 +416,13 @@ class AddStockView extends GetView<SupplierController> {
                      const SizedBox(width: 8),
                     // Color
                     Expanded(
-                      flex: 1,
-                      child: TextFormField(
+                      flex: 2,
+                      child: ColorSkinSelector(
                         initialValue: entry.color,
                         onChanged: (v) => entry.color = v,
-                        decoration: _inputDecoration('Color', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                        fontSize: 13,
+                        iconSize: 16,
                       ),
                     ),
                      const SizedBox(width: 8),
@@ -478,7 +492,7 @@ class AddStockView extends GetView<SupplierController> {
     return InputDecoration(
       hintText: hint,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey[300]!)),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: BorderSide(color: isDark ? AppColors.darkBorder : Colors.grey[300]!)),
     );

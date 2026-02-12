@@ -158,6 +158,8 @@ class SalesService {
 
     return SaleCardData(
       bikeModel: '${bike.brand} ${bike.model}',
+      bikeBrand: bike.brand,
+      bikeColor: bike.color,
       bikeImage: bikeImagePath,
       bikeChassisNumber: bike.chassisNumber,
       bikeEngineNumber: bike.engineNumber,

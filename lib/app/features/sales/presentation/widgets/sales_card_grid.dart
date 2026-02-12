@@ -23,34 +23,8 @@ class SalesCardGrid extends StatelessWidget {
         }
 
         // Use real sales data from controller
-        var filteredSales = controller.allSales.where((sale) {
-          final saleDate = _parseDate(sale.saleDate);
-          final now = DateTime.now();
-          final range = controller.selectedDateRange.value;
-
-          if (range == 'This Month') {
-            return saleDate.month == now.month && saleDate.year == now.year;
-          } else if (range == 'Last Month') {
-            final lastMonth = DateTime(now.year, now.month - 1);
-            return saleDate.month == lastMonth.month && saleDate.year == lastMonth.year;
-          } else if (range == 'This Year') {
-             return saleDate.year == now.year;
-          }
-          return true; // All Time
-        }).toList();
-
-        // Filter by Search Query
-        final query = controller.searchQuery.value.toLowerCase();
-        if (query.isNotEmpty) {
-          filteredSales = filteredSales.where((sale) {
-            return sale.customerName.toLowerCase().contains(query) ||
-                   sale.bikeModel.toLowerCase().contains(query) ||
-                   sale.bikeChassisNumber.toLowerCase().contains(query) ||
-                   sale.bikeEngineNumber.toLowerCase().contains(query) ||
-                   sale.customerCnic.contains(query) ||
-                   sale.customerContact.contains(query);
-          }).toList();
-        }
+        // Use filtered sales data from controller
+        final filteredSales = List<SaleCardData>.from(controller.filteredSales);
 
         // Sort Data by Date Descending
         filteredSales.sort((a, b) {
