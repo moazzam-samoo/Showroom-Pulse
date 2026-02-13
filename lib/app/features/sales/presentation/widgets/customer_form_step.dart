@@ -9,6 +9,7 @@ import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_s
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
+import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 class CustomerFormStep extends StatelessWidget {
   const CustomerFormStep({super.key});
@@ -56,18 +57,145 @@ class CustomerFormStep extends StatelessWidget {
   }
 
   Widget _buildSearchCustomer(BuildContext context) {
+    final controller = Get.find<NewSaleController>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         TextField(
-          decoration: const InputDecoration(
-            hintText: 'Enter CNIC (e.g. 41303-1234567-8)',
-            prefixIcon: Icon(LucideIcons.search),
-            border: OutlineInputBorder(),
+          controller: controller.customerSearchController,
+          onChanged: (value) => controller.searchCustomers(value),
+          decoration: InputDecoration(
+            hintText: 'Search by Name, CNIC (with/without dashes) or Phone',
+            prefixIcon: const Icon(LucideIcons.search),
+            suffixIcon: Obx(() => controller.isSearching.value
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : const SizedBox.shrink()),
+            border: const OutlineInputBorder(),
           ),
         ),
         const SizedBox(height: 20),
-        const Center(child: Text('Search results will appear here')),
+        
+        Obx(() {
+          if (controller.searchResults.isEmpty) {
+            if (controller.customerSearchController.text.isNotEmpty && !controller.isSearching.value) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Column(
+                    children: [
+                      Icon(LucideIcons.searchX, size: 48, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No customers found', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return const Center(child: Text('Search results will appear here'));
+          }
+
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: controller.searchResults.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final customer = controller.searchResults[index];
+              return _buildSearchResultItem(context, customer, controller);
+            },
+          );
+        }),
       ],
+    );
+  }
+
+  Widget _buildSearchResultItem(
+    BuildContext context, 
+    CustomerWithTransactions customerWithTxn,
+    NewSaleController controller,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final customer = customerWithTxn.customer;
+    final hasActiveInstallments = customerWithTxn.pendingAmount > 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+          child: Text(
+            customerWithTxn.initials,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ),
+        title: Text(
+          customer.fullName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(LucideIcons.creditCard, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(customer.cnicNumber, style: TextStyle(color: Colors.grey[600])),
+                const SizedBox(width: 16),
+                Icon(LucideIcons.phone, size: 14, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(customer.phoneNumber, style: TextStyle(color: Colors.grey[600])),
+              ],
+            ),
+            if (hasActiveInstallments) ...[
+               const SizedBox(height: 4),
+               Container(
+                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                 decoration: BoxDecoration(
+                   color: Colors.orange.withOpacity(0.1),
+                   borderRadius: BorderRadius.circular(4),
+                   border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                 ),
+                 child: Text(
+                   'Pending: Rs. ${customerWithTxn.pendingAmount.toStringAsFixed(0)}',
+                   style: const TextStyle(
+                     color: Colors.orange, 
+                     fontSize: 12,
+                     fontWeight: FontWeight.bold
+                   ),
+                 ),
+               ),
+            ],
+          ],
+        ),
+        trailing: ElevatedButton(
+          onPressed: () => controller.selectCustomer(customerWithTxn),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Select'),
+        ),
+      ),
     );
   }
 

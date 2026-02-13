@@ -120,6 +120,15 @@ class InstallmentsController extends GetxController {
         }
       }
 
+      // Sort: Date Descending -> Total Amount Descending
+      displayData.sort((a, b) {
+        final dateComparison = b.contract.contractDate.compareTo(a.contract.contractDate);
+        if (dateComparison == 0) {
+          return b.contract.totalAmount.compareTo(a.contract.totalAmount);
+        }
+        return dateComparison;
+      });
+
       // Apply search filter
       if (searchQuery.value.isNotEmpty) {
         final query = searchQuery.value.toLowerCase();

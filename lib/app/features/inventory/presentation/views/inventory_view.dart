@@ -160,7 +160,9 @@ class InventoryView extends StatelessWidget {
         if (constraints.maxWidth < 900) crossAxisCount = 2;
         else if (constraints.maxWidth < 1200) crossAxisCount = 3;
 
-        return GridView.builder(
+        return Scrollbar(
+          child: GridView.builder(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: AppSpacing.base,
@@ -180,6 +182,7 @@ class InventoryView extends StatelessWidget {
               onDelete: () => _deleteBike(context, controller, bike),
             );
           },
+        ),
         );
       },
     );

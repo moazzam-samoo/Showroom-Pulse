@@ -8,6 +8,7 @@ import 'package:tahir_showroom/app/features/customers/presentation/controllers/c
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/vehicle_card.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/transaction_details_dialog.dart';
 import 'package:intl/intl.dart';
+import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 class CustomerHistoryPanel extends GetView<CustomersController> {
   const CustomerHistoryPanel({super.key});
@@ -45,6 +46,24 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
             ),
           );
         }
+
+        // Sort transactions: Date Desc -> Price Desc
+        final sortedTransactions = List<TransactionRecord>.from(customer.transactions);
+        sortedTransactions.sort((a, b) {
+           final dateA = a.sale.saleDate;
+           final dateB = b.sale.saleDate;
+           final dateComparison = dateB.compareTo(dateA);
+           
+           if (dateComparison == 0) {
+             // Secondary sort: Price
+             // Use contract amount for installments, sale amount for cash
+             final amountA = a.contract?.totalAmount ?? a.sale.totalAmount;
+             final amountB = b.contract?.totalAmount ?? b.sale.totalAmount;
+             return amountB.compareTo(amountA);
+           }
+           
+           return dateComparison;
+        });
 
         return Column(
           children: [
@@ -112,18 +131,20 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                      Expanded(
                        child: Padding(
                          padding: const EdgeInsets.all(AppSpacing.lg),
-                         child: customer.transactions.isEmpty 
+                         child: sortedTransactions.isEmpty 
                          ? Center(child: Text('No transactions found', style: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)))
-                         : GridView.builder(
+                         : Scrollbar(
+                             child: GridView.builder(
+                             padding: const EdgeInsets.only(right: AppSpacing.md),
                              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                                maxCrossAxisExtent: 350,
                                childAspectRatio: 0.85, 
                                crossAxisSpacing: 16,
                                mainAxisSpacing: 16,
                              ),
-                             itemCount: customer.transactions.length,
+                             itemCount: sortedTransactions.length,
                              itemBuilder: (ctx, index) {
-                               final tx = customer.transactions[index];
+                               final tx = sortedTransactions[index];
                                return VehicleCard(
                                  transaction: tx,
                                  onTap: () {
@@ -132,6 +153,7 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                                );
                              },
                            ),
+                         ),
                        ),
                      ),
                   ],

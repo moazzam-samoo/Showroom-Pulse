@@ -85,7 +85,9 @@ class CustomerListSidebar extends GetView<CustomersController> {
                 );
               }
 
-              return ListView.separated(
+              return Scrollbar(
+                child: ListView.separated(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
                 itemCount: controller.customers.length,
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
@@ -111,6 +113,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
                     );
                   });
                 },
+              ),
               );
             }),
           ),

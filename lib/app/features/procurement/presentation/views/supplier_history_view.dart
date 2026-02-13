@@ -95,6 +95,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                               return const Center(child: Text('No suppliers found'));
                             }
                             return ListView.separated(
+                              padding: const EdgeInsets.only(right: AppSpacing.sm),
                               itemCount: controller.suppliers.length,
                               separatorBuilder: (_, __) => const Divider(height: 1),
                               itemBuilder: (ctx, index) {
@@ -198,9 +199,15 @@ class SupplierHistoryView extends GetView<SupplierController> {
                                   return const Center(child: CircularProgressIndicator());
                                 }
                                 
-                                // Convert to list and sort by date desc
+                                // Convert to list and sort by date desc then total amount desc
                                 final batches = supplier.batches.toList();
-                                batches.sort((a, b) => b.purchaseDate.compareTo(a.purchaseDate));
+                                batches.sort((a, b) {
+                                  final dateComparison = b.purchaseDate.compareTo(a.purchaseDate);
+                                  if (dateComparison == 0) {
+                                    return b.totalAmount.compareTo(a.totalAmount);
+                                  }
+                                  return dateComparison;
+                                });
                                 
                                 if (batches.isEmpty) {
                                   return const Center(child: Text('No purchase history'));

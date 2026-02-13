@@ -100,11 +100,22 @@ class CustomerRepository {
 
     // Apply search filter
     if (searchQuery != null && searchQuery.isNotEmpty) {
+      // Normalize query: remove non-digit characters for flexible matching
+      final normalizedQuery = searchQuery.replaceAll(RegExp(r'[^0-9a-zA-Z]'), '').toLowerCase();
       final query = searchQuery.toLowerCase();
-      customers = customers.where((c) =>
-          c.fullName.toLowerCase().contains(query) ||
-          c.cnicNumber.contains(query) ||
-          c.phoneNumber.contains(query)).toList();
+      
+      customers = customers.where((c) {
+        final matchesName = c.fullName.toLowerCase().contains(query);
+        
+        // Normalize stored CNIC and Phone for comparison if query looks like number
+        final normalizedCnic = c.cnicNumber.replaceAll(RegExp(r'[^0-9]'), '');
+        final matchesCnic = c.cnicNumber.contains(query) || normalizedCnic.contains(normalizedQuery);
+        
+        final normalizedPhone = c.phoneNumber.replaceAll(RegExp(r'[^0-9]'), ''); 
+        final matchesPhone = c.phoneNumber.contains(query) || normalizedPhone.contains(normalizedQuery);
+        
+        return matchesName || matchesCnic || matchesPhone;
+      }).toList();
     }
 
     // Build customer data with transactions

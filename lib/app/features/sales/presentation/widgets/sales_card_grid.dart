@@ -188,7 +188,7 @@ class SalesCardGrid extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl, right: AppSpacing.md),
       itemCount: groupedSales.keys.length,
       itemBuilder: (context, index) {
         final month = groupedSales.keys.elementAt(index);

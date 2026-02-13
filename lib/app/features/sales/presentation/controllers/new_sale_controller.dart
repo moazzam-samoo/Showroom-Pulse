@@ -14,6 +14,7 @@ import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/d
 import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
+import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:isar/isar.dart';
 
 
@@ -40,6 +41,62 @@ class NewSaleController extends GetxController {
   final customerProfileImagePath = RxnString();
   final customerCnicFrontPath = RxnString();
   final customerCnicBackPath = RxnString();
+
+  // Search State
+  final searchResults = <CustomerWithTransactions>[].obs;
+  final isSearching = false.obs;
+  late final CustomerRepository _customerRepository;
+
+  void _initCustomerRepository() {
+      final isarService = Get.find<IsarService>();
+      _customerRepository = CustomerRepository(isarService.isar);
+  }
+
+  Future<void> searchCustomers(String query) async {
+    if (query.isEmpty) {
+      searchResults.clear();
+      return;
+    }
+
+    try {
+      isSearching.value = true;
+      final results = await _customerRepository.getAllCustomersWithTransactions(
+        searchQuery: query,
+        sortByDateDesc: true,
+      );
+      searchResults.assignAll(results);
+    } catch (e) {
+      print('Error searching customers: $e');
+      searchResults.clear();
+    } finally {
+      isSearching.value = false;
+    }
+  }
+
+  void selectCustomer(CustomerWithTransactions customerWithTxn) {
+    final customer = customerWithTxn.customer;
+    selectedCustomer.value = customer;
+    
+    // Auto-fill form fields (in case we switch back to new customer mode or for display)
+    customerNameController.text = customer.fullName;
+    customerFatherNameController.text = customer.fatherName ?? '';
+    customerPhoneController.text = customer.phoneNumber;
+    customerCnicController.text = customer.cnicNumber;
+    customerAddressController.text = customer.address ?? '';
+    
+    // Clear search results to hide list
+    searchResults.clear();
+    customerSearchController.clear();
+    
+    Get.snackbar(
+      'Customer Selected',
+      'Selected: ${customer.fullName}',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green.shade100,
+      colorText: Colors.green.shade900,
+      duration: const Duration(seconds: 2),
+    );
+  }
 
   // Scroll Controller for auto-scroll on bike selection
   final scrollController = ScrollController();
@@ -123,6 +180,7 @@ class NewSaleController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _initCustomerRepository();
     loadAvailableBikes();
     // Listen to changes for auto-calculation
     downPaymentController.addListener(_calculateInstallment);
