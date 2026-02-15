@@ -29,6 +29,8 @@ class CustomerWithTransactions {
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
+    if (customer.fullName.isEmpty) return '??';
+    if (customer.fullName.length < 2) return customer.fullName.toUpperCase();
     return customer.fullName.substring(0, 2).toUpperCase();
   }
 }
@@ -334,6 +336,42 @@ class CustomerRepository {
 
     return await _isar.writeTxn(() async {
       return await _isar.customers.put(customer);
+    });
+  }
+
+  /// Update an existing customer
+  Future<void> updateCustomer(Customer customer) async {
+    // Check if another customer with same CNIC exists (excluding self)
+    final existingList = await _isar.customers
+        .filter()
+        .cnicNumberEqualTo(customer.cnicNumber)
+        .findAll();
+        
+    final existing = existingList.firstWhereOrNull((c) => c.id != customer.id);
+        
+    if (existing != null) {
+      throw Exception('Another customer with CNIC ${customer.cnicNumber} already exists');
+    }
+
+    await _isar.writeTxn(() async {
+      await _isar.customers.put(customer);
+    });
+  }
+
+  /// Check if customer can be deleted (no sales/installments)
+  Future<bool> canDeleteCustomer(int id) async {
+    final saleCount = await _isar.sales.filter().customerIdEqualTo(id).count();
+    return saleCount == 0;
+  }
+
+  /// Delete a customer
+  Future<void> deleteCustomer(int id) async {
+    if (!await canDeleteCustomer(id)) {
+      throw Exception('Cannot delete customer with existing sales history');
+    }
+
+    await _isar.writeTxn(() async {
+      await _isar.customers.delete(id);
     });
   }
 }

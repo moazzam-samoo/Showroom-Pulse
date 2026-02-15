@@ -25,7 +25,7 @@ class CnicInputFormatter extends TextInputFormatter {
     }
 
     // Limit to 13 digits (CNIC length)
-    final limitedDigits = digitsOnly.substring(0, digitsOnly.length > 13 ? 13 : digitsOnly.length);
+    final limitedDigits = digitsOnly.length > 13 ? digitsOnly.substring(0, 13) : digitsOnly;
 
     // Format based on length
     String formatted;
@@ -43,6 +43,11 @@ class CnicInputFormatter extends TextInputFormatter {
       if (RegExp(r'\d').hasMatch(newValue.text[i])) {
         digitsBeforeCursor++;
       }
+    }
+
+    // Clamp digitsBeforeCursor to available digits in formatted string
+    if (digitsBeforeCursor > limitedDigits.length) {
+      digitsBeforeCursor = limitedDigits.length;
     }
 
     // Find cursor position in formatted string

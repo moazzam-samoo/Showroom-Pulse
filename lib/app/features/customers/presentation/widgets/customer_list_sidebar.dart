@@ -110,6 +110,34 @@ class CustomerListSidebar extends GetView<CustomersController> {
                       ),
                       onTap: () => controller.selectCustomer(customer),
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+                      trailing: PopupMenuButton(
+                        icon: Icon(LucideIcons.moreVertical, size: 16, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        padding: EdgeInsets.zero,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            height: 32,
+                            child: Row(
+                              children: [
+                                Icon(LucideIcons.edit, size: 14, color: isDark ? Colors.white : Colors.black87),
+                                const SizedBox(width: 8),
+                                const Text('Edit', style: TextStyle(fontSize: 13)),
+                              ],
+                            ),
+                            onTap: () => controller.editCustomer(customer),
+                          ),
+                          PopupMenuItem(
+                            height: 32,
+                            child: Row(
+                              children: [
+                                const Icon(LucideIcons.trash2, size: 14, color: Colors.red),
+                                const SizedBox(width: 8),
+                                const Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
+                              ],
+                            ),
+                            onTap: () => controller.deleteCustomer(customer.customer.id),
+                          ),
+                        ],
+                      ),
                     );
                   });
                 },

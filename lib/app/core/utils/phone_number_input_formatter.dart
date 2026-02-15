@@ -25,7 +25,7 @@ class PhoneNumberInputFormatter extends TextInputFormatter {
     }
 
     // Limit to 11 digits (PK mobile number length)
-    final limitedDigits = digitsOnly.substring(0, digitsOnly.length > 11 ? 11 : digitsOnly.length);
+    final limitedDigits = digitsOnly.length > 11 ? digitsOnly.substring(0, 11) : digitsOnly;
 
     // Format based on length
     String formatted;
@@ -41,6 +41,11 @@ class PhoneNumberInputFormatter extends TextInputFormatter {
       if (RegExp(r'\d').hasMatch(newValue.text[i])) {
         digitsBeforeCursor++;
       }
+    }
+
+    // Clamp digitsBeforeCursor to available digits in formatted string
+    if (digitsBeforeCursor > limitedDigits.length) {
+      digitsBeforeCursor = limitedDigits.length;
     }
 
     // Find cursor position in formatted string

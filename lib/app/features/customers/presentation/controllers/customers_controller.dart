@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
@@ -201,6 +202,139 @@ class CustomersController extends GetxController {
       loadData(); // Refresh list
     } catch (e) {
       Get.snackbar('Error', 'Failed to add customer: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  /// Open Edit Customer Dialog
+  void editCustomer(CustomerWithTransactions customerData) {
+    Get.dialog(
+      AddCustomerDialog(
+        customer: customerData.customer,
+        onSave: (data) => _updateCustomer(customerData.customer.id, data),
+      ),
+    );
+  }
+
+  /// Delete customer
+  Future<void> deleteCustomer(int id) async {
+    // 1. Check if safe to delete
+    final canDelete = await _repository.canDeleteCustomer(id);
+    if (!canDelete) {
+      Get.snackbar(
+        'Cannot Delete', 
+        'This customer has valueable sales history and cannot be deleted.',
+        backgroundColor: Get.theme.colorScheme.errorContainer,
+        colorText: Get.theme.colorScheme.onErrorContainer,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    // 2. Confirm
+    final confirm = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Delete Customer?'),
+        content: const Text('Are you sure you want to delete this customer? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(result: true), 
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      )
+    );
+
+    if (confirm == true) {
+      isLoading.value = true;
+      try {
+        await _repository.deleteCustomer(id);
+        Get.snackbar('Success', 'Customer deleted successfully');
+        
+        // Clear selection if deleted
+        if (selectedCustomer.value?.customer.id == id) {
+          selectedCustomer.value = null;
+        }
+        
+        loadData();
+      } catch (e) {
+        Get.snackbar('Error', 'Failed to delete customer: $e');
+      } finally {
+        isLoading.value = false;
+      }
+    }
+  }
+
+  /// Internal method to update customer
+  Future<void> _updateCustomer(int id, Map<String, dynamic> data) async {
+    isLoading.value = true;
+    try {
+      String? profileImageFilename = data['existingProfileImage'];
+      String? cnicFrontFilename = data['existingCnicFrontImage'];
+      String? cnicBackFilename = data['existingCnicBackImage'];
+      
+      final fileService = Get.find<tahir_showroom.FileService>();
+
+      // Update Profile Image if changed
+      if (data['profileImage'] != null) {
+        profileImageFilename = await fileService.saveCustomerImage(
+          data['profileImage'],
+          data['cnicNumber'],
+          'profile',
+        );
+      }
+
+      // Update CNIC Front if changed
+      if (data['cnicFrontImage'] != null) {
+        cnicFrontFilename = await fileService.saveCustomerImage(
+          data['cnicFrontImage'],
+          data['cnicNumber'],
+          'cnic_front',
+        );
+      }
+
+      // Update CNIC Back if changed
+      if (data['cnicBackImage'] != null) {
+        cnicBackFilename = await fileService.saveCustomerImage(
+          data['cnicBackImage'],
+          data['cnicNumber'],
+          'cnic_back',
+        );
+      }
+
+      // Start with a clean copy or fetch fresh
+      // Since models are effectively immutable in Isar unless generated otherwise, 
+      // we usually copy with changes. But Isar object updates work by ID.
+      // So we can create a new object with the SAME ID.
+      
+      // We need to fetch the original to preserve dateRegistered etc if needed, 
+      // or we just trust the inputs if we had them all.
+      // Better to fetch fresh? Or just re-construct.
+      // We don't have dateRegistered in data map easily unless passed.
+      // Let's rely on repository logic or fetch first.
+      
+      final existingCust = customers.firstWhereOrNull((c) => c.customer.id == id)?.customer;
+      if (existingCust == null) throw Exception('Customer not found in list');
+
+      final updatedCustomer = existingCust
+        ..fullName = data['fullName']
+        ..fatherName = data['fatherName']
+        ..cnicNumber = data['cnicNumber']
+        ..phoneNumber = data['phoneNumber']
+        ..address = data['address']
+        ..profileImageFilename = profileImageFilename
+        ..cnicFrontFilename = cnicFrontFilename
+        ..cnicBackFilename = cnicBackFilename;
+        // dateRegistered remains unchanged
+
+      await _repository.updateCustomer(updatedCustomer);
+
+      Get.snackbar('Success', 'Customer updated successfully');
+      loadData(); // Refresh list
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to update customer: $e');
     } finally {
       isLoading.value = false;
     }
