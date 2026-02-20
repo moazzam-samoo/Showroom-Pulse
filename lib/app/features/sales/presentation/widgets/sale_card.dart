@@ -99,8 +99,8 @@ class SaleCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Status Badge Details
-    final badgeColor = data.isCash ? AppColors.darkPrimary : const Color(0xFFD946EF); // Cyan vs Fuchsia
-    final badgeLabel = data.isCash ? 'Cash' : 'Installment';
+    final badgeColor = data.isCash ? const Color(0xFFEF4444) : const Color(0xFFF59E0B); // Red (Sold) vs Amber (Installment)
+    final badgeLabel = data.isCash ? 'SOLD (NOT AVAILABLE)' : 'INSTALLMENT (RESERVED)';
 
     return GestureDetector(
       onTap: () {

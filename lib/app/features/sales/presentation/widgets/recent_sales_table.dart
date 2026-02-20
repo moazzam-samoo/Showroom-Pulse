@@ -49,8 +49,7 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Expanded(
-      child: Container(
+    return Container(
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -147,7 +146,6 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
             ),
           ],
         ),
-      ),
     );
   }
 
