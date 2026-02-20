@@ -1,9 +1,11 @@
 import 'package:isar/isar.dart';
+import 'package:collection/collection.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
+import 'package:tahir_showroom/app/data/models/witness.dart';
 
 /// Data class for customer with aggregated transaction data
 class CustomerWithTransactions {
@@ -39,6 +41,10 @@ class TransactionRecord {
   final List<Payment> payments;
   final String? witnessName;
   final String? witnessId;
+  final String? witnessPhone;
+  final String? witnessAddress;
+
+  final List<Witness> witnesses;
 
   TransactionRecord({
     required this.sale,
@@ -47,6 +53,9 @@ class TransactionRecord {
     this.payments = const [],
     this.witnessName,
     this.witnessId,
+    this.witnessPhone,
+    this.witnessAddress,
+    this.witnesses = const [],
   });
 
   bool get isInstallment => sale.saleType == SaleType.installment;
@@ -135,16 +144,52 @@ class CustomerRepository {
                 .contractIdEqualTo(contract.id)
                 .sortByPaymentDateDesc()
                 .findAll();
+            
+            // Fetch all witnesses
+            final witnesses = await _isar.witness
+                .filter()
+                .contractIdEqualTo(contract.id)
+                .findAll();
+                
+            final primaryWitness = witnesses.isNotEmpty 
+                ? (witnesses.firstWhereOrNull((w) => w.isPrimary) ?? witnesses.first)
+                : null;
+
+             transactions.add(TransactionRecord(
+              sale: sale,
+              bike: bike,
+              contract: contract,
+              payments: payments,
+              witnesses: witnesses,
+              witnessName: primaryWitness?.fullName ?? 'N/A',
+              witnessId: primaryWitness?.cnicNumber,
+              witnessPhone: primaryWitness?.phoneNumber,
+              witnessAddress: primaryWitness?.address,
+            ));
+            continue; // Skip the default add below
           }
         }
+
+        // For cash sales, fetch witnesses too
+        final witnesses = await _isar.witness
+            .filter()
+            .contractIdEqualTo(-sale.id) // Negative ID for cash sales
+            .findAll();
+
+        final primaryWitness = witnesses.isNotEmpty 
+            ? (witnesses.firstWhereOrNull((w) => w.isPrimary) ?? witnesses.first)
+            : null;
 
         transactions.add(TransactionRecord(
           sale: sale,
           bike: bike,
           contract: contract,
           payments: payments,
-          witnessName: 'N/A', // TODO: Add witness model
-          witnessId: null,
+          witnesses: witnesses,
+          witnessName: primaryWitness?.fullName ?? 'N/A',
+          witnessId: primaryWitness?.cnicNumber,
+          witnessPhone: primaryWitness?.phoneNumber,
+          witnessAddress: primaryWitness?.address,
         ));
       }
 
@@ -247,6 +292,38 @@ class CustomerRepository {
 
     if (lastMonthCount == 0) return thisMonthCount > 0 ? 100.0 : 0.0;
     return ((thisMonthCount - lastMonthCount) / lastMonthCount * 100);
+  }
+  /// Add a new customer
+  Future<int> addCustomer({
+    required String fullName,
+    required String cnicNumber,
+    required String phoneNumber,
+    String? fatherName,
+    String? address,
+    String? profileImageFilename,
+    String? cnicFrontFilename,
+    String? cnicBackFilename,
+  }) async {
+    final customer = Customer()
+      ..fullName = fullName
+      ..cnicNumber = cnicNumber
+      ..phoneNumber = phoneNumber
+      ..fatherName = fatherName
+      ..address = address
+      ..profileImageFilename = profileImageFilename
+      ..cnicFrontFilename = cnicFrontFilename
+      ..cnicBackFilename = cnicBackFilename
+      ..dateRegistered = DateTime.now();
+
+    // Check if customer with same CNIC exists
+    final existing = await _isar.customers.filter().cnicNumberEqualTo(cnicNumber).findFirst();
+    if (existing != null) {
+      throw Exception('Customer with CNIC $cnicNumber already exists');
+    }
+
+    return await _isar.writeTxn(() async {
+      return await _isar.customers.put(customer);
+    });
   }
 }
 

@@ -14,8 +14,7 @@ class SalesCardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<SalesController>();
 
-    return Expanded(
-      child: Obx(() {
+    return Obx(() {
         // Show loading indicator while fetching data
         if (controller.isLoading.value) {
           return const Center(
@@ -111,7 +110,7 @@ class SalesCardGrid extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    _buildColumnHeader('Cash Sales', const Color(0xFF22C55E), isDark),
+                    _buildColumnHeader('Cash Sales', const Color(0xFFEF4444), isDark),
                     const SizedBox(height: AppSpacing.md),
                     Expanded(
                       child: _buildGroupedList(cashSales, isDark, crossAxisCount: 2),
@@ -131,7 +130,7 @@ class SalesCardGrid extends StatelessWidget {
               Expanded(
                 child: Column(
                   children: [
-                    _buildColumnHeader('Installment Sales', const Color(0xFFD946EF), isDark),
+                    _buildColumnHeader('Installment Sales', const Color(0xFFF59E0B), isDark),
                      const SizedBox(height: AppSpacing.md),
                     Expanded(
                       child: _buildGroupedList(installmentSales, isDark, crossAxisCount: 2),
@@ -144,7 +143,7 @@ class SalesCardGrid extends StatelessWidget {
         } else {
           // Single Column View (Full Width)
           final salesToShow = status == 'Cash' ? cashSales : installmentSales;
-          final color = status == 'Cash' ? const Color(0xFF22C55E) : const Color(0xFFD946EF);
+          final color = status == 'Cash' ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
           
           return Column(
              children: [
@@ -156,8 +155,7 @@ class SalesCardGrid extends StatelessWidget {
              ],
           );
         }
-      }),
-    );
+      });
   }
 
   Widget _buildColumnHeader(String title, Color color, bool isDark) {

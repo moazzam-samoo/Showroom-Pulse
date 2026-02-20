@@ -5,6 +5,7 @@ import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
+import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/witness.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
@@ -12,6 +13,7 @@ import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card
 /// Sales Service - Handles sales-related database operations
 class SalesService {
   final IsarService _isarService = Get.find<IsarService>();
+  final FileService _fileService = Get.find<FileService>();
 
   /// Get all sales from the database with related data
   Future<List<SaleCardData>> getAllSales() async {
@@ -115,27 +117,19 @@ class SalesService {
       );
     }
 
-    // Create list of WitnessData for all witnesses
-    final List<WitnessData> witnessDataList = witnesses.map((w) => WitnessData(
-      fullName: w.fullName,
-      cnicNumber: w.cnicNumber,
-      phoneNumber: w.phoneNumber,
-      address: w.address,
-      cnicFrontFilename: w.cnicFrontFilename,
-      isPrimary: w.isPrimary,
-    )).toList();
+    // Create list of WitnessData for all witnesses (with paths, so just skip this one)
+    // final List<WitnessData> witnessDataList = ... (Removed as unused)
 
     // Convert bike image filename to full path
-    final fileService = Get.find<FileService>();
     String bikeImagePath = '';
     if (bike.imageFilename != null && bike.imageFilename!.isNotEmpty) {
-      bikeImagePath = fileService.getBikeImagePath(bike.imageFilename!);
+      bikeImagePath = _fileService.getBikeImagePath(bike.imageFilename!);
     }
 
     // Convert customer profile image filename to full path
     String? customerImagePath;
-    if (customer.profileImageFilename != null && customer.profileImageFilename!.isNotEmpty) {
-      customerImagePath = fileService.getCustomerProfileImagePath(
+    if (customer.profileImageFilename != null && customer.profileImageFilename!.trim().isNotEmpty) {
+      customerImagePath = _fileService.getCustomerProfileImagePath(
         customer.profileImageFilename!,
         customer.cnicNumber,
       );
@@ -144,7 +138,7 @@ class SalesService {
     // Convert witness CNIC image filename to full path (for backward compatibility)
     String? primaryWitnessCnicPath;
     if (primaryWitness?.cnicFrontFilename != null && primaryWitness!.cnicFrontFilename!.isNotEmpty) {
-      primaryWitnessCnicPath = fileService.getWitnessCnicImagePath(
+      primaryWitnessCnicPath = _fileService.getWitnessCnicImagePath(
         primaryWitness.cnicFrontFilename!,
         customer.cnicNumber,
       );
@@ -157,7 +151,7 @@ class SalesService {
       phoneNumber: w.phoneNumber,
       address: w.address,
       cnicFrontFilename: w.cnicFrontFilename != null && w.cnicFrontFilename!.isNotEmpty
-        ? fileService.getWitnessCnicImagePath(w.cnicFrontFilename!, customer.cnicNumber)
+        ? _fileService.getWitnessCnicImagePath(w.cnicFrontFilename!, customer.cnicNumber)
         : null,
       isPrimary: w.isPrimary,
     )).toList();
@@ -173,7 +167,7 @@ class SalesService {
       purchaserImage: customerImagePath,
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
-      amountPaid: contract?.totalPaid ?? sale.receivedAmount,
+      amountPaid: await _calculateAmountPaid(sale, contract, isar),
       bikePrice: contract?.cashPrice ?? sale.totalAmount,
       sellingPrice: contract?.totalAmount,
       amountRemaining: contract?.remainingBalance,
@@ -188,6 +182,17 @@ class SalesService {
       witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
       isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
     );
+  }
+
+  Future<double> _calculateAmountPaid(Sale sale, InstallmentContract? contract, Isar isar) async {
+    if (sale.saleType == SaleType.cash) {
+      // For cash sales, if receivedAmount is 0, assume full payment (migration fix)
+      return sale.receivedAmount > 0 ? sale.receivedAmount : sale.totalAmount;
+    } else if (contract != null) {
+      // Use the cached totalPaid from the contract model
+      return contract.totalPaid;
+    }
+    return 0;
   }
 
   /// Calculate dashboard statistics
@@ -350,7 +355,7 @@ class SalesService {
     double total = 0;
     
     for (var bike in bikes) {
-      total += bike.purchasePrice ?? 0;
+      total += bike.purchasePrice;
     }
     
     return total;

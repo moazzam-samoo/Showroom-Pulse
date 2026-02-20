@@ -1,0 +1,4 @@
+﻿Analyzing sales_service.dart...                                 
+
+warning - The left operand can't be null, so the right operand is never executed - lib\app\features\sales\domain\sales_service.dart:368:38 - dead_null_aware_expression
+
