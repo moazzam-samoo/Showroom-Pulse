@@ -23,21 +23,34 @@ class ReportsRepository {
         .findAll();
   }
 
-  /// Calculate revenue per sold bike: cashSalePrice - purchasePrice
+  /// Calculate total revenue using proportional recognition for installments
   Future<double> getTotalRevenue(int month, int year) async {
     final sales = await getSalesByMonth(month, year);
     double total = 0;
 
     for (final sale in sales) {
       final bike = await _isar.bikes.get(sale.bikeId);
-      if (bike != null) {
-        total += bike.cashSalePrice - bike.purchasePrice;
+      if (bike == null) continue;
+
+      final baseProfit = bike.cashSalePrice - bike.purchasePrice;
+
+      if (sale.saleType == SaleType.cash) {
+        total += baseProfit;
+      } else if (sale.installmentContractId != null) {
+        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
+        if (contract != null) {
+          final progress = contract.totalAmount > 0
+              ? (contract.totalPaid / contract.totalAmount).clamp(0.0, 1.0)
+              : 0.0;
+          total += baseProfit * progress;
+          total += contract.totalMarkupAmount * progress;
+        }
       }
     }
     return total;
   }
 
-  /// Revenue grouped by brand for a given month
+  /// Revenue grouped by brand — full amounts + earned (proportional recovery)
   Future<Map<String, Map<String, double>>> getProfitByBrand(int month, int year) async {
     final sales = await getSalesByMonth(month, year);
     final Map<String, Map<String, double>> result = {};
@@ -47,21 +60,30 @@ class ReportsRepository {
       if (bike == null) continue;
 
       final brand = bike.brand;
-      result.putIfAbsent(brand, () => {'cash': 0, 'installment': 0, 'total': 0});
+      result.putIfAbsent(brand, () => {'cash': 0, 'installment': 0, 'total': 0, 'earned': 0});
 
-      final profit = bike.cashSalePrice - bike.purchasePrice;
+      final baseProfit = bike.cashSalePrice - bike.purchasePrice;
 
       if (sale.saleType == SaleType.cash) {
-        result[brand]!['cash'] = result[brand]!['cash']! + profit;
-      } else {
-        // For installment, markup = contract.totalAmount - cashSalePrice
-        final contract = sale.installmentContractId != null
-            ? await _isar.installmentContracts.get(sale.installmentContractId!)
-            : null;
-        final installmentMarkup = contract != null
-            ? contract.totalAmount - bike.cashSalePrice
-            : profit;
-        result[brand]!['installment'] = result[brand]!['installment']! + installmentMarkup;
+        // Cash sale: full amounts, fully earned
+        result[brand]!['cash'] = result[brand]!['cash']! + baseProfit;
+        result[brand]!['earned'] = result[brand]!['earned']! + baseProfit;
+      } else if (sale.installmentContractId != null) {
+        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
+        if (contract != null) {
+          final markup = contract.totalMarkupAmount;
+          final totalProfit = baseProfit + markup;
+          final progress = contract.totalAmount > 0
+              ? (contract.totalPaid / contract.totalAmount).clamp(0.0, 1.0)
+              : 0.0;
+
+          // Full amounts (potential profit)
+          result[brand]!['cash'] = result[brand]!['cash']! + baseProfit;
+          result[brand]!['installment'] = result[brand]!['installment']! + markup;
+
+          // Earned = proportionally recovered
+          result[brand]!['earned'] = result[brand]!['earned']! + (totalProfit * progress);
+        }
       }
 
       result[brand]!['total'] = result[brand]!['cash']! + result[brand]!['installment']!;
@@ -97,9 +119,54 @@ class ReportsRepository {
     return distribution;
   }
 
-  /// Monthly revenue trend for line chart (last N months)
-  Future<List<MapEntry<String, double>>> getRevenueTrend(int months) async {
-    return getMonthlyProfitTrend(months);
+  /// Daily revenue trend for the selected month
+  Future<List<MapEntry<String, double>>> getDailyRevenueTrend(int month, int year) async {
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 0, 23, 59, 59);
+
+    final sales = await _isar.sales
+        .filter()
+        .saleDateBetween(start, end)
+        .findAll();
+
+    final int daysInMonth = end.day;
+    final Map<int, double> dailyRevenue = {for (var i = 1; i <= daysInMonth; i++) i: 0.0};
+
+    for (final sale in sales) {
+      final bike = await _isar.bikes.get(sale.bikeId);
+      if (bike == null) continue;
+
+      final day = sale.saleDate.day;
+      final baseProfit = bike.cashSalePrice - bike.purchasePrice;
+
+      if (sale.saleType == SaleType.cash) {
+        dailyRevenue[day] = dailyRevenue[day]! + baseProfit;
+      } else if (sale.installmentContractId != null) {
+        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
+        if (contract != null) {
+          final progress = contract.totalAmount > 0
+              ? (contract.totalPaid / contract.totalAmount).clamp(0.0, 1.0)
+              : 0.0;
+          dailyRevenue[day] = dailyRevenue[day]! + (baseProfit * progress) + (contract.totalMarkupAmount * progress);
+        }
+      }
+    }
+
+    return dailyRevenue.entries
+        .map((e) => MapEntry(e.key.toString(), e.value))
+        .toList();
+  }
+
+  /// Monthly revenue trend for the selected year
+  Future<List<MapEntry<String, double>>> getAnnualRevenueTrend(int year) async {
+    final List<MapEntry<String, double>> trend = [];
+    final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    for (int i = 1; i <= 12; i++) {
+      final revenue = await getTotalRevenue(i, year);
+      trend.add(MapEntry(monthNames[i - 1], revenue));
+    }
+    return trend;
   }
 
   // ─── Expense CRUD ──────────────────────────────────────────
@@ -119,7 +186,7 @@ class ReportsRepository {
   /// Get total expenses for a month
   Future<double> getTotalExpenses(int month, int year) async {
     final expenses = await getExpensesByMonth(month, year);
-    return expenses.fold(0.0, (sum, e) => sum + e.amount);
+    return expenses.fold<double>(0.0, (double sum, e) => sum + e.amount);
   }
 
   /// Get all unique category names (for dropdown)
