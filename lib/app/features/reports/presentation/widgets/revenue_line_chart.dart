@@ -7,8 +7,15 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 
 class RevenueLineChart extends StatelessWidget {
   final List<MapEntry<String, double>> data;
+  final String filter;
+  final Function(String) onFilterChanged;
 
-  const RevenueLineChart({super.key, required this.data});
+  const RevenueLineChart({
+    super.key,
+    required this.data,
+    required this.filter,
+    required this.onFilterChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +34,32 @@ class RevenueLineChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Monthly Revenue Breakdown',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                filter == 'Monthly' ? 'Daily Revenue Breakdown' : 'Annual Revenue Breakdown',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                ),
+              ),
+              // Filter Toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildToggleButton('Monthly', isDark),
+                    _buildToggleButton('Annual', isDark),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.lg),
           SizedBox(
@@ -75,6 +101,8 @@ class RevenueLineChart extends StatelessWidget {
                         bottomTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
+                            reservedSize: 30,
+                            interval: 1, // Force exactly one label per discrete data point
                             getTitlesWidget: (value, meta) {
                               if (value.toInt() >= 0 && value.toInt() < data.length) {
                                 return Padding(
@@ -140,8 +168,8 @@ class RevenueLineChart extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.3),
-                                (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.0),
+                                (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withValues(alpha: 0.3),
+                                (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withValues(alpha: 0.0),
                               ],
                             ),
                           ),
@@ -161,5 +189,41 @@ class RevenueLineChart extends StatelessWidget {
     if (data.isEmpty) return 100;
     final max = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     return max == 0 ? 100 : max * 1.2;
+  }
+
+  Widget _buildToggleButton(String type, bool isDark) {
+    final isSelected = filter == type;
+    return GestureDetector(
+      onTap: () => onFilterChanged(type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.darkCard : AppColors.lightSurface)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: isSelected ? Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ) : null,
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ] : [],
+        ),
+        child: Text(
+          type,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected
+                ? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)
+                : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+          ),
+        ),
+      ),
+    );
   }
 }
