@@ -1,0 +1,298 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
+
+import 'package:tahir_showroom/app/core/constants/app_colors.dart';
+import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
+import '../controllers/reports_controller.dart';
+import '../widgets/kpi_summary_cards.dart';
+import '../widgets/monthly_profit_chart.dart';
+import '../widgets/stock_distribution_chart.dart';
+import '../widgets/profit_summary_table.dart';
+import '../widgets/revenue_line_chart.dart';
+import '../widgets/expense_tracker.dart';
+
+class ReportsView extends StatefulWidget {
+  const ReportsView({super.key});
+
+  @override
+  State<ReportsView> createState() => _ReportsViewState();
+}
+
+class _ReportsViewState extends State<ReportsView> {
+  int _selectedNavIndex = 6; // Reports is index 6 in sidebar
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = Get.find<ReportsController>();
+    final currencyFormat = NumberFormat('#,##0', 'en_PK');
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      body: Row(
+        children: [
+          // Sidebar
+          SidebarNavigation(
+            selectedIndex: _selectedNavIndex,
+            onItemSelected: (index) {
+              setState(() => _selectedNavIndex = index);
+              switch (index) {
+                case 0: Get.offNamed('/dashboard'); break;
+                case 1: Get.offNamed('/procurement'); break;
+                case 2: Get.offNamed('/inventory'); break;
+                case 3: Get.offNamed('/sales'); break;
+                case 4: Get.offNamed('/installments'); break;
+                case 5: Get.offNamed('/customers'); break;
+                case 6: break; // Already on Reports
+                case 7: Get.offNamed('/settings'); break;
+              }
+            },
+          ),
+          // Main Content
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return Column(
+                children: [
+                  // Header
+                  _buildHeader(isDark, controller),
+                  // Content
+                  Expanded(
+                    child: Obx(() => controller.selectedTab.value == 0
+                        ? _buildReportsTab(isDark, controller, currencyFormat)
+                        : _buildRevenueTab(isDark, controller, currencyFormat)),
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(bool isDark, ReportsController controller) {
+    final monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Title
+          Text(
+            'Revenue & Reports',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          // Month/Year Filter
+          Obx(() => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorderInput : AppColors.lightBorder,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isDense: true,
+                value: '${controller.selectedMonth.value}-${controller.selectedYear.value}',
+                dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  fontSize: 14,
+                ),
+                icon: Icon(
+                  LucideIcons.chevronDown,
+                  size: 16,
+                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                ),
+                items: _buildMonthDropdownItems(monthNames, isDark),
+                onChanged: (value) {
+                  if (value != null) {
+                    final parts = value.split('-');
+                    controller.changeMonth(int.parse(parts[0]), int.parse(parts[1]));
+                  }
+                },
+              ),
+            ),
+          )),
+          const Spacer(),
+          // Tab Switcher
+          Obx(() => Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                _buildTabButton('Reports', 0, controller, isDark),
+                _buildTabButton('Revenue', 1, controller, isDark),
+              ],
+            ),
+          )),
+          const SizedBox(width: AppSpacing.md),
+          // Download PDF
+          FilledButton.icon(
+            onPressed: () => _downloadReport(controller),
+            icon: const Icon(LucideIcons.download, size: 16),
+            label: const Text('Download PDF'),
+            style: FilledButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<DropdownMenuItem<String>> _buildMonthDropdownItems(List<String> monthNames, bool isDark) {
+    final now = DateTime.now();
+    final items = <DropdownMenuItem<String>>[];
+    
+    // Last 12 months
+    for (int i = 0; i < 12; i++) {
+      final date = DateTime(now.year, now.month - i, 1);
+      final value = '${date.month}-${date.year}';
+      items.add(DropdownMenuItem(
+        value: value,
+        child: Text('${monthNames[date.month - 1]} ${date.year}'),
+      ));
+    }
+    return items;
+  }
+
+  Widget _buildTabButton(String label, int tabIndex, ReportsController controller, bool isDark) {
+    final isActive = controller.selectedTab.value == tabIndex;
+    return GestureDetector(
+      onTap: () => controller.selectedTab.value = tabIndex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive
+                ? Colors.white
+                : (isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary),
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Reports Tab ─────────────────────────────────────────────
+  Widget _buildReportsTab(bool isDark, ReportsController controller, NumberFormat currencyFormat) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          // KPI Cards
+          KpiSummaryCards(
+            totalRevenue: controller.totalRevenue.value,
+            totalExpenses: controller.totalExpenses.value,
+            netProfit: controller.netProfit.value,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          // Charts Row
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Monthly Profit Bar Chart
+              Expanded(
+                flex: 3,
+                child: MonthlyProfitChart(
+                  data: controller.monthlyProfitData,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              // Stock Distribution Donut
+              Expanded(
+                flex: 2,
+                child: StockDistributionChart(
+                  data: controller.stockDistribution,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          // Net Profit Summary Table
+          ProfitSummaryTable(
+            data: controller.profitByBrand,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Revenue Tab ─────────────────────────────────────────────
+  Widget _buildRevenueTab(bool isDark, ReportsController controller, NumberFormat currencyFormat) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          // Revenue Line Chart
+          RevenueLineChart(
+            data: controller.revenueTrend,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          // Expense Tracker
+          ExpenseTracker(
+            expenses: controller.expenses,
+            categories: controller.expenseCategories,
+            onAdd: (expense) => controller.addExpense(expense),
+            onUpdate: (expense) => controller.updateExpense(expense),
+            onDelete: (id) => controller.deleteExpense(id),
+            totalExpenses: controller.totalExpenses.value,
+            totalRevenue: controller.totalRevenue.value,
+            netProfit: controller.netProfit.value,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _downloadReport(ReportsController controller) {
+    // TODO: Phase 5 - Wire up PDF generation
+    Get.snackbar(
+      'Coming Soon',
+      'PDF report generation will be available soon.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+}
