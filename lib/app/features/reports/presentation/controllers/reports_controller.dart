@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 
 import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import '../../data/repositories/reports_repository.dart';
 
 class ReportsController extends GetxController {
   late final ReportsRepository _repository;
+  final _pdfService = ReportPdfService();
 
   // ─── Observable State ──────────────────────────────────────
   final isLoading = true.obs;
@@ -26,6 +28,7 @@ class ReportsController extends GetxController {
   final stockDistribution = <String, int>{}.obs;
   final profitByBrand = <String, Map<String, double>>{}.obs;
   final revenueTrend = <MapEntry<String, double>>[].obs;
+  final revenueChartFilter = 'Monthly'.obs; // 'Monthly' or 'Annual'
 
   // Expenses
   final expenses = <Expense>[].obs;
@@ -55,7 +58,9 @@ class ReportsController extends GetxController {
         _repository.getProfitByBrand(month, year),
         _repository.getExpensesByMonth(month, year),
         _repository.getExpenseCategories(),
-        _repository.getRevenueTrend(6),
+        revenueChartFilter.value == 'Monthly'
+            ? _repository.getDailyRevenueTrend(month, year)
+            : _repository.getAnnualRevenueTrend(year),
       ]);
 
       totalRevenue.value = results[0] as double;
@@ -82,6 +87,12 @@ class ReportsController extends GetxController {
     loadData();
   }
 
+  /// Change revenue chart filter (Monthly/Annual)
+  void changeRevenueChartFilter(String filter) {
+    revenueChartFilter.value = filter;
+    loadData();
+  }
+
   // ─── Expense CRUD ──────────────────────────────────────────
 
   Future<void> addExpense(Expense expense) async {
@@ -97,5 +108,54 @@ class ReportsController extends GetxController {
   Future<void> deleteExpense(int id) async {
     await _repository.deleteExpense(id);
     await loadData();
+  }
+
+  // ─── PDF Download ──────────────────────────────────────────
+
+  Future<void> downloadReport() async {
+    String? path;
+
+    if (selectedTab.value == 0) {
+      // Reports Tab → Monthly Profit Report
+      path = await _pdfService.generateProfitReport(
+        month: selectedMonth.value,
+        year: selectedYear.value,
+        totalRevenue: totalRevenue.value,
+        totalExpenses: totalExpenses.value,
+        netProfit: netProfit.value,
+        profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
+        stockDistribution: Map<String, int>.from(stockDistribution),
+      );
+    } else {
+      // Revenue Tab → Revenue & Expense Statement
+      path = await _pdfService.generateRevenueStatement(
+        month: selectedMonth.value,
+        year: selectedYear.value,
+        totalRevenue: totalRevenue.value,
+        totalExpenses: totalExpenses.value,
+        netProfit: netProfit.value,
+        expenses: List<Expense>.from(expenses),
+      );
+    }
+
+    if (path != null) {
+      Get.snackbar(
+        'PDF Saved',
+        'Report saved to: $path',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+        margin: const EdgeInsets.all(12),
+        backgroundColor: const Color(0xFF10B981),
+        colorText: const Color(0xFFFFFFFF),
+      );
+    } else {
+      Get.snackbar(
+        'Error',
+        'Failed to generate PDF report.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFFEF4444),
+        colorText: const Color(0xFFFFFFFF),
+      );
+    }
   }
 }

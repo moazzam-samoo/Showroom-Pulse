@@ -267,9 +267,11 @@ class _ReportsViewState extends State<ReportsView> {
       child: Column(
         children: [
           // Revenue Line Chart
-          RevenueLineChart(
+          Obx(() => RevenueLineChart(
             data: controller.revenueTrend,
-          ),
+            filter: controller.revenueChartFilter.value,
+            onFilterChanged: controller.changeRevenueChartFilter,
+          )),
           const SizedBox(height: AppSpacing.lg),
           // Expense Tracker
           ExpenseTracker(
@@ -288,11 +290,6 @@ class _ReportsViewState extends State<ReportsView> {
   }
 
   void _downloadReport(ReportsController controller) {
-    // TODO: Phase 5 - Wire up PDF generation
-    Get.snackbar(
-      'Coming Soon',
-      'PDF report generation will be available soon.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    controller.downloadReport();
   }
 }
