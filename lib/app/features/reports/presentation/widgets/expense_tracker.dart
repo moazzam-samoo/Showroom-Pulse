@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -315,6 +316,21 @@ class ExpenseTracker extends StatelessWidget {
     String? selectedCategory;
     bool isNewCategory = false;
 
+    void saveExpense() {
+      final category = isNewCategory ? categoryController.text.trim() : selectedCategory;
+      final amount = double.tryParse(amountController.text.replaceAll(',', ''));
+      if (category == null || category.isEmpty || amount == null || amount <= 0) return;
+
+      final expense = Expense()
+        ..category = category
+        ..amount = amount
+        ..date = selectedDate
+        ..description = descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim();
+
+      onAdd(expense);
+      Navigator.pop(context);
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -374,6 +390,7 @@ class ExpenseTracker extends StatelessWidget {
                       const SizedBox(height: AppSpacing.sm),
                       TextField(
                         controller: categoryController,
+                        onSubmitted: (_) => saveExpense(),
                         decoration: InputDecoration(
                           labelText: 'New Category Name',
                           labelStyle: TextStyle(
@@ -397,6 +414,19 @@ class ExpenseTracker extends StatelessWidget {
                     TextField(
                       controller: amountController,
                       keyboardType: TextInputType.number,
+                      onSubmitted: (_) => saveExpense(),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          if (newValue.text.isEmpty) return newValue;
+                          final value = int.tryParse(newValue.text.replaceAll(',', '')) ?? 0;
+                          final formatted = NumberFormat('#,##0').format(value);
+                          return TextEditingValue(
+                            text: formatted,
+                            selection: TextSelection.collapsed(offset: formatted.length),
+                          );
+                        }),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Amount (Rs)',
                         labelStyle: TextStyle(
@@ -438,6 +468,7 @@ class ExpenseTracker extends StatelessWidget {
                     // Description
                     TextField(
                       controller: descriptionController,
+                      onSubmitted: (_) => saveExpense(),
                       decoration: InputDecoration(
                         labelText: 'Note (optional)',
                         labelStyle: TextStyle(
@@ -466,25 +497,7 @@ class ExpenseTracker extends StatelessWidget {
                   )),
                 ),
                 FilledButton(
-                  onPressed: () {
-                    final category = isNewCategory
-                        ? categoryController.text.trim()
-                        : selectedCategory;
-                    final amount = double.tryParse(amountController.text.replaceAll(',', ''));
-
-                    if (category == null || category.isEmpty || amount == null || amount <= 0) return;
-
-                    final expense = Expense()
-                      ..category = category
-                      ..amount = amount
-                      ..date = selectedDate
-                      ..description = descriptionController.text.trim().isEmpty
-                          ? null
-                          : descriptionController.text.trim();
-
-                    onAdd(expense);
-                    Navigator.pop(context);
-                  },
+                  onPressed: saveExpense,
                   style: FilledButton.styleFrom(
                     backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                   ),
@@ -499,9 +512,23 @@ class ExpenseTracker extends StatelessWidget {
   }
 
   void _showEditExpenseDialog(BuildContext context, bool isDark, Expense expense) {
-    final amountController = TextEditingController(text: expense.amount.toStringAsFixed(0));
+    final amountController = TextEditingController(
+      text: NumberFormat('#,##0').format(expense.amount),
+    );
     final descriptionController = TextEditingController(text: expense.description ?? '');
     DateTime selectedDate = expense.date;
+
+    void saveEdit() {
+      final amount = double.tryParse(amountController.text.replaceAll(',', ''));
+      if (amount == null || amount <= 0) return;
+
+      expense.amount = amount;
+      expense.date = selectedDate;
+      expense.description = descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim();
+
+      onUpdate(expense);
+      Navigator.pop(context);
+    }
 
     showDialog(
       context: context,
@@ -525,6 +552,19 @@ class ExpenseTracker extends StatelessWidget {
                     TextField(
                       controller: amountController,
                       keyboardType: TextInputType.number,
+                      onSubmitted: (_) => saveEdit(),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          if (newValue.text.isEmpty) return newValue;
+                          final value = int.tryParse(newValue.text.replaceAll(',', '')) ?? 0;
+                          final formatted = NumberFormat('#,##0').format(value);
+                          return TextEditingValue(
+                            text: formatted,
+                            selection: TextSelection.collapsed(offset: formatted.length),
+                          );
+                        }),
+                      ],
                       decoration: InputDecoration(
                         labelText: 'Amount (Rs)',
                         labelStyle: TextStyle(
@@ -562,6 +602,7 @@ class ExpenseTracker extends StatelessWidget {
                     ),
                     TextField(
                       controller: descriptionController,
+                      onSubmitted: (_) => saveEdit(),
                       decoration: InputDecoration(
                         labelText: 'Note (optional)',
                         labelStyle: TextStyle(
@@ -590,19 +631,7 @@ class ExpenseTracker extends StatelessWidget {
                   )),
                 ),
                 FilledButton(
-                  onPressed: () {
-                    final amount = double.tryParse(amountController.text.replaceAll(',', ''));
-                    if (amount == null || amount <= 0) return;
-
-                    expense.amount = amount;
-                    expense.date = selectedDate;
-                    expense.description = descriptionController.text.trim().isEmpty
-                        ? null
-                        : descriptionController.text.trim();
-
-                    onUpdate(expense);
-                    Navigator.pop(context);
-                  },
+                  onPressed: saveEdit,
                   style: FilledButton.styleFrom(
                     backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                   ),
