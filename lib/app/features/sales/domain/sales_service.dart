@@ -170,7 +170,7 @@ class SalesService {
       customerAddress: customer.address ?? '',
       saleDate: formattedDate,
       amountPaid: await _calculateAmountPaid(sale, contract, isar),
-      bikePrice: contract?.cashPrice ?? sale.totalAmount,
+      bikePrice: contract?.cashPrice ?? (sale.totalAmount + sale.discountAmount),
       sellingPrice: contract?.totalAmount,
       amountRemaining: contract?.remainingBalance,
       isCash: sale.saleType == SaleType.cash,
@@ -182,6 +182,8 @@ class SalesService {
       witnessPhone: primaryWitness?.phoneNumber,
       witnessImage: primaryWitnessCnicPath,
       witnesses: witnessDataListWithPaths.isNotEmpty ? witnessDataListWithPaths : null,
+      discountAmount: sale.discountAmount,
+      discountPercentage: sale.discountPercentage,
       isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
     );
   }
