@@ -139,6 +139,18 @@ class AppTheme {
     dialogTheme: const DialogThemeData(
       backgroundColor: AppColors.darkSurface,
     ),
+
+    // Scrollbar
+    scrollbarTheme: ScrollbarThemeData(
+      thumbColor: MaterialStateProperty.all(AppColors.darkPrimary.withOpacity(0.5)),
+      trackColor: MaterialStateProperty.all(AppColors.darkSurface.withOpacity(0.5)),
+      trackVisibility: MaterialStateProperty.all(true),
+      thumbVisibility: MaterialStateProperty.all(true),
+      thickness: MaterialStateProperty.all(6.0),
+      radius: const Radius.circular(8.0),
+      crossAxisMargin: 4.0,
+      interactive: true,
+    ),
     
     // Text Theme
     textTheme: _darkTextTheme,
@@ -304,6 +316,18 @@ class AppTheme {
     // Dialog
     dialogTheme: const DialogThemeData(
       backgroundColor: AppColors.lightSurface,
+    ),
+
+    // Scrollbar
+    scrollbarTheme: ScrollbarThemeData(
+      thumbColor: MaterialStateProperty.all(AppColors.lightPrimary.withOpacity(0.5)),
+      trackColor: MaterialStateProperty.all(AppColors.lightSurface.withOpacity(0.5)),
+      trackVisibility: MaterialStateProperty.all(true),
+      thumbVisibility: MaterialStateProperty.all(true),
+      thickness: MaterialStateProperty.all(6.0),
+      radius: const Radius.circular(8.0),
+      crossAxisMargin: 4.0,
+      interactive: true,
     ),
     
     // Text Theme

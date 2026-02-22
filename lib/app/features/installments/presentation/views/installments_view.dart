@@ -228,6 +228,7 @@ class InstallmentsView extends StatelessWidget {
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.only(right: AppSpacing.sm),
           itemCount: controller.contracts.length,
           itemBuilder: (context, index) {
             final data = controller.contracts[index];

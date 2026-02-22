@@ -3,16 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:tahir_showroom/app/data/models/customer.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_showroom;
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 
 class AddCustomerDialog extends StatefulWidget {
+  final Customer? customer;
   final Function(Map<String, dynamic>)? onSave;
 
   const AddCustomerDialog({
     super.key,
+    this.customer,
     this.onSave,
   });
 
@@ -24,15 +28,61 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
   final _formKey = GlobalKey<FormState>();
   
   // Form controllers
-  final _nameController = TextEditingController();
-  final _fatherNameController = TextEditingController();
-  final _cnicController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _fatherNameController;
+  late final TextEditingController _cnicController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
 
   File? _profileImage;
   File? _cnicFrontImage;
   File? _cnicBackImage;
+
+  // Existing images (Files on disk, but path stored)
+  String? _existingProfileImage;
+  String? _existingCnicFrontImage;
+  String? _existingCnicBackImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.customer?.fullName ?? '');
+    _fatherNameController = TextEditingController(text: widget.customer?.fatherName ?? '');
+    _cnicController = TextEditingController(text: widget.customer?.cnicNumber ?? '');
+    _phoneController = TextEditingController(text: widget.customer?.phoneNumber ?? '');
+    _addressController = TextEditingController(text: widget.customer?.address ?? '');
+
+    if (widget.customer != null) {
+      _loadExistingImages();
+    }
+  }
+
+  void _loadExistingImages() {
+    final fileService = Get.find<tahir_showroom.FileService>();
+    final cnic = widget.customer!.cnicNumber;
+
+    if (widget.customer!.profileImageFilename != null) {
+      _existingProfileImage = fileService.getCustomerProfileImagePath(
+        widget.customer!.profileImageFilename!, 
+        cnic
+      );
+    }
+    if (widget.customer!.cnicFrontFilename != null) {
+      _existingCnicFrontImage = fileService.getCustomerProfileImagePath( // Note: getCustomerMediaPath logic is same base, just check if it handles subfolders correctly? 
+        // Wait, file_service.dart: getCustomerProfileImagePath uses `p.join(customersMediaPath, sanitizedCnic, filename)`
+        // saveCustomerImage uses `p.join(customerPath, filename)`. 
+        // So yes, flat structure in specific customer folder.
+        widget.customer!.cnicFrontFilename!, 
+        cnic
+      );
+    }
+    if (widget.customer!.cnicBackFilename != null) {
+      _existingCnicBackImage = fileService.getCustomerProfileImagePath(
+        widget.customer!.cnicBackFilename!, 
+        cnic
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -67,11 +117,24 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           'fatherName': _fatherNameController.text,
           'cnicNumber': _cnicController.text,
           'phoneNumber': _phoneController.text,
-          'phoneNumber': _phoneController.text,
           'address': _addressController.text,
           'profileImage': _profileImage,
           'cnicFrontImage': _cnicFrontImage,
           'cnicBackImage': _cnicBackImage,
+          'existingProfileImage': _existingProfileImage != null && _profileImage == null ? widget.customer?.profileImageFilename : null, // Logic handled in controller? Controller expects filenames or files.
+          // Controller logic: "if data['profileImage'] != null ... save ... else if existing? "
+          // Controller _updateCustomer logic:
+          // String? profileImageFilename = data['existingProfileImage']; ...
+          // if (data['profileImage'] != null) ...
+          
+          // So I need to pass the existing filenames if they are kept.
+          // If a new image is picked (_profileImage != null), controller uses that.
+          // If no new image, controller needs to know if we keep the old one.
+          // The controller implementation I wrote: `String? profileImageFilename = data['existingProfileImage'];`
+          // So I should pass the filename here if I want to keep it.
+           'existingProfileImage': _profileImage == null ? widget.customer?.profileImageFilename : null,
+           'existingCnicFrontImage': _cnicFrontImage == null ? widget.customer?.cnicFrontFilename : null,
+           'existingCnicBackImage': _cnicBackImage == null ? widget.customer?.cnicBackFilename : null,
         });
         Get.back();
       }
@@ -88,9 +151,11 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
     final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
 
+    final isEdit = widget.customer != null;
+
     return AppDialog(
-      title: 'Add New Customer',
-      subtitle: 'Create a new customer profile',
+      title: isEdit ? 'Edit Customer' : 'Add New Customer',
+      subtitle: isEdit ? 'Update customer profile' : 'Create a new customer profile',
       onSubmit: _handleSave,
       width: 700,
       actions: [
@@ -104,9 +169,9 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              child: const Text(
-                'Save Customer (Enter)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                isEdit ? 'Update Customer' : 'Save Customer (Enter)',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -127,7 +192,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                     color: sectionHeaderBg,
                     textColor: sectionHeaderText,
                     children: [
-                      _buildInputGroup('Full Name:', _nameController, 'e.g. John Doe', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                      _buildInputGroup('Full Name:', _nameController, 'e.g. John Doe', isDark, inputBg, inputBorder, labelColor, autofocus: !isEdit),
                       const SizedBox(height: 12),
                       _buildInputGroup('Father Name:', _fatherNameController, 'e.g. Richard Doe', isDark, inputBg, inputBorder, labelColor),
                        const SizedBox(height: 12),
@@ -159,24 +224,27 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                     _buildImagePicker(
                       'Profile Photo', 
                       _profileImage, 
+                      _existingProfileImage,
                       () => _pickImage('profile'), 
-                      () => setState(() => _profileImage = null),
+                      () => setState(() { _profileImage = null; }), // Remove NEW selection
                       isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
                     ),
                     const SizedBox(height: 16),
                     _buildImagePicker(
                       'CNIC Front', 
                       _cnicFrontImage, 
+                      _existingCnicFrontImage,
                       () => _pickImage('cnic_front'), 
-                      () => setState(() => _cnicFrontImage = null),
+                      () => setState(() { _cnicFrontImage = null; }),
                       isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
                     ),
                     const SizedBox(height: 16),
                     _buildImagePicker(
                       'CNIC Back', 
                       _cnicBackImage, 
+                      _existingCnicBackImage,
                       () => _pickImage('cnic_back'), 
-                      () => setState(() => _cnicBackImage = null),
+                      () => setState(() { _cnicBackImage = null; }),
                       isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
                     ),
                   ],
@@ -286,8 +354,8 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           validator: (value) {
             if (isOptional && (value == null || value.isEmpty)) return null;
             if (value == null || value.isEmpty) return 'Required';
-            if (isCnic && value.length < 15) return 'Invalid CNIC'; // 13 digits + 2 hyphens
-            if (isPhone && value.length < 12) return 'Invalid Phone'; // 11 digits + 1 hyphen
+            if (isCnic && value.length < 15) return 'Invalid CNIC (13 digits required)';
+            if (isPhone && value.length < 12) return 'Invalid Phone (11 digits required)';
             return null;
           },
         ),
@@ -296,15 +364,53 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
   }
   Widget _buildImagePicker(
     String title,
-    File? image,
+    File? newImage,
+    String? existingImagePath,
     VoidCallback onPick,
-    VoidCallback onRemove,
+    VoidCallback onRemoveNew,
     bool isDark,
     Color bg,
     Color border,
     Color headerBg,
     Color headerText,
   ) {
+    // Determine what to show
+    Widget content;
+    if (newImage != null) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.file(newImage, fit: BoxFit.cover),
+      );
+    } else if (existingImagePath != null) {
+       // Check if file exists to avoid error? Image.file with errorBuilder is safer
+       content = ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.file(
+          File(existingImagePath), 
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Center(child: Icon(LucideIcons.imageOff, size: 32, color: Colors.grey));
+          },
+        ),
+      );
+    } else {
+      content = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(LucideIcons.camera, size: 32, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+          const SizedBox(height: 4),
+          Text(
+            'Upload',
+            style: TextStyle(
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      );
+    }
+
     return _buildSection(
       title: title,
       color: headerBg,
@@ -320,41 +426,22 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: border, width: 2),
             ),
-            child: image != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(image, fit: BoxFit.cover),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.camera, size: 32, color: isDark ? Colors.grey[500] : Colors.grey[400]),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Upload',
-                        style: TextStyle(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: content,
           ),
         ),
-        if (image != null) ...[
+        if (newImage != null) ...[
           const SizedBox(height: 4),
           Center(
             child: InkWell(
-              onTap: onRemove,
+              onTap: onRemoveNew,
               child: Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(LucideIcons.trash2, size: 14, color: Colors.red),
+                    Icon(LucideIcons.minusCircle, size: 14, color: Colors.orange),
                     SizedBox(width: 4),
-                    Text('Remove', style: TextStyle(color: Colors.red, fontSize: 12)),
+                    Text('Undo New Selection', style: TextStyle(color: Colors.orange, fontSize: 12)),
                   ],
                 ),
               ),

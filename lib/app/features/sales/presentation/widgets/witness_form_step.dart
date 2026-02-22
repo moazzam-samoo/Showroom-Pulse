@@ -196,6 +196,11 @@ class WitnessFormStep extends StatelessWidget {
                 prefixIcon: LucideIcons.creditCard,
                 controller: cnicController,
                 inputFormatters: [CnicInputFormatter()],
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Required';
+                  if (value.length < 15) return 'Invalid CNIC';
+                  return null;
+                },
               ),
             ),
           ],
@@ -212,6 +217,11 @@ class WitnessFormStep extends StatelessWidget {
                 prefixIcon: LucideIcons.phone,
                 controller: phoneController,
                 inputFormatters: [PhoneNumberInputFormatter()],
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Required';
+                  if (value.length < 12) return 'Invalid Phone';
+                  return null;
+                },
               ),
             ),
             const SizedBox(width: 16),

@@ -8,56 +8,72 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     if (newValue.text.isEmpty) {
-      return newValue;
+      return newValue.copyWith(text: '');
     }
 
-    // Keep only digits
-    final newText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    // Handle "deletion" of a separator
+    if (oldValue.text.length > newValue.text.length) {
+      final int selectionIndex = newValue.selection.end;
+      // If the user deleted a comma, we need to delete the digit before it too
+      // or just trust the standard behavior if we strip non-digits.
+      // But actually, standard behavior is usually just to re-format.
+    }
+
+    // 1. Get the pure number
+    String newText = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
     
-    // If the resulting text is empty (user typed non-digits), return empty
+    // If empty or 0, return empty or formatted 0? 
+    // Let's stick to returning the formatted string.
     if (newText.isEmpty) {
-      return const TextEditingValue(
+       return const TextEditingValue(
         text: '',
         selection: TextSelection.collapsed(offset: 0),
       );
     }
-
-    // Parse the value
-    final int value = int.tryParse(newText) ?? 0;
-
-    // Format new value
+    
+    // Parse
+    int value = int.tryParse(newText) ?? 0;
+    
+    // Format
     final formatter = NumberFormat('#,###');
-    final String newString = formatter.format(value);
+    String newString = formatter.format(value);
 
-    // Calculate the cursor position
-    // We count how many digits were before the cursor in the unformatted string
+    // 2. Calculate cursor position
+    // We want to maintain the cursor's position relative to the DIGITS.
+    // Count how many digits are to the left of the cursor in the NEW raw input.
+    // BUT 'newValue' already has the user's change applied to the PREVIOUS formatted text.
+    
+    // Let's count digits before selection in newValue
     int digitsBeforeCursor = 0;
-    for (int i = 0; i < newValue.selection.baseOffset; i++) {
+    for (int i = 0; i < newValue.selection.end; i++) {
       if (i < newValue.text.length && RegExp(r'\d').hasMatch(newValue.text[i])) {
         digitsBeforeCursor++;
       }
     }
 
-    // Now find where that maps to in the formatted string
+    // Now find the index in 'newString' that follows that many digits
     int newCursorOffset = 0;
-    int digitsFound = 0;
+    int digitsEncountered = 0;
+    
     for (int i = 0; i < newString.length; i++) {
-      if (RegExp(r'\d').hasMatch(newString[i])) {
-        digitsFound++;
-      }
-      if (digitsFound == digitsBeforeCursor) {
-        // If we found the n-th digit, the cursor should be after it? 
-        // Or if we are right at the position. 
-        // Let's increment one more to be "after" the current char if it's the one we just counted.
-        // Actually, if we are at the target digit count, we stop.
-        newCursorOffset = i + 1;
-        break;
-      }
+        if (RegExp(r'\d').hasMatch(newString[i])) {
+            digitsEncountered++;
+        }
+        if (digitsEncountered == digitsBeforeCursor) {
+            // Found the spot. The cursor should be AFTER this digit.
+            newCursorOffset = i + 1;
+            break; 
+        }
     }
     
-    // Handle edge case where we are at the very beginning
+    // Edge case: if digitsBeforeCursor is 0, we are at start
     if (digitsBeforeCursor == 0) {
-      newCursorOffset = 0;
+        newCursorOffset = 0;
+    }
+    
+    // Safety check
+    if (newCursorOffset > newString.length) {
+        newCursorOffset = newString.length;
     }
 
     return TextEditingValue(

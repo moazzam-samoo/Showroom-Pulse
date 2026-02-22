@@ -26,6 +26,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   final _formKey = GlobalKey<FormState>();
   
   // Form controllers
+  late final TextEditingController _brandController;
   late final TextEditingController _modelController;
   late final TextEditingController _engineNoController;
   late final TextEditingController _chassisNoController;
@@ -41,6 +42,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   void initState() {
     super.initState();
     // Pre-fill controllers with existing bike data
+    _brandController = TextEditingController(text: widget.bike.brand);
     _modelController = TextEditingController(text: widget.bike.model);
     _engineNoController = TextEditingController(text: widget.bike.engineNumber);
     _chassisNoController = TextEditingController(text: widget.bike.chassisNumber);
@@ -52,6 +54,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
 
   @override
   void dispose() {
+    _brandController.dispose();
     _modelController.dispose();
     _engineNoController.dispose();
     _chassisNoController.dispose();
@@ -76,6 +79,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     if (_formKey.currentState!.validate()) {
       if (widget.onSave != null) {
         widget.onSave!({
+          'brand': _brandController.text,
           'model': _modelController.text,
           'color': _selectedColor,
           'engineNumber': _engineNoController.text,
@@ -140,7 +144,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                         textColor: sectionHeaderText,
                         children: [
 
-                          _buildInputGroup('Model:', _modelController, 'e.g. Honda CG125', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                          _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                          const SizedBox(height: 16),
+                          _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor),
                           const SizedBox(height: 16),
                           _buildColorSkinGroup('Color:', labelColor),
                         ],

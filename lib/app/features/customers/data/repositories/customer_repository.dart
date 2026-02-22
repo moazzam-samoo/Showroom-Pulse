@@ -29,6 +29,8 @@ class CustomerWithTransactions {
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
+    if (customer.fullName.isEmpty) return '??';
+    if (customer.fullName.length < 2) return customer.fullName.toUpperCase();
     return customer.fullName.substring(0, 2).toUpperCase();
   }
 }
@@ -100,11 +102,22 @@ class CustomerRepository {
 
     // Apply search filter
     if (searchQuery != null && searchQuery.isNotEmpty) {
+      // Normalize query: remove non-digit characters for flexible matching
+      final normalizedQuery = searchQuery.replaceAll(RegExp(r'[^0-9a-zA-Z]'), '').toLowerCase();
       final query = searchQuery.toLowerCase();
-      customers = customers.where((c) =>
-          c.fullName.toLowerCase().contains(query) ||
-          c.cnicNumber.contains(query) ||
-          c.phoneNumber.contains(query)).toList();
+      
+      customers = customers.where((c) {
+        final matchesName = c.fullName.toLowerCase().contains(query);
+        
+        // Normalize stored CNIC and Phone for comparison if query looks like number
+        final normalizedCnic = c.cnicNumber.replaceAll(RegExp(r'[^0-9]'), '');
+        final matchesCnic = c.cnicNumber.contains(query) || normalizedCnic.contains(normalizedQuery);
+        
+        final normalizedPhone = c.phoneNumber.replaceAll(RegExp(r'[^0-9]'), ''); 
+        final matchesPhone = c.phoneNumber.contains(query) || normalizedPhone.contains(normalizedQuery);
+        
+        return matchesName || matchesCnic || matchesPhone;
+      }).toList();
     }
 
     // Build customer data with transactions
@@ -323,6 +336,42 @@ class CustomerRepository {
 
     return await _isar.writeTxn(() async {
       return await _isar.customers.put(customer);
+    });
+  }
+
+  /// Update an existing customer
+  Future<void> updateCustomer(Customer customer) async {
+    // Check if another customer with same CNIC exists (excluding self)
+    final existingList = await _isar.customers
+        .filter()
+        .cnicNumberEqualTo(customer.cnicNumber)
+        .findAll();
+        
+    final existing = existingList.firstWhereOrNull((c) => c.id != customer.id);
+        
+    if (existing != null) {
+      throw Exception('Another customer with CNIC ${customer.cnicNumber} already exists');
+    }
+
+    await _isar.writeTxn(() async {
+      await _isar.customers.put(customer);
+    });
+  }
+
+  /// Check if customer can be deleted (no sales/installments)
+  Future<bool> canDeleteCustomer(int id) async {
+    final saleCount = await _isar.sales.filter().customerIdEqualTo(id).count();
+    return saleCount == 0;
+  }
+
+  /// Delete a customer
+  Future<void> deleteCustomer(int id) async {
+    if (!await canDeleteCustomer(id)) {
+      throw Exception('Cannot delete customer with existing sales history');
+    }
+
+    await _isar.writeTxn(() async {
+      await _isar.customers.delete(id);
     });
   }
 }

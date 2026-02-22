@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
+import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
@@ -23,6 +24,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _formKey = GlobalKey<FormState>();
   
   // Form controllers
+  final _brandController = TextEditingController();
   final _modelController = TextEditingController();
   final _engineNoController = TextEditingController();
   final _chassisNoController = TextEditingController();
@@ -34,6 +36,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
   @override
   void dispose() {
+    _brandController.dispose();
     _modelController.dispose();
     _engineNoController.dispose();
     _chassisNoController.dispose();
@@ -58,12 +61,13 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     if (_formKey.currentState!.validate()) {
       if (widget.onSave != null) {
         widget.onSave!({
+          'brand': _brandController.text,
           'model': _modelController.text,
           'color': _selectedColor,
           'engineNumber': _engineNoController.text,
           'chassisNumber': _chassisNoController.text,
-          'purchasePrice': double.tryParse(_purchasePriceController.text) ?? 0.0,
-          'sellingPrice': double.tryParse(_sellingPriceController.text) ?? 0.0,
+          'purchasePrice': double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ?? 0.0,
+          'sellingPrice': double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ?? 0.0,
           'imageFile': _selectedImage,
         });
         Navigator.pop(context);
@@ -122,26 +126,28 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Model:', _modelController, 'e.g. Honda CG125', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                          _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, autofocus: true),
                           const SizedBox(height: 16),
+                          _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor),
+                          const SizedBox(height: 10),
                           _buildColorSkinGroup('Color:', labelColor),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
                       _buildSection(
                         title: 'Technical Specs',
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
                           _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 10),
                           _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor),
                         ],
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 16),
                 // Right Column
                 Expanded(
                   flex: 1,
@@ -153,16 +159,16 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         textColor: sectionHeaderText,
                         children: [
                           _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 10),
                           _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12),
                       // Image Upload
                       GestureDetector(
                         onTap: _pickImage,
                         child: Container(
-                          height: 180,
+                          height: 140, // Reduced from 180 to fit content without scroll
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: inputBg,
@@ -211,7 +217,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Reduced vertical padding
           decoration: BoxDecoration(
             color: color,
             borderRadius: const BorderRadius.only(
@@ -224,12 +230,12 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             style: TextStyle(
               color: textColor,
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 13,
             ),
           ),
         ),
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12), // Reduced from 16
           decoration: BoxDecoration(
             color: const Color(0x0DFFFFFF),
             borderRadius: const BorderRadius.only(
@@ -267,20 +273,22 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: TextFormField(
             controller: controller,
             autofocus: autofocus,
             textInputAction: TextInputAction.next, // Important for keyboard nav
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+            inputFormatters: isNumber ? [ThousandsSeparatorInputFormatter()] : [],
+            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
             decoration: InputDecoration(
+              isDense: true,
               hintText: hint,
-              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
               filled: true,
               fillColor: bg,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: border),
@@ -321,7 +329,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: ColorSkinSelector(
             initialValue: _selectedColor,

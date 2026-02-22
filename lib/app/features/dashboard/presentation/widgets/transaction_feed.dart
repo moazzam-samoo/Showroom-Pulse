@@ -176,6 +176,7 @@ class LiveTransactionFeed extends StatelessWidget {
                     ),
                   )
                 : ListView.builder(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
                     itemCount: transactions.length,
                     itemBuilder: (context, index) {
                       return _buildTransactionRow(transactions[index], isDark, primaryColor);

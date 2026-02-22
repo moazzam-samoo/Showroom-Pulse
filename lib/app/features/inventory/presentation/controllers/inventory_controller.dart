@@ -27,6 +27,10 @@ class InventoryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Listen to search changes for real-time filtering
+    searchController.addListener(() {
+      bikes.refresh(); 
+    });
     loadBikes();
   }
 
@@ -66,7 +70,7 @@ class InventoryController extends GetxController {
     try {
       final bike = Bike()
         ..model = data['model']
-        ..brand = data['model'].toString().split(' ').first // Simple brand extraction
+        ..brand = data['brand'] ?? data['model'].toString().split(' ').first // Fallback to extraction if not provided
         ..color = data['color']
         ..modelYear = DateTime.now().year // Default to current year
 
@@ -135,7 +139,7 @@ class InventoryController extends GetxController {
     try {
       // Update bike fields
       bike.model = data['model'];
-      bike.brand = data['model'].toString().split(' ').first; // Simple brand extraction
+      bike.brand = data['brand'] ?? data['model'].toString().split(' ').first; // Update brand
       bike.color = data['color'];
       bike.engineNumber = data['engineNumber'];
       bike.chassisNumber = data['chassisNumber'];
@@ -246,9 +250,31 @@ class InventoryController extends GetxController {
       // Enhanced text search: model, engine, chassis
       final searchQuery = searchController.text.toLowerCase();
       if (searchQuery.isNotEmpty) {
+        // Check for Status Keywords
+        bool isStatusKeyword = false;
+        bool statusMatches = false;
+        
+        // Match exact keywords (case-insensitive done by toLowerCase())
+        if (searchQuery == 'available') {
+           isStatusKeyword = true;
+           if (bike.status == BikeStatusEnum.available) statusMatches = true;
+        } else if (searchQuery == 'sold') {
+           isStatusKeyword = true;
+           if (bike.status == BikeStatusEnum.sold) statusMatches = true;
+        } else if (searchQuery == 'installment' || searchQuery == 'reserved') {
+           isStatusKeyword = true;
+           if (bike.status == BikeStatusEnum.installment) statusMatches = true;
+        }
+
         final matches = bike.model.toLowerCase().contains(searchQuery) ||
+            bike.brand.toLowerCase().contains(searchQuery) ||
+            bike.color.toLowerCase().contains(searchQuery) ||
             bike.engineNumber.toLowerCase().contains(searchQuery) ||
-            bike.chassisNumber.toLowerCase().contains(searchQuery);
+            bike.chassisNumber.toLowerCase().contains(searchQuery) ||
+            bike.purchasePrice.toInt().toString().contains(searchQuery) ||
+            bike.cashSalePrice.toInt().toString().contains(searchQuery) ||
+            statusMatches; // Include status match
+            
         if (!matches) return false;
       }
 
