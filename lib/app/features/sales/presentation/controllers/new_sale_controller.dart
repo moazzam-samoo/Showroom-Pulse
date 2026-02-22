@@ -16,20 +16,63 @@ import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:isar/isar.dart';
-
+import 'package:tahir_showroom/app/core/utils/form_navigation_manager.dart';
 
 class NewSaleController extends GetxController {
+  // Navigation Manager
+  final formNavigationManager = FormNavigationManager();
+
+  // Focus Nodes
+  final FocusNode completeSaleFocus = FocusNode();
+
+  // Step 1: Bike Selector
+  final FocusNode searchBikeFocus = FocusNode();
+
+  // Step 2: Customer Data
+  final FocusNode searchCustomerFocus = FocusNode();
+  final FocusNode customerNameFocus = FocusNode();
+  final FocusNode customerFatherNameFocus = FocusNode();
+  final FocusNode customerPhoneFocus = FocusNode();
+  final FocusNode customerCnicFocus = FocusNode();
+  final FocusNode customerAddressFocus = FocusNode();
+  final FocusNode customerProfileImagePathFocus = FocusNode();
+  final FocusNode customerCnicFrontPathFocus = FocusNode();
+  final FocusNode customerCnicBackPathFocus = FocusNode();
+
+  // Step 3: Witness 1
+  final FocusNode witness1NameFocus = FocusNode();
+  final FocusNode witness1CnicFocus = FocusNode();
+  final FocusNode witness1PhoneFocus = FocusNode();
+  final FocusNode witness1AddressFocus = FocusNode();
+  final FocusNode witness1CnicFrontPathFocus = FocusNode();
+  final FocusNode witness1CnicBackPathFocus = FocusNode();
+
+  // Step 3: Witness 2
+  final FocusNode witness2NameFocus = FocusNode();
+  final FocusNode witness2CnicFocus = FocusNode();
+  final FocusNode witness2PhoneFocus = FocusNode();
+  final FocusNode witness2AddressFocus = FocusNode();
+  final FocusNode witness2CnicFrontPathFocus = FocusNode();
+  final FocusNode witness2CnicBackPathFocus = FocusNode();
+
+  // Step 4: Payment
+  final FocusNode cashAmountFocus = FocusNode();
+  final FocusNode discountFocus = FocusNode(); // Added for discount
+  final FocusNode downPaymentFocus = FocusNode();
+  final FocusNode monthsFocus = FocusNode();
+  final FocusNode markupValueFocus = FocusNode();
+
   // Stepper State
   final currentStep = 0.obs;
-  
+
   // Step 1: Selected Bike
   final selectedBike = Rxn<Bike>();
-  
+
   // Step 2: Customer Data
   final selectedCustomer = Rxn<Customer>();
   final customerSearchController = TextEditingController();
   final isNewCustomer = true.obs; // Default: New Customer
-  
+
   // New Customer Form Controllers
   final customerNameController = TextEditingController();
   final customerFatherNameController = TextEditingController();
@@ -48,8 +91,8 @@ class NewSaleController extends GetxController {
   late final CustomerRepository _customerRepository;
 
   void _initCustomerRepository() {
-      final isarService = Get.find<IsarService>();
-      _customerRepository = CustomerRepository(isarService.isar);
+    final isarService = Get.find<IsarService>();
+    _customerRepository = CustomerRepository(isarService.isar);
   }
 
   Future<void> searchCustomers(String query) async {
@@ -76,18 +119,18 @@ class NewSaleController extends GetxController {
   void selectCustomer(CustomerWithTransactions customerWithTxn) {
     final customer = customerWithTxn.customer;
     selectedCustomer.value = customer;
-    
+
     // Auto-fill form fields (in case we switch back to new customer mode or for display)
     customerNameController.text = customer.fullName;
     customerFatherNameController.text = customer.fatherName ?? '';
     customerPhoneController.text = customer.phoneNumber;
     customerCnicController.text = customer.cnicNumber;
     customerAddressController.text = customer.address ?? '';
-    
+
     // Clear search results to hide list
     searchResults.clear();
     customerSearchController.clear();
-    
+
     Get.snackbar(
       'Customer Selected',
       'Selected: ${customer.fullName}',
@@ -98,20 +141,34 @@ class NewSaleController extends GetxController {
     );
   }
 
+  void clearSelectedCustomer() {
+    selectedCustomer.value = null;
+    customerSearchController.clear();
+    searchResults.clear();
+
+    // Clear auto-filled fields
+    customerNameController.clear();
+    customerFatherNameController.clear();
+    customerPhoneController.clear();
+    customerCnicController.clear();
+    customerAddressController.clear();
+  }
+
   // Scroll Controller for auto-scroll on bike selection
   final scrollController = ScrollController();
   final customerSectionKey = GlobalKey();
-  
+
   // Step 3: Payment Plan
   final saleType = SaleType.cash.obs; // Enum to be defined or inferred
   final cashAmountController = TextEditingController();
-  
+
   // Installment Controllers
+  final discountController = TextEditingController(text: '0'); // Shared or Installment specific
   final downPaymentController = TextEditingController();
   final monthsController = TextEditingController(text: '12');
   final markupType = MarkupType.fixed.obs;
   final markupValueController = TextEditingController(text: '0');
-  
+
   // Witness 1 (Mandatory)
   final witness1NameController = TextEditingController();
   final witness1CnicController = TextEditingController();
@@ -119,7 +176,7 @@ class NewSaleController extends GetxController {
   final witness1AddressController = TextEditingController();
   final witness1CnicFrontPath = RxnString();
   final witness1CnicBackPath = RxnString();
-  
+
   // Witness 2 (Optional)
   final showWitness2 = false.obs;
   final witness2NameController = TextEditingController();
@@ -137,44 +194,81 @@ class NewSaleController extends GetxController {
 
   // Available Inventory
   final availableBikes = <Bike>[].obs;
-  
+
   // Expansion state for accordion behavior (only one model expanded at a time)
   final expandedModel = RxnString();
 
   Map<String, List<Bike>> get groupedBikes {
     final grouped = <String, List<Bike>>{};
     final displayNames = <String, String>{}; // Track original capitalization
-    
+
     // Use InventoryController's filtered bikes for comprehensive search support
     final invController = Get.find<InventoryController>();
     final bikesToDisplay = invController.filteredBikes
         .where((bike) => bike.status == BikeStatusEnum.available)
         .toList();
-    
+
     for (var bike in bikesToDisplay) {
       // Normalize to lowercase for grouping key
       final normalizedModel = bike.model.toLowerCase().trim();
-      
+
       // Track the first occurrence's capitalization for display
       if (!displayNames.containsKey(normalizedModel)) {
         displayNames[normalizedModel] = bike.model;
       }
-      
+
       // Group bikes by normalized model name
       if (!grouped.containsKey(normalizedModel)) {
         grouped[normalizedModel] = [];
       }
       grouped[normalizedModel]!.add(bike);
     }
-    
+
     // Convert back to Map with original capitalization for keys (for UI display)
     final result = <String, List<Bike>>{};
     for (var entry in grouped.entries) {
       final displayName = displayNames[entry.key]!;
       result[displayName] = entry.value;
     }
-    
+
     return result;
+  }
+
+  @override
+  void onClose() {
+    searchBikeFocus.dispose();
+    searchCustomerFocus.dispose();
+    customerNameFocus.dispose();
+    customerFatherNameFocus.dispose();
+    customerPhoneFocus.dispose();
+    customerCnicFocus.dispose();
+    customerAddressFocus.dispose();
+    customerProfileImagePathFocus.dispose();
+    customerCnicFrontPathFocus.dispose();
+    customerCnicBackPathFocus.dispose();
+
+    witness1NameFocus.dispose();
+    witness1CnicFocus.dispose();
+    witness1PhoneFocus.dispose();
+    witness1AddressFocus.dispose();
+    witness1CnicFrontPathFocus.dispose();
+    witness1CnicBackPathFocus.dispose();
+
+    witness2NameFocus.dispose();
+    witness2CnicFocus.dispose();
+    witness2PhoneFocus.dispose();
+    witness2AddressFocus.dispose();
+    witness2CnicFrontPathFocus.dispose();
+    witness2CnicBackPathFocus.dispose();
+
+    cashAmountFocus.dispose();
+    discountFocus.dispose();
+    downPaymentFocus.dispose();
+    monthsFocus.dispose();
+    markupValueFocus.dispose();
+    completeSaleFocus.dispose();
+
+    super.onClose();
   }
 
   @override
@@ -182,12 +276,124 @@ class NewSaleController extends GetxController {
     super.onInit();
     _initCustomerRepository();
     loadAvailableBikes();
-    // Listen to changes for auto-calculation
+
+    // Register fields in Navigation Manager in logical order
+    _registerNavigationFields();
+
     downPaymentController.addListener(_calculateInstallment);
+    discountController.addListener(_calculateInstallment);
     monthsController.addListener(_calculateInstallment);
     markupValueController.addListener(_calculateInstallment);
     ever(markupType, (_) => _calculateInstallment());
-    ever(selectedBike, (_) => _calculateInstallment()); // Recalculate if bike changes (price changes)
+    ever(
+        selectedBike,
+        (_) =>
+            _calculateInstallment()); // Recalculate if bike changes (price changes)
+  }
+
+  void _registerNavigationFields() {
+    // 1. Search Bike
+    formNavigationManager.registerField(
+      focusNode: searchBikeFocus,
+      isFilled: () =>
+          Get.find<InventoryController>().searchController.text.isNotEmpty ||
+          selectedBike.value != null,
+      order: 10,
+    );
+
+    // 2. Customer
+    formNavigationManager.registerField(
+      focusNode: customerNameFocus,
+      isFilled: () => customerNameController.text.trim().isNotEmpty,
+      order: 20,
+    );
+    formNavigationManager.registerField(
+      focusNode: customerFatherNameFocus,
+      isFilled: () => customerFatherNameController.text.trim().isNotEmpty,
+      order: 21,
+    );
+    formNavigationManager.registerField(
+      focusNode: customerCnicFocus,
+      isFilled: () =>
+          customerCnicController.text.trim().length >= 15, // Basic check
+      order: 22,
+    );
+    formNavigationManager.registerField(
+      focusNode: customerPhoneFocus,
+      isFilled: () => customerPhoneController.text.trim().length >= 12,
+      order: 23,
+    );
+    formNavigationManager.registerField(
+      focusNode: customerAddressFocus,
+      isFilled: () => customerAddressController.text.trim().isNotEmpty,
+      order: 24,
+    );
+
+    // 3. Witness 1
+    formNavigationManager.registerField(
+      focusNode: witness1NameFocus,
+      isFilled: () => witness1NameController.text.trim().isNotEmpty,
+      order: 30,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness1CnicFocus,
+      isFilled: () => witness1CnicController.text.trim().length >= 15,
+      order: 31,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness1PhoneFocus,
+      isFilled: () => witness1PhoneController.text.trim().length >= 12,
+      order: 32,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness1AddressFocus,
+      isFilled: () => witness1AddressController.text.trim().isNotEmpty,
+      order: 33,
+    );
+
+    // 4. Witness 2
+    formNavigationManager.registerField(
+      focusNode: witness2NameFocus,
+      isFilled: () => witness2NameController.text.trim().isNotEmpty,
+      order: 40,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness2CnicFocus,
+      isFilled: () => witness2CnicController.text.trim().length >= 15,
+      order: 41,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness2PhoneFocus,
+      isFilled: () => witness2PhoneController.text.trim().length >= 12,
+      order: 42,
+    );
+    formNavigationManager.registerField(
+      focusNode: witness2AddressFocus,
+      isFilled: () => witness2AddressController.text.trim().isNotEmpty,
+      order: 43,
+    );
+
+    // 5. Payment Details
+    formNavigationManager.registerField(
+      focusNode: cashAmountFocus,
+      isFilled: () => cashAmountController.text.trim().isNotEmpty,
+      order: 50,
+    );
+    formNavigationManager.registerField(
+      focusNode: downPaymentFocus,
+      isFilled: () => downPaymentController.text.trim().isNotEmpty,
+      order: 60,
+    );
+    formNavigationManager.registerField(
+      focusNode: monthsFocus,
+      isFilled: () => monthsController.text.trim().isNotEmpty,
+      order: 61,
+    );
+    formNavigationManager.registerField(
+      focusNode: markupValueFocus,
+      isFilled: () => markupValueController.text.trim().isNotEmpty,
+      order: 62,
+    );
   }
 
   Future<void> loadAvailableBikes() async {
@@ -197,14 +403,14 @@ class NewSaleController extends GetxController {
         .filter()
         .statusEqualTo(BikeStatusEnum.available)
         .findAll();
-    
+
     // Convert image filenames to full paths
     for (var bike in bikes) {
       if (bike.imageFilename != null) {
         bike.imageFilename = fileService.getBikeImagePath(bike.imageFilename!);
       }
     }
-    
+
     availableBikes.assignAll(bikes);
   }
 
@@ -216,9 +422,13 @@ class NewSaleController extends GetxController {
     if (bike == null) return;
 
     // Parse inputs
-    final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+    final downPayment =
+        double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+    final discount =
+        double.tryParse(discountController.text.replaceAll(',', '')) ?? 0;
     final months = int.tryParse(monthsController.text) ?? 0;
-    final markupVal = double.tryParse(markupValueController.text.replaceAll(',', '')) ?? 0;
+    final markupVal =
+        double.tryParse(markupValueController.text.replaceAll(',', '')) ?? 0;
 
     if (months <= 0) {
       calculationResult.value = null;
@@ -226,8 +436,9 @@ class NewSaleController extends GetxController {
     }
 
     try {
+      final basePrice = ((bike.cashSalePrice as num?)?.toDouble() ?? 0.0) - discount;
       final result = InstallmentCalculator.calculate(
-        cashPrice: (bike.cashSalePrice as num?)?.toDouble() ?? 0.0,
+        cashPrice: basePrice > 0 ? basePrice : 0.0,
         markupType: markupType.value,
         markupValue: markupVal,
         downPayment: downPayment,
@@ -265,7 +476,8 @@ class NewSaleController extends GetxController {
 
     // Validate payment details based on sale type
     if (saleType.value == SaleType.cash) {
-      final cashAmount = double.tryParse(cashAmountController.text.replaceAll(',', ''));
+      final cashAmount =
+          double.tryParse(cashAmountController.text.replaceAll(',', ''));
       if (cashAmount == null || cashAmount <= 0) {
         Get.snackbar(
           'Invalid Amount',
@@ -279,7 +491,7 @@ class NewSaleController extends GetxController {
     } else {
       // Installment validation
       final bike = selectedBike.value;
-      
+
       // Check if bike has a valid price
       try {
         final bikePrice = bike?.cashSalePrice;
@@ -305,7 +517,7 @@ class NewSaleController extends GetxController {
         );
         return;
       }
-      
+
       if (calculationResult.value == null) {
         Get.snackbar(
           'Calculation Required',
@@ -317,8 +529,9 @@ class NewSaleController extends GetxController {
         );
         return;
       }
-      
-      final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', ''));
+
+      final downPayment =
+          double.tryParse(downPaymentController.text.replaceAll(',', ''));
       if (downPayment == null || downPayment < 0) {
         Get.snackbar(
           'Invalid Down Payment',
@@ -398,40 +611,40 @@ class NewSaleController extends GetxController {
       await _isarService.isar.writeTxn(() async {
         // A. Create/Get Customer
         Customer? customer;
-        
+
         // Check if customer with this CNIC already exists
         customer = await _isarService.isar.customers
             .filter()
             .cnicNumberEqualTo(customerCnicController.text)
             .findFirst();
-        
+
         if (customer != null) {
           // Customer exists, update their information
           customer
             ..fullName = customerNameController.text
-            ..fatherName = customerFatherNameController.text.isNotEmpty 
-                ? customerFatherNameController.text 
+            ..fatherName = customerFatherNameController.text.isNotEmpty
+                ? customerFatherNameController.text
                 : null
             ..phoneNumber = customerPhoneController.text
-            ..address = customerAddressController.text.isNotEmpty  
-                ? customerAddressController.text 
+            ..address = customerAddressController.text.isNotEmpty
+                ? customerAddressController.text
                 : customer.address; // Keep existing address if new one is empty
         } else {
           // Create new customer
           customer = Customer()
             ..fullName = customerNameController.text
-            ..fatherName = customerFatherNameController.text.isNotEmpty 
-                ? customerFatherNameController.text 
+            ..fatherName = customerFatherNameController.text.isNotEmpty
+                ? customerFatherNameController.text
                 : null
-            ..cnicNumber = customerCnicController.text 
+            ..cnicNumber = customerCnicController.text
             ..phoneNumber = customerPhoneController.text
             ..address = customerAddressController.text
             ..dateRegistered = DateTime.now();
         }
-        
+
         // Save customer images if any are provided
         final fileService = Get.find<FileService>();
-        
+
         if (customerProfileImagePath.value != null) {
           final profileFile = File(customerProfileImagePath.value!);
           customer.profileImageFilename = await fileService.saveCustomerImage(
@@ -458,12 +671,14 @@ class NewSaleController extends GetxController {
             'cnic_back',
           );
         }
-        
+
         await _isarService.isar.customers.put(customer);
 
         // B. Update Bike Status
         final bike = selectedBike.value!;
-        bike.status = saleType.value == SaleType.cash ? BikeStatusEnum.sold : BikeStatusEnum.installment;
+        bike.status = saleType.value == SaleType.cash
+            ? BikeStatusEnum.sold
+            : BikeStatusEnum.installment;
         await _isarService.isar.bikes.put(bike);
 
         // C. Create Sale Record
@@ -472,87 +687,126 @@ class NewSaleController extends GetxController {
           ..saleType = saleType.value
           ..bikeId = bike.id
           ..customerId = customer.id
-          ..totalAmount = saleType.value == SaleType.cash 
-              ? (double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0)
+          ..totalAmount = saleType.value == SaleType.cash
+              ? (double.tryParse(
+                      cashAmountController.text.replaceAll(',', '')) ??
+                  0)
               : (calculationResult.value?.grandTotal ?? 0)
-          ..receivedAmount = saleType.value == SaleType.cash 
-              ? (double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0) 
-              : (double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0);
-        
+          ..receivedAmount = saleType.value == SaleType.cash
+              ? (double.tryParse(
+                      cashAmountController.text.replaceAll(',', '')) ??
+                  0)
+              : (double.tryParse(
+                      downPaymentController.text.replaceAll(',', '')) ??
+                  0);
+
+        // Calculate and apply discount
+        if (saleType.value == SaleType.cash) {
+          final double basePrice = bike.cashSalePrice;
+          final double receivedAmt = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0.0;
+          sale.discountAmount = basePrice > receivedAmt ? (basePrice - receivedAmt) : 0.0;
+          sale.discountPercentage = basePrice > 0 ? (sale.discountAmount / basePrice) * 100 : 0.0;
+        } else {
+          final double basePrice = bike.cashSalePrice;
+          final double discountAmt = double.tryParse(discountController.text.replaceAll(',', '')) ?? 0.0;
+          sale.discountAmount = discountAmt;
+          sale.discountPercentage = basePrice > 0 ? (discountAmt / basePrice) * 100 : 0.0;
+        }
+
         await _isarService.isar.sales.put(sale);
 
         // D. If Installment, Create Contract & Witnesses
-        if (saleType.value == SaleType.installment && calculationResult.value != null) {
-           final firstDue = DateTime.now().add(const Duration(days: 30));
-           final dpAmount = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
-           final contract = InstallmentContract()
-             ..bikeId = bike.id
-             ..customerId = customer.id
-             ..cashPrice = bike.cashSalePrice
-             ..markupType = markupType.value
-             ..markupValue = double.tryParse(markupValueController.text.replaceAll(',', '')) ?? 0
-             ..totalMarkupAmount = calculationResult.value!.totalMarkup
-             ..totalAmount = calculationResult.value!.grandTotal
-             ..downPayment = dpAmount
-             ..months = int.tryParse(monthsController.text) ?? 0
-             ..monthlyEMI = calculationResult.value!.monthlyEMI
-             ..firstDueDate = firstDue
-             ..nextDueDate = firstDue
-             ..dayOfMonth = firstDue.day
-             ..totalPaid = dpAmount
-             ..paymentsMade = 1
-             ..status = ContractStatusEnum.active;
-           
-           await _isarService.isar.installmentContracts.put(contract);
-           
-           // Link Contract to Sale
-           sale.installmentContractId = contract.id;
-           await _isarService.isar.sales.put(sale);
-         }
+        if (saleType.value == SaleType.installment &&
+            calculationResult.value != null) {
+          final firstDue = DateTime.now().add(const Duration(days: 30));
+          final dpAmount =
+              double.tryParse(downPaymentController.text.replaceAll(',', '')) ??
+                  0;
+          final contract = InstallmentContract()
+            ..bikeId = bike.id
+            ..customerId = customer.id
+            ..cashPrice = bike.cashSalePrice
+            ..discountAmount = sale.discountAmount
+            ..discountPercentage = sale.discountPercentage
+            ..markupType = markupType.value
+            ..markupValue = double.tryParse(
+                    markupValueController.text.replaceAll(',', '')) ??
+                0
+            ..totalMarkupAmount = calculationResult.value!.totalMarkup
+            ..totalAmount = calculationResult.value!.grandTotal
+            ..downPayment = dpAmount
+            ..months = int.tryParse(monthsController.text) ?? 0
+            ..monthlyEMI = calculationResult.value!.monthlyEMI
+            ..firstDueDate = firstDue
+            ..nextDueDate = firstDue
+            ..dayOfMonth = firstDue.day
+            ..totalPaid = dpAmount
+            ..paymentsMade = 1
+            ..status = ContractStatusEnum.active;
 
-         // D2. Create and Save Witness Records (for both cash and installment sales)
-         // For installment sales, use contract ID. For cash sales, use sale ID (as negative to distinguish)
-         // This ensures witnesses are properly linked to their specific sale
-         final witnessContractId = (saleType.value == SaleType.installment && sale.installmentContractId != null) 
-             ? sale.installmentContractId! 
-             : -sale.id; // Use negative sale ID for cash sales to distinguish from contract IDs
-         
-         // Save Witness 1 (Mandatory)
-         final witness1 = Witness()
-           ..fullName = witness1NameController.text
-           ..cnicNumber = witness1CnicController.text
-           ..phoneNumber = witness1PhoneController.text.isNotEmpty ? witness1PhoneController.text : ''
-           ..address = witness1AddressController.text.isNotEmpty ? witness1AddressController.text : null
-           ..cnicFrontFilename = witness1CnicFrontPath.value
-           ..cnicBackFilename = witness1CnicBackPath.value
-           ..contractId = witnessContractId
-           ..isPrimary = true;
-         
-         await _isarService.isar.witness.put(witness1);
-         
-         // Save Witness 2 (Optional)
-         if (witness2NameController.text.trim().isNotEmpty && 
-             witness2CnicController.text.trim().isNotEmpty) {
-           final witness2 = Witness()
-             ..fullName = witness2NameController.text
-             ..cnicNumber = witness2CnicController.text
-             ..phoneNumber = witness2PhoneController.text.isNotEmpty ? witness2PhoneController.text : ''
-             ..address = witness2AddressController.text.isNotEmpty ? witness2AddressController.text : null
-             ..cnicFrontFilename = witness2CnicFrontPath.value
-             ..cnicBackFilename = witness2CnicBackPath.value
-             ..contractId = witnessContractId
-             ..isPrimary = false;
-           
-           await _isarService.isar.witness.put(witness2);
-         }
+          await _isarService.isar.installmentContracts.put(contract);
+
+          // Link Contract to Sale
+          sale.installmentContractId = contract.id;
+          await _isarService.isar.sales.put(sale);
+        }
+
+        // D2. Create and Save Witness Records (for both cash and installment sales)
+        // For installment sales, use contract ID. For cash sales, use sale ID (as negative to distinguish)
+        // This ensures witnesses are properly linked to their specific sale
+        final witnessContractId = (saleType.value == SaleType.installment &&
+                sale.installmentContractId != null)
+            ? sale.installmentContractId!
+            : -sale
+                .id; // Use negative sale ID for cash sales to distinguish from contract IDs
+
+        // Save Witness 1 (Mandatory)
+        final witness1 = Witness()
+          ..fullName = witness1NameController.text
+          ..cnicNumber = witness1CnicController.text
+          ..phoneNumber = witness1PhoneController.text.isNotEmpty
+              ? witness1PhoneController.text
+              : ''
+          ..address = witness1AddressController.text.isNotEmpty
+              ? witness1AddressController.text
+              : null
+          ..cnicFrontFilename = witness1CnicFrontPath.value
+          ..cnicBackFilename = witness1CnicBackPath.value
+          ..contractId = witnessContractId
+          ..isPrimary = true;
+
+        await _isarService.isar.witness.put(witness1);
+
+        // Save Witness 2 (Optional)
+        if (witness2NameController.text.trim().isNotEmpty &&
+            witness2CnicController.text.trim().isNotEmpty) {
+          final witness2 = Witness()
+            ..fullName = witness2NameController.text
+            ..cnicNumber = witness2CnicController.text
+            ..phoneNumber = witness2PhoneController.text.isNotEmpty
+                ? witness2PhoneController.text
+                : ''
+            ..address = witness2AddressController.text.isNotEmpty
+                ? witness2AddressController.text
+                : null
+            ..cnicFrontFilename = witness2CnicFrontPath.value
+            ..cnicBackFilename = witness2CnicBackPath.value
+            ..contractId = witnessContractId
+            ..isPrimary = false;
+
+          await _isarService.isar.witness.put(witness2);
+        }
 
         // E. Create Initial Payment Record
         final payment = Payment()
           ..amount = sale.receivedAmount
           ..paymentDate = DateTime.now()
-          ..notes = saleType.value == SaleType.cash ? 'Full Cash Payment' : 'Down Payment'
+          ..notes = saleType.value == SaleType.cash
+              ? 'Full Cash Payment'
+              : 'Down Payment'
           ..isDownPayment = saleType.value == SaleType.installment
-          ..contractId = (saleType.value == SaleType.installment && sale.installmentContractId != null)
+          ..contractId = (saleType.value == SaleType.installment &&
+                  sale.installmentContractId != null)
               ? sale.installmentContractId!
               : 0; // For cash sales, use 0 as there's no contract
 
@@ -584,14 +838,21 @@ class NewSaleController extends GetxController {
       // Get theme info
       final context = Get.context!;
       final isDark = Theme.of(context).brightness == Brightness.dark;
-      final successColor = isDark ? AppColors.darkSuccess : Colors.green.shade700;
+      final successColor =
+          isDark ? AppColors.darkSuccess : Colors.green.shade700;
       final bgColor = isDark ? AppColors.darkSurface : Colors.green.shade50;
-      final borderColor = isDark ? AppColors.darkSuccess.withOpacity(0.3) : Colors.green.shade200;
-      final titleColor = isDark ? AppColors.darkTextPrimary : Colors.green.shade900;
-      final messageColor = isDark ? AppColors.darkTextSecondary : Colors.green.shade800;
+      final borderColor = isDark
+          ? AppColors.darkSuccess.withOpacity(0.3)
+          : Colors.green.shade200;
+      final titleColor =
+          isDark ? AppColors.darkTextPrimary : Colors.green.shade900;
+      final messageColor =
+          isDark ? AppColors.darkTextSecondary : Colors.green.shade800;
       final detailBgColor = isDark ? AppColors.darkCard : Colors.white;
-      final labelColor = isDark ? AppColors.darkTextMuted : Colors.grey.shade700;
-      final valueColor = isDark ? AppColors.darkTextPrimary : Colors.grey.shade900;
+      final labelColor =
+          isDark ? AppColors.darkTextMuted : Colors.grey.shade700;
+      final valueColor =
+          isDark ? AppColors.darkTextPrimary : Colors.grey.shade900;
 
       // Show success confirmation dialog
       await Get.dialog(
@@ -640,28 +901,30 @@ class NewSaleController extends GetxController {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSuccessDetailRow(
-                        'Customer:', 
+                        'Customer:',
                         customerNameController.text,
                         labelColor,
                         valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
-                        'Bike:', 
+                        'Bike:',
                         selectedBike.value?.model ?? 'N/A',
                         labelColor,
                         valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
-                        'Type:', 
-                        saleType.value == SaleType.cash ? 'Cash Sale' : 'Installment Sale',
+                        'Type:',
+                        saleType.value == SaleType.cash
+                            ? 'Cash Sale'
+                            : 'Installment Sale',
                         labelColor,
                         valueColor,
                       ),
                       const SizedBox(height: 8),
                       _buildSuccessDetailRow(
-                        'Amount:', 
+                        'Amount:',
                         saleType.value == SaleType.cash
                             ? 'Rs. ${cashAmountController.text}'
                             : 'Rs. ${calculationResult.value?.grandTotal.toStringAsFixed(0) ?? '0'} (Down: Rs. ${downPaymentController.text})',
@@ -681,7 +944,8 @@ class NewSaleController extends GetxController {
                 style: TextButton.styleFrom(
                   backgroundColor: successColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -706,52 +970,67 @@ class NewSaleController extends GetxController {
       print('Error message: $e');
       print('Stack trace: $stackTrace');
       print('==================================');
-      
+
       String errorMessage = e.toString();
       String title = 'Sale Failed';
-      
+
       // Check for specific error types
-      if (errorMessage.contains('unique') || errorMessage.contains('UniqueViolation') || 
-          errorMessage.contains('duplicate') || errorMessage.contains('already exists')) {
+      if (errorMessage.contains('unique') ||
+          errorMessage.contains('UniqueViolation') ||
+          errorMessage.contains('duplicate') ||
+          errorMessage.contains('already exists')) {
         title = 'Sale Failed - Duplicate Customer';
-        
+
         if (errorMessage.contains('cnic') || errorMessage.contains('CNIC')) {
-          errorMessage = 'A customer with CNIC "${customerCnicController.text}" already exists in the database. '
-                         'Please either:\n'
-                         '• Use the existing customer (search in step 2), or\n'
-                         '• Enter a different CNIC number for this new customer.';
+          errorMessage =
+              'A customer with CNIC "${customerCnicController.text}" already exists in the database. '
+              'Please either:\n'
+              '• Use the existing customer (search in step 2), or\n'
+              '• Enter a different CNIC number for this new customer.';
         } else {
-          errorMessage = 'This customer information already exists in the database. Please check if the customer is already registered or use different details.';
+          errorMessage =
+              'This customer information already exists in the database. Please check if the customer is already registered or use different details.';
         }
-      } else if (errorMessage.contains('LateInitialization') || 
+      } else if (errorMessage.contains('LateInitialization') ||
           errorMessage.contains('has not been initialized')) {
         title = 'Sale Failed - Missing Data';
-        
+
         // Identify which field
         if (errorMessage.contains('cashSalePrice')) {
-          errorMessage = 'The selected bike does not have a price configured. Please select a different bike or contact the administrator.';
-        } else if (errorMessage.contains('fullName') || errorMessage.contains('cnicNumber') || errorMessage.contains('phoneNumber')) {
-          errorMessage = 'Customer information is incomplete. Please fill all required fields (Name, CNIC, Phone).';
+          errorMessage =
+              'The selected bike does not have a price configured. Please select a different bike or contact the administrator.';
+        } else if (errorMessage.contains('fullName') ||
+            errorMessage.contains('cnicNumber') ||
+            errorMessage.contains('phoneNumber')) {
+          errorMessage =
+              'Customer information is incomplete. Please fill all required fields (Name, CNIC, Phone).';
         } else {
           final errorStr = e.toString();
-          errorMessage = 'Some required data is missing. Please ensure all fields are filled. Error: ${errorStr.length > 100 ? errorStr.substring(0, 100) : errorStr}';
+          errorMessage =
+              'Some required data is missing. Please ensure all fields are filled. Error: ${errorStr.length > 100 ? errorStr.substring(0, 100) : errorStr}';
         }
-      } else if (errorMessage.contains('Invalid') || errorMessage.contains('null')) {
+      } else if (errorMessage.contains('Invalid') ||
+          errorMessage.contains('null')) {
         title = 'Sale Failed - Invalid Data';
-        errorMessage = 'Some data is invalid. Please check all fields and try again.';
-      } else if (errorMessage.contains('Isar') || errorMessage.contains('database')) {
+        errorMessage =
+            'Some data is invalid. Please check all fields and try again.';
+      } else if (errorMessage.contains('Isar') ||
+          errorMessage.contains('database')) {
         title = 'Sale Failed - Database Error';
         // Provide more details in the error message
-        final errorDetails = errorMessage.length > 200 ? errorMessage.substring(0, 200) + '...' : errorMessage;
+        final errorDetails = errorMessage.length > 200
+            ? errorMessage.substring(0, 200) + '...'
+            : errorMessage;
         errorMessage = 'A database error occurred while saving the sale.\n\n'
-                       'Details: $errorDetails\n\n'
-                       'Please try again or contact support if the problem persists.';
+            'Details: $errorDetails\n\n'
+            'Please try again or contact support if the problem persists.';
       } else {
         // Generic error with more details
         title = 'Sale Failed';
-        errorMessage = 'Could not complete the sale. Error: ${errorMessage.length > 150 ? errorMessage.substring(0, 150) + '...' : errorMessage}';
+        errorMessage =
+            'Could not complete the sale. Error: ${errorMessage.length > 150 ? errorMessage.substring(0, 150) + '...' : errorMessage}';
       }
-      
+
       // Show error dialog instead of just snackbar for better visibility
       Get.dialog(
         AlertDialog(
@@ -791,7 +1070,8 @@ class NewSaleController extends GetxController {
               style: TextButton.styleFrom(
                 backgroundColor: Colors.red.shade700,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -815,7 +1095,8 @@ class NewSaleController extends GetxController {
   }
 
   // Helper method for success dialog detail rows
-  Widget _buildSuccessDetailRow(String label, String value, Color labelColor, Color valueColor) {
+  Widget _buildSuccessDetailRow(
+      String label, String value, Color labelColor, Color valueColor) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -848,7 +1129,7 @@ class NewSaleController extends GetxController {
       currentStep.value++;
     } else {
       // Last Step -> Finalize
-      finalizeSale(); 
+      finalizeSale();
     }
   }
 
