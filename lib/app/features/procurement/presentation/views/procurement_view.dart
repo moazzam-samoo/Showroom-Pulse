@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'supplier_history_view.dart';
@@ -8,8 +9,15 @@ class ProcurementView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          Get.offNamed('/dashboard');
+        }
+      },
+      child: Scaffold(
+        body: Row(
         children: [
           SidebarNavigation(
             selectedIndex: 1, // Dealers is now index 1
@@ -46,6 +54,7 @@ class ProcurementView extends StatelessWidget {
             child: SupplierHistoryView(),
           ),
         ],
+      ),
       ),
     );
   }

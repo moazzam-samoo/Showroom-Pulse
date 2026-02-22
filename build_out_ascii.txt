@@ -1,0 +1,63 @@
+Building Windows application...                                 
+flutter : lib/app/feat
+ures/inventory/present
+ation/widgets/edit_bik
+e_dialog.dart(110,11):
+ error G2352F3A4: 
+'NumberFormat' isn't 
+a type. [D:\Tahir-Show
+room\build\windows\x64
+\flutter\flutter_assem
+ble.vcxproj]
+At line:1 char:1
++ flutter build 
+windows > 
+build_out.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (lib/app/fe   
+ ature...semble.vc    
+xproj]:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+lib/app/features/inven
+tory/presentation/widg
+ets/edit_bike_dialog.d
+art(110,39): error 
+GE5CFE876: The method 
+'NumberFormat' isn't 
+defined for the type '
+_EditBikeDialogState'.
+ [D:\Tahir-Showroom\bu
+ild\windows\x64\flutte
+r\flutter_assemble.vcx
+proj]
+C:\Program 
+Files\Microsoft 
+Visual Studio\18\Commu
+nity\MSBuild\Microsoft
+\VC\v180\Microsoft.Cpp
+Common.targets(254,5):
+ error MSB8066: 
+Custom build for 'D:\T
+ahir-Showroom\build\wi
+ndows\x64\CMakeFiles\a
+de0bf973fe4ea1e8bf2e35
+303bc4388\flutter_wind
+ows.dll.rule;D:\Tahir-
+Showroom\build\windows
+\x64\CMakeFiles\a35f4b
+b059308ab38826637320cf
+d1f6\flutter_assemble.
+rule' exited with 
+code 1. [D:\Tahir-Show
+room\build\windows\x64
+\flutter\flutter_assem
+ble.vcxproj]
+Building Windows application...                                    21.1s
+Build process failed.

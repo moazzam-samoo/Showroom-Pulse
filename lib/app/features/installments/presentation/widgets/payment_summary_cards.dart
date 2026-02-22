@@ -180,7 +180,7 @@ class PaymentSummaryCards extends StatelessWidget {
     String? subtitle;
     Color subtitleColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    if (daysUntil != null) {
+    if (!isCompleted && daysUntil != null) {
       if (daysUntil < 0) {
         subtitle = '${daysUntil.abs()} days overdue';
         subtitleColor = isDark ? AppColors.darkError : AppColors.lightError;

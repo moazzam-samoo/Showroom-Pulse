@@ -1,0 +1,42 @@
+﻿Analyzing add_bike_dialog.dart, edit_bike_dialog.dart, record_payment_dialog.dart, add_customer_dialog.dart, add_stock_view.dart...
+
+  error - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:348:9 - Expected to find ']'. - expected_token
+  error - lib\app\features\installments\presentation\widgets\record_payment_dialog.dart:232:9 - Expected to find ']'. - expected_token
+  error - lib\app\features\installments\presentation\widgets\record_payment_dialog.dart:235:6 - Expected to find ')'. - expected_token
+  error - lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart:292:21 - Expected to find ')'. - expected_token
+  error - lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart:295:13 - Expected to find ']'. - expected_token
+warning - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:210:12 - Two keys in a map literal shouldn't be equal. Change or remove the duplicate key. - equal_keys_in_map
+warning - lib\app\features\installments\presentation\widgets\record_payment_dialog.dart:3:8 - Unused import: 'package:intl/intl.dart'. Try removing the import directive. - unused_import
+warning - lib\app\features\procurement\presentation\views\add_stock_view.dart:1:8 - Unused import: 'dart:io'. Try removing the import directive. - unused_import
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:224:5 - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const'. - prefer_const_declarations
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:389:63 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:492:20 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:492:34 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:540:22 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - lib\app\features\customers\presentation\widgets\add_customer_dialog.dart:542:24 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+   info - lib\app\features\installments\presentation\widgets\record_payment_dialog.dart:148:19 - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\app\features\inventory\presentation\widgets\add_bike_dialog.dart:150:5 - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const'. - prefer_const_declarations
+   info - lib\app\features\inventory\presentation\widgets\add_bike_dialog.dart:326:63 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart:168:5 - Use 'const' for final variables initialized to a constant value. Try replacing 'final' with 'const'. - prefer_const_declarations
+   info - lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart:355:63 - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss. Try replacing the use of the deprecated member with the replacement. - deprecated_member_use
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:35:63 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:36:18 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:39:63 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:40:18 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:49:61 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:50:16 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:53:61 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:54:55 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:55:16 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:69:63 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:70:61 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:71:18 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:83:50 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:84:16 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:98:24 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:99:18 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:107:47 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:108:16 - Statements in an if should be enclosed in a block. Try wrapping the statement in a block. - curly_braces_in_flow_control_structures
+   info - lib\app\features\procurement\presentation\views\add_stock_view.dart:501:20 - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation. - prefer_const_constructors
+
+38 issues found.

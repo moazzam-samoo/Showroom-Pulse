@@ -9,6 +9,8 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
+import 'package:flutter/services.dart';
+import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 
 class AddCustomerDialog extends StatefulWidget {
   final Customer? customer;
@@ -42,6 +44,70 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
   String? _existingProfileImage;
   String? _existingCnicFrontImage;
   String? _existingCnicBackImage;
+
+  final _nameFocus = FocusNode();
+  final _fatherNameFocus = FocusNode();
+  final _cnicFocus = FocusNode();
+  final _phoneFocus = FocusNode();
+  final _addressFocus = FocusNode();
+  final _profilePicFocus = FocusNode();
+  final _cnicFrontFocus = FocusNode();
+  final _cnicBackFocus = FocusNode();
+  final _submitFocus = FocusNode();
+
+  void _handleKeyboardNavigation(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
+        if (_nameFocus.hasFocus) {
+          _fatherNameFocus.requestFocus();
+        } else if (_fatherNameFocus.hasFocus) {
+          _cnicFocus.requestFocus();
+        } else if (_cnicFocus.hasFocus) {
+          _phoneFocus.requestFocus();
+        } else if (_phoneFocus.hasFocus) {
+          _addressFocus.requestFocus();
+        } else if (_addressFocus.hasFocus) {
+          _profilePicFocus.requestFocus();
+        } else if (_profilePicFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            _pickImage('profile');
+          } else {
+            _cnicFrontFocus.requestFocus();
+          }
+        } else if (_cnicFrontFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            _pickImage('cnic_front');
+          } else {
+            _cnicBackFocus.requestFocus();
+          }
+        } else if (_cnicBackFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            _pickImage('cnic_back');
+          } else {
+            _submitFocus.requestFocus();
+          }
+        }
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        if (_submitFocus.hasFocus) {
+          _cnicBackFocus.requestFocus();
+        } else if (_cnicBackFocus.hasFocus) {
+          _cnicFrontFocus.requestFocus();
+        } else if (_cnicFrontFocus.hasFocus) {
+          _profilePicFocus.requestFocus();
+        } else if (_profilePicFocus.hasFocus) {
+          _addressFocus.requestFocus();
+        } else if (_addressFocus.hasFocus) {
+          _phoneFocus.requestFocus();
+        } else if (_phoneFocus.hasFocus) {
+          _cnicFocus.requestFocus();
+        } else if (_cnicFocus.hasFocus) {
+          _fatherNameFocus.requestFocus();
+        } else if (_fatherNameFocus.hasFocus) {
+          _nameFocus.requestFocus();
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -91,6 +157,15 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     _cnicController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _nameFocus.dispose();
+    _fatherNameFocus.dispose();
+    _cnicFocus.dispose();
+    _phoneFocus.dispose();
+    _addressFocus.dispose();
+    _profilePicFocus.dispose();
+    _cnicFrontFocus.dispose();
+    _cnicBackFocus.dispose();
+    _submitFocus.dispose();
     super.dispose();
   }
 
@@ -162,22 +237,29 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
         Expanded(
           child: SizedBox(
             height: 50,
-            child: ElevatedButton(
-              onPressed: _handleSave,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: sectionHeaderBg,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text(
-                isEdit ? 'Update Customer' : 'Save Customer (Enter)',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: BlinkingFocusBuilder(
+              focusNode: _submitFocus,
+              child: ElevatedButton(
+                focusNode: _submitFocus,
+                onPressed: _handleSave,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: sectionHeaderBg,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(
+                  isEdit ? 'Update Customer' : 'Save Customer (Enter)',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),
         ),
       ],
-      child: Form(
+      child: KeyboardListener(
+        focusNode: FocusNode(), // Container focus node
+        onKeyEvent: _handleKeyboardNavigation,
+        child: Form(
         key: _formKey,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,11 +274,11 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                     color: sectionHeaderBg,
                     textColor: sectionHeaderText,
                     children: [
-                      _buildInputGroup('Full Name:', _nameController, 'e.g. John Doe', isDark, inputBg, inputBorder, labelColor, autofocus: !isEdit),
+                      _buildInputGroup('Full Name:', _nameController, 'e.g. John Doe', isDark, inputBg, inputBorder, labelColor, _nameFocus, autofocus: !isEdit),
                       const SizedBox(height: 12),
-                      _buildInputGroup('Father Name:', _fatherNameController, 'e.g. Richard Doe', isDark, inputBg, inputBorder, labelColor),
+                      _buildInputGroup('Father Name:', _fatherNameController, 'e.g. Richard Doe', isDark, inputBg, inputBorder, labelColor, _fatherNameFocus),
                        const SizedBox(height: 12),
-                      _buildInputGroup('CNIC:', _cnicController, 'XXXXX-XXXXXXX-X', isDark, inputBg, inputBorder, labelColor, isCnic: true),
+                      _buildInputGroup('CNIC:', _cnicController, 'XXXXX-XXXXXXX-X', isDark, inputBg, inputBorder, labelColor, _cnicFocus, isCnic: true),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -205,9 +287,9 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                     color: sectionHeaderBg,
                     textColor: sectionHeaderText,
                     children: [
-                      _buildInputGroup('Phone:', _phoneController, '03XX-XXXXXXX', isDark, inputBg, inputBorder, labelColor, isPhone: true),
+                      _buildInputGroup('Phone:', _phoneController, '03XX-XXXXXXX', isDark, inputBg, inputBorder, labelColor, _phoneFocus, isPhone: true),
                       const SizedBox(height: 12),
-                      _buildInputGroup('Address:', _addressController, 'Full Residential Address', isDark, inputBg, inputBorder, labelColor),
+                      _buildInputGroup('Address:', _addressController, 'Full Residential Address', isDark, inputBg, inputBorder, labelColor, _addressFocus),
                     ],
                   ),
                 ],
@@ -225,27 +307,39 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                       'Profile Photo', 
                       _profileImage, 
                       _existingProfileImage,
-                      () => _pickImage('profile'), 
+                      () {
+                        _profilePicFocus.requestFocus();
+                        _pickImage('profile');
+                      }, 
                       () => setState(() { _profileImage = null; }), // Remove NEW selection
-                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
+                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText,
+                      _profilePicFocus,
                     ),
                     const SizedBox(height: 16),
                     _buildImagePicker(
                       'CNIC Front', 
                       _cnicFrontImage, 
                       _existingCnicFrontImage,
-                      () => _pickImage('cnic_front'), 
+                      () {
+                        _cnicFrontFocus.requestFocus();
+                        _pickImage('cnic_front');
+                      }, 
                       () => setState(() { _cnicFrontImage = null; }),
-                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
+                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText,
+                      _cnicFrontFocus,
                     ),
                     const SizedBox(height: 16),
                     _buildImagePicker(
                       'CNIC Back', 
                       _cnicBackImage, 
                       _existingCnicBackImage,
-                      () => _pickImage('cnic_back'), 
+                      () {
+                        _cnicBackFocus.requestFocus();
+                        _pickImage('cnic_back');
+                      }, 
                       () => setState(() { _cnicBackImage = null; }),
-                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText
+                      isDark, inputBg, inputBorder, sectionHeaderBg, sectionHeaderText,
+                      _cnicBackFocus,
                     ),
                   ],
                 ),
@@ -253,6 +347,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -308,6 +403,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     Color bg,
     Color border,
     Color? labelColor,
+    FocusNode focusNode,
     {bool isNumber = false, bool isPhone = false, bool isCnic = false, bool isOptional = false, bool autofocus = false}
   ) {
     return Column(
@@ -322,10 +418,13 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           ),
         ),
         const SizedBox(height: 6),
-        TextFormField(
-          controller: controller,
-          autofocus: autofocus,
-          textInputAction: TextInputAction.next,
+        BlinkingFocusBuilder(
+          focusNode: focusNode,
+          child: TextFormField(
+            controller: controller,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            textInputAction: TextInputAction.next,
           keyboardType: (isNumber || isPhone || isCnic) ? TextInputType.number : TextInputType.text,
           inputFormatters: [
             if (isCnic) CnicInputFormatter(),
@@ -359,6 +458,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
             return null;
           },
         ),
+        ),
       ],
     );
   }
@@ -373,6 +473,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     Color border,
     Color headerBg,
     Color headerText,
+    FocusNode focusNode,
   ) {
     // Determine what to show
     Widget content;
@@ -416,17 +517,20 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
       color: headerBg,
       textColor: headerText,
       children: [
-        GestureDetector(
-          onTap: onPick,
-          child: Container(
-            height: 140, // Reduced height to fit multiple images
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: border, width: 2),
+        BlinkingFocusBuilder(
+          focusNode: focusNode,
+          child: GestureDetector(
+            onTap: onPick,
+            child: Container(
+              height: 140, // Reduced height to fit multiple images
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: border, width: 2),
+              ),
+              child: content,
             ),
-            child: content,
           ),
         ),
         if (newImage != null) ...[

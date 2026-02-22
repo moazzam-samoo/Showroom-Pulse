@@ -7,6 +7,8 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
+import 'package:flutter/services.dart';
+import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
@@ -34,6 +36,62 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   String? _selectedColor;
   File? _selectedImage;
 
+  final _brandFocus = FocusNode();
+  final _modelFocus = FocusNode();
+  final _colorFocus = FocusNode();
+  final _engineFocus = FocusNode();
+  final _chassisFocus = FocusNode();
+  final _purchaseFocus = FocusNode();
+  final _sellingFocus = FocusNode();
+  final _imageFocus = FocusNode();
+  final _submitFocus = FocusNode();
+
+  void _handleKeyboardNavigation(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
+        if (_brandFocus.hasFocus) {
+          _modelFocus.requestFocus();
+        } else if (_modelFocus.hasFocus) {
+          _colorFocus.requestFocus();
+        } else if (_colorFocus.hasFocus) {
+          _engineFocus.requestFocus();
+        } else if (_engineFocus.hasFocus) {
+          _chassisFocus.requestFocus();
+        } else if (_chassisFocus.hasFocus) {
+          _purchaseFocus.requestFocus();
+        } else if (_purchaseFocus.hasFocus) {
+          _sellingFocus.requestFocus();
+        } else if (_sellingFocus.hasFocus) {
+          _imageFocus.requestFocus();
+        } else if (_imageFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            _pickImage();
+          } else {
+            _submitFocus.requestFocus();
+          }
+        }
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        if (_submitFocus.hasFocus) {
+          _imageFocus.requestFocus();
+        } else if (_imageFocus.hasFocus) {
+          _sellingFocus.requestFocus();
+        } else if (_sellingFocus.hasFocus) {
+          _purchaseFocus.requestFocus();
+        } else if (_purchaseFocus.hasFocus) {
+          _chassisFocus.requestFocus();
+        } else if (_chassisFocus.hasFocus) {
+          _engineFocus.requestFocus();
+        } else if (_engineFocus.hasFocus) {
+          _colorFocus.requestFocus();
+        } else if (_colorFocus.hasFocus) {
+          _modelFocus.requestFocus();
+        } else if (_modelFocus.hasFocus) {
+          _brandFocus.requestFocus();
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
     _brandController.dispose();
@@ -42,6 +100,15 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _chassisNoController.dispose();
     _purchasePriceController.dispose();
     _sellingPriceController.dispose();
+    _brandFocus.dispose();
+    _modelFocus.dispose();
+    _colorFocus.dispose();
+    _engineFocus.dispose();
+    _chassisFocus.dispose();
+    _purchaseFocus.dispose();
+    _sellingFocus.dispose();
+    _imageFocus.dispose();
+    _submitFocus.dispose();
     super.dispose();
   }
 
@@ -94,24 +161,31 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         Expanded(
           child: SizedBox(
             height: 50,
-            child: ElevatedButton(
-              onPressed: _handleSave,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: sectionHeaderBg,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text(
-                'Save to Inventory (Enter)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: BlinkingFocusBuilder(
+              focusNode: _submitFocus,
+              child: ElevatedButton(
+                focusNode: _submitFocus,
+                onPressed: _handleSave,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: sectionHeaderBg,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text(
+                  'Save to Inventory (Enter)',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),
         ),
       ],
-      child: Form(
-        key: _formKey,
-        child: Column(
+      child: KeyboardListener(
+        focusNode: FocusNode(), // Container focus node
+        onKeyEvent: _handleKeyboardNavigation,
+        child: Form(
+          key: _formKey,
+          child: Column(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,11 +200,11 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, autofocus: true),
+                          _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, _brandFocus, autofocus: true),
                           const SizedBox(height: 16),
-                          _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor),
+                          _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor, _modelFocus),
                           const SizedBox(height: 10),
-                          _buildColorSkinGroup('Color:', labelColor),
+                          _buildColorSkinGroup('Color:', labelColor, _colorFocus),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -139,9 +213,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor),
+                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus),
                           const SizedBox(height: 10),
-                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor),
+                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus),
                         ],
                       ),
                     ],
@@ -158,19 +232,24 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
+                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, _purchaseFocus, isNumber: true),
                           const SizedBox(height: 10),
-                          _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, isNumber: true),
+                          _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, _sellingFocus, isNumber: true),
                         ],
                       ),
                       const SizedBox(height: 12),
                       // Image Upload
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          height: 140, // Reduced from 180 to fit content without scroll
-                          width: double.infinity,
-                          decoration: BoxDecoration(
+                      BlinkingFocusBuilder(
+                        focusNode: _imageFocus,
+                        child: GestureDetector(
+                          onTap: () {
+                            _imageFocus.requestFocus();
+                            _pickImage();
+                          },
+                          child: Container(
+                            height: 140, // Reduced from 180 to fit content without scroll
+                            width: double.infinity,
+                            decoration: BoxDecoration(
                             color: inputBg,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: inputBorder, width: 2),
@@ -194,6 +273,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                     ),
                                   ],
                                 ),
+                          ),
                         ),
                       ),
                     ],
@@ -203,6 +283,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -258,6 +339,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     Color bg,
     Color border,
     Color? labelColor,
+    FocusNode focusNode,
     {bool isNumber = false, bool autofocus = false}
   ) {
     return Row(
@@ -275,12 +357,15 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: TextFormField(
-            controller: controller,
-            autofocus: autofocus,
-            textInputAction: TextInputAction.next, // Important for keyboard nav
-            keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-            inputFormatters: isNumber ? [ThousandsSeparatorInputFormatter()] : [],
+          child: BlinkingFocusBuilder(
+            focusNode: focusNode,
+            child: TextFormField(
+              controller: controller,
+              focusNode: focusNode,
+              autofocus: autofocus,
+              textInputAction: TextInputAction.next, // Important for keyboard nav
+              keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+              inputFormatters: isNumber ? [ThousandsSeparatorInputFormatter()] : [],
             style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
             decoration: InputDecoration(
               isDense: true,
@@ -302,10 +387,11 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
               ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Required';
-              return null;
-            },
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Required';
+                return null;
+              },
+            ),
           ),
         ),
       ],
@@ -315,6 +401,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   Widget _buildColorSkinGroup(
     String label,
     Color? labelColor,
+    FocusNode focusNode,
   ) {
     return Row(
       children: [
@@ -331,10 +418,16 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: ColorSkinSelector(
-            initialValue: _selectedColor,
-            onChanged: (value) => setState(() => _selectedColor = value),
-            validator: (v) => v == null ? 'Required' : null,
+          child: BlinkingFocusBuilder(
+            focusNode: focusNode,
+            child: Focus(
+              focusNode: focusNode,
+              child: ColorSkinSelector(
+                initialValue: _selectedColor,
+                onChanged: (value) => setState(() => _selectedColor = value),
+                validator: (v) => v == null ? 'Required' : null,
+              ),
+            ),
           ),
         ),
       ],
