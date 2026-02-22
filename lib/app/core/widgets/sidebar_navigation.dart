@@ -67,6 +67,29 @@ class SidebarNavigation extends StatelessWidget {
     );
   }
 
+  IconData _getSelectedIcon(int index) {
+    switch (index) {
+      case 0:
+        return LucideIcons.layoutDashboard;
+      case 1:
+        return LucideIcons.truck;
+      case 2:
+        return LucideIcons.bike;
+      case 3:
+        return LucideIcons.shoppingCart;
+      case 4:
+        return LucideIcons.wallet;
+      case 5:
+        return LucideIcons.users;
+      case 6:
+        return LucideIcons.barChart3;
+      case 7:
+        return LucideIcons.settings;
+      default:
+        return LucideIcons.bike;
+    }
+  }
+
   Widget _buildLogo(bool isDark) {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     
@@ -78,7 +101,7 @@ class SidebarNavigation extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Icon(
-        LucideIcons.bike,
+        _getSelectedIcon(selectedIndex),
         size: 20,
         color: primaryColor,
       ),
