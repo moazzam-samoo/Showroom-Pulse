@@ -20,6 +20,8 @@ import 'app/features/customers/presentation/views/customers_view.dart';
 import 'app/features/customers/presentation/bindings/customers_binding.dart';
 import 'app/features/reports/presentation/views/reports_view.dart';
 import 'app/features/reports/presentation/bindings/reports_binding.dart';
+import 'app/features/settings/presentation/views/settings_view.dart';
+import 'app/features/settings/presentation/bindings/settings_binding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,6 +104,11 @@ class TahirShowroomApp extends StatelessWidget {
           name: '/reports',
           page: () => const ReportsView(),
           binding: ReportsBinding(),
+        ),
+        GetPage(
+          name: '/settings',
+          page: () => const SettingsView(),
+          binding: SettingsBinding(),
         ),
       ],
     );
