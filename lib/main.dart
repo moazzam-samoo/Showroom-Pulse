@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:tray_manager/tray_manager.dart';
 
 import 'app/core/bindings/initial_binding.dart';
 import 'app/core/theme/app_theme.dart';
@@ -40,13 +42,102 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
+    // Prevent default close so we can handle it
+    await windowManager.setPreventClose(true);
   });
   
   runApp(const TahirShowroomApp());
 }
 
-class TahirShowroomApp extends StatelessWidget {
+class TahirShowroomApp extends StatefulWidget {
   const TahirShowroomApp({super.key});
+
+  @override
+  State<TahirShowroomApp> createState() => _TahirShowroomAppState();
+}
+
+class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener, TrayListener {
+  @override
+  void initState() {
+    windowManager.addListener(this);
+    trayManager.addListener(this);
+    _initSystemTray();
+    super.initState();
+  }
+
+  Future<void> _initSystemTray() async {
+    // Set tray icon (Windows relies on .ico)
+    await trayManager.setIcon(
+      Platform.isWindows 
+          ? 'assets/app_icon.ico' 
+          : '',
+    );
+    
+    // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
+    await trayManager.setToolTip('Tahir Showroom');
+    
+    // Create tray context menu
+    Menu menu = Menu(
+      items: [
+        MenuItem(
+          key: 'show_app',
+          label: 'Show App',
+        ),
+        MenuItem.separator(),
+        MenuItem(
+          key: 'exit_app',
+          label: 'Exit',
+        ),
+      ],
+    );
+    await trayManager.setContextMenu(menu);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    trayManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowClose() async {
+    bool isPreventClose = await windowManager.isPreventClose();
+    if (isPreventClose) {
+      Get.snackbar(
+        'App Minimized to Tray',
+        'Tahir Showroom is now hiding in your System Tray.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.blueGrey.shade800,
+        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      );
+      // Hide completely from taskbar
+      await windowManager.hide();
+    }
+  }
+
+  @override
+  void onTrayIconMouseDown() {
+    windowManager.show();
+    windowManager.focus();
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
+  @override
+  void onTrayMenuItemClick(MenuItem menuItem) {
+    if (menuItem.key == 'show_app') {
+      windowManager.show();
+      windowManager.focus();
+    } else if (menuItem.key == 'exit_app') {
+      windowManager.destroy(); // Fully close app
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

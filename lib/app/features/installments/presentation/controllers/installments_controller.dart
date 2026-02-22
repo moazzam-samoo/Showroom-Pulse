@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/statement_service.dart';
+import 'package:tahir_showroom/app/core/services/notification_service.dart';
 
 /// Data class for displaying contract with related info
 class ContractDisplayData {
@@ -209,6 +210,11 @@ class InstallmentsController extends GetxController {
       );
       await loadContracts();
       Get.snackbar('Success', 'Payment recorded successfully');
+      
+      // Refresh notifications to clear any alerts that are now paid
+      try {
+        await Get.find<NotificationService>().checkAndNotify();
+      } catch (_) {}
     } catch (e) {
       Get.snackbar('Error', 'Failed to record payment: $e');
     }

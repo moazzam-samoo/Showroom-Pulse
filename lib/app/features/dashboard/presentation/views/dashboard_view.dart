@@ -8,6 +8,8 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
+import 'package:tahir_showroom/app/core/services/notification_service.dart';
+import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import '../controllers/dashboard_controller.dart';
 
 import '../widgets/kpi_section.dart';
@@ -247,14 +249,139 @@ class _DashboardViewState extends State<DashboardView> {
                 },
               ),
               // Notifications
-              IconButton(
-                icon: Icon(
-                  LucideIcons.bell,
-                  size: 20,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                ),
-                onPressed: () {},
-              ),
+              Obx(() {
+                final notifService = Get.find<NotificationService>();
+                final count = notifService.alertCount;
+                
+                return PopupMenuButton<NotificationAlert>(
+                  tooltip: 'Installment Alerts',
+                  offset: const Offset(0, 48),
+                  color: isDark ? AppColors.darkCard : Colors.white,
+                  icon: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(
+                        LucideIcons.bell,
+                        size: 20,
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      ),
+                      if (count > 0)
+                        Positioned(
+                          right: -4,
+                          top: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  itemBuilder: (context) {
+                    if (count == 0) {
+                      return [
+                        const PopupMenuItem(
+                          enabled: false,
+                          child: Text('No new alerts', style: TextStyle(color: Colors.grey)),
+                        )
+                      ];
+                    }
+
+                    final items = <PopupMenuEntry<NotificationAlert>>[];
+                    
+                    items.add(
+                      const PopupMenuItem(
+                        enabled: false,
+                        child: Text(
+                          'Installment Alerts',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                    
+                    items.add(const PopupMenuDivider());
+
+                    for (var alert in notifService.pendingAlerts) {
+                      items.add(
+                        PopupMenuItem(
+                          value: alert,
+                          child: Row(
+                            children: [
+                              Icon(
+                                alert.severity == AlertSeverity.critical ? Icons.warning_rounded : Icons.info_outline,
+                                color: alert.color,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${alert.severityLabel} — ${alert.customerName}',
+                                      style: TextStyle(
+                                        color: alert.color,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Rs ${alert.amountDue.toStringAsFixed(0)} due ${alert.timeText} • ${alert.bikeModel}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'View',
+                                style: TextStyle(
+                                  color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    
+                    items.add(const PopupMenuDivider());
+                    items.add(
+                      PopupMenuItem(
+                        value: null,
+                        child: Center(
+                          child: Text(
+                            'View All in Installments →',
+                            style: TextStyle(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    );
+
+                    return items;
+                  },
+                  onSelected: (alert) {
+                    Get.toNamed('/installments', arguments: alert?.contractId);
+                  },
+                );
+              }),
               // User Avatar
               const SizedBox(width: 8),
               Container(

@@ -2,8 +2,9 @@ import 'package:get/get.dart';
 import '../services/file_service.dart';
 import '../services/isar_service.dart';
 import '../services/theme_service.dart';
-import '../../features/auth/data/auth_service.dart';
 import '../../features/auth/presentation/controllers/login_controller.dart';
+import '../../features/auth/data/auth_service.dart';
+import '../services/notification_service.dart';
 
 /// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
@@ -31,6 +32,15 @@ Future<void> initializeAsyncServices() async {
   
   // Ensure default admin user exists
   await authService.ensureDefaultUser();
+  
+  // Initialize NotificationService
+  final notificationService = NotificationService();
+  await notificationService.init();
+  Get.put(notificationService, permanent: true);
+  
+  // Initial check and start timer
+  await notificationService.checkAndNotify();
+  notificationService.startPeriodicCheck();
 }
 
 /// Register Login page dependencies
