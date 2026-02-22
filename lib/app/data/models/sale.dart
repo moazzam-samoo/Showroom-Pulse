@@ -39,4 +39,10 @@ class Sale {
 
   /// Notes or formatting
   String? notes;
+
+  /// Discount given on this sale (Amount in Currency)
+  double discountAmount = 0.0;
+
+  /// Discount given on this sale (Percentage)
+  double discountPercentage = 0.0;
 }
