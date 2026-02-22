@@ -31,6 +31,8 @@ class WitnessData {
 
 class SaleCardData {
   final String bikeModel;
+  final String? bikeBrand; // Added for filtering
+  final String bikeColor; // Added for filtering
   final String bikeImage; 
   final String bikeChassisNumber;
   final String bikeEngineNumber;
@@ -63,6 +65,8 @@ class SaleCardData {
 
   SaleCardData({
     required this.bikeModel,
+    this.bikeBrand,
+    required this.bikeColor,
     required this.bikeImage,
     required this.bikeChassisNumber,
     required this.bikeEngineNumber,

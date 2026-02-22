@@ -29,6 +29,23 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
   Future<void> _loadRecentSales() async {
     try {
       final sales = await _salesService.getRecentSales(5);
+      
+      // Sort: Date Descending -> Price Descending
+      sales.sort((a, b) {
+        final dateA = _parseDate(a.saleDate);
+        final dateB = _parseDate(b.saleDate);
+        final dateComparison = dateB.compareTo(dateA);
+        
+        if (dateComparison == 0) {
+          // Secondary Sort: Price Descending
+          // Use sellingPrice (Installment) or amountPaid/bikePrice (Cash)
+          final priceA = a.sellingPrice ?? a.bikePrice ?? a.amountPaid;
+          final priceB = b.sellingPrice ?? b.bikePrice ?? b.amountPaid;
+          return priceB.compareTo(priceA);
+        }
+        return dateComparison;
+      });
+
       setState(() {
         _recentSales = sales;
         _isLoading = false;
@@ -42,6 +59,22 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
         'Failed to load recent sales: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
+    }
+  }
+
+  DateTime _parseDate(String dateStr) {
+    try {
+      final parts = dateStr.split('/');
+      if (parts.length == 3) {
+        return DateTime(
+          int.parse(parts[2]), 
+          int.parse(parts[1]), 
+          int.parse(parts[0])
+        );
+      }
+      return DateTime.now();
+    } catch (e) {
+      return DateTime.now();
     }
   }
 
@@ -134,6 +167,7 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
                           ),
                         )
                       : ListView.separated(
+                          padding: const EdgeInsets.only(right: AppSpacing.sm),
                           itemCount: _recentSales.length,
                           separatorBuilder: (_, __) => const Divider(height: 1),
                           itemBuilder: (context, index) {

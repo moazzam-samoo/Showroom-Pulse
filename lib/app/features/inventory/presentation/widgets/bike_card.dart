@@ -177,7 +177,7 @@ class _BikeCardState extends State<BikeCard> {
                         children: [
                           Expanded(
                             child: Text(
-                              widget.bike.model,
+                              "${widget.bike.brand} ${widget.bike.model}",
                               style: TextStyle(
                                 fontSize: widget.compact ? 14 : 16,
                                 fontWeight: FontWeight.bold,

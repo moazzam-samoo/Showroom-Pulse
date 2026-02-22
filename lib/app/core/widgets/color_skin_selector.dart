@@ -5,12 +5,18 @@ class ColorSkinSelector extends StatefulWidget {
   final String? initialValue;
   final Function(String) onChanged;
   final String? Function(String?)? validator;
+  final EdgeInsetsGeometry? padding;
+  final double? fontSize;
+  final double? iconSize;
 
   const ColorSkinSelector({
     super.key,
     this.initialValue,
     required this.onChanged,
     this.validator,
+    this.padding,
+    this.fontSize,
+    this.iconSize,
   });
 
   @override
@@ -40,6 +46,14 @@ class _ColorSkinSelectorState extends State<ColorSkinSelector> {
   void initState() {
     super.initState();
     _selectedValue = widget.initialValue;
+  }
+
+  @override
+  void didUpdateWidget(ColorSkinSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue) {
+      _selectedValue = widget.initialValue;
+    }
   }
 
   @override
@@ -236,7 +250,7 @@ class _ColorSkinSelectorState extends State<ColorSkinSelector> {
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(8),
@@ -256,11 +270,13 @@ class _ColorSkinSelectorState extends State<ColorSkinSelector> {
                   color: _selectedValue != null
                       ? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)
                       : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  fontSize: widget.fontSize,
                 ),
               ),
               Icon(
                 _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
                 color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                size: widget.iconSize,
               ),
             ],
           ),

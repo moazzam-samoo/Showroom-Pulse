@@ -65,7 +65,8 @@ class SalesView extends GetView<SalesController> {
                  // Keeping page specific header inside padding for now as per design
                  
                  Expanded(
-                   child: SingleChildScrollView(
+                   child: Scrollbar(
+                     child: SingleChildScrollView(
                      padding: const EdgeInsets.all(AppSpacing.lg),
                      child: Column(
                        children: [
@@ -136,9 +137,10 @@ class SalesView extends GetView<SalesController> {
                           child: const SalesCardGrid(),
                         ),
                        ],
-                     ),
-                   ),
-                 ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
