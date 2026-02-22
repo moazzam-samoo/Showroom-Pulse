@@ -11,6 +11,8 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/price_summary_card.dart';
+import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
+import 'package:intl/intl.dart';
 
 class PaymentPlanStep extends StatelessWidget {
   const PaymentPlanStep({super.key});
@@ -26,26 +28,26 @@ class PaymentPlanStep extends StatelessWidget {
         children: [
           // Sale Type Switch
           Obx(() => Row(
-            children: [
-              Expanded(
-                child: _buildToggle(
-                  context, 
-                  'Cash Sale', 
-                  controller.saleType.value == SaleType.cash,
-                  () => controller.saleType.value = SaleType.cash,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildToggle(
-                  context, 
-                  'Installment', 
-                  controller.saleType.value == SaleType.installment,
-                  () => controller.saleType.value = SaleType.installment,
-                ),
-              ),
-            ],
-          )),
+                children: [
+                  Expanded(
+                    child: _buildToggle(
+                      context,
+                      'Cash Sale',
+                      controller.saleType.value == SaleType.cash,
+                      () => controller.saleType.value = SaleType.cash,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildToggle(
+                      context,
+                      'Installment',
+                      controller.saleType.value == SaleType.installment,
+                      () => controller.saleType.value = SaleType.installment,
+                    ),
+                  ),
+                ],
+              )),
           const SizedBox(height: AppSpacing.lg),
 
           // Dynamic Content
@@ -61,7 +63,8 @@ class PaymentPlanStep extends StatelessWidget {
     );
   }
 
-  Widget _buildToggle(BuildContext context, String text, bool isSelected, VoidCallback onTap) {
+  Widget _buildToggle(
+      BuildContext context, String text, bool isSelected, VoidCallback onTap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
@@ -71,16 +74,29 @@ class PaymentPlanStep extends StatelessWidget {
         duration: 200.ms,
         height: 40,
         decoration: BoxDecoration(
-          color: isSelected ? primary : (isDark ? Colors.grey[800] : Colors.grey[200]),
+          color: isSelected
+              ? primary
+              : (isDark ? Colors.grey[800] : Colors.grey[200]),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          border: isSelected ? Border.all(color: primary, width: 2) : Border.all(color: Colors.transparent),
-          boxShadow: isSelected ? [BoxShadow(color: primary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
+          border: isSelected
+              ? Border.all(color: primary, width: 2)
+              : Border.all(color: Colors.transparent),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                      color: primary.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2))
+                ]
+              : null,
         ),
         alignment: Alignment.center,
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black87),
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),
@@ -92,25 +108,135 @@ class PaymentPlanStep extends StatelessWidget {
   Widget _buildCashForm(NewSaleController controller) {
     return Column(
       children: [
-        AppTextField(
-          label: 'Received Amount (Rs)',
-          prefixIcon: LucideIcons.banknote,
-          controller: controller.cashAmountController,
-          hint: 'Enter full cash amount',
-          inputFormatters: [ThousandsSeparatorInputFormatter()],
+        // Display original bike price
+        Obx(() {
+          final bike = controller.selectedBike.value;
+          if (bike == null) return const SizedBox.shrink();
+          final formatter = NumberFormat('#,###', 'en_US');
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Original Selling Price:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Rs ${formatter.format(bike.cashSalePrice)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+          );
+        }),
+
+        BlinkingFocusBuilder(
+          focusNode: controller.cashAmountFocus,
+          child: AppTextField(
+            label: 'Received Amount (Rs)',
+            prefixIcon: LucideIcons.banknote,
+            controller: controller.cashAmountController,
+            focusNode: controller.cashAmountFocus,
+            textInputAction: TextInputAction.next,
+            hint: 'Enter full cash amount',
+            formNavigationManager: controller.formNavigationManager,
+            inputFormatters: [ThousandsSeparatorInputFormatter()],
+            onChanged: (_) => controller.update(['cashDiscount']), // Update specific builder
+          ),
         ),
+        
+        // Dynamic Discount specific for Cash Sale
+        GetBuilder<NewSaleController>(
+          id: 'cashDiscount',
+          builder: (ctrl) {
+            final bike = ctrl.selectedBike.value;
+            if (bike == null) return const SizedBox.shrink();
+            
+            final received = double.tryParse(ctrl.cashAmountController.text.replaceAll(',', '')) ?? 0;
+            if (received <= 0) return const SizedBox.shrink();
+            
+            final discount = bike.cashSalePrice - received;
+            if (discount <= 0) return const SizedBox.shrink(); // No discount applied
+
+            final formatter = NumberFormat('#,###', 'en_US');
+            final discountPercentage = (discount / bike.cashSalePrice) * 100;
+            return Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: Container(
+                 padding: const EdgeInsets.all(AppSpacing.sm),
+                 decoration: BoxDecoration(
+                   color: Colors.green.withOpacity(0.1),
+                   borderRadius: BorderRadius.circular(4),
+                   border: Border.all(color: Colors.green.withOpacity(0.3)),
+                 ),
+                 child: Row(
+                   children: [
+                     const Icon(LucideIcons.tags, color: Colors.green, size: 16),
+                     const SizedBox(width: 8),
+                     Text('Discount Applied: Rs ${formatter.format(discount)} (${discountPercentage.toStringAsFixed(1)}%)', 
+                        style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                   ],
+                 ),
+              )
+            );
+          },
+        ),
+
         const SizedBox(height: 20),
-        const Text('Cash sale marks bike as SOLD immediately.', style: TextStyle(color: Colors.grey)),
+        const Text('Cash sale marks bike as SOLD immediately.',
+            style: TextStyle(color: Colors.grey)),
       ],
     );
   }
 
-  Widget _buildInstallmentForm(BuildContext context, NewSaleController controller) {
+  Widget _buildInstallmentForm(
+      BuildContext context, NewSaleController controller) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // BASE PRICE & DISCOUNT
+        Obx(() {
+          final bike = controller.selectedBike.value;
+          if (bike == null) return const SizedBox.shrink();
+          final formatter = NumberFormat('#,###', 'en_US');
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Original Selling Price:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Rs ${formatter.format(bike.cashSalePrice)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                BlinkingFocusBuilder(
+                  focusNode: controller.discountFocus,
+                  child: AppTextField(
+                    label: 'Discount (Rs) [Optional]',
+                    prefixIcon: LucideIcons.tags,
+                    controller: controller.discountController,
+                    focusNode: controller.discountFocus,
+                    textInputAction: TextInputAction.next,
+                    formNavigationManager: controller.formNavigationManager,
+                    inputFormatters: [ThousandsSeparatorInputFormatter()],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
         // MARKUP CONFIGURATION
         Container(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -122,7 +248,8 @@ class PaymentPlanStep extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Markup Configuration', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Markup Configuration',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
@@ -132,23 +259,34 @@ class PaymentPlanStep extends StatelessWidget {
                     child: DropdownButtonFormField<MarkupType>(
                       value: controller.markupType.value,
                       items: const [
-                        DropdownMenuItem(value: MarkupType.percentage, child: Text('Percentage (%)')),
-                        DropdownMenuItem(value: MarkupType.fixed, child: Text('Fixed Amount (Rs)')),
+                        DropdownMenuItem(
+                            value: MarkupType.percentage,
+                            child: Text('Percentage (%)')),
+                        DropdownMenuItem(
+                            value: MarkupType.fixed,
+                            child: Text('Fixed Amount (Rs)')),
                       ],
                       onChanged: (val) => controller.markupType.value = val!,
-                      decoration: const InputDecoration(labelText: 'Markup Type'),
+                      decoration:
+                          const InputDecoration(labelText: 'Markup Type'),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Value Input
                   Expanded(
                     flex: 3,
-                    child: AppTextField(
-                      label: 'Markup Value', 
-                      prefixIcon: LucideIcons.trendingUp,
-                      controller: controller.markupValueController,
-                      inputFormatters: [ThousandsSeparatorInputFormatter()],
+                    child: BlinkingFocusBuilder(
+                      focusNode: controller.markupValueFocus,
+                      child: AppTextField(
+                        label: 'Markup Value',
+                        prefixIcon: LucideIcons.trendingUp,
+                        controller: controller.markupValueController,
+                        focusNode: controller.markupValueFocus,
+                        textInputAction: TextInputAction.next,
+                        formNavigationManager: controller.formNavigationManager,
+                        inputFormatters: [ThousandsSeparatorInputFormatter()],
+                      ),
                     ),
                   ),
                 ],
@@ -162,19 +300,31 @@ class PaymentPlanStep extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: AppTextField(
-                label: 'Down Payment (Rs)',
-                prefixIcon: LucideIcons.download,
-                controller: controller.downPaymentController,
-                inputFormatters: [ThousandsSeparatorInputFormatter()],
+              child: BlinkingFocusBuilder(
+                focusNode: controller.downPaymentFocus,
+                child: AppTextField(
+                  label: 'Down Payment (Rs)',
+                  prefixIcon: LucideIcons.download,
+                  controller: controller.downPaymentController,
+                  focusNode: controller.downPaymentFocus,
+                  textInputAction: TextInputAction.next,
+                  formNavigationManager: controller.formNavigationManager,
+                  inputFormatters: [ThousandsSeparatorInputFormatter()],
+                ),
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: AppTextField(
-                label: 'Installments (Months)',
-                prefixIcon: LucideIcons.calendar,
-                controller: controller.monthsController,
+              child: BlinkingFocusBuilder(
+                focusNode: controller.monthsFocus,
+                child: AppTextField(
+                  label: 'Installments (Months)',
+                  prefixIcon: LucideIcons.calendar,
+                  controller: controller.monthsController,
+                  focusNode: controller.monthsFocus,
+                  textInputAction: TextInputAction.next,
+                  formNavigationManager: controller.formNavigationManager,
+                ),
               ),
             ),
           ],
@@ -183,18 +333,19 @@ class PaymentPlanStep extends StatelessWidget {
 
         // Live Calculation Result
         Obx(() {
-            final result = controller.calculationResult.value;
-            if (result == null) return const SizedBox.shrink();
+          final result = controller.calculationResult.value;
+          if (result == null) return const SizedBox.shrink();
 
-            final downPayment = double.tryParse(controller.downPaymentController.text) ?? 0;
+          final downPayment =
+              double.tryParse(controller.downPaymentController.text.replaceAll(',', '')) ?? 0;
 
-            return Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
-              child: PriceSummaryCard(
-                result: result,
-                downPayment: downPayment,
-              ),
-            );
+          return Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.md),
+            child: PriceSummaryCard(
+              result: result,
+              downPayment: downPayment,
+            ),
+          );
         }),
       ],
     );
