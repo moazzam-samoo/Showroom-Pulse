@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
@@ -23,7 +24,14 @@ class CashSaleDetailDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 24),
-      child: Container(
+      child: KeyboardListener(
+        focusNode: FocusNode()..requestFocus(),
+        onKeyEvent: (KeyEvent event) {
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+            Get.back();
+          }
+        },
+        child: Container(
         width: 850, // Wider to accommodate witness section
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -102,6 +110,7 @@ class CashSaleDetailDialog extends StatelessWidget {
             _buildFooter(isDark),
           ],
         ),
+      ),
       ),
     );
   }
@@ -411,8 +420,19 @@ class CashSaleDetailDialog extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+             if (data.discountAmount > 0) ...[
+               Text(
+                 'Original Price: Rs ${controller.currencyFormat(data.bikePrice ?? data.amountPaid)}',
+                 style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey, decoration: TextDecoration.lineThrough),
+               ),
+               Text(
+                 'Discount: -Rs ${controller.currencyFormat(data.discountAmount)} (${data.discountPercentage.toStringAsFixed(1)}%)',
+                 style: GoogleFonts.outfit(fontSize: 12, color: Colors.orange),
+               ),
+               const SizedBox(height: 4),
+             ],
              Text(
-               'Sale Price',
+               data.discountAmount > 0 ? 'Final Sale Price' : 'Sale Price',
                style: GoogleFonts.outfit(fontSize: 12, color: const Color(0xFF22C55E)),
              ),
              Text(

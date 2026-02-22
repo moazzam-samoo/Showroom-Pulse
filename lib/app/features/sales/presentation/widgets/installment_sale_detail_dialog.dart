@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
@@ -25,7 +26,14 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 24),
-      child: Container(
+      child: KeyboardListener(
+        focusNode: FocusNode()..requestFocus(),
+        onKeyEvent: (KeyEvent event) {
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+            Get.back();
+          }
+        },
+        child: Container(
         width: 900, // Wider for more content
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -98,6 +106,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
             _buildFooter(isDark),
           ],
         ),
+      ),
       ),
     );
   }
@@ -293,6 +302,10 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
                  child: Column(
                    children: [
                      _buildPriceRow('Total Actual Price', data.bikePrice, controller, isDark),
+                     if (data.discountAmount > 0) ...[
+                       const SizedBox(height: 8),
+                       _buildPriceRow('Discount (-)', data.discountAmount, controller, isDark, color: Colors.orange),
+                     ],
                      const SizedBox(height: 8),
                      _buildPriceRow('Selling Price (Markup)', data.sellingPrice, controller, isDark, isBold: true, color: const Color(0xFFF59E0B)),
                    ],
@@ -319,11 +332,14 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
            Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
            const SizedBox(height: AppSpacing.lg),
            
-           Row(
+            Row(
              mainAxisAlignment: MainAxisAlignment.spaceBetween,
              children: [
                _buildBadgeInfo('Duration', '${data.installmentDuration ?? 0} Months', isDark, const Color(0xFF3B82F6)),
-               _buildBadgeInfo('Due Date', 'Monthly ${data.installmentDueDate ?? "-"}', isDark, const Color(0xFFF59E0B)),
+               if (data.isInstallmentCompleted)
+                 _buildBadgeInfo('Status', 'Completed', isDark, const Color(0xFF22C55E))
+               else
+                 _buildBadgeInfo('Due Date', 'Monthly ${data.installmentDueDate ?? "-"}', isDark, const Color(0xFFF59E0B)),
                _buildBadgeInfo('Remaining', 'Rs ${controller.currencyFormat(data.amountRemaining ?? 0)}', isDark, const Color(0xFFEF4444)),
              ],
            ),
