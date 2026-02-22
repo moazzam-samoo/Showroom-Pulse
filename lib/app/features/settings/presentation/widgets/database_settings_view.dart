@@ -13,7 +13,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return ListView(
+    return Obx(() => ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Text(
@@ -56,39 +56,73 @@ class DatabaseSettingsView extends GetView<SettingsController> {
         // Export
         _buildActionRow(
           title: 'Export Database Backup',
-          subtitle: 'Save a copy of your entire system to Downloads',
-          buttonLabel: 'Export Data',
+          subtitle: 'Save a copy of your entire system (database + images)',
+          buttonLabel: controller.isExporting.value ? 'Exporting...' : 'Export Data',
           icon: LucideIcons.download,
           isDark: isDark,
           isDanger: false,
-          onPressed: () {
-            Get.snackbar(
-              'Coming Soon',
-              'Export feature will be available in the next release.',
-              backgroundColor: Colors.blue.withValues(alpha: 0.1),
-              colorText: Colors.blue,
-            );
-          },
+          isLoading: controller.isExporting.value,
+          onPressed: controller.isExporting.value ? null : () => controller.exportDatabase(),
         ),
+
+        // Export progress indicator
+        if (controller.isExporting.value && controller.exportProgress.value.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 32, top: 4, bottom: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  controller.exportProgress.value,
+                  style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                ),
+              ],
+            ),
+          ),
+
         _divider(isDark),
 
         // Import
         _buildActionRow(
           title: 'Import Database Backup',
-          subtitle: 'Restore from a previously exported backup file',
-          buttonLabel: 'Import Data',
+          subtitle: 'Restore from a previously exported .tahir backup file',
+          buttonLabel: controller.isImporting.value ? 'Importing...' : 'Import Data',
           icon: LucideIcons.upload,
           isDark: isDark,
           isDanger: false,
-          onPressed: () {
-            Get.snackbar(
-              'Coming Soon',
-              'Import feature will be available in the next release.',
-              backgroundColor: Colors.blue.withValues(alpha: 0.1),
-              colorText: Colors.blue,
-            );
-          },
+          isLoading: controller.isImporting.value,
+          onPressed: controller.isImporting.value ? null : () => controller.importDatabase(),
         ),
+
+        // Import progress indicator
+        if (controller.isImporting.value && controller.importProgress.value.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 32, top: 4, bottom: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  controller.importProgress.value,
+                  style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                ),
+              ],
+            ),
+          ),
+
         _divider(isDark),
 
         // Factory Reset
@@ -104,7 +138,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
 
         const SizedBox(height: 40),
       ],
-    );
+    ));
   }
 
   Widget _divider(bool isDark) {
@@ -216,9 +250,11 @@ class DatabaseSettingsView extends GetView<SettingsController> {
     required IconData icon,
     required bool isDark,
     required bool isDanger,
-    required VoidCallback onPressed,
+    VoidCallback? onPressed,
+    bool isLoading = false,
   }) {
     final dangerColor = isDark ? AppColors.darkError : AppColors.lightError;
+    final accentColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     return _buildInfoRow(
       title: title,
@@ -226,7 +262,9 @@ class DatabaseSettingsView extends GetView<SettingsController> {
       icon: icon,
       isDark: isDark,
       trailing: ElevatedButton.icon(
-        icon: Icon(icon, size: 14),
+        icon: isLoading
+            ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: isDanger ? dangerColor : accentColor))
+            : Icon(icon, size: 14),
         label: Text(buttonLabel, style: const TextStyle(fontSize: 12)),
         style: ElevatedButton.styleFrom(
           backgroundColor: isDanger ? dangerColor.withValues(alpha: 0.1) : (isDark ? AppColors.darkCard : AppColors.lightSurface),

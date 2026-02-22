@@ -23,6 +23,11 @@ class IsarService extends GetxService {
   
   Isar get isar => _isar;
 
+  /// Allows BackupService to inject a new Isar instance after import
+  void setIsar(Isar isar) {
+    _isar = isar;
+  }
+
   /// Initialize the Isar database
   Future<IsarService> init() async {
     final fileService = Get.find<FileService>();
