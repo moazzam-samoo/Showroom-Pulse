@@ -89,7 +89,7 @@ class RevenueLineChart extends StatelessWidget {
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: false,
-                        horizontalInterval: _getMaxY() / 4,
+                        horizontalInterval: (_getMaxY() / 4).clamp(1.0, double.infinity),
                         getDrawingHorizontalLine: (value) => FlLine(
                           color: isDark ? AppColors.darkBorder : AppColors.lightBorderLight,
                           strokeWidth: 1,
@@ -188,7 +188,8 @@ class RevenueLineChart extends StatelessWidget {
   double _getMaxY() {
     if (data.isEmpty) return 100;
     final max = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    return max == 0 ? 100 : max * 1.2;
+    if (max <= 0) return 100;
+    return max * 1.2;
   }
 
   Widget _buildToggleButton(String type, bool isDark) {
