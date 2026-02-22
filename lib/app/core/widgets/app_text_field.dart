@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_radius.dart';
 
+import '../utils/form_navigation_manager.dart';
+
 /// AppTextField - Standard text input component
 class AppTextField extends StatelessWidget {
   final String? label;
@@ -24,6 +26,7 @@ class AppTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
+  final FormNavigationManager? formNavigationManager;
 
   const AppTextField({
     super.key,
@@ -47,6 +50,7 @@ class AppTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.inputFormatters,
+    this.formNavigationManager,
   });
 
   @override
@@ -60,15 +64,14 @@ class AppTextField extends StatelessWidget {
             child: Text(
               label!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ),
         TextFormField(
           controller: controller,
           validator: validator,
           onChanged: onChanged,
-          onFieldSubmitted: onSubmitted,
           keyboardType: keyboardType,
           obscureText: obscureText,
           enabled: enabled,
@@ -79,13 +82,18 @@ class AppTextField extends StatelessWidget {
           textInputAction: textInputAction,
           inputFormatters: inputFormatters,
           style: Theme.of(context).textTheme.bodyLarge,
+          onFieldSubmitted: (value) {
+            if (formNavigationManager != null && focusNode != null) {
+              formNavigationManager!.handleEnter(focusNode!);
+            } else if (onSubmitted != null) {
+              onSubmitted!(value);
+            }
+          },
           decoration: InputDecoration(
             hintText: hint,
             prefix: prefix,
             suffix: suffix,
-            prefixIcon: prefixIcon != null 
-                ? Icon(prefixIcon, size: 20) 
-                : null,
+            prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
             suffixIcon: suffixIcon != null
                 ? GestureDetector(
                     onTap: onSuffixTap,
