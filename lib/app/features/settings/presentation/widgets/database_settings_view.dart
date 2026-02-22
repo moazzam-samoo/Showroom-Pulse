@@ -14,6 +14,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Obx(() => ListView(
+      primary: false,
       padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Text(

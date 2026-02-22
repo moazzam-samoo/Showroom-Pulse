@@ -16,6 +16,7 @@ class FinancialSettingsView extends GetView<SettingsController> {
       if (settings == null) return const SizedBox.shrink();
 
       return ListView(
+        primary: false,
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           Text(

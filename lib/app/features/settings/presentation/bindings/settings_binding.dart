@@ -6,8 +6,7 @@ import '../../data/repositories/settings_repository.dart';
 class SettingsBinding extends Bindings {
   @override
   void dependencies() {
-    final isar = Get.find<IsarService>().isar;
-    Get.lazyPut(() => SettingsRepository(isar));
+    Get.lazyPut(() => SettingsRepository(Get.find<IsarService>()));
     Get.lazyPut(() => SettingsController(Get.find<SettingsRepository>()));
   }
 }

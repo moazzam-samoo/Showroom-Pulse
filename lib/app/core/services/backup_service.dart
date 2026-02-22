@@ -302,12 +302,7 @@ class BackupService {
       name: 'default',
     );
 
-    // Update the IsarService's internal reference via reflection-free approach
-    // We need to re-register the service
-    Get.delete<IsarService>(force: true);
-    final newService = IsarService();
-    // Set the isar instance directly
-    newService.setIsar(isar);
-    Get.put(newService, permanent: true);
+    // Update the IsarService's internal reference
+    _isarService.setIsar(isar);
   }
 }
