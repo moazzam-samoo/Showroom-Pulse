@@ -13,6 +13,7 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/controllers/supplier_controller.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
+import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 
 class AddStockView extends GetView<SupplierController> {
   const AddStockView({super.key});
@@ -22,17 +23,121 @@ class AddStockView extends GetView<SupplierController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(
-        title: Obx(() => Text(controller.editingBatch.value != null ? 'Edit Stock (Batch ${controller.editingBatch.value!.id})' : 'Add Stock (Batch Entry)')),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(LucideIcons.arrowLeft, color: isDark ? Colors.white : Colors.black),
-          onPressed: () => Get.back(),
+    void handleKeyboardNavigation(KeyEvent event) {
+      if (event is! KeyDownEvent) return;
+      
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
+        if (controller.isNewSupplier.value) {
+          if (controller.newSupplierNameFocus.hasFocus) { controller.newSupplierPhoneFocus.requestFocus(); return; }
+          else if (controller.newSupplierPhoneFocus.hasFocus) { controller.newSupplierCnicFocus.requestFocus(); return; }
+          else if (controller.newSupplierCnicFocus.hasFocus) { controller.newSupplierProfilePicFocus.requestFocus(); return; }
+          else if (controller.newSupplierProfilePicFocus.hasFocus) {
+            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickSupplierProfilePic();
+            else controller.newSupplierCnicPicFocus.requestFocus();
+            return;
+          } else if (controller.newSupplierCnicPicFocus.hasFocus) {
+            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickSupplierCnicPic();
+            else controller.purchaseDateFocus.requestFocus();
+            return;
+          }
+        } else {
+          if (controller.existingSupplierDropdownFocus.hasFocus) { controller.purchaseDateFocus.requestFocus(); return; }
+        }
+
+        if (controller.purchaseDateFocus.hasFocus) { controller.billImageFocus.requestFocus(); return; }
+        else if (controller.billImageFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickBatchImage();
+          else controller.addRowFocus.requestFocus();
+          return;
+        } else if (controller.addRowFocus.hasFocus) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) controller.addBikeEntry();
+          else if (controller.bikeEntries.isNotEmpty) controller.bikeEntries[0].engineFocus.requestFocus();
+          else controller.saveBatchFocus.requestFocus();
+          return;
+        }
+
+        for (int i = 0; i < controller.bikeEntries.length; i++) {
+          final entry = controller.bikeEntries[i];
+          if (entry.engineFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
+          else if (entry.chassisFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
+          else if (entry.brandFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
+          else if (entry.modelFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
+          else if (entry.colorFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
+          else if (entry.yearFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
+          else if (entry.priceFocus.hasFocus) { entry.imageFocus.requestFocus(); return; }
+          else if (entry.imageFocus.hasFocus) {
+            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickEntryImage(i);
+            else if (i + 1 < controller.bikeEntries.length) controller.bikeEntries[i + 1].engineFocus.requestFocus();
+            else controller.saveBatchFocus.requestFocus();
+            return;
+          }
+        }
+        
+        if (controller.saveBatchFocus.hasFocus) {
+           if (event.logicalKey == LogicalKeyboardKey.enter) controller.saveBatch();
+           return;
+        }
+
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        if (controller.saveBatchFocus.hasFocus) {
+          if (controller.bikeEntries.isNotEmpty) controller.bikeEntries.last.imageFocus.requestFocus();
+          else controller.addRowFocus.requestFocus();
+          return;
+        }
+
+        for (int i = controller.bikeEntries.length - 1; i >= 0; i--) {
+          final entry = controller.bikeEntries[i];
+          if (entry.imageFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
+          else if (entry.priceFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
+          else if (entry.yearFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
+          else if (entry.colorFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
+          else if (entry.modelFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
+          else if (entry.brandFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
+          else if (entry.chassisFocus.hasFocus) { entry.engineFocus.requestFocus(); return; }
+          else if (entry.engineFocus.hasFocus) {
+            if (i > 0) controller.bikeEntries[i - 1].imageFocus.requestFocus();
+            else controller.addRowFocus.requestFocus();
+            return;
+          }
+        }
+
+        if (controller.addRowFocus.hasFocus) { controller.billImageFocus.requestFocus(); return; }
+        else if (controller.billImageFocus.hasFocus) { controller.purchaseDateFocus.requestFocus(); return; }
+        else if (controller.purchaseDateFocus.hasFocus) {
+          if (controller.isNewSupplier.value) controller.newSupplierCnicPicFocus.requestFocus();
+          else controller.existingSupplierDropdownFocus.requestFocus();
+          return;
+        }
+
+        if (controller.isNewSupplier.value) {
+          if (controller.newSupplierCnicPicFocus.hasFocus) { controller.newSupplierProfilePicFocus.requestFocus(); return; }
+          else if (controller.newSupplierProfilePicFocus.hasFocus) { controller.newSupplierCnicFocus.requestFocus(); return; }
+          else if (controller.newSupplierCnicFocus.hasFocus) { controller.newSupplierPhoneFocus.requestFocus(); return; }
+          else if (controller.newSupplierPhoneFocus.hasFocus) { controller.newSupplierNameFocus.requestFocus(); return; }
+        }
+      }
+    }
+
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          Get.back();
+        } else {
+          handleKeyboardNavigation(event);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        appBar: AppBar(
+          title: Obx(() => Text(controller.editingBatch.value != null ? 'Edit Stock (Batch ${controller.editingBatch.value!.id})' : 'Add Stock (Batch Entry)')),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(LucideIcons.arrowLeft, color: isDark ? Colors.white : Colors.black),
+            onPressed: () => Get.back(),
+          ),
         ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -51,6 +156,7 @@ class AddStockView extends GetView<SupplierController> {
             _buildFooter(context, isDark, primaryColor),
           ],
         ),
+      ),
       ),
     );
   }
@@ -99,30 +205,46 @@ class AddStockView extends GetView<SupplierController> {
                       if (controller.isNewSupplier.value) {
                          return Column(
                            children: [
-                             TextFormField(
-                               controller: controller.newSupplierName,
-                               decoration: _inputDecoration('Supplier Name', isDark),
-                               style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                             BlinkingFocusBuilder(
+                               focusNode: controller.newSupplierNameFocus,
+                               child: TextFormField(
+                                 controller: controller.newSupplierName,
+                                 focusNode: controller.newSupplierNameFocus,
+                                 autofocus: true,
+                                 textInputAction: TextInputAction.next,
+                                 decoration: _inputDecoration('Supplier Name', isDark),
+                                 style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                               ),
                              ),
                              const SizedBox(height: 8),
                              Row(
                                children: [
                                  Expanded(
-                                   child: TextFormField(
-                                     controller: controller.newSupplierPhone,
-                                     decoration: _inputDecoration('Phone', isDark),
-                                     style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                                     keyboardType: TextInputType.phone,
-                                     inputFormatters: [PhoneNumberInputFormatter()],
+                                   child: BlinkingFocusBuilder(
+                                     focusNode: controller.newSupplierPhoneFocus,
+                                     child: TextFormField(
+                                       controller: controller.newSupplierPhone,
+                                       focusNode: controller.newSupplierPhoneFocus,
+                                       textInputAction: TextInputAction.next,
+                                       decoration: _inputDecoration('Phone', isDark),
+                                       style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                                       keyboardType: TextInputType.phone,
+                                       inputFormatters: [PhoneNumberInputFormatter()],
+                                     ),
                                    ),
                                  ),
                                  const SizedBox(width: 8),
                                   Expanded(
-                                    child: TextFormField(
-                                      controller: controller.newSupplierCnic,
-                                      decoration: _inputDecoration('CNIC (Optional)', isDark),
-                                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                                      inputFormatters: [CnicInputFormatter()],
+                                    child: BlinkingFocusBuilder(
+                                      focusNode: controller.newSupplierCnicFocus,
+                                      child: TextFormField(
+                                        controller: controller.newSupplierCnic,
+                                        focusNode: controller.newSupplierCnicFocus,
+                                        textInputAction: TextInputAction.next,
+                                        decoration: _inputDecoration('CNIC (Optional)', isDark),
+                                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                                        inputFormatters: [CnicInputFormatter()],
+                                      ),
                                     ),
                                   ),
                                ],
@@ -133,9 +255,14 @@ class AddStockView extends GetView<SupplierController> {
                                 children: [
                                   // Profile Pic
                                   Expanded(
-                                    child: InkWell(
-                                      onTap: controller.pickSupplierProfilePic,
-                                      child: Container(
+                                    child: BlinkingFocusBuilder(
+                                      focusNode: controller.newSupplierProfilePicFocus,
+                                      child: InkWell(
+                                        onTap: () {
+                                          controller.newSupplierProfilePicFocus.requestFocus();
+                                          controller.pickSupplierProfilePic();
+                                        },
+                                        child: Container(
                                         height: 40,
                                         decoration: BoxDecoration(
                                           border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey[300]!),
@@ -157,12 +284,18 @@ class AddStockView extends GetView<SupplierController> {
                                       ),
                                     ),
                                   ),
+                                  ),
                                   const SizedBox(width: 8),
                                   // CNIC Pic
                                   Expanded(
-                                    child: InkWell(
-                                      onTap: controller.pickSupplierCnicPic,
-                                      child: Container(
+                                    child: BlinkingFocusBuilder(
+                                      focusNode: controller.newSupplierCnicPicFocus,
+                                      child: InkWell(
+                                        onTap: () {
+                                          controller.newSupplierCnicPicFocus.requestFocus();
+                                          controller.pickSupplierCnicPic();
+                                        },
+                                        child: Container(
                                         height: 40,
                                         decoration: BoxDecoration(
                                           border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey[300]!),
@@ -184,6 +317,7 @@ class AddStockView extends GetView<SupplierController> {
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ],
                              )
                            ],
@@ -196,9 +330,12 @@ class AddStockView extends GetView<SupplierController> {
                             borderRadius: BorderRadius.circular(AppRadius.md),
                             border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey[300]!),
                           ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<Supplier>(
-                              value: controller.selectedSupplier.value,
+                          child: BlinkingFocusBuilder(
+                            focusNode: controller.existingSupplierDropdownFocus,
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<Supplier>(
+                                focusNode: controller.existingSupplierDropdownFocus,
+                                value: controller.selectedSupplier.value,
                               hint: Text('Choose Supplier', style: TextStyle(color: isDark ? AppColors.darkTextMuted : Colors.grey)),
                               isExpanded: true,
                               dropdownColor: isDark ? AppColors.darkElevated : Colors.white,
@@ -208,7 +345,11 @@ class AddStockView extends GetView<SupplierController> {
                                   child: Text(s.name, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
                                 );
                               }).toList(),
-                              onChanged: (val) => controller.selectedSupplier.value = val,
+                                onChanged: (val) {
+                                  controller.existingSupplierDropdownFocus.requestFocus();
+                                  controller.selectedSupplier.value = val;
+                                },
+                              ),
                             ),
                           ),
                         );
@@ -229,6 +370,7 @@ class AddStockView extends GetView<SupplierController> {
                     const SizedBox(height: AppSpacing.sm),
                     InkWell(
                       onTap: () async {
+                        controller.purchaseDateFocus.requestFocus();
                         final date = await showDatePicker(
                           context: context,
                           initialDate: controller.purchaseDate.value,
@@ -237,9 +379,11 @@ class AddStockView extends GetView<SupplierController> {
                         );
                         if (date != null) controller.purchaseDate.value = date;
                       },
-                      child: Obx(() => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                            decoration: BoxDecoration(
+                      child: Obx(() => BlinkingFocusBuilder(
+                            focusNode: controller.purchaseDateFocus,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              decoration: BoxDecoration(
                               color: isDark ? AppColors.darkElevated : Colors.grey[100],
                               borderRadius: BorderRadius.circular(AppRadius.md),
                               border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey[300]!),
@@ -254,7 +398,7 @@ class AddStockView extends GetView<SupplierController> {
                                 ),
                               ],
                             ),
-                          )),
+                          ))),
                     ),
                   ],
                 ),
@@ -272,11 +416,14 @@ class AddStockView extends GetView<SupplierController> {
                     const SizedBox(height: AppSpacing.sm),
                       InkWell(
                       onTap: () async {
+                         controller.billImageFocus.requestFocus();
                          await controller.pickBatchImage();
                       },
-                      child: Container(
-                        height: 48,
-                        decoration: BoxDecoration(
+                      child: BlinkingFocusBuilder(
+                        focusNode: controller.billImageFocus,
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
                           color: isDark ? AppColors.darkElevated : Colors.grey[100],
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey[300]!),
@@ -297,6 +444,7 @@ class AddStockView extends GetView<SupplierController> {
                         ),
                       ),
                     ),
+                  ),
                   ],
                 ),
               ),
@@ -329,11 +477,18 @@ class AddStockView extends GetView<SupplierController> {
                   color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                 ),
               ),
-              ElevatedButton.icon(
-                onPressed: controller.addBikeEntry,
-                icon: const Icon(LucideIcons.plus, size: 16),
-                label: const Text('Add Row'),
-                style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+              BlinkingFocusBuilder(
+                focusNode: controller.addRowFocus,
+                child: ElevatedButton.icon(
+                  focusNode: controller.addRowFocus,
+                  onPressed: () {
+                    controller.addRowFocus.requestFocus();
+                    controller.addBikeEntry();
+                  },
+                  icon: const Icon(LucideIcons.plus, size: 16),
+                  label: const Text('Add Row'),
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor, foregroundColor: Colors.white),
+                ),
               ),
             ],
           ),
@@ -373,103 +528,147 @@ class AddStockView extends GetView<SupplierController> {
                     // Engine
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
-                        initialValue: entry.engineNumber,
-                        onChanged: (v) => entry.engineNumber = v,
-                        decoration: _inputDecoration('Engine #', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.engineFocus,
+                        child: TextFormField(
+                          initialValue: entry.engineNumber,
+                          focusNode: entry.engineFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => entry.engineNumber = v,
+                          autofocus: controller.bikeEntries.length == 1 && index == 0,
+                          decoration: _inputDecoration('Engine #', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     // Chassis
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
-                        initialValue: entry.chassisNumber,
-                        onChanged: (v) => entry.chassisNumber = v,
-                        decoration: _inputDecoration('Chassis #', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.chassisFocus,
+                        child: TextFormField(
+                          initialValue: entry.chassisNumber,
+                          focusNode: entry.chassisFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => entry.chassisNumber = v,
+                          decoration: _inputDecoration('Chassis #', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        ),
                       ),
                     ),
                      const SizedBox(width: 8),
                     // Brand
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
-                        initialValue: entry.brand,
-                        onChanged: (v) => entry.brand = v,
-                        decoration: _inputDecoration('Brand', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.brandFocus,
+                        child: TextFormField(
+                          initialValue: entry.brand,
+                          focusNode: entry.brandFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => entry.brand = v,
+                          decoration: _inputDecoration('Brand', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     // Model
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
-                        initialValue: entry.model,
-                        onChanged: (v) => entry.model = v,
-                         decoration: _inputDecoration('Model', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.modelFocus,
+                        child: TextFormField(
+                          initialValue: entry.model,
+                          focusNode: entry.modelFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => entry.model = v,
+                           decoration: _inputDecoration('Model', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        ),
                       ),
                     ),
                      const SizedBox(width: 8),
                     // Color
                     Expanded(
                       flex: 2,
-                      child: ColorSkinSelector(
-                        initialValue: entry.color,
-                        onChanged: (v) => entry.color = v,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                        fontSize: 13,
-                        iconSize: 16,
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.colorFocus,
+                        child: Focus(
+                          focusNode: entry.colorFocus,
+                          child: ColorSkinSelector(
+                            initialValue: entry.color,
+                            onChanged: (v) {
+                              entry.colorFocus.requestFocus();
+                              entry.color = v;
+                            },
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                            fontSize: 13,
+                            iconSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                      const SizedBox(width: 8),
                     // Year
                     Expanded(
                       flex: 1,
-                      child: TextFormField(
-                        initialValue: entry.modelYear.toString(),
-                        onChanged: (v) => entry.modelYear = int.tryParse(v) ?? DateTime.now().year,
-                         decoration: _inputDecoration('Year', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
-                        keyboardType: TextInputType.number,
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.yearFocus,
+                        child: TextFormField(
+                          initialValue: entry.modelYear.toString(),
+                          focusNode: entry.yearFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) => entry.modelYear = int.tryParse(v) ?? DateTime.now().year,
+                           decoration: _inputDecoration('Year', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                          keyboardType: TextInputType.number,
+                        ),
                       ),
                     ),
                      const SizedBox(width: 8),
                     // Purchase Price (Per Unit)
                     Expanded(
                       flex: 2,
-                      child: TextFormField(
-                        initialValue: entry.purchasePrice > 0 ? NumberFormat('#,###').format(entry.purchasePrice) : '',
-                        onChanged: (v) {
-                          entry.purchasePrice = double.tryParse(v.replaceAll(',', '')) ?? 0;
-                          controller.calculateTotal(); // Recalculate total on change
-                        },
-                         decoration: _inputDecoration('Price', isDark),
-                        style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [ThousandsSeparatorInputFormatter()],
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.priceFocus,
+                        child: TextFormField(
+                          initialValue: entry.purchasePrice > 0 ? NumberFormat('#,###').format(entry.purchasePrice) : '',
+                          focusNode: entry.priceFocus,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (v) {
+                            entry.purchasePrice = double.tryParse(v.replaceAll(',', '')) ?? 0;
+                            controller.calculateTotal(); // Recalculate total on change
+                          },
+                           decoration: _inputDecoration('Price', isDark),
+                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [ThousandsSeparatorInputFormatter()],
+                        ),
                       ),
                     ),
                      const SizedBox(width: 8),
                      // Image
                      Expanded(
                        flex: 1,
-                       child: InkWell(
-                         onTap: () {
-                           controller.pickEntryImage(index);
-                         },
-                         child: Container(
-                           height: 32,
-                           decoration: BoxDecoration(
-                             border: Border.all(color: Colors.grey),
-                             borderRadius: BorderRadius.circular(4),
+                       child: BlinkingFocusBuilder(
+                         focusNode: entry.imageFocus,
+                         child: InkWell(
+                           onTap: () {
+                             entry.imageFocus.requestFocus();
+                             controller.pickEntryImage(index);
+                           },
+                           child: Container(
+                             height: 32,
+                             decoration: BoxDecoration(
+                               border: Border.all(color: Colors.grey),
+                               borderRadius: BorderRadius.circular(4),
+                             ),
+                             child: entry.imageFile != null 
+                               ? Image.file(entry.imageFile!, fit: BoxFit.cover)
+                               : const Icon(LucideIcons.camera, size: 16, color: Colors.grey),
                            ),
-                           child: entry.imageFile != null 
-                             ? Image.file(entry.imageFile!, fit: BoxFit.cover)
-                             : const Icon(LucideIcons.camera, size: 16, color: Colors.grey),
                          ),
                        ),
                      ),
@@ -530,14 +729,21 @@ class AddStockView extends GetView<SupplierController> {
               )),
             ],
           ),
-          ElevatedButton(
-            onPressed: controller.saveBatch,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          BlinkingFocusBuilder(
+            focusNode: controller.saveBatchFocus,
+            child: ElevatedButton(
+              focusNode: controller.saveBatchFocus,
+              onPressed: () {
+                controller.saveBatchFocus.requestFocus();
+                controller.saveBatch();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: const Text('Save Batch & Add to Inventory', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-            child: const Text('Save Batch & Add to Inventory', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

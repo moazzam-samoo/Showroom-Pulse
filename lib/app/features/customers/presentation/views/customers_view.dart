@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
@@ -17,9 +18,16 @@ class CustomersView extends StatelessWidget {
     Get.put(CustomersController());
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Row(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          Get.offNamed('/dashboard');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: Row(
         children: [
           // Sidebar Navigation (Global App Nav)
           SidebarNavigation(
@@ -68,6 +76,7 @@ class CustomersView extends StatelessWidget {
              ),
           ),
         ],
+      ),
       ),
     );
   }

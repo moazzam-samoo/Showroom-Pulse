@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -39,9 +41,16 @@ class _DashboardViewState extends State<DashboardView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authService = Get.find<AuthService>();
     
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Row(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          _showExitDialog(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: Row(
         children: [
           // Sidebar
           SidebarNavigation(
@@ -146,6 +155,7 @@ class _DashboardViewState extends State<DashboardView> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -265,6 +275,43 @@ class _DashboardViewState extends State<DashboardView> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExitDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text(
+          'Exit Application',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to exit the application?',
+          style: TextStyle(
+            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'No',
+              style: TextStyle(
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => exit(0),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Yes, Exit', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
