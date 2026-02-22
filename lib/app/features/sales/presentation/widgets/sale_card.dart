@@ -51,11 +51,14 @@ class SaleCardData {
   final double? installmentMonthlyPayment;
   final String? installmentDueDate;
   
-  // Witness Details (for backward compatibility - primary witness)
   final String? witnessName;
   final String? witnessCnic;
   final String? witnessPhone;
   final String? witnessImage;
+
+  // Discount details
+  final double discountAmount;
+  final double discountPercentage;
   
   // All witnesses (supports multiple witnesses)
   final List<WitnessData>? witnesses;
@@ -88,7 +91,9 @@ class SaleCardData {
     this.witnessCnic,
     this.witnessPhone,
     this.witnessImage,
-    this.witnesses,
+    this.witnesses = const [],
+    this.discountAmount = 0.0,
+    this.discountPercentage = 0.0,
     this.isInstallmentCompleted = false,
   });
 }
@@ -245,6 +250,38 @@ class SaleCard extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (data.discountAmount > 0) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.orange.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.tags, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                '- ${data.discountPercentage.toStringAsFixed(1)}%',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -316,12 +353,21 @@ class SaleCard extends StatelessWidget {
                       isDark: isDark,
                     ),
                     const SizedBox(height: 6),
-                    _buildInfoRow(
-                      label: 'Due Date:',
-                      value: data.installmentDueDate ?? '-',
-                      valueColor: const Color(0xFFEF4444), // Red for due date
-                      isDark: isDark,
-                    ),
+                    if (data.isInstallmentCompleted) ...[
+                      _buildInfoRow(
+                        label: 'Status:',
+                        value: 'Completed',
+                        valueColor: const Color(0xFF22C55E), // Green
+                        isDark: isDark,
+                      ),
+                    ] else ...[
+                      _buildInfoRow(
+                        label: 'Due Date:',
+                        value: data.installmentDueDate ?? '-',
+                        valueColor: const Color(0xFFEF4444), // Red for due date
+                        isDark: isDark,
+                      ),
+                    ],
                   ],
 
                   const SizedBox(height: AppSpacing.sm),
