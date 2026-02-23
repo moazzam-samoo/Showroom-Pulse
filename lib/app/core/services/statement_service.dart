@@ -10,6 +10,10 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/features/installments/presentation/controllers/installments_controller.dart';
+import 'package:get/get.dart';
+import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/data/models/app_settings.dart';
 
 /// Statement PDF generation service
 class StatementService {
@@ -23,8 +27,11 @@ class StatementService {
   /// Generate a single customer statement PDF and save to Downloads
   Future<String?> generateSingleStatement(ContractDisplayData data) async {
     try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+
       final pdf = pw.Document();
-      _addStatementPage(pdf, data);
+      _addStatementPage(pdf, data, settings);
 
       final outputPath = await _getDownloadsPath();
       final sanitizedName = data.customer.fullName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
@@ -42,10 +49,13 @@ class StatementService {
   /// Generate a combined PDF with all contracts
   Future<String?> generateGlobalStatement(List<ContractDisplayData> allData) async {
     try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+
       final pdf = pw.Document();
 
       for (final data in allData) {
-        _addStatementPage(pdf, data);
+        _addStatementPage(pdf, data, settings);
       }
 
       final outputPath = await _getDownloadsPath();
@@ -63,12 +73,15 @@ class StatementService {
   /// Generate individual PDFs for each contract and bundle into a ZIP
   Future<String?> generateGlobalZip(List<ContractDisplayData> allData) async {
     try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+
       final archive = Archive();
       final dateStamp = DateFormat('yyyyMMdd').format(DateTime.now());
 
       for (final data in allData) {
         final pdf = pw.Document();
-        _addStatementPage(pdf, data);
+        _addStatementPage(pdf, data, settings);
 
         final sanitizedName = data.customer.fullName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
         final fileName = 'Statement_$sanitizedName.pdf';
@@ -93,7 +106,7 @@ class StatementService {
     }
   }
 
-  void _addStatementPage(pw.Document pdf, ContractDisplayData data) {
+  void _addStatementPage(pw.Document pdf, ContractDisplayData data, AppSettings settings) {
     final contract = data.contract;
     final customer = data.customer;
     final bike = data.bike;
@@ -103,7 +116,7 @@ class StatementService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
-        header: (context) => _buildHeader(context),
+        header: (context) => _buildHeader(context, settings),
         footer: (context) => _buildFooter(context),
         build: (context) => [
           // Customer & Bike Info
@@ -134,15 +147,33 @@ class StatementService {
     );
   }
 
-  pw.Widget _buildHeader(pw.Context context) {
+  pw.Widget _buildHeader(pw.Context context, AppSettings settings) {
+    pw.Widget? logoWidget;
+    if (settings.showroomLogoPath != null) {
+      final file = File(settings.showroomLogoPath!);
+      if (file.existsSync()) {
+        final image = pw.MemoryImage(file.readAsBytesSync());
+        logoWidget = pw.Image(image, width: 40, height: 40);
+      }
+    }
+
     return pw.Column(
       children: [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text(
-              'Tahir Showroom',
-              style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+            pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.center,
+              children: [
+                if (logoWidget != null) ...[
+                  logoWidget,
+                  pw.SizedBox(width: 8),
+                ],
+                pw.Text(
+                  settings.showroomName.isNotEmpty ? settings.showroomName : 'Tahir Showroom',
+                  style: pw.TextStyle(fontSize: settings.showroomName.length > 20 ? 16 : 22, fontWeight: pw.FontWeight.bold),
+                ),
+              ],
             ),
             pw.Text(
               'Installment Statement',

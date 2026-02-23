@@ -124,6 +124,28 @@ class FileService extends GetxService {
 
 
 
+  /// Get path to the showroom logo
+  Future<String> getShowroomLogoPath() async {
+    final path = p.join(mediaPath, 'Settings');
+    final directory = Directory(path);
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    return p.join(path, 'logo.jpg');
+  }
+
+  /// Save showroom logo
+  Future<String?> saveShowroomLogo(File sourceFile) async {
+    try {
+      final logoPath = await getShowroomLogoPath();
+      final savedFile = await sourceFile.copy(logoPath);
+      return savedFile.path;
+    } catch (e) {
+      debugPrint('Error saving showroom logo: $e');
+      return null;
+    }
+  }
+
   // --- Supplier Media ---
 
   String get suppliersMediaPath => p.join(mediaPath, 'Suppliers');

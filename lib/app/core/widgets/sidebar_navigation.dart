@@ -13,12 +13,12 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 /// - Active state with cyan glow (Dark) / light blue (Light)
 class SidebarNavigation extends StatelessWidget {
   final int selectedIndex;
-  final ValueChanged<int> onItemSelected;
+  final ValueChanged<int>? onItemSelected;
 
   const SidebarNavigation({
     super.key,
     required this.selectedIndex,
-    required this.onItemSelected,
+    this.onItemSelected,
   });
 
   @override
@@ -125,8 +125,10 @@ class SidebarNavigation extends StatelessWidget {
         onTap: () {
           if (isLogout) {
             _handleLogout();
+          } else if (onItemSelected != null) {
+            onItemSelected!(index);
           } else {
-            onItemSelected(index);
+            _handleNavigation(index);
           }
         },
         child: Container(
@@ -181,6 +183,37 @@ class SidebarNavigation extends StatelessWidget {
     
     if (confirmed == true) {
       Get.offAllNamed('/login');
+    }
+  }
+
+  void _handleNavigation(int index) {
+    if (index == selectedIndex) return;
+    
+    switch (index) {
+      case 0:
+        Get.offNamed('/dashboard');
+        break;
+      case 1:
+        Get.offNamed('/procurement');
+        break;
+      case 2:
+        Get.offNamed('/inventory');
+        break;
+      case 3:
+        Get.offNamed('/sales');
+        break;
+      case 4:
+        Get.offNamed('/installments');
+        break;
+      case 5:
+        Get.offNamed('/customers');
+        break;
+      case 6:
+        Get.offNamed('/reports');
+        break;
+      case 7:
+        Get.offNamed('/settings');
+        break;
     }
   }
 }

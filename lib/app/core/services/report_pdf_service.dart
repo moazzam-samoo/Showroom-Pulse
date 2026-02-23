@@ -5,6 +5,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import 'package:get/get.dart';
+import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/expense.dart';
 
 /// PDF generation service for Reports & Revenue tabs
@@ -38,6 +42,9 @@ class ReportPdfService {
     required Map<String, int> stockDistribution,
   }) async {
     try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+
       final pdf = pw.Document();
       final monthYear = _monthYearFormat.format(DateTime(year, month));
 
@@ -45,7 +52,7 @@ class ReportPdfService {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Profit Report', monthYear),
+          header: (context) => _buildHeader(context, 'Profit Report', monthYear, settings),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit),
@@ -77,6 +84,9 @@ class ReportPdfService {
     required List<Expense> expenses,
   }) async {
     try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+
       final pdf = pw.Document();
       final monthYear = _monthYearFormat.format(DateTime(year, month));
 
@@ -84,7 +94,7 @@ class ReportPdfService {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Revenue & Expense Statement', monthYear),
+          header: (context) => _buildHeader(context, 'Revenue & Expense Statement', monthYear, settings),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit, isRevenue: true),
@@ -109,7 +119,16 @@ class ReportPdfService {
   //  SHARED COMPONENTS
   // ═══════════════════════════════════════════════════════════
 
-  pw.Widget _buildHeader(pw.Context context, String title, String monthYear) {
+  pw.Widget _buildHeader(pw.Context context, String title, String monthYear, AppSettings settings) {
+    pw.Widget? logoWidget;
+    if (settings.showroomLogoPath != null) {
+      final file = File(settings.showroomLogoPath!);
+      if (file.existsSync()) {
+        final image = pw.MemoryImage(file.readAsBytesSync());
+        logoWidget = pw.Image(image, width: 40, height: 40);
+      }
+    }
+
     return pw.Column(
       children: [
         pw.Row(
@@ -119,9 +138,18 @@ class ReportPdfService {
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(
-                  'AL-TAHIR SHOWROOM',
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                  children: [
+                    if (logoWidget != null) ...[
+                      logoWidget,
+                      pw.SizedBox(width: 8),
+                    ],
+                    pw.Text(
+                      settings.showroomName.isNotEmpty ? settings.showroomName : 'AL-TAHIR SHOWROOM',
+                      style: pw.TextStyle(fontSize: settings.showroomName.length > 20 ? 16 : 22, fontWeight: pw.FontWeight.bold),
+                    ),
+                  ],
                 ),
                 pw.SizedBox(height: 2),
                 pw.Text(
