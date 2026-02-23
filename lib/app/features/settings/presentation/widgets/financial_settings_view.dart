@@ -91,7 +91,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: settings.emiRounding,
+                  value: ['Off', 'Nearest 10', 'Nearest 50', 'Nearest 100'].contains(settings.emiRounding) 
+                      ? settings.emiRounding 
+                      : 'Off',
                   dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                   isDense: true,
                   style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),

@@ -34,7 +34,16 @@ class ReportsRepository {
 
       final pPrice = bike.purchasePrice.isNaN ? 0.0 : bike.purchasePrice;
       final sPrice = bike.cashSalePrice.isNaN ? 0.0 : bike.cashSalePrice;
-      final dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      
+      double dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      // Fallback for legacy cash sales where discountAmount was not explicitly saved
+      if (sale.saleType == SaleType.cash && dAmt == 0.0) {
+        final double received = sale.receivedAmount.isNaN ? 0.0 : sale.receivedAmount;
+        if (received > 0 && received < sPrice) {
+          dAmt = sPrice - received;
+        }
+      }
+      
       final baseProfit = sPrice - pPrice - dAmt;
 
       if (sale.saleType == SaleType.cash) {
@@ -73,7 +82,16 @@ class ReportsRepository {
 
       final pPrice = bike.purchasePrice.isNaN ? 0.0 : bike.purchasePrice;
       final sPrice = bike.cashSalePrice.isNaN ? 0.0 : bike.cashSalePrice;
-      final dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      
+      double dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      // Fallback for legacy cash sales
+      if (sale.saleType == SaleType.cash && dAmt == 0.0) {
+        final double received = sale.receivedAmount.isNaN ? 0.0 : sale.receivedAmount;
+        if (received > 0 && received < sPrice) {
+          dAmt = sPrice - received;
+        }
+      }
+      
       final baseProfit = sPrice - pPrice - dAmt;
 
       if (sale.saleType == SaleType.cash) {
@@ -155,7 +173,16 @@ class ReportsRepository {
       final day = sale.saleDate.day;
       final pPrice = bike.purchasePrice.isNaN ? 0.0 : bike.purchasePrice;
       final sPrice = bike.cashSalePrice.isNaN ? 0.0 : bike.cashSalePrice;
-      final dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      
+      double dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
+      // Fallback for legacy cash sales
+      if (sale.saleType == SaleType.cash && dAmt == 0.0) {
+        final double received = sale.receivedAmount.isNaN ? 0.0 : sale.receivedAmount;
+        if (received > 0 && received < sPrice) {
+          dAmt = sPrice - received;
+        }
+      }
+      
       final baseProfit = sPrice - pPrice - dAmt;
 
       if (sale.saleType == SaleType.cash) {
