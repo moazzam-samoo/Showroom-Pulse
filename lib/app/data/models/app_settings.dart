@@ -24,6 +24,36 @@ class AppSettings {
   /// Current theme (dark/light)
   bool isDarkTheme = true;
 
+  // -- NEW FIELDS FROM SETTINGS UI UPDATE --
+
+  /// Showroom Name (General Settings)
+  String showroomName = 'AL-TAHIR SHOWROOM';
+
+  /// Showroom Logo path (General Settings)
+  String? showroomLogoPath;
+
+  /// Showroom Address (General Settings)
+  String? showroomAddress;
+
+  /// Showroom Phone (General Settings)
+  String? showroomPhone;
+
+  /// Currency Symbol (General Settings)
+  String currencySymbol = 'Rs';
+
+  /// Date Format (General Settings)
+  String dateFormat = 'dd/MM/yyyy';
+
+  /// PDF Download Location (General Settings)
+  String? pdfDownloadLocation;
+
+  /// EMI Rounding Setting (Financials)
+  /// e.g. 'Off', 'Nearest 10', 'Nearest 50', 'Nearest 100'
+  String emiRounding = 'Nearest 50';
+
+  /// Default Expense Categories (Financials, comma separated)
+  String defaultExpenseCategories = 'Building Rent,Electricity,Snacks/Tea,Salaries,Maintenance';
+
   /// Last backup date
   DateTime? lastBackupDate;
 }
