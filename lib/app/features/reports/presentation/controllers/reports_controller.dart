@@ -4,7 +4,8 @@ import 'package:get/get.dart';
 import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
-import '../../data/repositories/reports_repository.dart';
+import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
+import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
 
 class ReportsController extends GetxController {
   late final ReportsRepository _repository;
@@ -71,7 +72,47 @@ class ReportsController extends GetxController {
       stockDistribution.assignAll(results[3] as Map<String, int>);
       profitByBrand.assignAll(results[4] as Map<String, Map<String, double>>);
       expenses.assignAll(results[5] as List<Expense>);
+      // 7. Expense Categories
       expenseCategories.assignAll(results[6] as List<String>);
+      
+      // Merge default categories from settings
+      try {
+        final settingsRepo = SettingsRepository(Get.find<IsarService>());
+        final settings = await settingsRepo.getSettings();
+        if (settings.defaultExpenseCategories.isNotEmpty) {
+          final defaults = settings.defaultExpenseCategories
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+          
+          bool addedNew = false;
+          for (final cat in defaults) {
+            if (!expenseCategories.contains(cat)) {
+              expenseCategories.add(cat);
+              addedNew = true;
+            }
+          }
+          if (addedNew) {
+            expenseCategories.sort();
+          }
+        }
+      } catch (e) {
+        debugPrint('Error merging default expense categories: $e');
+      }
+
+      // If still empty, provide basic defaults
+      if (expenseCategories.isEmpty) {
+        expenseCategories.assignAll([
+          'Rent',
+          'Salaries',
+          'Utilities',
+          'Marketing',
+          'Maintenance',
+          'Supplies',
+          'Other',
+        ]);
+      }
       revenueTrend.assignAll(results[7] as List<MapEntry<String, double>>);
     } catch (e) {
       debugPrint('Error loading reports data: $e');

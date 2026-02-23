@@ -54,18 +54,10 @@ class InstallmentCalculator {
 
     double rawEMI = loanAmount / months;
     
-    // Round EMI to nearest 50 (e.g. 25833 -> 25850)
-    double monthlyEMI = (rawEMI / 50).ceil() * 50.0;
-    
-    // Recalculate totals based on rounded EMI to ensure consistency
-    // New Loan Amount = EMI * Months
-    double newLoanAmount = monthlyEMI * months;
-    
-    // New Grand Total = Down Payment + New Loan Amount
-    grandTotal = downPayment + newLoanAmount;
-    
-    // Update markup to reflect the rounded total
-    totalMarkup = grandTotal - cashPrice;
+    // Based on user request, automatically round up/down to nearest 100 
+    // Example: 25023 -> 25000, 25080 -> 25100
+    // We ignore the dynamic setting here because the user wants it universally applied
+    double monthlyEMI = (rawEMI / 100).round() * 100.0;
 
     return InstallmentCalculationResult(
       cashPrice: cashPrice,

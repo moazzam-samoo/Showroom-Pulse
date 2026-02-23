@@ -17,6 +17,7 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/utils/form_navigation_manager.dart';
+import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
 
 class NewSaleController extends GetxController {
   // Navigation Manager
@@ -188,6 +189,9 @@ class NewSaleController extends GetxController {
 
   // Calculations
   final calculationResult = Rxn<InstallmentCalculationResult>();
+  
+  // Settings
+  double _defaultMarkupPercentage = 40.0; // Default, will be overwritten by settings
 
   // Processing State
   final isProcessingSale = false.obs;
@@ -279,12 +283,26 @@ class NewSaleController extends GetxController {
 
     // Register fields in Navigation Manager in logical order
     _registerNavigationFields();
+    
+    _loadDefaultSettings();
 
     downPaymentController.addListener(_calculateInstallment);
     discountController.addListener(_calculateInstallment);
     monthsController.addListener(_calculateInstallment);
     markupValueController.addListener(_calculateInstallment);
-    ever(markupType, (_) => _calculateInstallment());
+    ever(markupType, (type) {
+      // If user switches to Percentage and the field is currently 0, pre-fill it with the settings default
+      if (type == MarkupType.percentage && 
+         (markupValueController.text == '0' || markupValueController.text.isEmpty)) {
+        markupValueController.text = _defaultMarkupPercentage.toStringAsFixed(0);
+      } 
+      // If user switches back to Fixed and it's equal to the percentage default, reset to 0
+      else if (type == MarkupType.fixed && 
+               markupValueController.text == _defaultMarkupPercentage.toStringAsFixed(0)) {
+        markupValueController.text = '0';
+      }
+      _calculateInstallment();
+    });
     ever(
         selectedBike,
         (_) =>
@@ -394,6 +412,18 @@ class NewSaleController extends GetxController {
       isFilled: () => markupValueController.text.trim().isNotEmpty,
       order: 62,
     );
+  }
+
+  Future<void> _loadDefaultSettings() async {
+    try {
+      final settingsRepo = SettingsRepository(Get.find<IsarService>());
+      final settings = await settingsRepo.getSettings();
+      
+      // Store default markup but DO NOT instantly apply it to the UI (user requested Fixed/0 behavior by default)
+      _defaultMarkupPercentage = settings.defaultMarkupPercentage;
+    } catch (e) {
+      print('Could not load default settings: $e');
+    }
   }
 
   Future<void> loadAvailableBikes() async {
