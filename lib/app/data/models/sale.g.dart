@@ -27,34 +27,44 @@ const SaleSchema = CollectionSchema(
       name: r'customerId',
       type: IsarType.long,
     ),
-    r'installmentContractId': PropertySchema(
+    r'discountAmount': PropertySchema(
       id: 2,
+      name: r'discountAmount',
+      type: IsarType.double,
+    ),
+    r'discountPercentage': PropertySchema(
+      id: 3,
+      name: r'discountPercentage',
+      type: IsarType.double,
+    ),
+    r'installmentContractId': PropertySchema(
+      id: 4,
       name: r'installmentContractId',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'notes',
       type: IsarType.string,
     ),
     r'receivedAmount': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'receivedAmount',
       type: IsarType.double,
     ),
     r'saleDate': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'saleDate',
       type: IsarType.dateTime,
     ),
     r'saleType': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'saleType',
       type: IsarType.byte,
       enumMap: _SalesaleTypeEnumValueMap,
     ),
     r'totalAmount': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'totalAmount',
       type: IsarType.double,
     )
@@ -96,12 +106,14 @@ void _saleSerialize(
 ) {
   writer.writeLong(offsets[0], object.bikeId);
   writer.writeLong(offsets[1], object.customerId);
-  writer.writeLong(offsets[2], object.installmentContractId);
-  writer.writeString(offsets[3], object.notes);
-  writer.writeDouble(offsets[4], object.receivedAmount);
-  writer.writeDateTime(offsets[5], object.saleDate);
-  writer.writeByte(offsets[6], object.saleType.index);
-  writer.writeDouble(offsets[7], object.totalAmount);
+  writer.writeDouble(offsets[2], object.discountAmount);
+  writer.writeDouble(offsets[3], object.discountPercentage);
+  writer.writeLong(offsets[4], object.installmentContractId);
+  writer.writeString(offsets[5], object.notes);
+  writer.writeDouble(offsets[6], object.receivedAmount);
+  writer.writeDateTime(offsets[7], object.saleDate);
+  writer.writeByte(offsets[8], object.saleType.index);
+  writer.writeDouble(offsets[9], object.totalAmount);
 }
 
 Sale _saleDeserialize(
@@ -113,15 +125,17 @@ Sale _saleDeserialize(
   final object = Sale();
   object.bikeId = reader.readLong(offsets[0]);
   object.customerId = reader.readLong(offsets[1]);
+  object.discountAmount = reader.readDouble(offsets[2]);
+  object.discountPercentage = reader.readDouble(offsets[3]);
   object.id = id;
-  object.installmentContractId = reader.readLongOrNull(offsets[2]);
-  object.notes = reader.readStringOrNull(offsets[3]);
-  object.receivedAmount = reader.readDouble(offsets[4]);
-  object.saleDate = reader.readDateTime(offsets[5]);
+  object.installmentContractId = reader.readLongOrNull(offsets[4]);
+  object.notes = reader.readStringOrNull(offsets[5]);
+  object.receivedAmount = reader.readDouble(offsets[6]);
+  object.saleDate = reader.readDateTime(offsets[7]);
   object.saleType =
-      _SalesaleTypeValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+      _SalesaleTypeValueEnumMap[reader.readByteOrNull(offsets[8])] ??
           SaleType.cash;
-  object.totalAmount = reader.readDouble(offsets[7]);
+  object.totalAmount = reader.readDouble(offsets[9]);
   return object;
 }
 
@@ -137,17 +151,21 @@ P _saleDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P;
-    case 3:
-      return (reader.readStringOrNull(offset)) as P;
-    case 4:
       return (reader.readDouble(offset)) as P;
+    case 3:
+      return (reader.readDouble(offset)) as P;
+    case 4:
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readDouble(offset)) as P;
+    case 7:
+      return (reader.readDateTime(offset)) as P;
+    case 8:
       return (_SalesaleTypeValueEnumMap[reader.readByteOrNull(offset)] ??
           SaleType.cash) as P;
-    case 7:
+    case 9:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -351,6 +369,130 @@ extension SaleQueryFilter on QueryBuilder<Sale, Sale, QFilterCondition> {
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'discountAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'discountAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'discountAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'discountAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountPercentageEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'discountPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountPercentageGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'discountPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountPercentageLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'discountPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterFilterCondition> discountPercentageBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'discountPercentage',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -883,6 +1025,30 @@ extension SaleQuerySortBy on QueryBuilder<Sale, Sale, QSortBy> {
     });
   }
 
+  QueryBuilder<Sale, Sale, QAfterSortBy> sortByDiscountAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> sortByDiscountAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> sortByDiscountPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> sortByDiscountPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountPercentage', Sort.desc);
+    });
+  }
+
   QueryBuilder<Sale, Sale, QAfterSortBy> sortByInstallmentContractId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'installmentContractId', Sort.asc);
@@ -978,6 +1144,30 @@ extension SaleQuerySortThenBy on QueryBuilder<Sale, Sale, QSortThenBy> {
   QueryBuilder<Sale, Sale, QAfterSortBy> thenByCustomerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'customerId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> thenByDiscountAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> thenByDiscountAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> thenByDiscountPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QAfterSortBy> thenByDiscountPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'discountPercentage', Sort.desc);
     });
   }
 
@@ -1079,6 +1269,18 @@ extension SaleQueryWhereDistinct on QueryBuilder<Sale, Sale, QDistinct> {
     });
   }
 
+  QueryBuilder<Sale, Sale, QDistinct> distinctByDiscountAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'discountAmount');
+    });
+  }
+
+  QueryBuilder<Sale, Sale, QDistinct> distinctByDiscountPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'discountPercentage');
+    });
+  }
+
   QueryBuilder<Sale, Sale, QDistinct> distinctByInstallmentContractId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'installmentContractId');
@@ -1133,6 +1335,18 @@ extension SaleQueryProperty on QueryBuilder<Sale, Sale, QQueryProperty> {
   QueryBuilder<Sale, int, QQueryOperations> customerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'customerId');
+    });
+  }
+
+  QueryBuilder<Sale, double, QQueryOperations> discountAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'discountAmount');
+    });
+  }
+
+  QueryBuilder<Sale, double, QQueryOperations> discountPercentageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'discountPercentage');
     });
   }
 

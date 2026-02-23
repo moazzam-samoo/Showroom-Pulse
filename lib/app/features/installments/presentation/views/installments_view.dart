@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -22,9 +23,16 @@ class InstallmentsView extends StatelessWidget {
     final controller = Get.put(InstallmentsController());
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Row(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          Get.offNamed('/dashboard');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: Row(
         children: [
           // Sidebar Navigation
           SidebarNavigation(
@@ -58,6 +66,7 @@ class InstallmentsView extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

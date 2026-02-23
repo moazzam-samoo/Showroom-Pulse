@@ -57,6 +57,10 @@ dependencies:
   # ZIP Archive
   archive: ^3.4.10
 
+  # Local Desktop Notifications
+  local_notifier: ^0.1.6
+  tray_manager: ^0.5.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -66,3 +70,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  assets:
+    - assets/app_icon.ico

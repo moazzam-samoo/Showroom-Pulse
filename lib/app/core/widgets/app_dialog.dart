@@ -52,34 +52,20 @@ class AppDialog extends StatelessWidget {
     final titleColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final closeIconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    return FocusableActionDetector(
-      autofocus: true, // Capture focus immediately
-      shortcuts: <ShortcutActivator, Intent>{
-        const SingleActivator(LogicalKeyboardKey.escape): const CancelIntent(),
-        if (onSubmit != null)
-           const SingleActivator(LogicalKeyboardKey.enter): const SubmitIntent(),
-      },
-      actions: <Type, Action<Intent>>{
-        CancelIntent: CallbackAction<CancelIntent>(
-          onInvoke: (intent) {
+    return Dialog(
+      backgroundColor: dialogBg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: KeyboardListener(
+        focusNode: FocusNode()..requestFocus(),
+        onKeyEvent: (KeyEvent event) {
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
             if (onCancel != null) {
               onCancel!();
             } else {
               Navigator.of(context).pop();
             }
-            return null;
-          },
-        ),
-        SubmitIntent: CallbackAction<SubmitIntent>(
-          onInvoke: (intent) {
-            onSubmit?.call();
-            return null;
-          },
-        ),
-      },
-      child: Dialog(
-        backgroundColor: dialogBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          }
+        },
         child: Container(
           width: width,
           padding: const EdgeInsets.all(24),
@@ -118,7 +104,13 @@ class AppDialog extends StatelessWidget {
                     ],
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      if (onCancel != null) {
+                        onCancel!();
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
                     tooltip: 'Close (Esc)',
                     icon: Icon(Icons.close, color: closeIconColor),
                   ),

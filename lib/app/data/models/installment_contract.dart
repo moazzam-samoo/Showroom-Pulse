@@ -88,6 +88,12 @@ class InstallmentContract {
   /// Notes
   String? notes;
 
+  /// Discount given on the cash price (Amount in Currency)
+  double discountAmount = 0.0;
+
+  /// Discount given on the cash price (Percentage)
+  double discountPercentage = 0.0;
+
   /// Calculate remaining balance
   double get remainingBalance => totalAmount - totalPaid;
 

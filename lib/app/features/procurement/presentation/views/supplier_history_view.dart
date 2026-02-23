@@ -13,7 +13,11 @@ import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:flutter/services.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
+import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
   const SupplierHistoryView({super.key});
@@ -367,6 +371,51 @@ class SupplierHistoryView extends GetView<SupplierController> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
+    final nameFocus = FocusNode();
+    final phoneFocus = FocusNode();
+    final cnicFocus = FocusNode();
+    final profilePicFocus = FocusNode();
+    final cnicPicFocus = FocusNode();
+    final submitFocus = FocusNode();
+
+    void handleKeyboardNavigation(KeyEvent event) {
+      if (event is KeyDownEvent) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
+          if (nameFocus.hasFocus) {
+            phoneFocus.requestFocus();
+          } else if (phoneFocus.hasFocus) {
+            cnicFocus.requestFocus();
+          } else if (cnicFocus.hasFocus) {
+            profilePicFocus.requestFocus();
+          } else if (profilePicFocus.hasFocus) {
+            if (event.logicalKey == LogicalKeyboardKey.enter) {
+              controller.pickSupplierProfilePic();
+            } else {
+              cnicPicFocus.requestFocus();
+            }
+          } else if (cnicPicFocus.hasFocus) {
+            if (event.logicalKey == LogicalKeyboardKey.enter) {
+              controller.pickSupplierCnicPic();
+            } else {
+              submitFocus.requestFocus();
+            }
+          }
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+          if (submitFocus.hasFocus) {
+            cnicPicFocus.requestFocus();
+          } else if (cnicPicFocus.hasFocus) {
+            profilePicFocus.requestFocus();
+          } else if (profilePicFocus.hasFocus) {
+            cnicFocus.requestFocus();
+          } else if (cnicFocus.hasFocus) {
+            phoneFocus.requestFocus();
+          } else if (phoneFocus.hasFocus) {
+            nameFocus.requestFocus();
+          }
+        }
+      }
+    }
+
     Get.dialog(
       AppDialog(
         title: supplier == null ? 'Add New Supplier' : 'Edit Supplier',
@@ -388,6 +437,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 profilePic: controller.newSupplierProfilePic.value,
                 cnicPic: controller.newSupplierCnicPic.value,
               );
+              Get.back();
               Get.snackbar('Success', 'Supplier updated successfully');
             } else {
               await controller.createSupplier(
@@ -397,41 +447,67 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 controller.newSupplierProfilePic.value, 
                 cnicPic: controller.newSupplierCnicPic.value,
               );
+              Get.back();
               Get.snackbar('Success', 'Supplier added successfully');
             }
-            Get.back();
         },
-        child: Column(
+        child: KeyboardListener(
+          focusNode: FocusNode(), // Not requested focus because inputs have focus
+          onKeyEvent: handleKeyboardNavigation,
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Form
-              TextFormField(
-                controller: controller.newSupplierName,
-                autofocus: true, // Auto-focus first field
-                textInputAction: TextInputAction.next,
-                decoration: _inputDecoration('Supplier Name', isDark),
-                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              BlinkingFocusBuilder(
+                focusNode: nameFocus,
+                child: TextFormField(
+                  controller: controller.newSupplierName,
+                  focusNode: nameFocus,
+                  autofocus: true, // Auto-focus first field
+                  textInputAction: TextInputAction.next,
+                  decoration: _inputDecoration('Supplier Name', isDark),
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
                   Expanded(
-                    child: TextFormField(
-                      controller: controller.newSupplierPhone,
-                      textInputAction: TextInputAction.next,
-                      decoration: _inputDecoration('Phone', isDark),
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-                      keyboardType: TextInputType.phone,
+                    child: BlinkingFocusBuilder(
+                      focusNode: phoneFocus,
+                      child: TextFormField(
+                        controller: controller.newSupplierPhone,
+                        focusNode: phoneFocus,
+                        textInputAction: TextInputAction.next,
+                        decoration: _inputDecoration('Phone', isDark),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          PhoneNumberInputFormatter(),
+                          LengthLimitingTextInputFormatter(12),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: TextFormField(
-                      controller: controller.newSupplierCnic,
-                      textInputAction: TextInputAction.done,
-                      decoration: _inputDecoration('CNIC', isDark),
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    child: BlinkingFocusBuilder(
+                      focusNode: cnicFocus,
+                      child: TextFormField(
+                        controller: controller.newSupplierCnic,
+                        focusNode: cnicFocus,
+                        textInputAction: TextInputAction.done,
+                        decoration: _inputDecoration('CNIC', isDark),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          CnicInputFormatter(),
+                          LengthLimitingTextInputFormatter(15),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -442,26 +518,38 @@ class SupplierHistoryView extends GetView<SupplierController> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildImagePicker(
-                      label: supplier?.profilePicFilename != null && controller.newSupplierProfilePic.value == null 
-                          ? 'Update Profile Pic' 
-                          : 'Profile Picture',
-                      imageRx: controller.newSupplierProfilePic,
-                      onTap: controller.pickSupplierProfilePic,
-                      isDark: isDark,
-                      primaryColor: primaryColor,
+                    child: BlinkingFocusBuilder(
+                      focusNode: profilePicFocus,
+                      child: _buildImagePicker(
+                        label: supplier?.profilePicFilename != null && controller.newSupplierProfilePic.value == null 
+                            ? 'Update Profile Pic' 
+                            : 'Profile Picture',
+                        imageRx: controller.newSupplierProfilePic,
+                        onTap: () {
+                          profilePicFocus.requestFocus();
+                          controller.pickSupplierProfilePic();
+                        },
+                        isDark: isDark,
+                        primaryColor: primaryColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: _buildImagePicker(
-                      label: supplier?.cnicPicFilename != null && controller.newSupplierCnicPic.value == null 
-                          ? 'Update CNIC Img' 
-                          : 'CNIC Image',
-                      imageRx: controller.newSupplierCnicPic,
-                      onTap: controller.pickSupplierCnicPic,
-                      isDark: isDark,
-                      primaryColor: primaryColor,
+                    child: BlinkingFocusBuilder(
+                      focusNode: cnicPicFocus,
+                      child: _buildImagePicker(
+                        label: supplier?.cnicPicFilename != null && controller.newSupplierCnicPic.value == null 
+                            ? 'Update CNIC Img' 
+                            : 'CNIC Image',
+                        imageRx: controller.newSupplierCnicPic,
+                        onTap: () {
+                          cnicPicFocus.requestFocus();
+                          controller.pickSupplierCnicPic();
+                        },
+                        isDark: isDark,
+                        primaryColor: primaryColor,
+                      ),
                     ),
                   ),
                 ],
@@ -478,47 +566,53 @@ class SupplierHistoryView extends GetView<SupplierController> {
                     child: const Text('Cancel (Esc)'),
                   ),
                   const SizedBox(width: AppSpacing.md),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (controller.newSupplierName.text.isEmpty || 
-                          controller.newSupplierPhone.text.isEmpty) {
-                        Get.snackbar('Error', 'Name and Phone are required');
-                        return;
-                      }
+                  BlinkingFocusBuilder(
+                    focusNode: submitFocus,
+                    child: ElevatedButton(
+                      focusNode: submitFocus,
+                      onPressed: () async {
+                        if (controller.newSupplierName.text.isEmpty || 
+                            controller.newSupplierPhone.text.isEmpty) {
+                          Get.snackbar('Error', 'Name and Phone are required');
+                          return;
+                        }
 
-                      if (supplier != null) {
-                        await controller.updateSupplier(
-                          supplier,
-                          controller.newSupplierName.text,
-                          controller.newSupplierCnic.text,
-                          controller.newSupplierPhone.text,
-                          profilePic: controller.newSupplierProfilePic.value,
-                          cnicPic: controller.newSupplierCnicPic.value,
-                        );
-                        Get.snackbar('Success', 'Supplier updated successfully');
-                      } else {
-                        await controller.createSupplier(
-                          controller.newSupplierName.text,
-                          controller.newSupplierCnic.text,
-                          controller.newSupplierPhone.text,
-                          controller.newSupplierProfilePic.value, 
-                          cnicPic: controller.newSupplierCnicPic.value,
-                        );
-                        Get.snackbar('Success', 'Supplier added successfully');
-                      }
-                      Get.back();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        if (supplier != null) {
+                          await controller.updateSupplier(
+                            supplier,
+                            controller.newSupplierName.text,
+                            controller.newSupplierCnic.text,
+                            controller.newSupplierPhone.text,
+                            profilePic: controller.newSupplierProfilePic.value,
+                            cnicPic: controller.newSupplierCnicPic.value,
+                          );
+                          Get.back();
+                          Get.snackbar('Success', 'Supplier updated successfully');
+                        } else {
+                          await controller.createSupplier(
+                            controller.newSupplierName.text,
+                            controller.newSupplierCnic.text,
+                            controller.newSupplierPhone.text,
+                            controller.newSupplierProfilePic.value, 
+                            cnicPic: controller.newSupplierCnicPic.value,
+                          );
+                          Get.back();
+                          Get.snackbar('Success', 'Supplier added successfully');
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: Text(supplier == null ? 'Add Supplier (Enter)' : 'Update Supplier (Enter)'),
                     ),
-                    child: Text(supplier == null ? 'Add Supplier (Enter)' : 'Update Supplier (Enter)'),
                   ),
                 ],
               ),
             ],
           ),
+        ),
       ),
     );
   }

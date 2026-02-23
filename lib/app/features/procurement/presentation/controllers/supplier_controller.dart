@@ -18,6 +18,27 @@ class BikeEntry {
   double purchasePrice = 0.0;
   File? imageFile;
   Bike? existingBike; // For Edit Mode
+
+  // Focus Nodes for Keyboard Navigation
+  final FocusNode engineFocus = FocusNode();
+  final FocusNode chassisFocus = FocusNode();
+  final FocusNode brandFocus = FocusNode();
+  final FocusNode modelFocus = FocusNode();
+  final FocusNode colorFocus = FocusNode();
+  final FocusNode yearFocus = FocusNode();
+  final FocusNode priceFocus = FocusNode();
+  final FocusNode imageFocus = FocusNode();
+
+  void dispose() {
+    engineFocus.dispose();
+    chassisFocus.dispose();
+    brandFocus.dispose();
+    modelFocus.dispose();
+    colorFocus.dispose();
+    yearFocus.dispose();
+    priceFocus.dispose();
+    imageFocus.dispose();
+  }
 }
 
 class SupplierController extends GetxController {
@@ -43,6 +64,18 @@ class SupplierController extends GetxController {
   final RxList<BikeEntry> bikeEntries = <BikeEntry>[].obs;
   final RxDouble totalBatchCost = 0.0.obs;
 
+  // Focus Nodes for Keyboard Navigation
+  final FocusNode newSupplierNameFocus = FocusNode();
+  final FocusNode newSupplierPhoneFocus = FocusNode();
+  final FocusNode newSupplierCnicFocus = FocusNode();
+  final FocusNode newSupplierProfilePicFocus = FocusNode();
+  final FocusNode newSupplierCnicPicFocus = FocusNode();
+  final FocusNode existingSupplierDropdownFocus = FocusNode();
+  final FocusNode purchaseDateFocus = FocusNode();
+  final FocusNode billImageFocus = FocusNode();
+  final FocusNode addRowFocus = FocusNode();
+  final FocusNode saveBatchFocus = FocusNode();
+
   @override
   void onInit() {
     super.onInit();
@@ -54,6 +87,22 @@ class SupplierController extends GetxController {
     newSupplierName.dispose();
     newSupplierPhone.dispose();
     newSupplierCnic.dispose();
+
+    newSupplierNameFocus.dispose();
+    newSupplierPhoneFocus.dispose();
+    newSupplierCnicFocus.dispose();
+    newSupplierProfilePicFocus.dispose();
+    newSupplierCnicPicFocus.dispose();
+    existingSupplierDropdownFocus.dispose();
+    purchaseDateFocus.dispose();
+    billImageFocus.dispose();
+    addRowFocus.dispose();
+    saveBatchFocus.dispose();
+
+    for (var entry in bikeEntries) {
+      entry.dispose();
+    }
+
     super.onClose();
   }
 
@@ -172,6 +221,7 @@ class SupplierController extends GetxController {
   }
 
   void removeBikeEntry(int index) {
+    bikeEntries[index].dispose(); // Dispose focus nodes
     bikeEntries.removeAt(index);
     calculateTotal();
   }
@@ -337,6 +387,9 @@ class SupplierController extends GetxController {
     editingBatch.value = null; // Reset edit mode
     purchaseDate.value = DateTime.now();
     billImage.value = null;
+    for (var entry in bikeEntries) {
+      entry.dispose();
+    }
     bikeEntries.clear();
     totalBatchCost.value = 0.0;
     

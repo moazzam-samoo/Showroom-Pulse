@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
@@ -332,6 +334,10 @@ class _BikeCardState extends State<BikeCard> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            ThousandsSeparatorInputFormatter()
+          ],
           autofocus: true,
           decoration: const InputDecoration(
             labelText: "Amount (Rs)",
@@ -342,7 +348,7 @@ class _BikeCardState extends State<BikeCard> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () {
-              final price = double.tryParse(controller.text) ?? 0.0;
+              final price = double.tryParse(controller.text.replaceAll(',', '')) ?? 0.0;
               if (price > 0) {
                 inventoryController.updateBikePrice(widget.bike, price);
                 Navigator.pop(ctx);

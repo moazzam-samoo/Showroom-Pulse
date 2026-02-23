@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -29,9 +30,16 @@ class InventoryView extends StatelessWidget {
     final controller = Get.put(InventoryController());
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Row(
+    return KeyboardListener(
+      focusNode: FocusNode()..requestFocus(),
+      onKeyEvent: (KeyEvent event) {
+        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+          Get.offNamed('/dashboard');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        body: Row(
         children: [
           // Sidebar
           SidebarNavigation(
@@ -115,6 +123,7 @@ class InventoryView extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
