@@ -88,12 +88,20 @@ class InventoryView extends StatelessWidget {
                     selectedCC: controller.selectedCC.value,
                     selectedStatus: controller.selectedStatus.value,
                     selectedColor: controller.selectedColor.value,
+                    selectedSkin: controller.selectedSkin.value,
                     minPrice: controller.minPrice.value,
                     maxPrice: controller.maxPrice.value,
                     onBrandChanged: (v) => controller.selectedBrand.value = v,
                     onCCChanged: (v) => controller.selectedCC.value = v,
                     onStatusChanged: (v) => controller.selectedStatus.value = v,
-                    onColorChanged: (v) => controller.selectedColor.value = v,
+                    onColorChanged: (v) {
+                      controller.selectedColor.value = v;
+                      if (v != null) controller.selectedSkin.value = null;
+                    },
+                    onSkinChanged: (v) {
+                      controller.selectedSkin.value = v;
+                      if (v != null) controller.selectedColor.value = null;
+                    },
                     onMinPriceChanged: (v) => controller.minPrice.value = v,
                     onMaxPriceChanged: (v) => controller.maxPrice.value = v,
                     onClearFilters: () {
@@ -102,6 +110,7 @@ class InventoryView extends StatelessWidget {
                       controller.selectedCC.value = null;
                       controller.selectedStatus.value = null;
                       controller.selectedColor.value = null;
+                      controller.selectedSkin.value = null;
                       controller.minPrice.value = null;
                       controller.maxPrice.value = null;
                     },

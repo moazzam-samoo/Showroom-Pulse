@@ -154,6 +154,10 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       
       // Initial Bindings
       initialBinding: InitialBinding(),
+
+      // Navigation Transitions
+      defaultTransition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
       
       // Start with Splash Screen
       home: const SplashScreen(),

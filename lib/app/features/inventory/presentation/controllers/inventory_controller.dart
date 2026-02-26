@@ -21,6 +21,7 @@ class InventoryController extends GetxController {
   final RxnString selectedCC = RxnString();
   final RxnString selectedStatus = RxnString();
   final RxnString selectedColor = RxnString();
+  final RxnString selectedSkin = RxnString();
   final Rxn<double> minPrice = Rxn<double>();
   final Rxn<double> maxPrice = Rxn<double>();
 
@@ -309,6 +310,13 @@ class InventoryController extends GetxController {
       // Color filter
       if (selectedColor.value != null && selectedColor.value!.isNotEmpty) {
         if (bike.color.toLowerCase() != selectedColor.value!.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Skin filter
+      if (selectedSkin.value != null && selectedSkin.value!.isNotEmpty) {
+        if (bike.color.toLowerCase() != selectedSkin.value!.toLowerCase()) {
           return false;
         }
       }
