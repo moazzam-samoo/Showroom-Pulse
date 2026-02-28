@@ -614,7 +614,7 @@ class ReportPdfService {
                pw.SizedBox(height: 20),
              ],
              _buildInvoiceFinancials(saleData),
-             pw.SizedBox(height: 30),
+             pw.Spacer(),
              _buildSignatures(),
           ],
         ),
@@ -627,6 +627,145 @@ class ReportPdfService {
       return await _savePdf(pdf, fileName);
     } catch (e) {
       debugPrint('Error generating sale invoice pdf: $e');
+      return null;
+    }
+  }
+
+  /// Generate a global sales report PDF with separate Cash and Installment sections
+  Future<String?> generateSalesReport({
+    required List<Map<String, dynamic>> cashSales,
+    required List<Map<String, dynamic>> installmentSales,
+    required String dateRange,
+  }) async {
+    try {
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+      final monthYear = dateRange;
+      final totalSales = cashSales.length + installmentSales.length;
+      final totalCashRevenue = cashSales.fold<double>(0, (sum, s) => sum + ((s['amountPaid'] as num?)?.toDouble() ?? 0));
+      final totalInstRevenue = installmentSales.fold<double>(0, (sum, s) => sum + ((s['sellingPrice'] as num?)?.toDouble() ?? 0));
+      final totalRevenue = totalCashRevenue + totalInstRevenue;
+
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          header: (context) => _buildHeader(context, 'SALES REPORT', monthYear, settings),
+          footer: _buildFooter,
+          build: (context) => [
+            // Summary KPIs
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey100,
+                borderRadius: pw.BorderRadius.circular(6),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                children: [
+                  _kpiBox('Total Sales', '$totalSales', PdfColors.blue800),
+                  _kpiDivider(),
+                  _kpiBox('Cash Sales', '${cashSales.length}', PdfColors.green800),
+                  _kpiDivider(),
+                  _kpiBox('Installment Sales', '${installmentSales.length}', PdfColors.orange800),
+                  _kpiDivider(),
+                  _kpiBox('Total Revenue', 'Rs ${NumberFormat('#,###').format(totalRevenue)}', PdfColors.teal800),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 24),
+
+            // Cash Sales Section
+            if (cashSales.isNotEmpty) ...[
+              _sectionTitle('CASH SALES'),
+              pw.SizedBox(height: 8),
+              pw.TableHelper.fromTextArray(
+                headerAlignment: pw.Alignment.centerLeft,
+                cellAlignment: pw.Alignment.centerLeft,
+                headerDecoration: pw.BoxDecoration(color: PdfColors.green50),
+                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.green900),
+                cellStyle: const pw.TextStyle(fontSize: 10),
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                headers: ['#', 'Customer', 'Bike', 'Amount', 'Date'],
+                data: cashSales.asMap().entries.map((e) {
+                  final s = e.value;
+                  return [
+                    '${e.key + 1}',
+                    s['customerName'] ?? '',
+                    s['bikeModel'] ?? '',
+                    'Rs ${NumberFormat('#,###').format((s['amountPaid'] as num?)?.toDouble() ?? 0)}',
+                    s['saleDate'] ?? '',
+                  ];
+                }).toList(),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Cash Total: Rs ${NumberFormat('#,###').format(totalCashRevenue)}',
+                  style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.green800),
+                ),
+              ),
+              pw.SizedBox(height: 24),
+            ],
+
+            // Installment Sales Section
+            if (installmentSales.isNotEmpty) ...[
+              _sectionTitle('INSTALLMENT SALES'),
+              pw.SizedBox(height: 8),
+              pw.TableHelper.fromTextArray(
+                headerAlignment: pw.Alignment.centerLeft,
+                cellAlignment: pw.Alignment.centerLeft,
+                headerDecoration: pw.BoxDecoration(color: PdfColors.orange50),
+                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.orange900),
+                cellStyle: const pw.TextStyle(fontSize: 10),
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                headers: ['#', 'Customer', 'Bike', 'Paid', 'Monthly', 'Months', 'Remaining', 'Date'],
+                data: installmentSales.asMap().entries.map((e) {
+                  final s = e.value;
+                  return [
+                    '${e.key + 1}',
+                    s['customerName'] ?? '',
+                    s['bikeModel'] ?? '',
+                    'Rs ${NumberFormat('#,###').format((s['amountPaid'] as num?)?.toDouble() ?? 0)}',
+                    'Rs ${NumberFormat('#,###').format((s['monthlyPayment'] as num?)?.toDouble() ?? 0)}',
+                    '${s['duration'] ?? 0}',
+                    'Rs ${NumberFormat('#,###').format((s['amountRemaining'] as num?)?.toDouble() ?? 0)}',
+                    s['saleDate'] ?? '',
+                  ];
+                }).toList(),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Installment Total: Rs ${NumberFormat('#,###').format(totalInstRevenue)}',
+                  style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800),
+                ),
+              ),
+            ],
+
+            // Grand Total
+            pw.SizedBox(height: 24),
+            pw.Divider(),
+            pw.SizedBox(height: 8),
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Text(
+                'Grand Total Revenue: Rs ${NumberFormat('#,###').format(totalRevenue)}',
+                style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      final fileName = 'Sales_Report_${dateRange.replaceAll(' ', '_')}';
+      return await _savePdf(pdf, fileName);
+    } catch (e) {
+      debugPrint('Error generating sales report pdf: $e');
       return null;
     }
   }

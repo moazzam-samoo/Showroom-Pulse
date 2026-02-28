@@ -132,9 +132,50 @@ class SalesController extends GetxController {
 
 
 
-  void exportReport() {
-    // Placeholder for export logic
-    Get.snackbar('Export', 'Generating report for ${selectedDateRange.value}...');
+  Future<void> exportReport() async {
+    try {
+      final sales = filteredSales;
+      if (sales.isEmpty) {
+        Get.snackbar('No Data', 'No sales found for the selected filters.');
+        return;
+      }
+
+      Get.snackbar('Exporting', 'Generating sales report...');
+      final pdfService = Get.find<ReportPdfService>();
+
+      final cashSales = sales.where((s) => s.isCash).map((s) => <String, dynamic>{
+        'customerName': s.customerName,
+        'bikeModel': s.bikeModel,
+        'amountPaid': s.amountPaid,
+        'saleDate': s.saleDate,
+        'sellingPrice': s.sellingPrice ?? s.amountPaid,
+      }).toList();
+
+      final installmentSales = sales.where((s) => !s.isCash).map((s) => <String, dynamic>{
+        'customerName': s.customerName,
+        'bikeModel': s.bikeModel,
+        'amountPaid': s.amountPaid,
+        'saleDate': s.saleDate,
+        'sellingPrice': s.sellingPrice ?? 0,
+        'monthlyPayment': s.installmentMonthlyPayment ?? 0,
+        'duration': s.installmentDuration ?? 0,
+        'amountRemaining': s.amountRemaining ?? 0,
+      }).toList();
+
+      final filePath = await pdfService.generateSalesReport(
+        cashSales: cashSales,
+        installmentSales: installmentSales,
+        dateRange: selectedDateRange.value,
+      );
+
+      if (filePath != null) {
+        Get.snackbar('Success', 'Report saved to $filePath', duration: const Duration(seconds: 4));
+      } else {
+        Get.snackbar('Error', 'Failed to generate report');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Export failed: $e', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   Future<void> exportSaleInvoice(SaleCardData data) async {
