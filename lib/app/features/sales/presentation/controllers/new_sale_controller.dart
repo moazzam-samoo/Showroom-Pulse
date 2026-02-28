@@ -18,6 +18,9 @@ import 'package:tahir_showroom/app/features/customers/data/repositories/customer
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/utils/form_navigation_manager.dart';
 import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
 
 class NewSaleController extends GetxController {
   // Navigation Manager
@@ -988,6 +991,30 @@ class NewSaleController extends GetxController {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () {
+                  Get.back();
+                  _generateInvoiceForCompletedSale();
+                },
+                icon: const Icon(LucideIcons.download, size: 18),
+                label: const Text(
+                  'Generate Invoice',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1166,6 +1193,69 @@ class NewSaleController extends GetxController {
   void previousStep() {
     if (currentStep.value > 0) {
       currentStep.value--;
+    }
+  }
+
+  Future<void> _generateInvoiceForCompletedSale() async {
+    try {
+      Get.snackbar('Exporting', 'Generating invoice...');
+      final pdfService = Get.find<ReportPdfService>();
+      final isCash = saleType.value == SaleType.cash;
+      final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+      final witnesses = <Map<String, String>>[];
+      if (witness1NameController.text.isNotEmpty) {
+        witnesses.add({
+          'fullName': witness1NameController.text,
+          'cnicNumber': witness1CnicController.text,
+          'phoneNumber': witness1PhoneController.text,
+        });
+      }
+      if (showWitness2.value && witness2NameController.text.isNotEmpty) {
+        witnesses.add({
+          'fullName': witness2NameController.text,
+          'cnicNumber': witness2CnicController.text,
+          'phoneNumber': witness2PhoneController.text,
+        });
+      }
+
+      final saleMap = <String, dynamic>{
+        'customerName': customerNameController.text,
+        'customerCnic': customerCnicController.text,
+        'customerContact': customerPhoneController.text,
+        'customerAddress': customerAddressController.text,
+        'bikeModel': selectedBike.value?.model ?? '',
+        'bikeColor': selectedBike.value?.color ?? '',
+        'bikeChassisNumber': selectedBike.value?.chassisNumber ?? '',
+        'bikeEngineNumber': selectedBike.value?.engineNumber ?? '',
+        'isCash': isCash,
+        'saleDate': today,
+        'witnesses': witnesses,
+      };
+
+      if (isCash) {
+        final amount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+        saleMap['amountPaid'] = amount;
+        saleMap['sellingPrice'] = amount;
+        saleMap['amountRemaining'] = 0.0;
+      } else {
+        final calc = calculationResult.value;
+        final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+        saleMap['amountPaid'] = downPayment;
+        saleMap['sellingPrice'] = calc?.grandTotal ?? 0;
+        saleMap['amountRemaining'] = (calc?.grandTotal ?? 0) - downPayment;
+        saleMap['installmentMonthlyPayment'] = calc?.monthlyEMI ?? 0;
+        saleMap['installmentDuration'] = int.tryParse(monthsController.text) ?? 12;
+      }
+
+      final filePath = await pdfService.generateSaleInvoice(saleData: saleMap);
+      if (filePath != null) {
+        Get.snackbar('Success', 'Invoice saved to $filePath', duration: const Duration(seconds: 4));
+      } else {
+        Get.snackbar('Error', 'Failed to generate invoice');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed: $e', snackPosition: SnackPosition.BOTTOM);
     }
   }
 }
