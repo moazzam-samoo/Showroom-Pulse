@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../../core/services/theme_service.dart';
 import '../controllers/settings_controller.dart';
 
 class GeneralSettingsView extends GetView<SettingsController> {
@@ -161,7 +162,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
                 settings.isDarkTheme = value;
                 controller.settings.refresh();
                 controller.saveSettings();
-                Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
+                Get.find<ThemeService>().setThemeMode(value);
               },
             ),
           ),

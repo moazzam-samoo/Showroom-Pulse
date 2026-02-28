@@ -144,73 +144,92 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Tahir Showroom',
-      debugShowCheckedModeBanner: false,
-      
-      // Theme Configuration - Dark Theme as Default
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Dark theme is default
-      
-      // Initial Bindings
-      initialBinding: InitialBinding(),
-
-      // Navigation Transitions
+    // Manual setup replaces GetMaterialApp to add themeAnimationDuration: Duration.zero
+    // which GetMaterialApp v4.7.3 doesn't expose. This prevents AnimatedTheme cross-fade
+    // that causes GlobalKey collisions on Material ink renderers during theme switches.
+    
+    // Initialize GetX config and bindings
+    Get.config(
+      enableLog: true,
       defaultTransition: Transition.fadeIn,
-      transitionDuration: const Duration(milliseconds: 300),
-      
-      // Start with Splash Screen
-      home: const SplashScreen(),
-      
-      // Named Routes
-      getPages: [
-        GetPage(
-          name: '/login',
-          page: () => const LoginView(),
-          binding: LoginBinding(),
-        ),
-        GetPage(
-          name: '/dashboard', 
-          page: () => const DashboardView(),
-          binding: DashboardBinding(),
-        ),
-        GetPage(
-          name: '/procurement',
-          page: () => const ProcurementView(),
-          binding: ProcurementBinding(),
-        ),
-        GetPage(
-          name: '/inventory',
-          page: () => const InventoryView(),
-          binding: InventoryBinding(),
-        ),
-        GetPage(
-          name: '/sales',
-          page: () => const SalesView(),
-          binding: SalesBinding(),
-        ),
-        GetPage(
-          name: '/installments',
-          page: () => const InstallmentsView(),
-          binding: InstallmentsBinding(),
-        ),
-        GetPage(
-          name: '/customers',
-          page: () => const CustomersView(),
-          binding: CustomersBinding(),
-        ),
-        GetPage(
-          name: '/reports',
-          page: () => const ReportsView(),
-          binding: ReportsBinding(),
-        ),
-        GetPage(
-          name: '/settings',
-          page: () => const SettingsView(),
-          binding: SettingsBinding(),
-        ),
-      ],
+      defaultDurationTransition: const Duration(milliseconds: 300),
+    );
+    InitialBinding().dependencies();
+    
+    // Register pages with GetX
+    final getPages = [
+      GetPage(
+        name: '/login',
+        page: () => const LoginView(),
+        binding: LoginBinding(),
+      ),
+      GetPage(
+        name: '/dashboard',
+        page: () => const DashboardView(),
+        binding: DashboardBinding(),
+      ),
+      GetPage(
+        name: '/procurement',
+        page: () => const ProcurementView(),
+        binding: ProcurementBinding(),
+      ),
+      GetPage(
+        name: '/inventory',
+        page: () => const InventoryView(),
+        binding: InventoryBinding(),
+      ),
+      GetPage(
+        name: '/sales',
+        page: () => const SalesView(),
+        binding: SalesBinding(),
+      ),
+      GetPage(
+        name: '/installments',
+        page: () => const InstallmentsView(),
+        binding: InstallmentsBinding(),
+      ),
+      GetPage(
+        name: '/customers',
+        page: () => const CustomersView(),
+        binding: CustomersBinding(),
+      ),
+      GetPage(
+        name: '/reports',
+        page: () => const ReportsView(),
+        binding: ReportsBinding(),
+      ),
+      GetPage(
+        name: '/settings',
+        page: () => const SettingsView(),
+        binding: SettingsBinding(),
+      ),
+    ];
+    Get.addPages(getPages);
+    
+    return GetBuilder<GetMaterialController>(
+      init: Get.rootController,
+      builder: (ctrl) => MaterialApp(
+        navigatorKey: Get.key,
+        title: 'Tahir Showroom',
+        debugShowCheckedModeBanner: false,
+        
+        // Theme
+        theme: ctrl.theme ?? AppTheme.lightTheme,
+        darkTheme: ctrl.darkTheme ?? AppTheme.darkTheme,
+        themeMode: ctrl.themeMode ?? ThemeMode.dark,
+        
+        // Disable theme animation to prevent GlobalKey collisions
+        themeAnimationDuration: Duration.zero,
+        
+        // Navigation
+        home: const SplashScreen(),
+        onGenerateRoute: (settings) {
+          return PageRedirect(settings: settings).page();
+        },
+        navigatorObservers: [
+          GetObserver(null, Get.routing),
+        ],
+      ),
     );
   }
 }

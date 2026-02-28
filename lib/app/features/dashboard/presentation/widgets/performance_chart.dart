@@ -33,6 +33,26 @@ class _PerformanceChartState extends State<PerformanceChart> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+
+    // Dynamic Y-axis: scale based on actual data
+    final maxDataValue = widget.weeklyData.isNotEmpty
+        ? widget.weeklyData.reduce((a, b) => a > b ? a : b)
+        : 0.0;
+    double chartMaxY;
+    double chartInterval;
+    if (maxDataValue <= 10) {
+      chartMaxY = 10;
+      chartInterval = 2;
+    } else if (maxDataValue <= 20) {
+      chartMaxY = 20;
+      chartInterval = 5;
+    } else if (maxDataValue <= 50) {
+      chartMaxY = 50;
+      chartInterval = 10;
+    } else {
+      chartMaxY = 100;
+      chartInterval = 25;
+    }
     
     return Container(
       padding: const EdgeInsets.all(AppSpacing.base),
@@ -128,7 +148,7 @@ class _PerformanceChartState extends State<PerformanceChart> {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 25,
+                  horizontalInterval: chartInterval,
                   getDrawingHorizontalLine: (value) {
                     return FlLine(
                       color: isDark ? AppColors.darkBorder : Colors.grey.shade200,
@@ -140,7 +160,7 @@ class _PerformanceChartState extends State<PerformanceChart> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 25,
+                      interval: chartInterval,
                       reservedSize: 30,
                       getTitlesWidget: (value, meta) {
                         return Text(
@@ -216,7 +236,7 @@ class _PerformanceChartState extends State<PerformanceChart> {
                   ),
                 ),
                 minY: 0,
-                maxY: 100,
+                maxY: chartMaxY,
               ),
             ),
           ),

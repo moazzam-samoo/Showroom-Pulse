@@ -238,7 +238,9 @@ class SalesService {
     // Pending installments (sum of remaining balances)
     final activeContracts = await isar.installmentContracts
         .filter()
-        .statusEqualTo(ContractStatusEnum.active)
+        .not().statusEqualTo(ContractStatusEnum.completed)
+        .and()
+        .not().statusEqualTo(ContractStatusEnum.defaulted)
         .findAll();
     
     final pendingInstallments = activeContracts.fold<double>(
@@ -355,7 +357,10 @@ class SalesService {
   /// Calculate total asset value (all bikes' purchase prices)
   Future<double> calculateTotalAssetValue() async {
     final isar = _isarService.isar;
-    final bikes = await isar.bikes.where().findAll();
+    final bikes = await isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.available)
+        .findAll();
     double total = 0;
     
     for (var bike in bikes) {
