@@ -6,16 +6,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
+import 'package:tahir_showroom/app/core/services/theme_service.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import '../controllers/dashboard_controller.dart';
 
 import '../widgets/kpi_section.dart';
 import '../widgets/performance_chart.dart';
 import '../widgets/stock_allocation_chart.dart';
-import '../widgets/transaction_feed.dart';
+import '../widgets/quick_actions.dart';
+import '../widgets/upcoming_installments.dart';
+import '../widgets/kpi_detail_dialogs.dart';
 
 /// Dashboard View - Main screen after login
 /// 
@@ -99,17 +103,24 @@ class _DashboardViewState extends State<DashboardView> {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
+                        // Quick Actions Row
+                        const QuickActionsRow(),
+                        const SizedBox(height: AppSpacing.lg),
                         // KPI Section
                         Obx(() => KpiSection(
-                          totalAssetValue: 'Rs. ${(controller.totalAssetValue.value / 1000000).toStringAsFixed(1)}M',
-                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD Growth',
+                          totalAssetValue: PriceFormatter.formatLakhWords(controller.totalAssetValue.value),
+                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD',
                           unitsInStock: controller.unitsInStock.value,
                           lowStockAlert: controller.lowStockAlert.value,
-                          monthlySalesRevenue: 'Rs. ${(controller.monthlyRevenue.value / 1000000).toStringAsFixed(1)}M',
-                          salesTarget: 'Rs. 10.0M',
+                          monthlySalesRevenue: PriceFormatter.formatLakhWords(controller.monthlyRevenue.value),
+                          salesTarget: '10 Lac',
                           salesProgress: controller.revenueOnTrack.value ? 82 : 50,
-                          criticalArrears: 'Rs. ${(controller.pendingInstallments.value / 1000000).toStringAsFixed(2)}M',
-                          accountsOverdue: controller.overdueInstallments.value,
+                          totalInstallmentValue: PriceFormatter.formatLakhWords(controller.totalInstallmentValue.value),
+                          activeContractsCount: controller.activeContracts.value,
+                          onAssetValueTap: () => KpiDetailDialogs.showAssetValueDialog(context),
+                          onUnitsInStockTap: () => KpiDetailDialogs.showStockDialog(context),
+                          onSalesRevenueTap: () => KpiDetailDialogs.showRevenueDialog(context),
+                          onCriticalArrearsTap: () => KpiDetailDialogs.showInstallmentDialog(context),
                         )),
                         const SizedBox(height: AppSpacing.lg),
                         // Charts Row
@@ -142,12 +153,12 @@ class _DashboardViewState extends State<DashboardView> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        // Transaction Feed (using Recent Sales data)
-                        const SizedBox(
+                        // Upcoming Installments (replaces empty Transaction Feed)
+                        SizedBox(
                           height: 350,
-                          child: LiveTransactionFeed(
-                            transactions: [], // Empty for now - could add getRecentTransactions method
-                          ),
+                          child: Obx(() => UpcomingInstallmentsWidget(
+                            installments: controller.upcomingInstallments.toList(),
+                          )),
                         ),
                       ],
                     ),
@@ -223,14 +234,14 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Live: 4 Active Sales Reps',
-                      style: TextStyle(
+                    Obx(() => Text(
+                      'Live: ${controller.activeContracts.value} Active Installments',
+                      style: const TextStyle(
                         color: Colors.green,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),
@@ -243,9 +254,7 @@ class _DashboardViewState extends State<DashboardView> {
                   color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                 ),
                 onPressed: () {
-                  Get.changeThemeMode(
-                    Get.isDarkMode ? ThemeMode.light : ThemeMode.dark,
-                  );
+                  Get.find<ThemeService>().toggleTheme();
                 },
               ),
               // Notifications

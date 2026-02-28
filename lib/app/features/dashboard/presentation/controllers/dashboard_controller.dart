@@ -3,6 +3,9 @@ import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/customer.dart';
+import 'package:tahir_showroom/app/data/models/installment_contract.dart';
+import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcoming_installments.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -11,7 +14,7 @@ class DashboardController extends GetxController {
   // Loading State
   final RxBool isLoading = false.obs;
 
-  // Stats Observables (existing)
+  // Stats Observables
   final totalDailySales = 0.0.obs;
   final dailyGrowth = 0.0.obs;
   final pendingInstallments = 0.0.obs;
@@ -36,6 +39,10 @@ class DashboardController extends GetxController {
   final totalAssetGrowth = 0.0.obs;
   final unitsInStock = 0.obs;
   final lowStockAlert = 0.obs;
+  final totalInstallmentValue = 0.0.obs;
+
+  // Upcoming Installments (for bottom widget)
+  final upcomingInstallments = <UpcomingInstallment>[].obs;
 
   @override
   void onInit() {
@@ -52,6 +59,7 @@ class DashboardController extends GetxController {
         loadChartData(),
         loadStockAllocation(),
         loadKPIData(),
+        loadUpcomingInstallments(),
       ]);
     } catch (e) {
       Get.snackbar(
@@ -111,25 +119,87 @@ class DashboardController extends GetxController {
   /// Load KPI card data
   Future<void> loadKPIData() async {
     try {
-      // Calculate total asset value
       final assetValue = await _salesService.calculateTotalAssetValue();
       totalAssetValue.value = assetValue;
       
-      // Get units in stock (available + installment)
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
         b.status == BikeStatusEnum.available || 
         b.status == BikeStatusEnum.installment
       ).length;
       
-      // Get low stock alert
       final lowStock = await _salesService.getLowStockAlert();
-       lowStockAlert.value = lowStock;
+      lowStockAlert.value = lowStock;
       
-      // TODO: Calculate asset growth (compare with previous month)
       totalAssetGrowth.value = 5.2; // Placeholder
+
+      // Compute total installment remaining directly
+      final contracts = await _isarService.isar.installmentContracts
+          .filter()
+          .not().statusEqualTo(ContractStatusEnum.completed)
+          .and()
+          .not().statusEqualTo(ContractStatusEnum.defaulted)
+          .findAll();
+      totalInstallmentValue.value = contracts.fold<double>(
+        0, (sum, c) => sum + c.remainingBalance,
+      );
     } catch (e) {
       print('Error loading KPI data: $e');
+    }
+  }
+
+  /// Load upcoming installments due in the next 7 days
+  Future<void> loadUpcomingInstallments() async {
+    try {
+      final isar = _isarService.isar;
+      final now = DateTime.now();
+      final sevenDaysLater = now.add(const Duration(days: 7));
+
+      final contracts = await isar.installmentContracts
+          .filter()
+          .statusEqualTo(ContractStatusEnum.active)
+          .findAll();
+
+      final List<UpcomingInstallment> upcoming = [];
+
+      for (var contract in contracts) {
+        final dueDate = contract.nextDueDate;
+        if (dueDate == null) continue;
+
+        // Include overdue + next 7 days
+        if (dueDate.isBefore(sevenDaysLater)) {
+          // Resolve customer name
+          final customer = await isar.customers
+              .filter()
+              .idEqualTo(contract.customerId)
+              .findFirst();
+
+          // Resolve bike model
+          final bike = await isar.bikes
+              .filter()
+              .idEqualTo(contract.bikeId)
+              .findFirst();
+
+          upcoming.add(UpcomingInstallment(
+            customerName: customer?.fullName ?? 'Unknown',
+            bikeModel: bike?.model ?? 'Unknown',
+            amount: contract.monthlyEMI,
+            dueDate: dueDate,
+            isOverdue: now.isAfter(dueDate),
+          ));
+        }
+      }
+
+      // Sort: overdue first, then by soonest due date
+      upcoming.sort((a, b) {
+        if (a.isOverdue && !b.isOverdue) return -1;
+        if (!a.isOverdue && b.isOverdue) return 1;
+        return a.dueDate.compareTo(b.dueDate);
+      });
+
+      upcomingInstallments.value = upcoming;
+    } catch (e) {
+      print('Error loading upcoming installments: $e');
     }
   }
 
@@ -138,3 +208,4 @@ class DashboardController extends GetxController {
     await loadAllDashboardData();
   }
 }
+

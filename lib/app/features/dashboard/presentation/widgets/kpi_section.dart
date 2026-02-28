@@ -20,6 +20,7 @@ class KpiCard extends StatelessWidget {
   final Color? subtitleColor;
   final bool showAlert;
   final String? alertText;
+  final VoidCallback? onTap;
 
   const KpiCard({
     super.key,
@@ -30,12 +31,12 @@ class KpiCard extends StatelessWidget {
     this.subtitleColor,
     this.showAlert = false,
     this.alertText,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -48,15 +49,24 @@ class KpiCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.lightGradientDark.withOpacity(0.3),
+            color: AppColors.lightGradientDark.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Material(
+        key: ValueKey('kpi_card_$title'),
+        type: MaterialType.transparency,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.base),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
         children: [
           // Header Row - Title and Icon
           Row(
@@ -101,7 +111,7 @@ class KpiCard extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.2),
+                color: Colors.amber.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -139,8 +149,11 @@ class KpiCard extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
+    ),
+  ),
+),
+);
+}
 }
 
 /// KPI Section - Row of 4 KPI Cards
@@ -155,9 +168,13 @@ class KpiSection extends StatelessWidget {
   final String monthlySalesRevenue;
   final String salesTarget;
   final int salesProgress;
-  final String criticalArrears;
-  final int accountsOverdue;
+  final String totalInstallmentValue;
+  final int activeContractsCount;
   final bool hasRecoveryInProgress;
+  final VoidCallback? onAssetValueTap;
+  final VoidCallback? onUnitsInStockTap;
+  final VoidCallback? onSalesRevenueTap;
+  final VoidCallback? onCriticalArrearsTap;
 
   const KpiSection({
     super.key,
@@ -168,9 +185,13 @@ class KpiSection extends StatelessWidget {
     this.monthlySalesRevenue = 'Rs. 0',
     this.salesTarget = 'Rs. 0',
     this.salesProgress = 0,
-    this.criticalArrears = 'Rs. 0',
-    this.accountsOverdue = 0,
+    this.totalInstallmentValue = 'Rs. 0',
+    this.activeContractsCount = 0,
     this.hasRecoveryInProgress = false,
+    this.onAssetValueTap,
+    this.onUnitsInStockTap,
+    this.onSalesRevenueTap,
+    this.onCriticalArrearsTap,
   });
 
   @override
@@ -185,6 +206,7 @@ class KpiSection extends StatelessWidget {
             subtitle: totalAssetGrowth,
             subtitleColor: Colors.greenAccent,
             icon: LucideIcons.dollarSign,
+            onTap: onAssetValueTap,
           ),
         ),
         const SizedBox(width: AppSpacing.base),
@@ -196,30 +218,31 @@ class KpiSection extends StatelessWidget {
             icon: LucideIcons.boxes,
             showAlert: lowStockAlert > 0,
             alertText: 'Low Stock Alert: CD70 ($lowStockAlert Left)',
+            onTap: onUnitsInStockTap,
           ),
         ),
         const SizedBox(width: AppSpacing.base),
         // Monthly Sales Revenue
         Expanded(
-          child: _buildSalesRevenueCard(),
+          child: _buildSalesRevenueCard(onTap: onSalesRevenueTap),
         ),
         const SizedBox(width: AppSpacing.base),
-        // Critical Arrears
+        // Total Installment Value (Remaining Receivable)
         Expanded(
           child: KpiCard(
-            title: 'CRITICAL ARREARS',
-            value: criticalArrears,
-            subtitle: '$accountsOverdue Accounts Overdue',
-            icon: LucideIcons.alertCircle,
+            title: 'TOTAL INSTALLMENT VALUE',
+            value: totalInstallmentValue,
+            subtitle: '$activeContractsCount Active Contracts',
+            icon: LucideIcons.landmark,
+            onTap: onCriticalArrearsTap,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSalesRevenueCard() {
+  Widget _buildSalesRevenueCard({VoidCallback? onTap}) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -232,80 +255,92 @@ class KpiSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.lightGradientDark.withOpacity(0.3),
+            color: AppColors.lightGradientDark.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: const Text(
-                  'MONTHLY SALES REVENUE',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+      child: Material(
+        key: const ValueKey('kpi_revenue_card'),
+        type: MaterialType.transparency,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.base),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'MONTHLY SALES REVENUE',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      LucideIcons.dollarSign,
+                      size: 16,
+                      color: Colors.white38,
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                LucideIcons.dollarSign,
-                size: 16,
-                color: Colors.white38,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            monthlySalesRevenue,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  monthlySalesRevenue,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  children: [
+                    Text(
+                      'Target: $salesTarget',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '$salesProgress%',
+                        style: const TextStyle(
+                          color: Colors.greenAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            children: [
-              Text(
-                'Target: $salesTarget',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.greenAccent.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '$salesProgress%',
-                  style: const TextStyle(
-                    color: Colors.greenAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
