@@ -564,8 +564,8 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
               Get.back(); // Close dialog
               Get.find<SalesController>().exportSaleInvoice(data);
             },
-            icon: const Icon(LucideIcons.printer, size: 18),
-            label: const Text('Print Plan'),
+            icon: const Icon(LucideIcons.download, size: 18),
+            label: const Text('Download Invoice'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.darkPrimary,
               foregroundColor: Colors.black,
