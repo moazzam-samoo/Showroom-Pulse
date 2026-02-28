@@ -5,6 +5,7 @@ import '../../../../data/models/app_settings.dart';
 import '../../../../core/services/backup_service.dart';
 import '../../../../core/services/isar_service.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -40,6 +41,11 @@ class SettingsController extends GetxController {
   Future<void> saveSettings() async {
     if (settings.value != null) {
       await _repository.updateSettings(settings.value!);
+      
+      // Notify DashboardController to reload profile and showroom data
+      if (Get.isRegistered<DashboardController>()) {
+        Get.find<DashboardController>().loadProfileSettings();
+      }
       
       Get.snackbar(
         'Success', 

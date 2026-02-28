@@ -15,6 +15,7 @@ class DashboardController extends GetxController {
   // Profile Settings
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
+  final showroomName = RxString('AL-TAHIR SHOWROOM');
 
   // Loading State
   final RxBool isLoading = false.obs;
@@ -161,9 +162,29 @@ class DashboardController extends GetxController {
       if (settingsList.isNotEmpty) {
         ownerName.value = settingsList.first.ownerName;
         ownerProfilePicPath.value = settingsList.first.ownerProfilePicPath;
+        showroomName.value = settingsList.first.showroomName;
       }
     } catch (e) {
       print('Error loading profile settings: $e');
+    }
+  }
+
+  /// Update owner name from dialog
+  Future<void> updateOwnerName(String name) async {
+    ownerName.value = name.isEmpty ? null : name;
+    
+    // Save to database
+    try {
+      final settingsList = await _isarService.isar.appSettings.where().findAll();
+      if (settingsList.isNotEmpty) {
+        final settings = settingsList.first;
+        await _isarService.isar.writeTxn(() async {
+          settings.ownerName = name.isEmpty ? null : name;
+          await _isarService.isar.appSettings.put(settings);
+        });
+      }
+    } catch (e) {
+      print('Error updating owner name: $e');
     }
   }
 

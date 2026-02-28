@@ -195,21 +195,26 @@ class _DashboardViewState extends State<DashboardView> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Executive Command Center',
-                style: TextStyle(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                'Tahir Showroom • Real-time Performance Metrics',
+              Obx(() {
+                final name = controller.ownerName.value;
+                return Text(
+                  name != null && name.isNotEmpty
+                      ? 'Welcome, $name'
+                      : 'Executive Command Center',
+                  style: TextStyle(
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }),
+              Obx(() => Text(
+                '${controller.showroomName.value} • Real-time Performance Metrics',
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                   fontSize: 12,
                 ),
-              ),
+              )),
             ],
           ),
           // Right Section
@@ -399,34 +404,38 @@ class _DashboardViewState extends State<DashboardView> {
 
                 return Tooltip(
                   message: controller.ownerName.value ?? authService.currentUser.value?.displayName ?? 'User',
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                      image: hasPic
-                          ? DecorationImage(
-                              image: FileImage(File(controller.ownerProfilePicPath.value!)),
-                              fit: BoxFit.cover,
-                            )
-                          : null,
-                    ),
-                    child: hasPic
-                        ? null
-                        : Center(
-                            child: Text(
-                              (controller.ownerName.value?.isNotEmpty == true
-                                      ? controller.ownerName.value!
-                                      : (authService.currentUser.value?.displayName ?? 'A'))
-                                  .substring(0, 1)
-                                  .toUpperCase(),
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold,
+                  child: InkWell(
+                    onTap: () => _showProfileDialog(context, isDark, controller),
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        image: hasPic
+                            ? DecorationImage(
+                                image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: hasPic
+                          ? null
+                          : Center(
+                              child: Text(
+                                (controller.ownerName.value?.isNotEmpty == true
+                                        ? controller.ownerName.value!
+                                        : (authService.currentUser.value?.displayName ?? 'A'))
+                                    .substring(0, 1)
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
+                    ),
                   ),
                 );
               }),
@@ -434,6 +443,88 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showProfileDialog(BuildContext context, bool isDark, DashboardController controller) {
+    final TextEditingController nameController = TextEditingController(text: controller.ownerName.value);
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            'Edit Profile',
+            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Show profile picture
+              Obx(() {
+                final hasPic = controller.ownerProfilePicPath.value != null &&
+                    File(controller.ownerProfilePicPath.value!).existsSync();
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                    shape: BoxShape.circle,
+                    image: hasPic
+                        ? DecorationImage(
+                            image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                  ),
+                  child: hasPic
+                      ? null
+                      : Icon(LucideIcons.user, size: 40, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                );
+              }),
+              const SizedBox(height: 24),
+              TextField(
+                controller: nameController,
+                style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Owner Name',
+                  labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  filled: true,
+                  fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                onSubmitted: (_) {
+                  controller.updateOwnerName(nameController.text.trim());
+                  Get.back();
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                controller.updateOwnerName(nameController.text.trim());
+                Get.back();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 
