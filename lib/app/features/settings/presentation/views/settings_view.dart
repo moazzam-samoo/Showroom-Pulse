@@ -9,6 +9,7 @@ import '../controllers/settings_controller.dart';
 import '../widgets/financial_settings_view.dart';
 import '../widgets/database_settings_view.dart';
 import '../widgets/general_settings_view.dart';
+import '../widgets/profile_settings_view.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -67,6 +68,7 @@ class _SettingsViewState extends State<SettingsView> {
                       const SizedBox(height: AppSpacing.sm),
                       _buildCategoryItem(controller, 'Financials', LucideIcons.percent, isDark),
                       _buildCategoryItem(controller, 'Database', LucideIcons.database, isDark),
+                      _buildCategoryItem(controller, 'Profile', LucideIcons.user, isDark),
                       _buildCategoryItem(controller, 'General', LucideIcons.settings, isDark),
                     ],
                   ),
@@ -93,6 +95,8 @@ class _SettingsViewState extends State<SettingsView> {
                           return const FinancialSettingsView();
                         case 'Database':
                           return const DatabaseSettingsView();
+                        case 'Profile':
+                          return const ProfileSettingsView();
                         case 'General':
                           return const GeneralSettingsView();
                         default:

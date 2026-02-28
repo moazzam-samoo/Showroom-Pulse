@@ -189,6 +189,28 @@ class SaleCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Download Button
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                         Get.find<SalesController>().exportSaleInvoice(data);
+                      },
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (isDark ? Colors.white : Colors.black).withOpacity(0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(LucideIcons.download, size: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
                 // Status Badge
                 Positioned(
                   top: 12,

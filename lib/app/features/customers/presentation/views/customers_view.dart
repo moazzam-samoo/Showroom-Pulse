@@ -55,6 +55,9 @@ class CustomersView extends StatelessWidget {
                 case 6:
                   Get.offNamed('/reports');
                   break;
+                case 7:
+                  Get.offNamed('/settings');
+                  break;
               }
             },
           ),

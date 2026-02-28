@@ -14,6 +14,7 @@ import 'app/features/dashboard/presentation/bindings/dashboard_binding.dart';
 import 'app/features/procurement/presentation/views/procurement_view.dart';
 import 'app/features/procurement/presentation/bindings/procurement_binding.dart';
 import 'app/features/inventory/presentation/views/inventory_view.dart';
+import 'app/features/inventory/presentation/bindings/inventory_binding.dart';
 import 'app/features/sales/presentation/views/sales_view.dart';
 import 'app/features/sales/presentation/bindings/sales_binding.dart';
 import 'app/features/installments/presentation/views/installments_view.dart';
@@ -179,7 +180,11 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
           page: () => const ProcurementView(),
           binding: ProcurementBinding(),
         ),
-        GetPage(name: '/inventory', page: () => const InventoryView()),
+        GetPage(
+          name: '/inventory',
+          page: () => const InventoryView(),
+          binding: InventoryBinding(),
+        ),
         GetPage(
           name: '/sales',
           page: () => const SalesView(),

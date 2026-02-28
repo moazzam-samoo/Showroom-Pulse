@@ -561,8 +561,8 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
            const SizedBox(width: AppSpacing.md),
            ElevatedButton.icon(
             onPressed: () {
-              Get.back();
-              Get.snackbar('Print', 'Sending Installment Plan to printer...');
+              Get.back(); // Close dialog
+              Get.find<SalesController>().exportSaleInvoice(data);
             },
             icon: const Icon(LucideIcons.printer, size: 18),
             label: const Text('Print Plan'),

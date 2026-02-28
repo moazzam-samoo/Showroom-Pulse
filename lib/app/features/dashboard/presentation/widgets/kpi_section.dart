@@ -136,6 +136,11 @@ class KpiCard extends StatelessWidget {
                 fontWeight: FontWeight.w500,
               ),
             ),
+          ] else ...[
+            const Text(
+              ' ',
+              style: TextStyle(fontSize: 12),
+            ),
           ],
         ],
       ),
@@ -175,45 +180,48 @@ class KpiSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // Total Asset Value
-        Expanded(
-          child: KpiCard(
-            title: 'TOTAL ASSET VALUE',
-            value: totalAssetValue,
-            subtitle: totalAssetGrowth,
-            subtitleColor: Colors.greenAccent,
-            icon: LucideIcons.dollarSign,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Total Asset Value
+          Expanded(
+            child: KpiCard(
+              title: 'TOTAL ASSET VALUE',
+              value: totalAssetValue,
+              subtitle: totalAssetGrowth,
+              subtitleColor: Colors.greenAccent,
+              icon: LucideIcons.dollarSign,
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.base),
-        // Units in Stock
-        Expanded(
-          child: KpiCard(
-            title: 'UNITS IN STOCK',
-            value: '$unitsInStock Units',
-            icon: LucideIcons.boxes,
-            showAlert: lowStockAlert > 0,
-            alertText: 'Low Stock Alert: CD70 ($lowStockAlert Left)',
+          const SizedBox(width: AppSpacing.base),
+          // Units in Stock
+          Expanded(
+            child: KpiCard(
+              title: 'UNITS IN STOCK',
+              value: '$unitsInStock Units',
+              icon: LucideIcons.boxes,
+              showAlert: lowStockAlert > 0,
+              alertText: 'Low Stock Alert: CD70 ($lowStockAlert Left)',
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.base),
-        // Monthly Sales Revenue
-        Expanded(
-          child: _buildSalesRevenueCard(),
-        ),
-        const SizedBox(width: AppSpacing.base),
-        // Critical Arrears
-        Expanded(
-          child: KpiCard(
-            title: 'CRITICAL ARREARS',
-            value: criticalArrears,
-            subtitle: '$accountsOverdue Accounts Overdue',
-            icon: LucideIcons.alertCircle,
+          const SizedBox(width: AppSpacing.base),
+          // Monthly Sales Revenue
+          Expanded(
+            child: _buildSalesRevenueCard(),
           ),
-        ),
-      ],
+          const SizedBox(width: AppSpacing.base),
+          // Critical Arrears
+          Expanded(
+            child: KpiCard(
+              title: 'CRITICAL ARREARS',
+              value: criticalArrears,
+              subtitle: '$accountsOverdue Accounts Overdue',
+              icon: LucideIcons.alertCircle,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

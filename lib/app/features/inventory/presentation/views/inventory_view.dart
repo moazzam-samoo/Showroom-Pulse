@@ -15,23 +15,46 @@ import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_
 
 
 /// Inventory View
-/// 
+///
 /// Analyzed from: Dark Theme UI/Inventory Page.png
 /// Layout:
 /// - Sidebar navigation (left)
 /// - Main content:
 ///   - Filter bar (search, add button, dropdowns)
 ///   - Grid of bike cards (4 columns)
-class InventoryView extends StatelessWidget {
+class InventoryView extends StatefulWidget {
   const InventoryView({super.key});
 
   @override
+  State<InventoryView> createState() => _InventoryViewState();
+}
+
+class _InventoryViewState extends State<InventoryView> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    // Request focus after the first frame so we don't steal it from transitions
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(InventoryController());
+    final controller = Get.find<InventoryController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
+      focusNode: _focusNode,
       onKeyEvent: (KeyEvent event) {
         if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
           Get.offNamed('/dashboard');

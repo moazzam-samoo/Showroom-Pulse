@@ -3,10 +3,15 @@ import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/app_settings.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
   final IsarService _isarService = Get.find<IsarService>();
+
+  // Profile Settings
+  final ownerName = RxnString();
+  final ownerProfilePicPath = RxnString();
 
   // Loading State
   final RxBool isLoading = false.obs;
@@ -52,6 +57,7 @@ class DashboardController extends GetxController {
         loadChartData(),
         loadStockAllocation(),
         loadKPIData(),
+        loadProfileSettings(),
       ]);
     } catch (e) {
       Get.snackbar(
@@ -130,6 +136,19 @@ class DashboardController extends GetxController {
       totalAssetGrowth.value = 5.2; // Placeholder
     } catch (e) {
       print('Error loading KPI data: $e');
+    }
+  }
+
+  /// Load profile settings from AppSettings
+  Future<void> loadProfileSettings() async {
+    try {
+      final settingsList = await _isarService.isar.appSettings.where().findAll();
+      if (settingsList.isNotEmpty) {
+        ownerName.value = settingsList.first.ownerName;
+        ownerProfilePicPath.value = settingsList.first.ownerProfilePicPath;
+      }
+    } catch (e) {
+      print('Error loading profile settings: $e');
     }
   }
 

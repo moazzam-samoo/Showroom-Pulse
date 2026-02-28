@@ -92,7 +92,7 @@ class _DashboardViewState extends State<DashboardView> {
             child: Column(
               children: [
                 // Header
-                _buildHeader(isDark, authService),
+                _buildHeader(isDark, authService, controller),
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
@@ -162,7 +162,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildHeader(bool isDark, AuthService authService) {
+  Widget _buildHeader(bool isDark, AuthService authService, DashboardController controller) {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     
     return Container(
@@ -384,23 +384,43 @@ class _DashboardViewState extends State<DashboardView> {
               }),
               // User Avatar
               const SizedBox(width: 8),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    authService.currentUser.value?.displayName.substring(0, 1).toUpperCase() ?? 'A',
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
+              Obx(() {
+                final hasPic = controller.ownerProfilePicPath.value != null &&
+                    File(controller.ownerProfilePicPath.value!).existsSync();
+
+                return Tooltip(
+                  message: controller.ownerName.value ?? authService.currentUser.value?.displayName ?? 'User',
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                      image: hasPic
+                          ? DecorationImage(
+                              image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
+                    child: hasPic
+                        ? null
+                        : Center(
+                            child: Text(
+                              (controller.ownerName.value?.isNotEmpty == true
+                                      ? controller.ownerName.value!
+                                      : (authService.currentUser.value?.displayName ?? 'A'))
+                                  .substring(0, 1)
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                   ),
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ],

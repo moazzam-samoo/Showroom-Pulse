@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 
 class SalesController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -134,6 +135,51 @@ class SalesController extends GetxController {
   void exportReport() {
     // Placeholder for export logic
     Get.snackbar('Export', 'Generating report for ${selectedDateRange.value}...');
+  }
+
+  Future<void> exportSaleInvoice(SaleCardData data) async {
+    try {
+      Get.snackbar('Exporting', 'Generating invoice...');
+      final pdfService = Get.find<ReportPdfService>();
+      
+      final saleMap = {
+        'customerName': data.customerName,
+        'customerCnic': data.customerCnic,
+        'customerContact': data.customerContact,
+        'customerAddress': data.customerAddress,
+        'bikeModel': data.bikeModel,
+        'bikeColor': data.bikeColor,
+        'bikeChassisNumber': data.bikeChassisNumber,
+        'bikeEngineNumber': data.bikeEngineNumber,
+        'isCash': data.isCash,
+        'amountPaid': data.amountPaid,
+        'sellingPrice': data.sellingPrice,
+        'amountRemaining': data.amountRemaining,
+        'installmentMonthlyPayment': data.installmentMonthlyPayment,
+        'installmentDuration': data.installmentDuration,
+        'saleDate': data.saleDate,
+        'witnesses': (data.witnesses != null && data.witnesses!.isNotEmpty) 
+          ? data.witnesses!.map((w) => {
+              'fullName': w.fullName,
+              'cnicNumber': w.cnicNumber,
+              'phoneNumber': w.phoneNumber,
+            }).toList() 
+          : (data.witnessName != null ? [{
+              'fullName': data.witnessName ?? '',
+              'cnicNumber': data.witnessCnic ?? '',
+              'phoneNumber': data.witnessPhone ?? '',
+            }] : []),
+      };
+
+      final filePath = await pdfService.generateSaleInvoice(saleData: saleMap);
+      if (filePath != null) {
+        Get.snackbar('Success', 'Invoice saved to $filePath', duration: const Duration(seconds: 4));
+      } else {
+        Get.snackbar('Error', 'Failed to generate invoice');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed during export: $e', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   String currencyFormat(double amount) {

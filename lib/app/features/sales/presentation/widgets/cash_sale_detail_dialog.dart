@@ -475,9 +475,8 @@ class CashSaleDetailDialog extends StatelessWidget {
            const SizedBox(width: AppSpacing.md),
            ElevatedButton.icon(
             onPressed: () {
-              // TODO: Print
-              Get.back();
-              Get.snackbar('Print', 'Sending to printer...');
+              Get.back(); // Close dialog
+              Get.find<SalesController>().exportSaleInvoice(data);
             },
             icon: const Icon(LucideIcons.printer, size: 18),
             label: const Text('Print Invoice'),

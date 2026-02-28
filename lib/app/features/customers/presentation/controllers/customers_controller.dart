@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_showroom;
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:intl/intl.dart';
 
 /// Controller for Customers screen
 class CustomersController extends GetxController {
@@ -337,6 +338,59 @@ class CustomersController extends GetxController {
       Get.snackbar('Error', 'Failed to update customer: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> exportCustomerData() async {
+    final customerObj = selectedCustomer.value;
+    if (customerObj == null) {
+      Get.snackbar('Export Failed', 'No customer is selected.');
+      return;
+    }
+
+    try {
+      Get.snackbar('Exporting', 'Generating customer statement...');
+      final pdfService = Get.find<ReportPdfService>();
+
+      final customerMap = {
+        'fullName': customerObj.customer.fullName,
+        'phoneNumber': customerObj.customer.phoneNumber,
+        'cnicNumber': customerObj.customer.cnicNumber,
+        'address': customerObj.customer.address,
+      };
+
+      // Create transactions list mapped
+      final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+      final txList = customerObj.transactions.map((tx) {
+        final date = dateFormat.format(tx.sale.saleDate);
+        final vehicle = tx.bike.model;
+        final type = tx.isInstallment ? 'Installment' : 'Cash';
+        final total = tx.isInstallment ? (tx.contract?.totalAmount ?? tx.sale.totalAmount) : tx.sale.totalAmount;
+        final paid = tx.sale.receivedAmount;
+        final bal = total - paid;
+        
+        return {
+          'date': date,
+          'vehicle': vehicle,
+          'type': type,
+          'totalPrice': total,
+          'amountPaid': paid,
+          'amountRemaining': bal,
+        };
+      }).toList();
+
+      final filePath = await pdfService.generateCustomerStatement(
+        customerData: customerMap,
+        transactions: txList,
+      );
+
+      if (filePath != null) {
+        Get.snackbar('Success', 'Statement saved to $filePath', duration: const Duration(seconds: 4));
+      } else {
+        Get.snackbar('Error', 'Failed to generate statement');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed during export: $e');
     }
   }
 }
