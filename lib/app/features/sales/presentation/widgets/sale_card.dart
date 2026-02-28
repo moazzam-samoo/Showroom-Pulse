@@ -203,10 +203,10 @@ class SaleCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: (isDark ? Colors.white : Colors.black).withOpacity(0.3),
+                          color: Colors.black.withOpacity(0.6),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(LucideIcons.download, size: 16, color: Colors.white),
+                        child: const Icon(LucideIcons.download, size: 18, color: Colors.white),
                       ),
                     ),
                   ),
