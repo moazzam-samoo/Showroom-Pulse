@@ -5,7 +5,9 @@ import '../../../../data/models/app_settings.dart';
 import '../../../../core/services/backup_service.dart';
 import '../../../../core/services/isar_service.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../../core/services/checkpoint_service.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import 'dart:io';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -244,5 +246,46 @@ class SettingsController extends GetxController {
     final spaced = key.replaceAllMapped(RegExp(r'[A-Z]'), (m) => ' ${m.group(0)}').trim();
     if (spaced.isEmpty) return spaced;
     return spaced[0].toUpperCase() + spaced.substring(1);
+  }
+
+  // --- Checkpoint / Reset logic ---
+  Future<List<CheckpointInfo>> getCheckpoints() async {
+    final checkpointService = Get.find<CheckpointService>();
+    return await checkpointService.getCheckpoints();
+  }
+
+  Future<void> restoreFromCheckpoint(String checkpointPath) async {
+    isImporting.value = true;
+    importProgress.value = 'Preparing checkpoint restore...';
+    try {
+      final checkpointService = Get.find<CheckpointService>();
+      final success = await checkpointService.restoreFromCheckpoint(checkpointPath);
+      
+      if (success) {
+        await Get.dialog(
+          barrierDismissible: false,
+          AlertDialog(
+            title: const Text('Checkpoint Restored'),
+            content: const Text('The checkpoint has been staged. The app will now restart to apply the rollback.'),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Process.start(Platform.resolvedExecutable, []);
+                  exit(0);
+                },
+                child: const Text('Restart App'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar('Error', 'Failed to restore checkpoint.');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'An error occurred restoring checkpoint: $e');
+    } finally {
+      isImporting.value = false;
+      importProgress.value = '';
+    }
   }
 }

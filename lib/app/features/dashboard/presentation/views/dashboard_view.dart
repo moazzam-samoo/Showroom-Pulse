@@ -462,27 +462,48 @@ class _DashboardViewState extends State<DashboardView> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Show profile picture
+              // Show profile picture with actions
               Obx(() {
                 final hasPic = controller.ownerProfilePicPath.value != null &&
                     File(controller.ownerProfilePicPath.value!).existsSync();
-                return Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightBackground,
-                    shape: BoxShape.circle,
-                    image: hasPic
-                        ? DecorationImage(
-                            image: FileImage(File(controller.ownerProfilePicPath.value!)),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                  ),
-                  child: hasPic
-                      ? null
-                      : Icon(LucideIcons.user, size: 40, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                return Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                        shape: BoxShape.circle,
+                        image: hasPic
+                            ? DecorationImage(
+                                image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                        border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                      ),
+                      child: hasPic
+                          ? null
+                          : Icon(LucideIcons.user, size: 40, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => controller.uploadProfilePicture(),
+                          icon: Icon(LucideIcons.camera, size: 16, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+                          label: Text('Upload', style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary)),
+                        ),
+                        if (hasPic)
+                          TextButton.icon(
+                            onPressed: () => controller.removeProfilePicture(),
+                            icon: const Icon(LucideIcons.trash2, size: 16, color: Colors.red),
+                            label: const Text('Remove', style: TextStyle(fontSize: 12, color: Colors.red)),
+                          ),
+                      ],
+                    ),
+                  ],
                 );
               }),
               const SizedBox(height: 24),

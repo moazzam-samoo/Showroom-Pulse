@@ -5,7 +5,8 @@ import '../services/theme_service.dart';
 import '../../features/auth/presentation/controllers/login_controller.dart';
 import '../../features/auth/data/auth_service.dart';
 import '../services/notification_service.dart';
-import '../services/report_pdf_service.dart'; // Added import for ReportPdfService
+import '../services/report_pdf_service.dart';
+import '../services/checkpoint_service.dart';
 
 /// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
@@ -26,6 +27,11 @@ Future<void> initializeAsyncServices() async {
   // Initialize IsarService (database)
   final isarService = await IsarService().init();
   Get.put(isarService);
+  
+  // Initialize CheckpointService (auto-snapshots)
+  final checkpointService = CheckpointService(fileService, isarService);
+  Get.put(checkpointService);
+  await checkpointService.autoCheckpoint();
   
   // Initialize AuthService (authentication + session)
   final authService = await AuthService().init();
