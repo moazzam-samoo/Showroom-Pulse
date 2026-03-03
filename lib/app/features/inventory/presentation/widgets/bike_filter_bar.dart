@@ -29,6 +29,7 @@ class BikeFilterBar extends StatelessWidget {
   final ValueChanged<String?>? onSkinChanged;
   final ValueChanged<double?>? onMinPriceChanged;
   final ValueChanged<double?>? onMaxPriceChanged;
+  final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onClearFilters;
   final VoidCallback? onAddBike;
 
@@ -49,6 +50,7 @@ class BikeFilterBar extends StatelessWidget {
     this.onSkinChanged,
     this.onMinPriceChanged,
     this.onMaxPriceChanged,
+    this.onSearchChanged,
     this.onClearFilters,
     this.onAddBike,
   });
@@ -100,6 +102,7 @@ class BikeFilterBar extends StatelessWidget {
                     Expanded(
                       child: TextField(
                         controller: searchController,
+                        onChanged: onSearchChanged,
                         style: TextStyle(
                           color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                           fontSize: 15,
@@ -112,6 +115,25 @@ class BikeFilterBar extends StatelessWidget {
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
+                          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: searchController,
+                            builder: (context, value, child) {
+                              if (value.text.isNotEmpty) {
+                                return IconButton(
+                                  icon: const Icon(LucideIcons.x, size: 16),
+                                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                  onPressed: () {
+                                    searchController.clear();
+                                    if (onSearchChanged != null) {
+                                      onSearchChanged!('');
+                                    }
+                                  },
+                                  tooltip: 'Clear Search',
+                                );
+                              }
+                              return const SizedBox.shrink();
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -122,31 +144,22 @@ class BikeFilterBar extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             
             // Clear Filters Button
-            Tooltip(
-              message: 'Clear Filters',
-              child: Material(
-                color: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  side: BorderSide(
-                    color: isDark ? AppColors.darkBorder : Colors.grey.shade300,
-                  ),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: onClearFilters,
+                icon: const Icon(LucideIcons.filterX, size: 18),
+                label: const Text(
+                  'Clear Filters',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
-                child: InkWell(
-                  onTap: onClearFilters,
-                  borderRadius: BorderRadius.circular(AppRadius.lg),
-                  child: Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                    ),
-                    child: Icon(
-                      LucideIcons.filterX,
-                      size: 20,
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                    ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? Colors.redAccent.shade200 : Colors.redAccent,
+                  side: BorderSide(
+                    color: (isDark ? Colors.redAccent.shade200 : Colors.redAccent).withOpacity(0.5)
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
                 ),
               ),

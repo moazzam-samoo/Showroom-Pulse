@@ -1,72 +1,38 @@
-## 🧠 Brainstorm: Navigation Animation Improvement
+# Orchestration Plan: Add "Clear Filters" Buttons
 
-### Context
+## Overview
 
-When navigating between pages in the Tahir Showroom app, the default transition currently feels unprofessional and jarring ("like a new screen is opened"). The application is a desktop/cross-platform app using GetX. We need a smoother, more professional transition consistent with premium applications.
+The user requested adding a "Clear All Filters" button on all screens where filters or search properties are used.
 
----
+## Identified Screens with Filters
 
-### Option A: Cupertino (iOS Style) Transition
+1. **Inventory (`inventory_view.dart` / `BikeFilterBar`)**:
+   - Already has an `onClearFilters` callback. We need to verify if the UI exposes it as an attractive "Clear Filters" button and add it if missing.
+2. **Sales (`sales_view.dart` / `SalesFilterBar`)**:
+   - Has a Date Range Filter, Status Filter, and Search. Needs a "Clear Filters" button that resets the controller's states.
+3. **Installments (`installments_view.dart`)**:
+   - Has "Due This Week" filter and "Status Filter" dropdown. Needs a "Clear Filters" button.
+4. **Customers / Procurement**:
+   - We will inject a similar filter reset mechanism where search/filter bars exist.
 
-A smooth right-to-left sliding animation with a slight parallax effect. This is the gold standard for mobile apps and feels highly premium.
-✅ **Pros:**
+## Execution Strategy
 
-- Very professional and widely recognized.
-- Smooth, native feel.
+### Phase 2: Implementation (Parallel Agents)
 
-❌ **Cons:**
+#### Agent 1: `frontend-specialist` (UI Implementation)
 
-- Might feel slightly "mobile-first" on a large desktop screen.
+- **Task**: Modify the filter widgets (`BikeFilterBar`, `SalesFilterBar`, `installments_view.dart`, `customers_view.dart`) to include a new, aesthetically pleasing "Clear Filters" or "Reset" icon button.
+- **Rules**: Adhere to `@[/ui-ux-pro-max]` guidelines. Use standard `LucideIcons.filterX` or `xCircle`. The button should have a hover effect and maybe a distinct color (like a subtle red/orange or just subtle grey) so it's clearly a destructive/reset action but not overwhelming.
 
-📊 **Effort:** Low
+#### Agent 2: `backend-specialist` (Controller Logic)
 
----
+- **Task**: Update the GetX controllers (`SalesController`, `InstallmentsController`, `CustomersController`) to add a `clearFilters()` method that resets all `Rx` observer variables (search text, dropdown selections, date ranges) back to their default `null` or empty states.
 
-### Option B: Fade In Transition (Recommended for Desktop Dashboards)
+#### Agent 3: `test-engineer` (Verification)
 
-A minimalist cross-fade where the new screen gently fades in over the old one.
-✅ **Pros:**
+- **Task**: Run `flutter analyze` and existing test scripts to ensure the new buttons don't break the build and the controllers compile correctly.
 
-- Excellent for desktop and dashboard interfaces.
-- Very subtle, doesn't distract the user.
-- Instantly feels like a professional desktop application rather than a mobile port.
+## Verification
 
-❌ **Cons:**
-
-- Less "dynamic/playful" than sliding animations.
-
-📊 **Effort:** Low
-
----
-
-### Option C: Right to Left with Fade
-
-The new screen slides in from the right while simultaneously fading in.
-✅ **Pros:**
-
-- Modern and dynamic.
-- Feels lighter than a full slide.
-
-❌ **Cons:**
-
-- Can sometimes feel slightly over-animated depending on the UI elements.
-
-📊 **Effort:** Low
-
----
-
-## 💡 Recommendation
-
-**Option B (Fade In Transition)**. Given that this is a desktop showroom application (configured with `window_manager` for a 1280x720 window), **Fade Transition** feels the most seamless and professional for dashboard/desktop apps.
-
----
-
-## 📅 Implementation Plan
-
-1. **Update `lib/main.dart`**:
-   - Add `defaultTransition: Transition.fadeIn` (or the user's chosen option) to `GetMaterialApp`.
-   - Add a custom `transitionDuration: const Duration(milliseconds: 300)` for a premium, smooth feel.
-2. **Review Individual Routes**:
-   - Ensure all `GetPage` definitions in `main.dart` inherit the default transition.
-3. **Verify UI/UX**:
-   - Run the app to ensure navigation feels smooth and professional.
+- Run `flutter analyze` to ensure no syntax errors.
+- Visual verification by running the desktop app (`flutter run -d windows`).
