@@ -46,13 +46,22 @@ class CustomerListSidebar extends GetView<CustomersController> {
           // Search
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: TextField(
+            child: Obx(() => TextField(
+              controller: controller.searchController,
               onChanged: controller.updateSearch,
               style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 hintText: 'Search customers...',
                 hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                 prefixIcon: Icon(LucideIcons.search, size: 16, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                suffixIcon: controller.hasActiveFilters
+                    ? IconButton(
+                        icon: const Icon(LucideIcons.x, size: 16),
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        onPressed: controller.clearFilters,
+                        tooltip: 'Clear Search',
+                      )
+                    : null,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 filled: true,
                 fillColor: isDark ? AppColors.darkElevated : Colors.grey[100],
@@ -61,7 +70,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
                   borderSide: BorderSide.none,
                 ),
               ),
-            ),
+            )),
           ),
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1),

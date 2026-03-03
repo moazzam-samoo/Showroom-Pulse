@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
@@ -14,10 +15,23 @@ class SalesController extends GetxController {
   final selectedDateRange = 'All Time'.obs; // Default: All Time
   final selectedStatus = 'All Status'.obs;
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
 
   // Options
   final dateRangeOptions = ['This Month', 'Last Month', 'This Year', 'All Time'];
   final statusOptions = ['All Status', 'Cash', 'Installment'];
+
+  bool get hasActiveFilters =>
+      searchQuery.value.isNotEmpty ||
+      selectedDateRange.value != 'All Time' ||
+      selectedStatus.value != 'All Status';
+
+  void clearFilters() {
+    selectedDateRange.value = 'All Time';
+    selectedStatus.value = 'All Status';
+    searchQuery.value = '';
+    searchController.clear();
+  }
 
   @override
   void onInit() {

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
@@ -58,10 +59,22 @@ class InstallmentsController extends GetxController {
   final isLoading = true.obs;
   final selectedContractId = Rxn<int>();
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
   final statusFilter = Rxn<ContractStatusEnum>();
 
   // Filter options
   final showDueThisWeek = false.obs;
+
+  bool get hasActiveFilters =>
+      searchQuery.value.isNotEmpty || showDueThisWeek.value || statusFilter.value != null;
+
+  void clearFilters() {
+    searchQuery.value = '';
+    searchController.clear();
+    showDueThisWeek.value = false;
+    statusFilter.value = null;
+    loadContracts();
+  }
 
   @override
   void onInit() {

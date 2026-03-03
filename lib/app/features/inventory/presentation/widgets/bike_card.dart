@@ -59,18 +59,28 @@ class _BikeCardState extends State<BikeCard> {
           transform: _isHovered ? Matrix4.identity().scaled(1.02) : Matrix4.identity(),
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
+              // Base subtle shadow always present
               BoxShadow(
-                color: isDark ? Colors.black.withOpacity(0.3) : Colors.black.withOpacity(0.1),
-                blurRadius: _isHovered ? 12 : 8,
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                blurRadius: 12,
+                spreadRadius: 0,
                 offset: const Offset(0, 4),
               ),
+              // Attractive colored shadow when hovered
+              if (_isHovered)
+                BoxShadow(
+                  color: primaryColor.withOpacity(isDark ? 0.4 : 0.25),
+                  blurRadius: isDark ? 25 : 20,
+                  spreadRadius: isDark ? 2 : 1,
+                  offset: const Offset(0, 8),
+                ),
             ],
             border: Border.all(
               color: isDark 
                   ? (_isHovered ? primaryColor.withOpacity(0.5) : const Color(0xFF424242)) // Grey 800
-                  : AppColors.lightBorder,
+                  : (_isHovered ? primaryColor.withOpacity(0.5) : AppColors.lightBorder),
               width: 1,
             ),
           ),
@@ -78,23 +88,27 @@ class _BikeCardState extends State<BikeCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Image Area (Reduced in compact mode)
-              Expanded(
-                flex: widget.compact ? 3 : 5, 
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Image
-                    Hero(
-                      tag: 'bike_${widget.bike.engineNumber}',
-                      child: widget.bike.imageFilename != null
-                          ? Image.file(
-                              File(widget.bike.imageFilename!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _buildPlaceholder(isDark),
-                            )
-                          : _buildPlaceholder(isDark),
+              // 1. Image Area
+              Stack(
+                children: [
+                  // Image
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: SizedBox(
+                      height: 150, // Match SaleCard exact dimension
+                      width: double.infinity,
+                      child: Hero(
+                        tag: 'bike_${widget.bike.engineNumber}',
+                        child: widget.bike.imageFilename != null
+                            ? Image.file(
+                                File(widget.bike.imageFilename!),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _buildPlaceholder(isDark),
+                              )
+                            : _buildPlaceholder(isDark),
+                      ),
                     ),
+                  ),
                     
                     // Gradient Overlay
                     Positioned(
@@ -160,17 +174,11 @@ class _BikeCardState extends State<BikeCard> {
                       ),
                   ],
                 ),
-              ),
 
               // 2. Info Area
-              Expanded(
-                flex: widget.compact ? 3 : 4,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: widget.compact ? 4 : 10,
-                    vertical: widget.compact ? 4 : 10,
-                  ),
-                  child: Column(
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12), // Same padding as SaleCard
+                child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Model & Color
@@ -227,7 +235,7 @@ class _BikeCardState extends State<BikeCard> {
                         ),
                       ),
                       
-                      const Spacer(),
+                      const SizedBox(height: 12), // Push the price down instead of using Spacer()
 
                       // Price Section
                       Row(
@@ -315,7 +323,6 @@ class _BikeCardState extends State<BikeCard> {
                     ],
                   ),
                 ),
-              ),
             ],
           ),
         ),

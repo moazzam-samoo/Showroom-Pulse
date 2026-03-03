@@ -117,6 +117,14 @@ class _QuickActionCardState extends State<_QuickActionCard> {
                   : (widget.isDark ? AppColors.darkBorder : Colors.grey.shade300),
               width: _isHovered ? 1.5 : 1,
             ),
+            boxShadow: _isHovered ? [
+              BoxShadow(
+                color: color.withOpacity(widget.isDark ? 0.4 : 0.25),
+                blurRadius: widget.isDark ? 25 : 20,
+                spreadRadius: widget.isDark ? 2 : 1,
+                offset: const Offset(0, 8),
+              ),
+            ] : null,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,

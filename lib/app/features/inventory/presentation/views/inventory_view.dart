@@ -12,6 +12,7 @@ import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_filter_bar.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_bike_dialog.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 
 /// Inventory View
@@ -198,18 +199,15 @@ class _InventoryViewState extends State<InventoryView> {
       builder: (context, constraints) {
         // Responsive columns: 4 for wide screens, 3 for smaller, 2 for very small
         int crossAxisCount = 4;
-        if (constraints.maxWidth < 900) crossAxisCount = 2;
-        else if (constraints.maxWidth < 1200) crossAxisCount = 3;
+        if (constraints.maxWidth < 700) crossAxisCount = 2;
+        else if (constraints.maxWidth < 1000) crossAxisCount = 3;
 
         return Scrollbar(
-          child: GridView.builder(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: AppSpacing.base,
-            mainAxisSpacing: AppSpacing.base,
-            childAspectRatio: 0.85,
-          ),
+          child: MasonryGridView.count(
+          padding: const EdgeInsets.only(right: AppSpacing.md, bottom: AppSpacing.xl),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: AppSpacing.base,
+          mainAxisSpacing: AppSpacing.base,
           itemCount: filteredBikes.length,
           itemBuilder: (context, index) {
             final bike = filteredBikes[index];

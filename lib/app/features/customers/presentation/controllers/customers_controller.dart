@@ -15,6 +15,15 @@ class CustomersController extends GetxController {
   final customers = <CustomerWithTransactions>[].obs;
   final isLoading = true.obs;
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
+
+  bool get hasActiveFilters => searchQuery.value.isNotEmpty;
+
+  void clearFilters() {
+    searchQuery.value = '';
+    searchController.clear();
+    loadCustomers();
+  }
   
   // Expanded row tracking - DEPRECATED for Sidebar Layout but kept for compatibility during migration
   final expandedCustomerId = Rxn<int>();

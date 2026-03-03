@@ -6,7 +6,7 @@ import '../constants/app_spacing.dart';
 /// AppCard - Standard card component with theme support
 /// 
 /// Follows design system specifications for both Light and Dark themes
-class AppCard extends StatelessWidget {
+class AppCard extends StatefulWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -27,46 +27,69 @@ class AppCard extends StatelessWidget {
   });
 
   @override
+  State<AppCard> createState() => _AppCardState();
+}
+
+class _AppCardState extends State<AppCard> {
+  bool isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = const Color(0xFF00ACC1); // Cyan
     
     // Pro Max Aesthetic: Slate 800 for Dark, White for Light
     final defaultColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final cardColor = color ?? defaultColor;
+    final cardColor = widget.color ?? defaultColor;
 
-    Widget card = Container(
-      margin: margin,
+    Widget card = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: widget.margin,
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.lg),
+        borderRadius: BorderRadius.circular(widget.borderRadius ?? AppRadius.lg),
         border: isDark 
-            ? Border.all(color: Colors.white.withOpacity(0.1), width: 1.0) 
-            : Border.all(color: Colors.black.withOpacity(0.05)),
-        boxShadow: hasShadow 
+            ? (isHovered ? Border.all(color: primaryColor.withOpacity(0.5), width: 1.0) : Border.all(color: Colors.white.withOpacity(0.1), width: 1.0))
+            : (isHovered ? Border.all(color: primaryColor.withOpacity(0.5), width: 1.0) : Border.all(color: Colors.black.withOpacity(0.05))),
+        boxShadow: widget.hasShadow 
           ? [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.4 : 0.05),
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
+              if (isHovered)
+                BoxShadow(
+                  color: primaryColor.withOpacity(isDark ? 0.4 : 0.25),
+                  blurRadius: isDark ? 25 : 20,
+                  spreadRadius: isDark ? 2 : 1,
+                  offset: const Offset(0, 8),
+                ),
             ]
           : null,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius ?? AppRadius.lg),
+        borderRadius: BorderRadius.circular(widget.borderRadius ?? AppRadius.lg),
         child: Padding(
-          padding: padding ?? const EdgeInsets.all(AppSpacing.base),
-          child: child,
+          padding: widget.padding ?? const EdgeInsets.all(AppSpacing.base),
+          child: widget.child,
         ),
       ),
     );
 
-    if (onTap != null) {
+    if (widget.onTap != null) {
       return MouseRegion(
+        onEnter: (_) => setState(() => isHovered = true),
+        onExit: (_) => setState(() => isHovered = false),
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
-          onTap: onTap,
-          child: card,
+          onTap: widget.onTap,
+          child: AnimatedScale(
+            scale: isHovered ? 1.02 : 1.0,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: card,
+          ),
         ),
       );
     }

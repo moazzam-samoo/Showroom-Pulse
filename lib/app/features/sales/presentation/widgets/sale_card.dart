@@ -98,42 +98,70 @@ class SaleCardData {
   });
 }
 
-class SaleCard extends StatelessWidget {
+class SaleCard extends StatefulWidget {
   final SaleCardData data;
 
   const SaleCard({super.key, required this.data});
 
   @override
+  State<SaleCard> createState() => _SaleCardState();
+}
+
+class _SaleCardState extends State<SaleCard> {
+  bool isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final data = widget.data;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     // Status Badge Details
     final badgeColor = data.isCash ? const Color(0xFFEF4444) : const Color(0xFFF59E0B); // Red (Sold) vs Amber (Installment)
     final badgeLabel = data.isCash ? 'SOLD (NOT AVAILABLE)' : 'INSTALLMENT (RESERVED)';
 
-    return GestureDetector(
-      onTap: () {
-        if (data.isCash) {
-          Get.dialog(CashSaleDetailDialog(data: data));
-        } else {
-          Get.dialog(InstallmentSaleDetailDialog(data: data));
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-          border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.05) : AppColors.lightBorder,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (data.isCash) {
+            Get.dialog(CashSaleDetailDialog(data: data));
+          } else {
+            Get.dialog(InstallmentSaleDetailDialog(data: data));
+          }
+        },
+        child: AnimatedScale(
+          scale: isHovered ? 1.02 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              border: Border.all(
+                color: isDark 
+                    ? (isHovered ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.05))
+                    : (isHovered ? AppColors.lightPrimary.withOpacity(0.5) : AppColors.lightBorder),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+                if (isHovered)
+                  BoxShadow(
+                    color: AppColors.lightPrimary.withOpacity(isDark ? 0.4 : 0.25),
+                    blurRadius: isDark ? 25 : 20,
+                    spreadRadius: isDark ? 2 : 1,
+                    offset: const Offset(0, 8),
+                  ),
+              ],
             ),
-          ],
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -143,7 +171,7 @@ class SaleCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
                     child: SizedBox(
-                      height: 140,
+                      height: 120,
                       width: double.infinity,
                       child: data.bikeImage.isNotEmpty
                           ? Image.file(
@@ -219,7 +247,7 @@ class SaleCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: badgeColor,
                           borderRadius: BorderRadius.circular(AppRadius.full),
@@ -234,7 +262,7 @@ class SaleCard extends StatelessWidget {
                         child: Text(
                           badgeLabel,
                           style: GoogleFonts.outfit(
-                            fontSize: 12,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
@@ -263,7 +291,7 @@ class SaleCard extends StatelessWidget {
                               Text(
                                 'Completed',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
@@ -312,7 +340,7 @@ class SaleCard extends StatelessWidget {
 
             // 2. Details Section
             Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -329,7 +357,7 @@ class SaleCard extends StatelessWidget {
                         child: Text(
                           data.bikeModel,
                           style: GoogleFonts.outfit(
-                            fontSize: 16,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
@@ -454,6 +482,8 @@ class SaleCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      ),
       ),
     );
   }
