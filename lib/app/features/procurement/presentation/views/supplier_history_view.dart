@@ -18,6 +18,7 @@ import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart'
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
+import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
   const SupplierHistoryView({super.key});
@@ -92,18 +93,35 @@ class SupplierHistoryView extends GetView<SupplierController> {
                             ],
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+                          child: Obx(() => AppTextField(
+                            controller: controller.searchController,
+                            hint: 'Search dealers...',
+                            prefixIcon: LucideIcons.search,
+                            showClearIcon: controller.searchQuery.value.isNotEmpty,
+                            onClear: () {
+                              controller.searchController.clear();
+                              controller.searchQuery.value = '';
+                            },
+                            onChanged: (val) {
+                              controller.searchQuery.value = val;
+                            },
+                          )),
+                        ),
                         const Divider(height: 1),
                         Expanded(
                           child: Obx(() {
-                            if (controller.suppliers.isEmpty) {
+                            final displaySuppliers = controller.filteredSuppliers;
+                            if (displaySuppliers.isEmpty) {
                               return const Center(child: Text('No suppliers found'));
                             }
                             return ListView.separated(
                               padding: const EdgeInsets.only(right: AppSpacing.sm),
-                              itemCount: controller.suppliers.length,
+                              itemCount: displaySuppliers.length,
                               separatorBuilder: (_, __) => const Divider(height: 1),
                               itemBuilder: (ctx, index) {
-                                final supplier = controller.suppliers[index];
+                                final supplier = displaySuppliers[index];
                                 return Obx(() {
                                     final isSelected = controller.selectedSupplier.value?.id == supplier.id;
                                     return ListTile(

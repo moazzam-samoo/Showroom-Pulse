@@ -49,6 +49,20 @@ class SupplierController extends GetxController {
   final RxList<Supplier> suppliers = <Supplier>[].obs;
   final Rx<Supplier?> selectedSupplier = Rx<Supplier?>(null);
   
+  // Search State
+  final searchQuery = ''.obs;
+  final searchController = TextEditingController();
+
+  List<Supplier> get filteredSuppliers {
+    if (searchQuery.value.isEmpty) return suppliers;
+    final query = searchQuery.value.toLowerCase();
+    return suppliers.where((s) => 
+      s.name.toLowerCase().contains(query) || 
+      s.phone.contains(query) || 
+      s.cnic.contains(query)
+    ).toList();
+  }
+
   // New Supplier State
   final RxBool isNewSupplier = false.obs;
   final newSupplierName = TextEditingController();
