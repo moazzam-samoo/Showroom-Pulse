@@ -97,7 +97,8 @@ class InstallmentsView extends StatelessWidget {
           // Search Box
           SizedBox(
             width: 280,
-            child: TextField(
+            child: Obx(() => TextField(
+              controller: controller.searchController,
               onChanged: controller.updateSearch,
               style: TextStyle(
                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
@@ -113,6 +114,17 @@ class InstallmentsView extends StatelessWidget {
                   size: 18,
                   color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                 ),
+                suffixIcon: controller.searchQuery.value.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(LucideIcons.x, size: 16),
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        onPressed: () {
+                          controller.searchController.clear();
+                          controller.updateSearch('');
+                        },
+                        tooltip: 'Clear Search',
+                      )
+                    : null,
                 filled: true,
                 fillColor: isDark ? AppColors.darkCard : AppColors.lightBackground,
                 border: OutlineInputBorder(
@@ -121,7 +133,7 @@ class InstallmentsView extends StatelessWidget {
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
-            ),
+            )),
           ),
           const SizedBox(width: AppSpacing.base),
           // Due This Week Filter
@@ -182,6 +194,32 @@ class InstallmentsView extends StatelessWidget {
             ),
           )),
           const SizedBox(width: AppSpacing.sm),
+
+          // Clear Filters Button
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: SizedBox(
+              height: 40, // Match typical button heights
+              child: OutlinedButton.icon(
+                onPressed: controller.clearFilters,
+                icon: const Icon(LucideIcons.filterX, size: 16),
+                label: const Text(
+                  'Clear Filters',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? Colors.redAccent.shade200 : Colors.redAccent,
+                  side: BorderSide(
+                    color: (isDark ? Colors.redAccent.shade200 : Colors.redAccent).withOpacity(0.5)
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           // Export All Button
           ElevatedButton.icon(
             onPressed: () => controller.downloadAllStatements(),
