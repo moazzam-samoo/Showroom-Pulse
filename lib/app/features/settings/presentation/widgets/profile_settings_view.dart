@@ -5,6 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../../core/widgets/app_notification_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class ProfileSettingsView extends GetView<SettingsController> {
@@ -102,6 +104,7 @@ class ProfileSettingsView extends GetView<SettingsController> {
               settings.ownerName = value.isEmpty ? null : value;
               controller.settings.refresh();
               controller.saveSettings();
+              AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
             },
           ),
           _divider(isDark),
@@ -132,13 +135,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
         settings.ownerProfilePicPath = savedPath;
         controller.settings.refresh();
         controller.saveSettings();
+        AppToast.showSuccess(title: 'Profile Updated', message: 'Profile picture saved successfully');
       } else {
-        Get.snackbar(
-          'Error', 
-          'Failed to save profile picture', 
-          backgroundColor: Colors.red.withValues(alpha: 0.1), 
-          colorText: Colors.red
-        );
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to save profile picture');
       }
     }
   }

@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcoming_installments.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -16,6 +17,8 @@ class DashboardController extends GetxController {
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
   final showroomName = RxString('AL-TAHIR SHOWROOM');
+  final showroomAddress = RxnString();
+  final showroomPhone = RxnString();
 
   // Loading State
   final RxBool isLoading = false.obs;
@@ -69,10 +72,9 @@ class DashboardController extends GetxController {
         loadUpcomingInstallments(),
       ]);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load dashboard data: $e',
-        snackPosition: SnackPosition.BOTTOM,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to load dashboard data: $e',
       );
     } finally {
       isLoading.value = false;
@@ -163,6 +165,8 @@ class DashboardController extends GetxController {
         ownerName.value = settingsList.first.ownerName;
         ownerProfilePicPath.value = settingsList.first.ownerProfilePicPath;
         showroomName.value = settingsList.first.showroomName;
+        showroomAddress.value = settingsList.first.showroomAddress;
+        showroomPhone.value = settingsList.first.showroomPhone;
       }
     } catch (e) {
       print('Error loading profile settings: $e');

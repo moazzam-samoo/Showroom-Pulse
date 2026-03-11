@@ -7,12 +7,15 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/features/procurement/domain/supplier_service.dart';
 import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class BikeEntry {
   String engineNumber = '';
   String chassisNumber = '';
   String model = '';
   String brand = 'Honda'; // Default
+  BikeConditionEnum condition = BikeConditionEnum.newBike;
   String color = '';
   int modelYear = DateTime.now().year;
   double purchasePrice = 0.0;
@@ -24,6 +27,7 @@ class BikeEntry {
   final FocusNode chassisFocus = FocusNode();
   final FocusNode brandFocus = FocusNode();
   final FocusNode modelFocus = FocusNode();
+  final FocusNode conditionFocus = FocusNode();
   final FocusNode colorFocus = FocusNode();
   final FocusNode yearFocus = FocusNode();
   final FocusNode priceFocus = FocusNode();
@@ -34,6 +38,7 @@ class BikeEntry {
     chassisFocus.dispose();
     brandFocus.dispose();
     modelFocus.dispose();
+    conditionFocus.dispose();
     colorFocus.dispose();
     yearFocus.dispose();
     priceFocus.dispose();
@@ -155,6 +160,7 @@ class SupplierController extends GetxController {
         ..chassisNumber = bike.chassisNumber
         ..model = bike.model
         ..brand = bike.brand
+        ..condition = bike.condition
         ..color = bike.color
         ..modelYear = bike.modelYear
         ..purchasePrice = bike.purchasePrice
@@ -269,12 +275,9 @@ class SupplierController extends GetxController {
           newSupplierCnic.text.isEmpty ||
           newSupplierProfilePic.value == null ||
           newSupplierCnicPic.value == null) {
-        Get.snackbar(
-          'Missing Information', 
-          'Please fill all supplier details (Name, Phone, CNIC) and provide both Profile and CNIC images before proceeding.',
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-          duration: const Duration(seconds: 4),
+        AppNotificationDialog.showError(
+          title: 'Missing Information', 
+          message: 'Please fill all supplier details (Name, Phone, CNIC) and provide both Profile and CNIC images before proceeding.',
         );
         return;
       }
@@ -289,12 +292,12 @@ class SupplierController extends GetxController {
         await loadSuppliers(); // Refresh list
         finalSupplier = newSupplier;
       } catch (e) {
-        Get.snackbar('Error', 'Failed to create supplier: $e');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to create supplier: $e');
         return;
       }
     } else {
       if (selectedSupplier.value == null) {
-        Get.snackbar('Error', 'Please select a supplier');
+        AppNotificationDialog.showError(title: 'Error', message: 'Please select a supplier');
         return;
       }
       finalSupplier = selectedSupplier.value;
@@ -303,7 +306,7 @@ class SupplierController extends GetxController {
     if (finalSupplier == null) return;
 
     if (bikeEntries.isEmpty) {
-      Get.snackbar('Error', 'Please add at least one bike');
+      AppNotificationDialog.showError(title: 'Error', message: 'Please add at least one bike');
       return;
     }
 
@@ -311,12 +314,9 @@ class SupplierController extends GetxController {
       var e = bikeEntries[i];
       if (e.engineNumber.isEmpty || e.chassisNumber.isEmpty || e.brand.isEmpty || 
           e.model.isEmpty || e.color.isEmpty || e.purchasePrice <= 0 || e.imageFile == null) {
-        Get.snackbar(
-          'Missing Details', 
-          'Row ${i + 1} is incomplete. Engine, Chassis, Brand, Model, Color, Year, Purchase Price, and Image must all be filled.',
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-          duration: const Duration(seconds: 4),
+        AppNotificationDialog.showError(
+          title: 'Missing Details', 
+          message: 'Row ${i + 1} is incomplete. Engine, Chassis, Brand, Model, Color, Year, Purchase Price, and Image must all be filled.',
         );
         return;
       }
@@ -390,16 +390,12 @@ class SupplierController extends GetxController {
     } catch (e) {
       final errorMessage = e.toString().toLowerCase();
       if (errorMessage.contains('unique index violated') || errorMessage.contains('unique')) {
-        Get.snackbar(
-          'Duplicate Entry', 
-          'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-          snackPosition: SnackPosition.BOTTOM,
-          duration: const Duration(seconds: 4),
+        AppNotificationDialog.showError(
+          title: 'Duplicate Entry', 
+          message: 'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
         );
       } else {
-        Get.snackbar('Error', e.toString());
+        AppNotificationDialog.showError(title: 'Error', message: e.toString());
       }
     }
   }
@@ -416,6 +412,7 @@ class SupplierController extends GetxController {
           ..chassisNumber = entry.chassisNumber
           ..model = entry.model
           ..brand = entry.brand
+          ..condition = entry.condition
           ..color = entry.color
           ..modelYear = entry.modelYear
           ..purchasePrice = entry.purchasePrice
@@ -467,6 +464,7 @@ class SupplierController extends GetxController {
           ..chassisNumber = entry.chassisNumber
           ..model = entry.model
           ..brand = entry.brand
+          ..condition = entry.condition
           ..color = entry.color
           ..modelYear = entry.modelYear
           ..purchasePrice = entry.purchasePrice;

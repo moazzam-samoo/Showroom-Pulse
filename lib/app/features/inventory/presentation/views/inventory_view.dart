@@ -111,6 +111,7 @@ class _InventoryViewState extends State<InventoryView> {
                     selectedBrand: controller.selectedBrand.value,
                     selectedCC: controller.selectedCC.value,
                     selectedStatus: controller.selectedStatus.value,
+                    selectedCondition: controller.selectedCondition.value,
                     selectedColor: controller.selectedColor.value,
                     selectedSkin: controller.selectedSkin.value,
                     minPrice: controller.minPrice.value,
@@ -118,6 +119,7 @@ class _InventoryViewState extends State<InventoryView> {
                     onBrandChanged: (v) => controller.selectedBrand.value = v,
                     onCCChanged: (v) => controller.selectedCC.value = v,
                     onStatusChanged: (v) => controller.selectedStatus.value = v,
+                    onConditionChanged: (v) => controller.selectedCondition.value = v,
                     onColorChanged: (v) {
                       controller.selectedColor.value = v;
                       if (v != null) controller.selectedSkin.value = null;
@@ -133,6 +135,7 @@ class _InventoryViewState extends State<InventoryView> {
                       controller.selectedBrand.value = null;
                       controller.selectedCC.value = null;
                       controller.selectedStatus.value = null;
+                      controller.selectedCondition.value = null;
                       controller.selectedColor.value = null;
                       controller.selectedSkin.value = null;
                       controller.minPrice.value = null;

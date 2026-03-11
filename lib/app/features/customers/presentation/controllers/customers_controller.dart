@@ -6,6 +6,8 @@ import 'package:tahir_showroom/app/features/customers/data/repositories/customer
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:intl/intl.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// Controller for Customers screen
 class CustomersController extends GetxController {
@@ -64,7 +66,7 @@ class CustomersController extends GetxController {
         loadStats(),
       ]);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load customers: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to load customers: $e');
     } finally {
       isLoading.value = false;
     }
@@ -170,13 +172,9 @@ class CustomersController extends GetxController {
         data['profileImage'] == null ||
         data['cnicFrontImage'] == null ||
         data['cnicBackImage'] == null) {
-      Get.snackbar(
-        'Missing Information',
-        'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back).',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
-        duration: const Duration(seconds: 4),
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back).',
       );
       return;
     }
@@ -227,10 +225,10 @@ class CustomersController extends GetxController {
         cnicBackFilename: cnicBackFilename,
       );
 
-      Get.snackbar('Success', 'Customer added successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Customer added successfully');
       loadData(); // Refresh list
     } catch (e) {
-      Get.snackbar('Error', 'Failed to add customer: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to add customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -319,7 +317,7 @@ class CustomersController extends GetxController {
         await _repository.deleteCustomer(id);
       }
       
-      Get.snackbar('Success', 'Customer ${withHistory ? 'and history ' : ''}deleted successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Customer ${withHistory ? 'and history ' : ''}deleted successfully');
       
       // Clear selection if deleted
       if (selectedCustomer.value?.customer.id == id) {
@@ -328,7 +326,7 @@ class CustomersController extends GetxController {
       
       loadData();
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete customer: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to delete customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -348,13 +346,9 @@ class CustomersController extends GetxController {
         !hasProfile ||
         !hasCnicFront ||
         !hasCnicBack) {
-      Get.snackbar(
-        'Missing Information',
-        'Please fill all input fields and ensure all 3 images (Profile, CNIC Front, CNIC Back) are provided.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
-        duration: const Duration(seconds: 4),
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please fill all input fields and ensure all 3 images (Profile, CNIC Front, CNIC Back) are provided.',
       );
       return;
     }
@@ -421,10 +415,10 @@ class CustomersController extends GetxController {
 
       await _repository.updateCustomer(updatedCustomer);
 
-      Get.snackbar('Success', 'Customer updated successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Customer updated successfully');
       loadData(); // Refresh list
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update customer: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to update customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -433,12 +427,12 @@ class CustomersController extends GetxController {
   Future<void> exportCustomerData() async {
     final customerObj = selectedCustomer.value;
     if (customerObj == null) {
-      Get.snackbar('Export Failed', 'No customer is selected.');
+      AppNotificationDialog.showError(title: 'Export Failed', message: 'No customer is selected.');
       return;
     }
 
     try {
-      Get.snackbar('Exporting', 'Generating customer statement...');
+      AppToast.showInfo(title: 'Exporting', message: 'Generating customer statement...');
       final pdfService = Get.find<ReportPdfService>();
 
       final customerMap = {
@@ -474,12 +468,12 @@ class CustomersController extends GetxController {
       );
 
       if (filePath != null) {
-        Get.snackbar('Success', 'Statement saved to $filePath', duration: const Duration(seconds: 4));
+        AppToast.showSuccess(title: 'Success', message: 'Statement saved to $filePath');
       } else {
-        Get.snackbar('Error', 'Failed to generate statement');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate statement');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed during export: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed during export: $e');
     }
   }
 }

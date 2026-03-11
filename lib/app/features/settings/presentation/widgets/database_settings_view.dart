@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/isar_service.dart';
+import '../../../../core/widgets/app_toast.dart';
+import '../../../../core/widgets/app_notification_dialog.dart';
 import '../controllers/settings_controller.dart';
 
 class DatabaseSettingsView extends GetView<SettingsController> {
@@ -199,24 +201,12 @@ class DatabaseSettingsView extends GetView<SettingsController> {
                       Get.back(); // Only close the dialog after completion
                     }
                     
-                    Get.snackbar(
-                      'Data Cleared',
-                      'All application data has been permanently deleted.',
-                      backgroundColor: (isDark ? AppColors.darkError : AppColors.lightError).withValues(alpha: 0.1),
-                      colorText: isDark ? AppColors.darkError : AppColors.lightError,
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
+                    AppToast.showSuccess(title: 'Data Cleared', message: 'All application data has been permanently deleted.');
                   } catch (e) {
                     if (Get.isDialogOpen ?? false) {
                       Get.back(); 
                     }
-                    Get.snackbar(
-                      'Error',
-                      'Failed to clear data.',
-                      backgroundColor: Colors.red.withValues(alpha: 0.1),
-                      colorText: Colors.red,
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
+                    AppNotificationDialog.showError(title: 'Error', message: 'Failed to clear data.');
                   }
                 },
                 child: isClearing

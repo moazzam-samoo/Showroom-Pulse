@@ -11,6 +11,8 @@ import 'package:tahir_showroom/app/features/procurement/presentation/views/add_s
 import 'package:tahir_showroom/app/features/procurement/presentation/controllers/supplier_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,7 @@ import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
   const SupplierHistoryView({super.key});
@@ -127,10 +130,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                                     return ListTile(
                                       selected: isSelected,
                                       selectedTileColor: primaryColor.withOpacity(0.1),
-                                      leading: CircleAvatar(
-                                        backgroundColor: primaryColor.withOpacity(0.2),
-                                        child: Text(supplier.name[0].toUpperCase()),
-                                      ),
+                                      leading: _buildSupplierAvatar(supplier, isDark, primaryColor, Get.find<FileService>()),
                                       title: Text(supplier.name, style: const TextStyle(fontSize: 14)),
                                       subtitle: Text(supplier.phone, style: const TextStyle(fontSize: 12)),
                                       onTap: () => controller.selectedSupplier.value = supplier,
@@ -447,6 +447,27 @@ class SupplierHistoryView extends GetView<SupplierController> {
     );
   }
 
+  Widget _buildSupplierAvatar(Supplier supplier, bool isDark, Color primaryColor, FileService fileService) {
+    if (supplier.profilePicFilename != null && supplier.profilePicFilename!.isNotEmpty) {
+      final imagePath = fileService.getSupplierProfileImagePathSync(supplier.profilePicFilename!, supplier.name);
+      if (File(imagePath).existsSync()) {
+        return CircleAvatar(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          backgroundImage: FileImage(File(imagePath)),
+          radius: 20,
+        );
+      }
+    }
+    
+    return CircleAvatar(
+      backgroundColor: primaryColor.withOpacity(0.2),
+      radius: 20,
+      child: Text(supplier.name.isNotEmpty ? supplier.name[0].toUpperCase() : '?', 
+        style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 16)
+      ),
+    );
+  }
+
   Widget _buildBatchCard(PurchaseBatch batch, bool isDark, Color primaryColor) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
@@ -635,11 +656,9 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 controller.newSupplierCnic.text.isEmpty ||
                 controller.newSupplierProfilePic.value == null ||
                 controller.newSupplierCnicPic.value == null) {
-              Get.snackbar(
-                'Missing Information', 
-                'Name, Phone, CNIC and both Images are required.',
-                backgroundColor: Colors.red.shade100,
-                colorText: Colors.red.shade900,
+              AppNotificationDialog.showError(
+                title: 'Missing Information', 
+                message: 'Name, Phone, CNIC and both Images are required.',
               );
               return;
             }
@@ -653,7 +672,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 cnicPic: controller.newSupplierCnicPic.value,
               );
               Get.back();
-              Get.snackbar('Success', 'Supplier updated successfully');
+              AppToast.showSuccess(title: 'Success', message: 'Supplier updated successfully');
             } else {
               await controller.createSupplier(
                 controller.newSupplierName.text,
@@ -663,7 +682,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 cnicPic: controller.newSupplierCnicPic.value,
               );
               Get.back();
-              Get.snackbar('Success', 'Supplier added successfully');
+              AppToast.showSuccess(title: 'Success', message: 'Supplier added successfully');
             }
         },
         child: KeyboardListener(
@@ -794,11 +813,9 @@ class SupplierHistoryView extends GetView<SupplierController> {
                             controller.newSupplierCnic.text.isEmpty ||
                             controller.newSupplierProfilePic.value == null ||
                             controller.newSupplierCnicPic.value == null) {
-                          Get.snackbar(
-                            'Missing Information', 
-                            'Name, Phone, CNIC and both Images are required.',
-                            backgroundColor: Colors.red.shade100,
-                            colorText: Colors.red.shade900,
+                          AppNotificationDialog.showError(
+                            title: 'Missing Information', 
+                            message: 'Name, Phone, CNIC and both Images are required.',
                           );
                           return;
                         }
@@ -813,7 +830,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                             cnicPic: controller.newSupplierCnicPic.value,
                           );
                           Get.back();
-                          Get.snackbar('Success', 'Supplier updated successfully');
+                          AppToast.showSuccess(title: 'Success', message: 'Supplier updated successfully');
                         } else {
                           await controller.createSupplier(
                             controller.newSupplierName.text,
@@ -823,7 +840,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                             cnicPic: controller.newSupplierCnicPic.value,
                           );
                           Get.back();
-                          Get.snackbar('Success', 'Supplier added successfully');
+                          AppToast.showSuccess(title: 'Success', message: 'Supplier added successfully');
                         }
                       },
                       style: ElevatedButton.styleFrom(

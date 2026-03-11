@@ -405,7 +405,7 @@ class _DashboardViewState extends State<DashboardView> {
                 return Tooltip(
                   message: controller.ownerName.value ?? authService.currentUser.value?.displayName ?? 'User',
                   child: InkWell(
-                    onTap: () => _showProfileDialog(context, isDark, controller),
+                    onTap: () => _showProfileCard(context, isDark, controller),
                     borderRadius: BorderRadius.circular(18),
                     child: Container(
                       width: 36,
@@ -446,85 +446,215 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  void _showProfileDialog(BuildContext context, bool isDark, DashboardController controller) {
-    final TextEditingController nameController = TextEditingController(text: controller.ownerName.value);
-    
+  void _showProfileCard(BuildContext context, bool isDark, DashboardController controller) {
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final showroomAddress = controller.showroomAddress.value;
+    final showroomPhone = controller.showroomPhone.value;
+
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            'Edit Profile',
-            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Show profile picture
-              Obx(() {
-                final hasPic = controller.ownerProfilePicPath.value != null &&
-                    File(controller.ownerProfilePicPath.value!).existsSync();
-                return Container(
-                  width: 80,
-                  height: 80,
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 320,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: primaryColor.withOpacity(0.2),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.1),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 28, bottom: 20),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkCard : AppColors.lightBackground,
-                    shape: BoxShape.circle,
-                    image: hasPic
-                        ? DecorationImage(
-                            image: FileImage(File(controller.ownerProfilePicPath.value!)),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        primaryColor.withOpacity(0.15),
+                        primaryColor.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
                   ),
-                  child: hasPic
-                      ? null
-                      : Icon(LucideIcons.user, size: 40, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                );
-              }),
-              const SizedBox(height: 24),
-              TextField(
-                controller: nameController,
-                style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Owner Name',
-                  labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                  filled: true,
-                  fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+                  child: Column(
+                    children: [
+                      // Profile Picture
+                      Obx(() {
+                        final hasPic = controller.ownerProfilePicPath.value != null &&
+                            File(controller.ownerProfilePicPath.value!).existsSync();
+                        return Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: primaryColor, width: 2.5),
+                            color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                            image: hasPic
+                                ? DecorationImage(
+                                    image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: hasPic
+                              ? null
+                              : Icon(LucideIcons.user, size: 32,
+                                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                      // Owner Name
+                      Obx(() => Text(
+                        controller.ownerName.value ?? 'Owner',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        ),
+                      )),
+                      const SizedBox(height: 4),
+                      // Showroom Name
+                      Obx(() => Text(
+                        controller.showroomName.value,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )),
+                    ],
                   ),
                 ),
-                onSubmitted: (_) {
-                  controller.updateOwnerName(nameController.text.trim());
-                  Get.back();
-                },
-              ),
-            ],
+                // Details section
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Column(
+                    children: [
+                      if (showroomAddress != null && showroomAddress.isNotEmpty)
+                        _profileDetailRow(
+                          icon: LucideIcons.mapPin,
+                          label: 'Address',
+                          value: showroomAddress,
+                          isDark: isDark,
+                          primaryColor: primaryColor,
+                        ),
+                      if (showroomPhone != null && showroomPhone.isNotEmpty)
+                        _profileDetailRow(
+                          icon: LucideIcons.phone,
+                          label: 'Phone',
+                          value: showroomPhone,
+                          isDark: isDark,
+                          primaryColor: primaryColor,
+                        ),
+                      if ((showroomAddress == null || showroomAddress.isEmpty) &&
+                          (showroomPhone == null || showroomPhone.isEmpty))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'Add your address and phone in Settings',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Bottom Action
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: Icon(LucideIcons.settings, size: 16, color: primaryColor),
+                      label: Text('Edit in Settings', style: TextStyle(color: primaryColor, fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: primaryColor.withOpacity(0.3)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      onPressed: () {
+                        Get.back();
+                        Get.offNamed('/settings');
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(),
-              child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                controller.updateOwnerName(nameController.text.trim());
-                Get.back();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Save'),
-            ),
-          ],
         );
       },
+    );
+  }
+
+  Widget _profileDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    required Color primaryColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: primaryColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

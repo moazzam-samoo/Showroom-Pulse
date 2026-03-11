@@ -160,6 +160,7 @@ class SalesService {
       bikeModel: '${bike.brand} ${bike.model}',
       bikeBrand: bike.brand,
       bikeColor: bike.color,
+      bikeCondition: bike.condition,
       bikeImage: bikeImagePath,
       bikeChassisNumber: bike.chassisNumber,
       bikeEngineNumber: bike.engineNumber,

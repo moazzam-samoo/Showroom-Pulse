@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
@@ -54,10 +55,9 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
       setState(() {
         _isLoading = false;
       });
-      Get.snackbar(
-        'Error',
-        'Failed to load recent sales: $e',
-        snackPosition: SnackPosition.BOTTOM,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to load recent sales: $e',
       );
     }
   }

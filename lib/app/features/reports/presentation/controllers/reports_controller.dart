@@ -6,6 +6,8 @@ import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
 import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class ReportsController extends GetxController {
   late final ReportsRepository _repository;
@@ -180,23 +182,9 @@ class ReportsController extends GetxController {
     }
 
     if (path != null) {
-      Get.snackbar(
-        'PDF Saved',
-        'Report saved to: $path',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-        margin: const EdgeInsets.all(12),
-        backgroundColor: const Color(0xFF10B981),
-        colorText: const Color(0xFFFFFFFF),
-      );
+      AppToast.showSuccess(title: 'PDF Saved', message: 'Report saved to: $path');
     } else {
-      Get.snackbar(
-        'Error',
-        'Failed to generate PDF report.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFFEF4444),
-        colorText: const Color(0xFFFFFFFF),
-      );
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate PDF report.');
     }
   }
 }

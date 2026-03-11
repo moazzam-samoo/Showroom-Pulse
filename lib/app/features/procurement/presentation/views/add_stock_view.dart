@@ -10,6 +10,7 @@ import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart'
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/controllers/supplier_controller.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
@@ -61,7 +62,8 @@ class AddStockView extends GetView<SupplierController> {
           if (entry.engineFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
           else if (entry.chassisFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
           else if (entry.brandFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
-          else if (entry.modelFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
+          else if (entry.modelFocus.hasFocus) { entry.conditionFocus.requestFocus(); return; }
+          else if (entry.conditionFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
           else if (entry.colorFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
           else if (entry.yearFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
           else if (entry.priceFocus.hasFocus) { entry.imageFocus.requestFocus(); return; }
@@ -90,7 +92,8 @@ class AddStockView extends GetView<SupplierController> {
           if (entry.imageFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
           else if (entry.priceFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
           else if (entry.yearFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
-          else if (entry.colorFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
+          else if (entry.colorFocus.hasFocus) { entry.conditionFocus.requestFocus(); return; }
+          else if (entry.conditionFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
           else if (entry.modelFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
           else if (entry.brandFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
           else if (entry.chassisFocus.hasFocus) { entry.engineFocus.requestFocus(); return; }
@@ -507,6 +510,7 @@ class AddStockView extends GetView<SupplierController> {
                 Expanded(flex: 2, child: Text('Chassis #')),
                 Expanded(flex: 2, child: Text('Brand')),
                 Expanded(flex: 2, child: Text('Model')),
+                Expanded(flex: 2, child: Text('Condition')),
                 Expanded(flex: 2, child: Text('Color')),
                 Expanded(flex: 1, child: Text('Year')),
                 Expanded(flex: 2, child: Text('Purchase Price')),
@@ -601,6 +605,33 @@ class AddStockView extends GetView<SupplierController> {
                           onChanged: (v) => entry.model = v,
                            decoration: _inputDecoration('Model', isDark),
                           style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
+                        ),
+                      ),
+                    ),
+                     const SizedBox(width: 8),
+                    // Condition
+                    Expanded(
+                      flex: 2,
+                      child: BlinkingFocusBuilder(
+                        focusNode: entry.conditionFocus,
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButtonFormField<BikeConditionEnum>(
+                            focusNode: entry.conditionFocus,
+                            value: entry.condition,
+                            decoration: _inputDecoration('Condition', isDark),
+                            dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
+                            items: const [
+                              DropdownMenuItem(value: BikeConditionEnum.newBike, child: Text('New', style: TextStyle(fontSize: 13))),
+                              DropdownMenuItem(value: BikeConditionEnum.usedBike, child: Text('Used', style: TextStyle(fontSize: 13))),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                entry.conditionFocus.requestFocus();
+                                entry.condition = val;
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ),

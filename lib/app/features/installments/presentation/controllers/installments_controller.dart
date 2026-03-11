@@ -9,6 +9,8 @@ import 'package:tahir_showroom/app/features/installments/data/repositories/insta
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/statement_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// Data class for displaying contract with related info
 class ContractDisplayData {
@@ -160,7 +162,7 @@ class InstallmentsController extends GetxController {
         selectedContractId.value = contracts.first.contract.id;
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load contracts: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to load contracts: $e');
     } finally {
       isLoading.value = false;
     }
@@ -222,14 +224,14 @@ class InstallmentsController extends GetxController {
         notes: notes,
       );
       await loadContracts();
-      Get.snackbar('Success', 'Payment recorded successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Payment recorded successfully');
       
       // Refresh notifications to clear any alerts that are now paid
       try {
         await Get.find<NotificationService>().checkAndNotify();
       } catch (_) {}
     } catch (e) {
-      Get.snackbar('Error', 'Failed to record payment: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to record payment: $e');
     }
   }
 
@@ -241,10 +243,9 @@ class InstallmentsController extends GetxController {
     final service = StatementService();
     final path = await service.generateSingleStatement(data);
     if (path != null) {
-      Get.snackbar('Success', 'Statement saved to Downloads folder',
-        duration: const Duration(seconds: 3));
+      AppToast.showSuccess(title: 'Success', message: 'Statement saved to Downloads folder');
     } else {
-      Get.snackbar('Error', 'Failed to generate statement');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate statement');
     }
   }
 
@@ -261,10 +262,9 @@ class InstallmentsController extends GetxController {
     final zipPath = await service.generateGlobalZip(contracts.toList());
 
     if (pdfPath != null && zipPath != null) {
-      Get.snackbar('Success', 'All statements saved to Downloads folder',
-        duration: const Duration(seconds: 3));
+      AppToast.showSuccess(title: 'Success', message: 'All statements saved to Downloads folder');
     } else {
-      Get.snackbar('Error', 'Failed to generate statements');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate statements');
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/cash_sale_detail_dialog.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/installment_sale_detail_dialog.dart';
 
@@ -33,6 +34,7 @@ class SaleCardData {
   final String bikeModel;
   final String? bikeBrand; // Added for filtering
   final String bikeColor; // Added for filtering
+  final BikeConditionEnum? bikeCondition;
   final String bikeImage; 
   final String bikeChassisNumber;
   final String bikeEngineNumber;
@@ -70,6 +72,7 @@ class SaleCardData {
     required this.bikeModel,
     this.bikeBrand,
     required this.bikeColor,
+    this.bikeCondition,
     required this.bikeImage,
     required this.bikeChassisNumber,
     required this.bikeEngineNumber,
@@ -290,6 +293,41 @@ class _SaleCardState extends State<SaleCard> {
                               const SizedBox(width: 4),
                               Text(
                                 'Completed',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (data.bikeCondition != null) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: data.bikeCondition == BikeConditionEnum.newBike 
+                                ? const Color(0xFF3B82F6) // Blue
+                                : const Color(0xFFA16207), // Brownish
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (data.bikeCondition == BikeConditionEnum.newBike 
+                                    ? const Color(0xFF3B82F6) 
+                                    : const Color(0xFFA16207)).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(data.bikeCondition == BikeConditionEnum.newBike ? '🆕 ' : '🔄 ', style: const TextStyle(fontSize: 10)),
+                              Text(
+                                data.bikeCondition == BikeConditionEnum.newBike ? 'NEW' : 'USED',
                                 style: GoogleFonts.outfit(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,

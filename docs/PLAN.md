@@ -1,38 +1,57 @@
-# Orchestration Plan: Add "Clear Filters" Buttons
+# Plan: Hybrid UX Pattern for Notifications
 
-## Overview
+This document outlines the implementation plan for replacing the 50+ existing `Get.snackbar` notifications with a Hybrid UX Pattern (Toasts for info/success, Pop-ups for errors/critical alerts), serving as Phase 1 of the orchestration process.
 
-The user requested adding a "Clear All Filters" button on all screens where filters or search properties are used.
+## User Review Required
+>
+> [!IMPORTANT]
+> Please review this plan. This will apply a significant UI overhaul across 18 files.
+> Once approved, the Orchestration mode will proceed to Phase 2 (Implementation).
 
-## Identified Screens with Filters
+## Proposed Changes
 
-1. **Inventory (`inventory_view.dart` / `BikeFilterBar`)**:
-   - Already has an `onClearFilters` callback. We need to verify if the UI exposes it as an attractive "Clear Filters" button and add it if missing.
-2. **Sales (`sales_view.dart` / `SalesFilterBar`)**:
-   - Has a Date Range Filter, Status Filter, and Search. Needs a "Clear Filters" button that resets the controller's states.
-3. **Installments (`installments_view.dart`)**:
-   - Has "Due This Week" filter and "Status Filter" dropdown. Needs a "Clear Filters" button.
-4. **Customers / Procurement**:
-   - We will inject a similar filter reset mechanism where search/filter bars exist.
+### Core UI Components
 
-## Execution Strategy
+#### [NEW] `lib/app/core/widgets/app_toast.dart`
 
-### Phase 2: Implementation (Parallel Agents)
+- Create an elegant, top-right floating toast component for Success/Info messages.
+- Non-blocking and self-dismissible (3-4 seconds).
+- Supports closing on `Esc`.
 
-#### Agent 1: `frontend-specialist` (UI Implementation)
+#### [NEW] `lib/app/core/widgets/app_notification_dialog.dart`
 
-- **Task**: Modify the filter widgets (`BikeFilterBar`, `SalesFilterBar`, `installments_view.dart`, `customers_view.dart`) to include a new, aesthetically pleasing "Clear Filters" or "Reset" icon button.
-- **Rules**: Adhere to `@[/ui-ux-pro-max]` guidelines. Use standard `LucideIcons.filterX` or `xCircle`. The button should have a hover effect and maybe a distinct color (like a subtle red/orange or just subtle grey) so it's clearly a destructive/reset action but not overwhelming.
+- Create a dedicated dialog component specifically for Errors and Critical alerts.
+- Uses `Get.dialog` with `barrierDismissible: true` (closes on click outside).
+- Built-in `RawKeyboardListener` for `Enter` and `Esc` to dismiss.
+- Highly visible, preventing the user from missing critical failures or validation issues.
 
-#### Agent 2: `backend-specialist` (Controller Logic)
+### Implementation Areas (Agents: `frontend-specialist`, `backend-specialist`)
 
-- **Task**: Update the GetX controllers (`SalesController`, `InstallmentsController`, `CustomersController`) to add a `clearFilters()` method that resets all `Rx` observer variables (search text, dropdown selections, date ranges) back to their default `null` or empty states.
+The 50+ snackbars across these areas will be categorized and refactored:
 
-#### Agent 3: `test-engineer` (Verification)
+#### Sales & Transactions
 
-- **Task**: Run `flutter analyze` and existing test scripts to ensure the new buttons don't break the build and the controllers compile correctly.
+- **Invoices/Success**: Replace with `AppToast.showSuccess(...)`
+- **Missing selections/Failed saves**: Replace with `AppNotificationDialog.showError(...)`
 
-## Verification
+#### Inventory & Procurement
 
-- Run `flutter analyze` to ensure no syntax errors.
-- Visual verification by running the desktop app (`flutter run -d windows`).
+- **Supplier added/updated**: Replace with `AppToast.showSuccess(...)`
+- **Validation errors (e.g. Please add a bike)**: Replace with `AppNotificationDialog.showError(...)`
+
+#### Settings & Configuration
+
+- **Profile saved**: Replace with `AppToast.showSuccess(...)`
+- **Database backup failed / Logo failed**: Replace with `AppNotificationDialog.showError(...)`
+
+#### Core, Auth & Dashboard
+
+- **Installment warnings**: Replace with `AppNotificationDialog.showWarning(...)` or `showError(...)` depending on severity.
+- **Login fails/Data fetch fails**: Replace with `AppNotificationDialog.showError(...)`
+
+## Verification Plan
+
+### Manual Verification
+
+- Execute actions that trigger success messages to verify Toasts appear and vanish without screen blocking.
+- Execute actions that trigger error messages to verify Pop-ups dim the screen, and disappear when clicking outside, or pressing `Esc` / `Enter`.

@@ -34,10 +34,12 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _sellingPriceController = TextEditingController();
 
   String? _selectedColor;
+  String _selectedCondition = 'New';
   File? _selectedImage;
 
   final _brandFocus = FocusNode();
   final _modelFocus = FocusNode();
+  final _conditionFocus = FocusNode();
   final _colorFocus = FocusNode();
   final _engineFocus = FocusNode();
   final _chassisFocus = FocusNode();
@@ -52,6 +54,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         if (_brandFocus.hasFocus) {
           _modelFocus.requestFocus();
         } else if (_modelFocus.hasFocus) {
+          _conditionFocus.requestFocus();
+        } else if (_conditionFocus.hasFocus) {
           _colorFocus.requestFocus();
         } else if (_colorFocus.hasFocus) {
           _engineFocus.requestFocus();
@@ -84,6 +88,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_engineFocus.hasFocus) {
           _colorFocus.requestFocus();
         } else if (_colorFocus.hasFocus) {
+          _conditionFocus.requestFocus();
+        } else if (_conditionFocus.hasFocus) {
           _modelFocus.requestFocus();
         } else if (_modelFocus.hasFocus) {
           _brandFocus.requestFocus();
@@ -102,6 +108,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _sellingPriceController.dispose();
     _brandFocus.dispose();
     _modelFocus.dispose();
+    _conditionFocus.dispose();
     _colorFocus.dispose();
     _engineFocus.dispose();
     _chassisFocus.dispose();
@@ -130,6 +137,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         widget.onSave!({
           'brand': _brandController.text,
           'model': _modelController.text,
+          'condition': _selectedCondition,
           'color': _selectedColor,
           'engineNumber': _engineNoController.text,
           'chassisNumber': _chassisNoController.text,
@@ -203,6 +211,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                           _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, _brandFocus, autofocus: true),
                           const SizedBox(height: 16),
                           _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor, _modelFocus),
+                          const SizedBox(height: 10),
+                          _buildConditionGroup('Condition:', isDark, inputBg, inputBorder, labelColor, _conditionFocus),
                           const SizedBox(height: 10),
                           _buildColorSkinGroup('Color:', labelColor, _colorFocus),
                         ],
@@ -432,6 +442,72 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 onChanged: (value) => setState(() => _selectedColor = value),
                 validator: (v) => v == null ? 'Required' : null,
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConditionGroup(
+    String label,
+    bool isDark,
+    Color bg,
+    Color border,
+    Color? labelColor,
+    FocusNode focusNode,
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label.replaceAll(':', ''),
+            style: TextStyle(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: BlinkingFocusBuilder(
+            focusNode: focusNode,
+            child: DropdownButtonFormField<String>(
+              focusNode: focusNode,
+              value: _selectedCondition,
+              decoration: InputDecoration(
+                isDense: true,
+                filled: true,
+                fillColor: bg,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
+                ),
+              ),
+              dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
+              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
+              items: ['New', 'Used'].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                if (newValue != null) {
+                  setState(() => _selectedCondition = newValue);
+                }
+              },
             ),
           ),
         ),
