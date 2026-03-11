@@ -200,13 +200,15 @@ class _RecentSalesTableState extends State<RecentSalesTable> {
   Widget _buildRow(BuildContext context, SaleCardData sale, bool isDark) {
     // Extract initials from customer name
     String getInitials(String name) {
-      final parts = name.split(' ');
-      if (parts.length >= 2) {
+      final cleanName = name.trim();
+      if (cleanName.isEmpty) return 'NA';
+      
+      final parts = cleanName.split(RegExp(r'\s+'));
+      if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
         return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-      } else if (parts.isNotEmpty) {
-        return parts[0].substring(0, 2).toUpperCase();
       }
-      return 'NA';
+      
+      return cleanName.substring(0, cleanName.length >= 2 ? 2 : 1).toUpperCase();
     }
 
     return Padding(

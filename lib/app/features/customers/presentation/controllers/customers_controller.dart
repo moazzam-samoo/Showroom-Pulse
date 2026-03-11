@@ -162,6 +162,25 @@ class CustomersController extends GetxController {
 
   /// Internal method to save customer
   Future<void> _addCustomer(Map<String, dynamic> data) async {
+    if (data['fullName'].toString().trim().isEmpty ||
+        data['fatherName'].toString().trim().isEmpty ||
+        data['cnicNumber'].toString().trim().isEmpty ||
+        data['phoneNumber'].toString().trim().isEmpty ||
+        data['address'].toString().trim().isEmpty ||
+        data['profileImage'] == null ||
+        data['cnicFrontImage'] == null ||
+        data['cnicBackImage'] == null) {
+      Get.snackbar(
+        'Missing Information',
+        'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back).',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
     isLoading.value = true;
     try {
       String? profileImageFilename;
@@ -228,20 +247,48 @@ class CustomersController extends GetxController {
 
   /// Delete customer
   Future<void> deleteCustomer(int id) async {
-    // 1. Check if safe to delete
+    // 1. Check if safe to delete (no history)
     final canDelete = await _repository.canDeleteCustomer(id);
+    
     if (!canDelete) {
-      Get.snackbar(
-        'Cannot Delete', 
-        'This customer has valueable sales history and cannot be deleted.',
-        backgroundColor: Get.theme.colorScheme.errorContainer,
-        colorText: Get.theme.colorScheme.onErrorContainer,
-        snackPosition: SnackPosition.BOTTOM,
+      // Show special "Delete with History" dialog
+      final confirmAll = await Get.dialog<bool>(
+        AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete History?'),
+            ],
+          ),
+          content: const Text(
+            'This customer has transaction history (Sales/Installments).\n\n'
+            'Do you want to delete the customer AND their entire history? This action is IRREVERSIBLE.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false), 
+              child: const Text('Cancel')
+            ),
+            ElevatedButton(
+              onPressed: () => Get.back(result: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('DELETE EVERYTHING'),
+            ),
+          ],
+        )
       );
+
+      if (confirmAll == true) {
+        await _executeDelete(id, withHistory: true);
+      }
       return;
     }
 
-    // 2. Confirm
+    // 2. Standard Confirm (No history case)
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Delete Customer?'),
@@ -258,27 +305,60 @@ class CustomersController extends GetxController {
     );
 
     if (confirm == true) {
-      isLoading.value = true;
-      try {
+      await _executeDelete(id, withHistory: false);
+    }
+  }
+
+  /// Internal helper to execute deletion and refresh UI
+  Future<void> _executeDelete(int id, {required bool withHistory}) async {
+    isLoading.value = true;
+    try {
+      if (withHistory) {
+        await _repository.deleteCustomerWithHistory(id);
+      } else {
         await _repository.deleteCustomer(id);
-        Get.snackbar('Success', 'Customer deleted successfully');
-        
-        // Clear selection if deleted
-        if (selectedCustomer.value?.customer.id == id) {
-          selectedCustomer.value = null;
-        }
-        
-        loadData();
-      } catch (e) {
-        Get.snackbar('Error', 'Failed to delete customer: $e');
-      } finally {
-        isLoading.value = false;
       }
+      
+      Get.snackbar('Success', 'Customer ${withHistory ? 'and history ' : ''}deleted successfully');
+      
+      // Clear selection if deleted
+      if (selectedCustomer.value?.customer.id == id) {
+        selectedCustomer.value = null;
+      }
+      
+      loadData();
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to delete customer: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
   /// Internal method to update customer
   Future<void> _updateCustomer(int id, Map<String, dynamic> data) async {
+    bool hasProfile = data['profileImage'] != null || data['existingProfileImage'] != null;
+    bool hasCnicFront = data['cnicFrontImage'] != null || data['existingCnicFrontImage'] != null;
+    bool hasCnicBack = data['cnicBackImage'] != null || data['existingCnicBackImage'] != null;
+
+    if (data['fullName'].toString().trim().isEmpty ||
+        data['fatherName'].toString().trim().isEmpty ||
+        data['cnicNumber'].toString().trim().isEmpty ||
+        data['phoneNumber'].toString().trim().isEmpty ||
+        data['address'].toString().trim().isEmpty ||
+        !hasProfile ||
+        !hasCnicFront ||
+        !hasCnicBack) {
+      Get.snackbar(
+        'Missing Information',
+        'Please fill all input fields and ensure all 3 images (Profile, CNIC Front, CNIC Back) are provided.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 4),
+      );
+      return;
+    }
+
     isLoading.value = true;
     try {
       String? profileImageFilename = data['existingProfileImage'];

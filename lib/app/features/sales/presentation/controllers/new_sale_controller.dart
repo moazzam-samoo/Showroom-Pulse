@@ -579,62 +579,127 @@ class NewSaleController extends GetxController {
 
     // Validate customer information for new customers
     if (isNewCustomer.value) {
-      if (customerNameController.text.trim().isEmpty) {
+      if (customerNameController.text.trim().isEmpty ||
+          customerFatherNameController.text.trim().isEmpty ||
+          customerCnicController.text.trim().isEmpty ||
+          customerPhoneController.text.trim().isEmpty ||
+          customerAddressController.text.trim().isEmpty ||
+          customerProfileImagePath.value == null ||
+          customerCnicFrontPath.value == null ||
+          customerCnicBackPath.value == null) {
         Get.snackbar(
           'Missing Information',
-          'Please enter the customer\'s full name.',
+          'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back) for the new customer.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.red.shade100,
           colorText: Colors.red.shade900,
-        );
-        return;
-      }
-
-      if (customerCnicController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Missing Information',
-          'Please enter the customer\'s CNIC number.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-        );
-        return;
-      }
-
-      if (customerPhoneController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Missing Information',
-          'Please enter the customer\'s phone number.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
+          duration: const Duration(seconds: 4),
         );
         return;
       }
     }
 
-    // Validate witness information (Witness 1 is mandatory for all sales)
-    if (witness1NameController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Missing Information',
-        'Please enter Witness 1\'s full name.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
+    // Witness Validation Helpers
+    final bool isWitness1Empty =
+        witness1NameController.text.trim().isEmpty &&
+        witness1CnicController.text.trim().isEmpty &&
+        witness1PhoneController.text.trim().isEmpty &&
+        witness1AddressController.text.trim().isEmpty &&
+        witness1CnicFrontPath.value == null &&
+        witness1CnicBackPath.value == null;
+
+    final bool isWitness1Full =
+        witness1NameController.text.trim().isNotEmpty &&
+        witness1CnicController.text.trim().isNotEmpty &&
+        witness1PhoneController.text.trim().isNotEmpty &&
+        witness1AddressController.text.trim().isNotEmpty &&
+        witness1CnicFrontPath.value != null &&
+        witness1CnicBackPath.value != null;
+
+    final bool isWitness2Empty =
+        witness2NameController.text.trim().isEmpty &&
+        witness2CnicController.text.trim().isEmpty &&
+        witness2PhoneController.text.trim().isEmpty &&
+        witness2AddressController.text.trim().isEmpty &&
+        witness2CnicFrontPath.value == null &&
+        witness2CnicBackPath.value == null;
+
+    final bool isWitness2Full =
+        witness2NameController.text.trim().isNotEmpty &&
+        witness2CnicController.text.trim().isNotEmpty &&
+        witness2PhoneController.text.trim().isNotEmpty &&
+        witness2AddressController.text.trim().isNotEmpty &&
+        witness2CnicFrontPath.value != null &&
+        witness2CnicBackPath.value != null;
+
+    // Witness Validation Logic
+    if (isWitness1Empty && isWitness2Empty) {
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: Get.theme.canvasColor,
+          title: Text(
+            'Witnesses Required?',
+            style: TextStyle(color: Get.theme.textTheme.bodyLarge?.color),
+          ),
+          content: Text(
+            'You have not filled out any witness details. Would you like to proceed without witnesses, or go back to fill them in?',
+            style: TextStyle(color: Get.theme.textTheme.bodyMedium?.color),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Get.back(); // close dialog
+              },
+              child: const Text('Fill Witnesses'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Get.back(); // close dialog
+                _executeSale();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Proceed Without', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       );
       return;
     }
 
-    if (witness1CnicController.text.trim().isEmpty) {
+    if (!isWitness1Empty && !isWitness1Full) {
       Get.snackbar(
-        'Missing Information',
-        'Please enter Witness 1\'s CNIC number.',
+        'Incomplete Witness 1',
+        'Please fill all required fields and upload both CNIC images for Witness 1.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 4),
       );
       return;
     }
+
+    if (!isWitness2Empty && !isWitness2Full) {
+      Get.snackbar(
+        'Incomplete Witness 2',
+        'Please fill all required fields and upload both CNIC images for Witness 2.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        duration: const Duration(seconds: 4),
+      );
+      if (!showWitness2.value) {
+        showWitness2.value = true;
+      }
+      return;
+    }
+
+    // Validation passed, execute actual sale
+    _executeSale();
+  }
+
+  /// Internal method to execute the database operations after successful validation
+  Future<void> _executeSale() async {
+    // Witnesses validated previously. Included in actual execution depending on whether they were filled.
 
     // Set processing state to show loading indicator
     isProcessingSale.value = true;
@@ -793,22 +858,24 @@ class NewSaleController extends GetxController {
             : -sale
                 .id; // Use negative sale ID for cash sales to distinguish from contract IDs
 
-        // Save Witness 1 (Mandatory)
-        final witness1 = Witness()
-          ..fullName = witness1NameController.text
-          ..cnicNumber = witness1CnicController.text
-          ..phoneNumber = witness1PhoneController.text.isNotEmpty
-              ? witness1PhoneController.text
-              : ''
-          ..address = witness1AddressController.text.isNotEmpty
-              ? witness1AddressController.text
-              : null
-          ..cnicFrontFilename = witness1CnicFrontPath.value
-          ..cnicBackFilename = witness1CnicBackPath.value
-          ..contractId = witnessContractId
-          ..isPrimary = true;
+        // Save Witness 1 only if filled
+        if (witness1NameController.text.trim().isNotEmpty) {
+          final witness1 = Witness()
+            ..fullName = witness1NameController.text
+            ..cnicNumber = witness1CnicController.text
+            ..phoneNumber = witness1PhoneController.text.isNotEmpty
+                ? witness1PhoneController.text
+                : ''
+            ..address = witness1AddressController.text.isNotEmpty
+                ? witness1AddressController.text
+                : null
+            ..cnicFrontFilename = witness1CnicFrontPath.value
+            ..cnicBackFilename = witness1CnicBackPath.value
+            ..contractId = witnessContractId
+            ..isPrimary = true;
 
-        await _isarService.isar.witness.put(witness1);
+          await _isarService.isar.witness.put(witness1);
+        }
 
         // Save Witness 2 (Optional)
         if (witness2NameController.text.trim().isNotEmpty &&

@@ -242,9 +242,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus),
+                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus, maxLength: 17),
                           const SizedBox(height: 16),
-                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus),
+                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus, maxLength: 17),
                         ],
                       ),
                     ],
@@ -382,7 +382,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false}
+    {bool isNumber = false, bool autofocus = false, int? maxLength}
   ) {
     return Row(
       children: [
@@ -405,14 +405,17 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
               controller: controller,
               focusNode: focusNode,
               autofocus: autofocus,
+              maxLength: maxLength,
               textInputAction: TextInputAction.next,
               keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-              inputFormatters: isNumber ? [
-                FilteringTextInputFormatter.digitsOnly,
-                ThousandsSeparatorInputFormatter()
-              ] : [],
+              inputFormatters: [
+                if (isNumber) FilteringTextInputFormatter.digitsOnly,
+                if (isNumber) ThousandsSeparatorInputFormatter(),
+                if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+              ],
               style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
               decoration: InputDecoration(
+              counterText: '', // Hide default counter
               hintText: hint,
               hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
               filled: true,

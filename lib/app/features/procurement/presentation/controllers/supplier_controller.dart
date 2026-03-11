@@ -181,6 +181,12 @@ class SupplierController extends GetxController {
     selectedSupplier.value = null; // Clear selection
     await loadSuppliers();
   }
+
+  Future<void> deleteSupplierOnly(Supplier supplier) async {
+    await _supplierService.deleteSupplierOnly(supplier);
+    selectedSupplier.value = null;
+    await loadSuppliers();
+  }
   
   Future<void> updateBatchDate(PurchaseBatch batch, DateTime newDate) async {
     await _supplierService.updatePurchaseBatch(batch, newDate);
@@ -258,8 +264,18 @@ class SupplierController extends GetxController {
 
     // Validate Supplier
     if (isNewSupplier.value) {
-      if (newSupplierName.text.isEmpty || newSupplierPhone.text.isEmpty) {
-        Get.snackbar('Error', 'Please fill in required supplier details');
+      if (newSupplierName.text.isEmpty || 
+          newSupplierPhone.text.isEmpty || 
+          newSupplierCnic.text.isEmpty ||
+          newSupplierProfilePic.value == null ||
+          newSupplierCnicPic.value == null) {
+        Get.snackbar(
+          'Missing Information', 
+          'Please fill all supplier details (Name, Phone, CNIC) and provide both Profile and CNIC images before proceeding.',
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade900,
+          duration: const Duration(seconds: 4),
+        );
         return;
       }
       try {
@@ -289,6 +305,21 @@ class SupplierController extends GetxController {
     if (bikeEntries.isEmpty) {
       Get.snackbar('Error', 'Please add at least one bike');
       return;
+    }
+
+    for (int i = 0; i < bikeEntries.length; i++) {
+      var e = bikeEntries[i];
+      if (e.engineNumber.isEmpty || e.chassisNumber.isEmpty || e.brand.isEmpty || 
+          e.model.isEmpty || e.color.isEmpty || e.purchasePrice <= 0 || e.imageFile == null) {
+        Get.snackbar(
+          'Missing Details', 
+          'Row ${i + 1} is incomplete. Engine, Chassis, Brand, Model, Color, Year, Purchase Price, and Image must all be filled.',
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade900,
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
     }
 
     try {
@@ -334,7 +365,7 @@ class SupplierController extends GetxController {
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
-                  width: double.infinity,
+                  width: 200, // Fixed width instead of double.infinity
                   child: ElevatedButton(
                     onPressed: () {
                       Get.back(); // Close dialog
@@ -357,7 +388,19 @@ class SupplierController extends GetxController {
       );
       
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('unique index violated') || errorMessage.contains('unique')) {
+        Get.snackbar(
+          'Duplicate Entry', 
+          'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade900,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+        );
+      } else {
+        Get.snackbar('Error', e.toString());
+      }
     }
   }
 

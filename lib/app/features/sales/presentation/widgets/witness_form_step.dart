@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
@@ -227,6 +228,7 @@ class WitnessFormStep extends StatelessWidget {
                   controller: nameController,
                   focusNode: nameFocus,
                   textInputAction: TextInputAction.next,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
                   formNavigationManager: Get.find<NewSaleController>().formNavigationManager,
                 ),
               ),

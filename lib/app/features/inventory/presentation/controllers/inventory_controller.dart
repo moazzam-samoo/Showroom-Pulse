@@ -68,6 +68,23 @@ class InventoryController extends GetxController {
 
   /// Add a new bike
   Future<bool> addBike(Map<String, dynamic> data) async {
+    if ((data['brand'] ?? '').toString().trim().isEmpty && data['model'].toString().trim().isEmpty ||
+        data['color'].toString().trim().isEmpty ||
+        data['engineNumber'].toString().trim().isEmpty ||
+        data['chassisNumber'].toString().trim().isEmpty ||
+        (data['purchasePrice'] ?? 0) <= 0 ||
+        (data['sellingPrice'] ?? 0) <= 0 ||
+        data['imageFile'] == null) {
+      Get.snackbar(
+        'Missing Information',
+        'Please fill all input fields and upload a bike image to proceed.',
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade900,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
     try {
       final bike = Bike()
         ..model = data['model']

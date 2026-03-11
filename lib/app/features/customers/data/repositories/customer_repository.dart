@@ -25,13 +25,15 @@ class CustomerWithTransactions {
 
   /// Get initials for avatar
   String get initials {
-    final parts = customer.fullName.split(' ');
-    if (parts.length >= 2) {
+    final cleanName = customer.fullName.trim();
+    if (cleanName.isEmpty) return '??';
+    
+    final parts = cleanName.split(RegExp(r'\s+'));
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    if (customer.fullName.isEmpty) return '??';
-    if (customer.fullName.length < 2) return customer.fullName.toUpperCase();
-    return customer.fullName.substring(0, 2).toUpperCase();
+    
+    return cleanName.substring(0, cleanName.length >= 2 ? 2 : 1).toUpperCase();
   }
 }
 
@@ -372,6 +374,43 @@ class CustomerRepository {
 
     await _isar.writeTxn(() async {
       await _isar.customers.delete(id);
+    });
+  }
+
+  /// Delete customer and ALL associated transaction history
+  Future<void> deleteCustomerWithHistory(int customerId) async {
+    await _isar.writeTxn(() async {
+      // 1. Get all sales for this customer
+      final sales = await _isar.sales.filter().customerIdEqualTo(customerId).findAll();
+      
+      for (final sale in sales) {
+        // 2. Handle installments data
+        if (sale.saleType == SaleType.installment && sale.installmentContractId != null) {
+          // Delete all payments for this contract
+          await _isar.payments.filter()
+              .contractIdEqualTo(sale.installmentContractId!)
+              .deleteAll();
+          
+          // Delete the contract itself
+          await _isar.installmentContracts.delete(sale.installmentContractId!);
+          
+          // Delete witnesses linked to contract
+          await _isar.witness.filter()
+              .contractIdEqualTo(sale.installmentContractId!)
+              .deleteAll();
+        } else {
+          // 3. Handle cash sale witnesses (negated IDs)
+          await _isar.witness.filter()
+              .contractIdEqualTo(-sale.id)
+              .deleteAll();
+        }
+      }
+
+      // 4. Delete all sales records
+      await _isar.sales.filter().customerIdEqualTo(customerId).deleteAll();
+
+      // 5. Delete the customer record
+      await _isar.customers.delete(customerId);
     });
   }
 }

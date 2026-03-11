@@ -147,22 +147,211 @@ class SupplierHistoryView extends GetView<SupplierController> {
                                             tooltip: 'Delete Supplier',
                                             color: Colors.red[400],
                                             onPressed: () async {
-                                              final confirm = await showDialog<bool>(
+                                              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
+                                              final dialogPrimary = dialogIsDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+                                              final dialogBg = dialogIsDark ? AppColors.darkSurface : AppColors.lightSurface;
+                                              final cardBg = dialogIsDark ? AppColors.darkElevated : Colors.grey[50]!;
+                                              final textPrimary = dialogIsDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+                                              final textSecondary = dialogIsDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+                                              final borderColor = dialogIsDark ? AppColors.darkBorder : Colors.grey.shade300;
+
+                                              final result = await showDialog<String>(
                                                 context: Get.context!,
-                                                builder: (ctx) => AlertDialog(
-                                                  title: const Text('Delete Supplier?'),
-                                                  content: const Text('This will delete the supplier AND ALL their history (Batches, Bikes, Images). This cannot be undone.'),
-                                                  actions: [
-                                                    TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel')),
-                                                    TextButton(
-                                                      onPressed: () => Get.back(result: true), 
-                                                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                barrierDismissible: true,
+                                                builder: (ctx) => Dialog(
+                                                  backgroundColor: dialogBg,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                                                  ),
+                                                  child: Container(
+                                                    width: 480,
+                                                    padding: const EdgeInsets.all(24),
+                                                    child: Column(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        // Warning Icon
+                                                        Container(
+                                                          width: 56,
+                                                          height: 56,
+                                                          decoration: BoxDecoration(
+                                                            color: Colors.red.withOpacity(0.1),
+                                                            shape: BoxShape.circle,
+                                                          ),
+                                                          child: const Icon(
+                                                            LucideIcons.alertTriangle,
+                                                            color: Colors.red,
+                                                            size: 28,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 16),
+
+                                                        // Title
+                                                        Text(
+                                                          'Delete "${supplier.name}"?',
+                                                          style: TextStyle(
+                                                            fontSize: 20,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: textPrimary,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          'Choose how you want to handle the bikes purchased from this dealer.',
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                            color: textSecondary,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(height: 24),
+
+                                                        // Two Option Cards
+                                                        Row(
+                                                          children: [
+                                                            // Option 1: Delete Everything
+                                                            Expanded(
+                                                              child: MouseRegion(
+                                                                cursor: SystemMouseCursors.click,
+                                                                child: GestureDetector(
+                                                                  onTap: () => Navigator.of(ctx).pop('deleteAll'),
+                                                                  child: AnimatedContainer(
+                                                                    duration: const Duration(milliseconds: 200),
+                                                                    padding: const EdgeInsets.all(16),
+                                                                    decoration: BoxDecoration(
+                                                                      color: cardBg,
+                                                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                                                      border: Border.all(
+                                                                        color: Colors.red.withOpacity(0.4),
+                                                                        width: 1.5,
+                                                                      ),
+                                                                    ),
+                                                                    child: Column(
+                                                                      children: [
+                                                                        Container(
+                                                                          width: 40,
+                                                                          height: 40,
+                                                                          decoration: BoxDecoration(
+                                                                            color: Colors.red.withOpacity(0.1),
+                                                                            borderRadius: BorderRadius.circular(10),
+                                                                          ),
+                                                                          child: const Icon(
+                                                                            LucideIcons.trash2,
+                                                                            color: Colors.red,
+                                                                            size: 20,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(height: 12),
+                                                                        Text(
+                                                                          'Delete Everything',
+                                                                          style: TextStyle(
+                                                                            fontSize: 14,
+                                                                            fontWeight: FontWeight.w600,
+                                                                            color: textPrimary,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(height: 4),
+                                                                        Text(
+                                                                          'Remove dealer, all batches & bikes permanently',
+                                                                          textAlign: TextAlign.center,
+                                                                          style: TextStyle(
+                                                                            fontSize: 11,
+                                                                            color: textSecondary,
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 12),
+
+                                                            // Option 2: Keep Bikes
+                                                            Expanded(
+                                                              child: MouseRegion(
+                                                                cursor: SystemMouseCursors.click,
+                                                                child: GestureDetector(
+                                                                  onTap: () => Navigator.of(ctx).pop('dealerOnly'),
+                                                                  child: AnimatedContainer(
+                                                                    duration: const Duration(milliseconds: 200),
+                                                                    padding: const EdgeInsets.all(16),
+                                                                    decoration: BoxDecoration(
+                                                                      color: cardBg,
+                                                                      borderRadius: BorderRadius.circular(AppRadius.md),
+                                                                      border: Border.all(
+                                                                        color: dialogPrimary.withOpacity(0.4),
+                                                                        width: 1.5,
+                                                                      ),
+                                                                    ),
+                                                                    child: Column(
+                                                                      children: [
+                                                                        Container(
+                                                                          width: 40,
+                                                                          height: 40,
+                                                                          decoration: BoxDecoration(
+                                                                            color: dialogPrimary.withOpacity(0.1),
+                                                                            borderRadius: BorderRadius.circular(10),
+                                                                          ),
+                                                                          child: Icon(
+                                                                            LucideIcons.bike,
+                                                                            color: dialogPrimary,
+                                                                            size: 20,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(height: 12),
+                                                                        Text(
+                                                                          'Keep Bikes',
+                                                                          style: TextStyle(
+                                                                            fontSize: 14,
+                                                                            fontWeight: FontWeight.w600,
+                                                                            color: textPrimary,
+                                                                          ),
+                                                                        ),
+                                                                        const SizedBox(height: 4),
+                                                                        Text(
+                                                                          'Remove dealer info only, bikes stay in inventory',
+                                                                          textAlign: TextAlign.center,
+                                                                          style: TextStyle(
+                                                                            fontSize: 11,
+                                                                            color: textSecondary,
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        const SizedBox(height: 20),
+
+                                                        // Cancel Button
+                                                        SizedBox(
+                                                          width: double.infinity,
+                                                          child: TextButton(
+                                                            onPressed: () => Navigator.of(ctx).pop(null),
+                                                            style: TextButton.styleFrom(
+                                                              foregroundColor: textSecondary,
+                                                              padding: const EdgeInsets.symmetric(vertical: 12),
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(AppRadius.md),
+                                                                side: BorderSide(color: borderColor),
+                                                              ),
+                                                            ),
+                                                            child: const Text('Cancel'),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
+                                                  ),
                                                 ),
                                               );
-                                              if (confirm == true) {
+
+                                              if (result == 'deleteAll') {
                                                 await controller.deleteSupplier(supplier);
+                                              } else if (result == 'dealerOnly') {
+                                                await controller.deleteSupplierOnly(supplier);
                                               }
                                             },
                                           ),
@@ -442,8 +631,16 @@ class SupplierHistoryView extends GetView<SupplierController> {
         onSubmit: () async {
             // Replicating Save Logic for Enter Key
             if (controller.newSupplierName.text.isEmpty || 
-                controller.newSupplierPhone.text.isEmpty) {
-              Get.snackbar('Error', 'Name and Phone are required');
+                controller.newSupplierPhone.text.isEmpty ||
+                controller.newSupplierCnic.text.isEmpty ||
+                controller.newSupplierProfilePic.value == null ||
+                controller.newSupplierCnicPic.value == null) {
+              Get.snackbar(
+                'Missing Information', 
+                'Name, Phone, CNIC and both Images are required.',
+                backgroundColor: Colors.red.shade100,
+                colorText: Colors.red.shade900,
+              );
               return;
             }
             if (supplier != null) {
@@ -484,6 +681,9 @@ class SupplierHistoryView extends GetView<SupplierController> {
                   focusNode: nameFocus,
                   autofocus: true, // Auto-focus first field
                   textInputAction: TextInputAction.next,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                  ],
                   decoration: _inputDecoration('Supplier Name', isDark),
                   style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 ),
@@ -590,8 +790,16 @@ class SupplierHistoryView extends GetView<SupplierController> {
                       focusNode: submitFocus,
                       onPressed: () async {
                         if (controller.newSupplierName.text.isEmpty || 
-                            controller.newSupplierPhone.text.isEmpty) {
-                          Get.snackbar('Error', 'Name and Phone are required');
+                            controller.newSupplierPhone.text.isEmpty ||
+                            controller.newSupplierCnic.text.isEmpty ||
+                            controller.newSupplierProfilePic.value == null ||
+                            controller.newSupplierCnicPic.value == null) {
+                          Get.snackbar(
+                            'Missing Information', 
+                            'Name, Phone, CNIC and both Images are required.',
+                            backgroundColor: Colors.red.shade100,
+                            colorText: Colors.red.shade900,
+                          );
                           return;
                         }
 

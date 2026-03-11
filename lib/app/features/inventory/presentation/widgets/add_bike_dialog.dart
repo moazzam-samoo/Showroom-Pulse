@@ -213,9 +213,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus),
+                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus, maxLength: 17),
                           const SizedBox(height: 10),
-                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus),
+                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus, maxLength: 17),
                         ],
                       ),
                     ],
@@ -340,7 +340,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false}
+    {bool isNumber = false, bool autofocus = false, int? maxLength}
   ) {
     return Row(
       children: [
@@ -363,12 +363,17 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               controller: controller,
               focusNode: focusNode,
               autofocus: autofocus,
+              maxLength: maxLength,
               textInputAction: TextInputAction.next, // Important for keyboard nav
               keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-              inputFormatters: isNumber ? [ThousandsSeparatorInputFormatter()] : [],
+              inputFormatters: [
+                if (isNumber) ThousandsSeparatorInputFormatter(),
+                if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+              ],
             style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
             decoration: InputDecoration(
               isDense: true,
+              counterText: '', // Hide default counter
               hintText: hint,
               hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
               filled: true,

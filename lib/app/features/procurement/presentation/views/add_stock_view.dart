@@ -212,6 +212,9 @@ class AddStockView extends GetView<SupplierController> {
                                  focusNode: controller.newSupplierNameFocus,
                                  autofocus: true,
                                  textInputAction: TextInputAction.next,
+                                 inputFormatters: [
+                                   FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                 ],
                                  decoration: _inputDecoration('Supplier Name', isDark),
                                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                                ),
@@ -536,7 +539,13 @@ class AddStockView extends GetView<SupplierController> {
                           textInputAction: TextInputAction.next,
                           onChanged: (v) => entry.engineNumber = v,
                           autofocus: controller.bikeEntries.length == 1 && index == 0,
-                          decoration: _inputDecoration('Engine #', isDark),
+                          maxLength: 17,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(17),
+                          ],
+                          decoration: _inputDecoration('Engine #', isDark).copyWith(
+                            counterText: '', // Hide default counter
+                          ),
                           style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
                         ),
                       ),
@@ -552,7 +561,13 @@ class AddStockView extends GetView<SupplierController> {
                           focusNode: entry.chassisFocus,
                           textInputAction: TextInputAction.next,
                           onChanged: (v) => entry.chassisNumber = v,
-                          decoration: _inputDecoration('Chassis #', isDark),
+                          maxLength: 17,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(17),
+                          ],
+                          decoration: _inputDecoration('Chassis #', isDark).copyWith(
+                            counterText: '', // Hide default counter
+                          ),
                           style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
                         ),
                       ),
