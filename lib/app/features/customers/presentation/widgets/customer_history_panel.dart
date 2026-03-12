@@ -113,7 +113,11 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                            ),
                            const SizedBox(width: 8),
                            OutlinedButton.icon(
-                             onPressed: () => controller.exportCustomerData(),
+                             onPressed: () {
+                               if (customer != null) {
+                                  controller.downloadCustomerData(customer);
+                               }
+                             },
                              icon: const Icon(LucideIcons.download, size: 16),
                              label: const Text('EXPORT DATA'),
                              style: OutlinedButton.styleFrom(

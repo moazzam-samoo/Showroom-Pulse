@@ -7,6 +7,7 @@ import '../../features/auth/data/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/report_pdf_service.dart';
 import '../services/checkpoint_service.dart';
+import '../services/customer_export_service.dart'; // Added import for CustomerExportService
 
 /// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
@@ -47,6 +48,9 @@ Future<void> initializeAsyncServices() async {
 
   // Initialize ReportPdfService
   Get.put(ReportPdfService()); // Added ReportPdfService initialization
+  
+  // Initialize CustomerExportService (depends on FileService + ReportPdfService)
+  Get.put(CustomerExportService());
   
   // Initial check and start timer
   await notificationService.checkAndNotify();

@@ -4,12 +4,15 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/expense.dart';
+import 'package:tahir_showroom/app/data/models/customer.dart';
+import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 /// PDF generation service for Reports & Revenue tabs
 class ReportPdfService {
@@ -1145,5 +1148,126 @@ class ReportPdfService {
         ),
       ],
     );
+  }
+
+  /// Generate a PDF document containing a list of customer details including financial summary
+  Future<String?> generateCustomerProfilePdf({
+    required List<CustomerWithTransactions> customers,
+    String? customTitle, 
+  }) async {
+    try {
+      final pdf = pw.Document(
+        theme: pw.ThemeData.withFont(
+          base: await PdfGoogleFonts.interRegular(),
+          bold: await PdfGoogleFonts.interBold(),
+        ),
+      );
+
+      final isar = Get.find<IsarService>().isar;
+      final settings = await isar.appSettings.where().findFirst();
+      if (settings == null) throw Exception('App settings not found');
+      
+      final title = customTitle ?? (customers.length == 1 ? 'Customer Profile' : 'Customers Profile List');
+
+      // Pagination setup
+      const int itemsPerPage = 10;
+      
+      for (var i = 0; i < customers.length; i += itemsPerPage) {
+        final end = (i + itemsPerPage < customers.length) ? i + itemsPerPage : customers.length;
+        final pageCustomers = customers.sublist(i, end);
+
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4.landscape, // Switching to landscape to fit more data
+            margin: const pw.EdgeInsets.all(32),
+            build: (pw.Context context) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                   _buildHeader(context, title, DateFormat('dd MMM yyyy').format(DateTime.now()), settings),
+                  pw.SizedBox(height: 20),
+                  
+                  // Table Header
+                  pw.Container(
+                    decoration: pw.BoxDecoration(
+                      color: _headerBg, // Fixed: Using dark background for white text
+                      borderRadius: const pw.BorderRadius.vertical(top: pw.Radius.circular(4)),
+                    ),
+                    padding: const pw.EdgeInsets.all(12),
+                    child: pw.Row(
+                      children: [
+                        pw.Expanded(flex: 20, child: _tableHeader('Name & Father Name')),
+                        pw.Expanded(flex: 20, child: _tableHeader('CNIC Number')),
+                        pw.Expanded(flex: 15, child: _tableHeader('Phone')),
+                        pw.Expanded(flex: 20, child: _tableHeader('Address')),
+                        pw.Expanded(flex: 12, child: _tableHeader('Total Purchase')),
+                        pw.Expanded(flex: 12, child: _tableHeader('Total Paid')),
+                        pw.Expanded(flex: 12, child: _tableHeader('Balance')),
+                      ],
+                    ),
+                  ),
+                  
+                  // Table Content
+                  ...pageCustomers.map((customerData) {
+                    final customer = customerData.customer;
+                    final isEven = pageCustomers.indexOf(customerData) % 2 == 0;
+                    
+                    double totalPurchased = 0;
+                    double totalPaid = 0;
+                    for (var tx in customerData.transactions) {
+                      totalPurchased += tx.isInstallment ? (tx.contract?.totalAmount ?? tx.sale.totalAmount) : tx.sale.totalAmount;
+                      totalPaid += tx.sale.receivedAmount;
+                    }
+                    final balance = totalPurchased - totalPaid;
+
+                    return pw.Container(
+                      decoration: pw.BoxDecoration(
+                        color: isEven ? PdfColors.white : PdfColors.grey50,
+                        border: pw.Border.all(color: PdfColors.grey200),
+                      ),
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: pw.Row(
+                        crossAxisAlignment: pw.CrossAxisAlignment.center,
+                        children: [
+                          pw.Expanded(
+                            flex: 20, 
+                            child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                _tableCell(customer.fullName, bold: true),
+                                if (customer.fatherName != null && customer.fatherName!.isNotEmpty)
+                                  pw.Text('S/O: ${customer.fatherName}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
+                              ]
+                            )
+                          ),
+                          pw.Expanded(flex: 20, child: _tableCell(customer.cnicNumber)),
+                          pw.Expanded(flex: 15, child: _tableCell(customer.phoneNumber)),
+                          pw.Expanded(flex: 20, child: _tableCell(customer.address ?? 'N/A')),
+                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(totalPurchased))),
+                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(totalPaid), color: _successColor)),
+                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(balance), color: balance > 0 ? _warningColor : null, bold: true)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+
+                  pw.Spacer(),
+                  _buildFooter(context),
+                ],
+              );
+            },
+          ),
+        );
+      }
+
+      final fileName = customers.length == 1 
+          ? 'Profile_${customers.first.customer.cnicNumber}.pdf'
+          : 'All_Customers_Profile_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf';
+
+      return await _savePdf(pdf, fileName);
+    } catch (e) {
+      debugPrint('Error generating customer profile PDF: $e');
+      return null;
+    }
   }
 }
