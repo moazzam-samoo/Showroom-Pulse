@@ -168,23 +168,24 @@ class CustomerFormStep extends StatelessWidget {
           const SizedBox(height: 20),
           Obx(() {
             if (controller.searchResults.isEmpty) {
-              if (controller.customerSearchController.text.isNotEmpty &&
-                  !controller.isSearching.value) {
+              if (controller.isSearching.value) {
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32.0),
-                    child: Column(
-                      children: [
-                        Icon(LucideIcons.searchX, size: 48, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('No customers found',
-                            style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
+                    child: CircularProgressIndicator(),
                   ),
                 );
               }
-              return const Center(child: Text('Search results will appear here'));
+              final query = controller.customerSearchController.text.trim();
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text(
+                    query.isEmpty ? 'No customers found in database' : 'No customers matching "$query"',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ),
+              );
             }
 
             return ListView.separated(
@@ -212,78 +213,81 @@ class CustomerFormStep extends StatelessWidget {
     final customer = customerWithTxn.customer;
     final hasActiveInstallments = customerWithTxn.pendingAmount > 0;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-              isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-          child: Text(
-            customerWithTxn.initials,
-            style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        ),
-        title: Text(
-          customer.fullName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(LucideIcons.creditCard, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(customer.cnicNumber,
-                    style: TextStyle(color: Colors.grey[600])),
-                const SizedBox(width: 16),
-                Icon(LucideIcons.phone, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(customer.phoneNumber,
-                    style: TextStyle(color: Colors.grey[600])),
-              ],
+    return InkWell(
+      onTap: () => controller.selectCustomer(customerWithTxn),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            if (hasActiveInstallments) ...[
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
-                ),
-                child: Text(
-                  'Pending: Rs. ${customerWithTxn.pendingAmount.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                      color: Colors.orange,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
           ],
         ),
-        trailing: ElevatedButton(
-          onPressed: () => controller.selectCustomer(customerWithTxn),
-          style: ElevatedButton.styleFrom(
+        child: ListTile(
+          leading: CircleAvatar(
             backgroundColor:
                 isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-            foregroundColor: Colors.white,
+            child: Text(
+              customerWithTxn.initials,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
-          child: const Text('Select'),
+          title: Text(
+            customer.fullName,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(LucideIcons.creditCard, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(customer.cnicNumber,
+                      style: TextStyle(color: Colors.grey[600])),
+                  const SizedBox(width: 16),
+                  Icon(LucideIcons.phone, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(customer.phoneNumber,
+                      style: TextStyle(color: Colors.grey[600])),
+                ],
+              ),
+              if (hasActiveInstallments) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    'Pending: Rs. ${customerWithTxn.pendingAmount.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        color: Colors.orange,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          trailing: ElevatedButton(
+            onPressed: () => controller.selectCustomer(customerWithTxn),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Select'),
+          ),
         ),
       ),
     );

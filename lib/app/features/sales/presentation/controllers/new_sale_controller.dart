@@ -102,15 +102,10 @@ class NewSaleController extends GetxController {
   }
 
   Future<void> searchCustomers(String query) async {
-    if (query.isEmpty) {
-      searchResults.clear();
-      return;
-    }
-
     try {
       isSearching.value = true;
       final results = await _customerRepository.getAllCustomersWithTransactions(
-        searchQuery: query,
+        searchQuery: query.isEmpty ? null : query,
         sortByDateDesc: true,
       );
       searchResults.assignAll(results);
@@ -281,6 +276,15 @@ class NewSaleController extends GetxController {
     super.onInit();
     _initCustomerRepository();
     loadAvailableBikes();
+
+    // Listen to isNewCustomer toggle
+    ever(isNewCustomer, (bool newValue) {
+      if (!newValue && selectedCustomer.value == null) {
+        searchCustomers('');
+      } else if (newValue) {
+        searchResults.clear();
+      }
+    });
 
     // Register fields in Navigation Manager in logical order
     _registerNavigationFields();
