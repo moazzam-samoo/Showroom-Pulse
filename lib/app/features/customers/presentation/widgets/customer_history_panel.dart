@@ -19,61 +19,62 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     return Expanded(
-      child: Obx(() {
-        final customer = controller.selectedCustomer.value;
-        
-        if (customer == null) {
-          // Empty State
-          return Container(
-            decoration: BoxDecoration(
-               color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(LucideIcons.mousePointerClick, size: 48, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Select a customer to view history',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      child: Column(
+        children: [
+          // KPI Section (Top - Always visible)
+          Obx(() => _buildKPISection(context, controller, isDark)),
+          const SizedBox(height: 24),
+
+          // Main Content Area
+          Expanded(
+            child: Obx(() {
+              final customer = controller.selectedCustomer.value;
+              
+              if (customer == null) {
+                // Empty State
+                return Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(color: isDark ? AppColors.darkBorder : Colors.grey.shade300),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(LucideIcons.mousePointerClick, size: 48, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Select a customer to view history',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          );
-        }
+                );
+              }
 
-        // Sort transactions: Date Desc -> Price Desc
-        final sortedTransactions = List<TransactionRecord>.from(customer.transactions);
-        sortedTransactions.sort((a, b) {
-           final dateA = a.sale.saleDate;
-           final dateB = b.sale.saleDate;
-           final dateComparison = dateB.compareTo(dateA);
-           
-           if (dateComparison == 0) {
-             // Secondary sort: Price
-             // Use contract amount for installments, sale amount for cash
-             final amountA = a.contract?.totalAmount ?? a.sale.totalAmount;
-             final amountB = b.contract?.totalAmount ?? b.sale.totalAmount;
-             return amountB.compareTo(amountA);
-           }
-           
-           return dateComparison;
-        });
+              // Sort transactions: Date Desc -> Price Desc
+              final sortedTransactions = List<TransactionRecord>.from(customer.transactions);
+              sortedTransactions.sort((a, b) {
+                 final dateA = a.sale.saleDate;
+                 final dateB = b.sale.saleDate;
+                 final dateComparison = dateB.compareTo(dateA);
+                 
+                 if (dateComparison == 0) {
+                   final amountA = a.contract?.totalAmount ?? a.sale.totalAmount;
+                   final amountB = b.contract?.totalAmount ?? b.sale.totalAmount;
+                   return amountB.compareTo(amountA);
+                 }
+                 
+                 return dateComparison;
+              });
 
-        return Column(
-          children: [
-            // KPI Section (Top - matching image)
-            _buildKPISection(context, controller, isDark),
-            const SizedBox(height: 24),
-
-            // Main Content Area
-            Expanded(
-              child: Container(
+              return Container(
                 decoration: BoxDecoration(
                   color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -114,9 +115,9 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                            const SizedBox(width: 8),
                            OutlinedButton.icon(
                              onPressed: () {
-                               if (customer != null) {
-                                  controller.downloadCustomerData(customer);
-                               }
+                                if (customer != null) {
+                                   controller.downloadCustomerData(customer);
+                                }
                              },
                              icon: const Icon(LucideIcons.download, size: 16),
                              label: const Text('EXPORT DATA'),
@@ -162,11 +163,11 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                      ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        );
-      }),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -177,9 +178,9 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
       children: [
         Expanded(child: _buildKPICard('TOTAL CUSTOMERS', controller.totalCustomers.value.toString(), '+100% last month', LucideIcons.users, isDark, AppColors.darkInfo)),
         const SizedBox(width: 16),
-        Expanded(child: _buildKPICard('ACTIVE INSTALLMENTS', controller.activeInstallmentsCount.value.toString(), 'Rs${_formatCurrency(controller.activeInstallmentsValue.value)} Total Value', LucideIcons.bike, isDark, AppColors.darkPrimary)),
+        Expanded(child: _buildKPICard('ACTIVE INSTALLMENTS', controller.activeInstallmentsCount.value.toString(), 'Rs ${_formatCurrency(controller.activeInstallmentsValue.value)} Total Value', LucideIcons.bike, isDark, AppColors.darkPrimary)),
         const SizedBox(width: 16),
-         Expanded(child: _buildKPICard('PENDING PAYMENTS', controller.pendingPaymentsCount.value.toString(), 'Rs${_formatCurrency(controller.pendingPaymentsDueSoon.value)} Due Soon', LucideIcons.wallet, isDark, AppColors.darkError)),
+         Expanded(child: _buildKPICard('PENDING PAYMENTS', controller.pendingPaymentsCount.value.toString(), 'Rs ${_formatCurrency(controller.pendingPaymentsDueSoon.value)} Due Soon', LucideIcons.wallet, isDark, AppColors.darkError)),
       ],
     );
   }
