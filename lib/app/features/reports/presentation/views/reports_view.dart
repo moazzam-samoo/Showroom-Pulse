@@ -13,6 +13,9 @@ import '../widgets/stock_distribution_chart.dart';
 import '../widgets/profit_summary_table.dart';
 import '../widgets/revenue_line_chart.dart';
 import '../widgets/expense_tracker.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 
 class ReportsView extends StatefulWidget {
   const ReportsView({super.key});
@@ -24,6 +27,42 @@ class ReportsView extends StatefulWidget {
 class _ReportsViewState extends State<ReportsView> {
   int _selectedNavIndex = 6; // Reports is index 6 in sidebar
 
+  // Coach mark keys
+  final GlobalKey _filterModeSelectorKey = GlobalKey();
+  final GlobalKey _kpiSummaryKey = GlobalKey();
+  final GlobalKey _chartsSectionKey = GlobalKey();
+  final GlobalKey _profitSummaryTableKey = GlobalKey();
+  final GlobalKey _revenueLineChartKey = GlobalKey();
+  final GlobalKey _expenseTrackerKey = GlobalKey();
+  
+  bool _showCoachMarks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkWalkthroughStatus();
+  }
+
+  Future<void> _checkWalkthroughStatus() async {
+    final walkthroughService = Get.find<WalkthroughService>();
+    if (!walkthroughService.hasCompletedTab('reports')) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _showCoachMarks = true;
+          });
+        }
+      });
+    }
+  }
+
+  void _completeTour() {
+    setState(() {
+      _showCoachMarks = false;
+    });
+    Get.find<WalkthroughService>().markTabComplete('reports');
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -32,45 +71,99 @@ class _ReportsViewState extends State<ReportsView> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      body: Row(
+      body: Stack(
         children: [
-          // Sidebar
-          SidebarNavigation(
-            selectedIndex: _selectedNavIndex,
-            onItemSelected: (index) {
-              setState(() => _selectedNavIndex = index);
-              switch (index) {
-                case 0: Get.offNamed('/dashboard'); break;
-                case 1: Get.offNamed('/procurement'); break;
-                case 2: Get.offNamed('/inventory'); break;
-                case 3: Get.offNamed('/sales'); break;
-                case 4: Get.offNamed('/installments'); break;
-                case 5: Get.offNamed('/customers'); break;
-                case 6: break; // Already on Reports
-                case 7: Get.offNamed('/settings'); break;
-              }
-            },
+          Row(
+            children: [
+              // Sidebar
+              SidebarNavigation(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) {
+                  setState(() => _selectedNavIndex = index);
+                  switch (index) {
+                    case 0: Get.offNamed('/dashboard'); break;
+                    case 1: Get.offNamed('/procurement'); break;
+                    case 2: Get.offNamed('/inventory'); break;
+                    case 3: Get.offNamed('/sales'); break;
+                    case 4: Get.offNamed('/installments'); break;
+                    case 5: Get.offNamed('/customers'); break;
+                    case 6: break; // Already on Reports
+                    case 7: Get.offNamed('/settings'); break;
+                  }
+                },
+              ),
+              // Main Content
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return Column(
+                    children: [
+                      // Header
+                      _buildHeader(isDark, controller),
+                      // Content
+                      Expanded(
+                        child: Obx(() => controller.selectedTab.value == 0
+                            ? _buildReportsTab(isDark, controller, currencyFormat)
+                            : _buildRevenueTab(isDark, controller, currencyFormat)),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ],
           ),
-          // Main Content
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              return Column(
-                children: [
-                  // Header
-                  _buildHeader(isDark, controller),
-                  // Content
-                  Expanded(
-                    child: Obx(() => controller.selectedTab.value == 0
-                        ? _buildReportsTab(isDark, controller, currencyFormat)
-                        : _buildRevenueTab(isDark, controller, currencyFormat)),
+          
+          // Coach Marks Overlay
+          if (_showCoachMarks)
+            Positioned.fill(
+              child: CoachMarkOverlay(
+                targets: [
+                  CoachMarkTarget(
+                    targetKey: _filterModeSelectorKey,
+                    title: 'Report Period',
+                    description: 'Switch between Monthly, Yearly, and All-Time views.',
+                    position: CoachMarkPosition.bottom,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _kpiSummaryKey,
+                    title: 'Financial Summary',
+                    description: 'See total revenue, expenses, and net profit at a glance.',
+                    position: CoachMarkPosition.bottom,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _chartsSectionKey,
+                    title: 'Profit & Stock Charts',
+                    description: 'Monthly profit bar chart and stock distribution donut chart.',
+                    position: CoachMarkPosition.top,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _profitSummaryTableKey,
+                    title: 'Brand-wise Profits',
+                    description: 'Detailed breakdown of profit by brand in table format.',
+                    position: CoachMarkPosition.top,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _revenueLineChartKey,
+                    title: 'Revenue Trends',
+                    description: 'Track revenue over time with interactive line chart filters.',
+                    position: CoachMarkPosition.bottom,
+                    onBeforeTarget: () async {
+                      // Switch to Revenue tab before showing this target
+                      Get.find<ReportsController>().selectedTab.value = 1;
+                    },
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _expenseTrackerKey,
+                    title: 'Expense Management',
+                    description: 'Add, edit, and delete business expenses to track net profit vs total expenses.',
+                    position: CoachMarkPosition.top,
                   ),
                 ],
-              );
-            }),
-          ),
+                onComplete: _completeTour,
+              ),
+            ),
         ],
       ),
     );
@@ -110,6 +203,7 @@ class _ReportsViewState extends State<ReportsView> {
           const SizedBox(width: AppSpacing.lg),
           // Filter Mode Selectors
           Obx(() => Container(
+            key: _filterModeSelectorKey,
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightBackground,
@@ -308,37 +402,46 @@ class _ReportsViewState extends State<ReportsView> {
       child: Column(
         children: [
           // KPI Cards
-          KpiSummaryCards(
-            totalRevenue: controller.totalRevenue.value,
-            totalExpenses: controller.totalExpenses.value,
-            netProfit: controller.netProfit.value,
+          Container(
+            key: _kpiSummaryKey,
+            child: KpiSummaryCards(
+              totalRevenue: controller.totalRevenue.value,
+              totalExpenses: controller.totalExpenses.value,
+              netProfit: controller.netProfit.value,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           // Charts Row
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Monthly Profit Bar Chart
-              Expanded(
-                flex: 3,
-                child: MonthlyProfitChart(
-                  data: controller.monthlyProfitData,
+          Container(
+            key: _chartsSectionKey,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Monthly Profit Bar Chart
+                Expanded(
+                  flex: 3,
+                  child: MonthlyProfitChart(
+                    data: controller.monthlyProfitData,
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              // Stock Distribution Donut
-              Expanded(
-                flex: 2,
-                child: StockDistributionChart(
-                  data: controller.stockDistribution,
+                const SizedBox(width: AppSpacing.lg),
+                // Stock Distribution Donut
+                Expanded(
+                  flex: 2,
+                  child: StockDistributionChart(
+                    data: controller.stockDistribution,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           // Net Profit Summary Table
-          ProfitSummaryTable(
-            data: controller.profitByBrand,
+          Container(
+            key: _profitSummaryTableKey,
+            child: ProfitSummaryTable(
+              data: controller.profitByBrand,
+            ),
           ),
         ],
       ),
@@ -352,22 +455,28 @@ class _ReportsViewState extends State<ReportsView> {
       child: Column(
         children: [
           // Revenue Line Chart
-          Obx(() => RevenueLineChart(
-            data: controller.revenueTrend,
-            filter: controller.revenueChartFilter.value,
-            onFilterChanged: controller.changeRevenueChartFilter,
+          Obx(() => Container(
+            key: _revenueLineChartKey,
+            child: RevenueLineChart(
+              data: controller.revenueTrend,
+              filter: controller.revenueChartFilter.value,
+              onFilterChanged: controller.changeRevenueChartFilter,
+            ),
           )),
           const SizedBox(height: AppSpacing.lg),
           // Expense Tracker
-          ExpenseTracker(
-            expenses: controller.expenses,
-            categories: controller.expenseCategories,
-            onAdd: (expense) => controller.addExpense(expense),
-            onUpdate: (expense) => controller.updateExpense(expense),
-            onDelete: (id) => controller.deleteExpense(id),
-            totalExpenses: controller.totalExpenses.value,
-            totalRevenue: controller.totalRevenue.value,
-            netProfit: controller.netProfit.value,
+          Container(
+            key: _expenseTrackerKey,
+            child: ExpenseTracker(
+              expenses: controller.expenses,
+              categories: controller.expenseCategories,
+              onAdd: (expense) => controller.addExpense(expense),
+              onUpdate: (expense) => controller.updateExpense(expense),
+              onDelete: (id) => controller.deleteExpense(id),
+              totalExpenses: controller.totalExpenses.value,
+              totalRevenue: controller.totalRevenue.value,
+              netProfit: controller.netProfit.value,
+            ),
           ),
         ],
       ),

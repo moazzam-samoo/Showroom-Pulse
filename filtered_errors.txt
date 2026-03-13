@@ -1,0 +1,122 @@
+﻿
+  error - The getter 
+'primary' isn't 
+defined for the type 
+'AppColors' - lib\app\
+features\walkthrough\p
+resentation\views\walk
+through_view.dart:49:4
+2 - undefined_getter
+  error - The getter 
+'success' isn't 
+defined for the type 
+'AppColors' - lib\app\
+features\walkthrough\p
+resentation\views\walk
+through_view.dart:55:4
+2 - undefined_getter
+  error - The named 
+parameter 
+'description' is 
+required, but there's 
+no corresponding 
+argument - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:57:19 
+- missing_required_arg
+ument
+  error - The named 
+parameter 'iconColor' 
+is required, but 
+there's no 
+corresponding 
+argument - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:57:19 
+- missing_required_arg
+ument
+  error - The named 
+parameter 
+'visualIcon' is 
+required, but there's 
+no corresponding 
+argument - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:57:19 
+- missing_required_arg
+ument
+  error - Too many 
+positional arguments: 
+0 expected, but 3 
+found - lib\app\featur
+es\walkthrough\present
+ation\views\walkthroug
+h_view.dart:59:13 - ex
+tra_positional_argumen
+ts_could_be_named
+  error - The getter 
+'lightInfo' isn't 
+defined for the type 
+'AppColors' - lib\app\
+features\walkthrough\p
+resentation\views\walk
+through_view.dart:79:7
+0 - undefined_getter
+  error - The getter 
+'handshake' isn't 
+defined for the type 
+'LucideIcons' - lib\ap
+p\features\walkthrough
+\presentation\views\wa
+lkthrough_view.dart:90
+:43 - undefined_getter
+  error - The getter 
+'primary' isn't 
+defined for the type 
+'AppColors' - lib\app\
+features\walkthrough\p
+resentation\views\walk
+through_view.dart:154:
+54 - undefined_getter
+  error - Undefined 
+name 'isLastPage' - li
+b\app\features\walkthr
+ough\presentation\view
+s\walkthrough_view.dar
+t:162:27 - 
+undefined_identifier
+  error - Expected to 
+find ')' - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:169:22 
+- expected_token
+  error - Expected to 
+find ']' - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:169:22 
+- expected_token
+  error - Expected to 
+find ')' - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:174:11 
+- expected_token
+  error - Expected to 
+find ']' - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:177:5 
+- expected_token
+  error - Expected to 
+find ')' - lib\app\fea
+tures\walkthrough\pres
+entation\views\walkthr
+ough_view.dart:177:6 
+- expected_token
+
+

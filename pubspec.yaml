@@ -58,6 +58,7 @@ dependencies:
   # Local Desktop Notifications
   local_notifier: ^0.1.6
   tray_manager: ^0.5.2
+  smooth_page_indicator: ^2.0.1
 
 dev_dependencies:
   flutter_test:

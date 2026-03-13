@@ -10,7 +10,12 @@ import 'package:tahir_showroom/app/features/customers/presentation/controllers/c
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 class CustomerListSidebar extends GetView<CustomersController> {
-  const CustomerListSidebar({super.key});
+  final GlobalKey? downloadBtnKey;
+
+  const CustomerListSidebar({
+    super.key,
+    this.downloadBtnKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +41,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
                 const Text('Customers', style: TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 IconButton(
+                  key: downloadBtnKey,
                   icon: const Icon(LucideIcons.download, size: 18),
                   onPressed: () => controller.downloadAllCustomersData(), 
                   tooltip: 'Download All Customers',

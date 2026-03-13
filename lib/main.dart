@@ -1,5 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
+import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_binding.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -203,6 +208,11 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         page: () => const SettingsView(),
         binding: SettingsBinding(),
       ),
+      GetPage(
+        name: '/walkthrough',
+        page: () => const WalkthroughView(),
+        binding: WalkthroughBinding(),
+      ),
     ];
     Get.addPages(getPages);
     
@@ -299,8 +309,13 @@ class _SplashScreenState extends State<SplashScreen> {
       final hasSession = await authService.checkSavedSession();
       
       if (hasSession) {
-        // User is already logged in, go to dashboard
-        Get.offAllNamed('/dashboard');
+        // User is already logged in, check walkthrough
+        final walkthroughService = Get.find<WalkthroughService>();
+        if (!walkthroughService.hasCompletedWalkthrough.value) {
+          Get.offAllNamed('/walkthrough');
+        } else {
+          Get.offAllNamed('/dashboard');
+        }
       } else {
         // No session, go to login
         Get.offAllNamed('/login');
