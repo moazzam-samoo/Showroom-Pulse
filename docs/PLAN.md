@@ -1,50 +1,57 @@
-# Discount Feature Implementation Plan
+# Plan: Hybrid UX Pattern for Notifications
 
-## Overview
+This document outlines the implementation plan for replacing the 50+ existing `Get.snackbar` notifications with a Hybrid UX Pattern (Toasts for info/success, Pop-ups for errors/critical alerts), serving as Phase 1 of the orchestration process.
 
-This plan outlines the integration of a Discount mechanism into the New Sale workflow for both Cash and Installment sales. It includes database schema updates, calculation logic modifications, and UI enhancements.
+## User Review Required
+>
+> [!IMPORTANT]
+> Please review this plan. This will apply a significant UI overhaul across 18 files.
+> Once approved, the Orchestration mode will proceed to Phase 2 (Implementation).
 
-## Phase 1: Database Updates (Isar Models)
+## Proposed Changes
 
-1. **Sale Model (`lib/app/data/models/sale.dart`)**:
-   - Add `double discountAmount = 0.0;`
-   - Add `double discountPercentage = 0.0;`
+### Core UI Components
 
-2. **Installment Contract Model (`lib/app/data/models/installment_contract.dart`)**:
-   - Add `double discountAmount = 0.0;`
-   - Add `double discountPercentage = 0.0;`
+#### [NEW] `lib/app/core/widgets/app_toast.dart`
 
-3. **Code Generation**:
-   - Run `flutter pub run build_runner build --delete-conflicting-outputs` to regenerate Isar schema files (`.g.dart`).
+- Create an elegant, top-right floating toast component for Success/Info messages.
+- Non-blocking and self-dismissible (3-4 seconds).
+- Supports closing on `Esc`.
 
-## Phase 2: Controller & Calculation Logic
+#### [NEW] `lib/app/core/widgets/app_notification_dialog.dart`
 
-**`NewSaleController` Updates**:
+- Create a dedicated dialog component specifically for Errors and Critical alerts.
+- Uses `Get.dialog` with `barrierDismissible: true` (closes on click outside).
+- Built-in `RawKeyboardListener` for `Enter` and `Esc` to dismiss.
+- Highly visible, preventing the user from missing critical failures or validation issues.
 
-1. **Cash Sales**:
-   - **Logic**: `Discount = Bike Cash Sale Price - Received Amount`
-   - Calculate discount percentage: `(Discount / Bike Cash Sale Price) * 100`
+### Implementation Areas (Agents: `frontend-specialist`, `backend-specialist`)
 
-2. **Installment Sales**:
-   - **Form Update**: We'll add a new "Discount" input field to the Installment Markup Configuration section.
-   - **Logic**: `New Base Price = Bike Cash Sale Price - Discount`. The markup will then be calculated on this *new base price*.
+The 50+ snackbars across these areas will be categorized and refactored:
 
-3. **Save Logic**:
-   - Update the `saveSale` method to persist the calculated `discountAmount` and `discountPercentage` into the `Sale` and `InstallmentContract` databases.
+#### Sales & Transactions
 
-## Phase 3: Frontend UI Enhancements
+- **Invoices/Success**: Replace with `AppToast.showSuccess(...)`
+- **Missing selections/Failed saves**: Replace with `AppNotificationDialog.showError(...)`
 
-1. **Payment Plan Step (`lib/app/features/sales/presentation/widgets/payment_plan_step.dart`)**:
-   - **Cash View**: Display the original Bike Selling Price above the "Received Amount" input. Show the real-time calculated discount.
-   - **Installment View**: Add a "Discount (Rs)" input field beside Markup configuration. Subtract this discount from the total before applying markup.
+#### Inventory & Procurement
 
-2. **Bike Card & Sale Details**:
-   - **`BikeCard`**: Update the UI to show a "Discount" chip/badge displaying both the amount and percentage if a discount was given.
-   - **`CashSaleDetailDialog` & `InstallmentSaleDetailDialog`**: Add dedicated rows to show "Original Price", "Discount", and "Final Price/Amount".
+- **Supplier added/updated**: Replace with `AppToast.showSuccess(...)`
+- **Validation errors (e.g. Please add a bike)**: Replace with `AppNotificationDialog.showError(...)`
 
-## Phase 4: Verification & Testing
+#### Settings & Configuration
 
-- Run `flutter analyze`
-- Test full lifecycle of a Cash Sale with discount.
-- Test full lifecycle of an Installment Sale with discount.
-- Verify that historical data is not broken by the new DB fields (Isar handles adding fields safely).
+- **Profile saved**: Replace with `AppToast.showSuccess(...)`
+- **Database backup failed / Logo failed**: Replace with `AppNotificationDialog.showError(...)`
+
+#### Core, Auth & Dashboard
+
+- **Installment warnings**: Replace with `AppNotificationDialog.showWarning(...)` or `showError(...)` depending on severity.
+- **Login fails/Data fetch fails**: Replace with `AppNotificationDialog.showError(...)`
+
+## Verification Plan
+
+### Manual Verification
+
+- Execute actions that trigger success messages to verify Toasts appear and vanish without screen blocking.
+- Execute actions that trigger error messages to verify Pop-ups dim the screen, and disappear when clicking outside, or pressing `Esc` / `Enter`.

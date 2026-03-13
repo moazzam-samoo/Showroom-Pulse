@@ -6,16 +6,20 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
+import 'package:tahir_showroom/app/core/services/theme_service.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import '../controllers/dashboard_controller.dart';
 
 import '../widgets/kpi_section.dart';
 import '../widgets/performance_chart.dart';
 import '../widgets/stock_allocation_chart.dart';
-import '../widgets/transaction_feed.dart';
+import '../widgets/quick_actions.dart';
+import '../widgets/upcoming_installments.dart';
+import '../widgets/kpi_detail_dialogs.dart';
 
 /// Dashboard View - Main screen after login
 /// 
@@ -92,24 +96,31 @@ class _DashboardViewState extends State<DashboardView> {
             child: Column(
               children: [
                 // Header
-                _buildHeader(isDark, authService),
+                _buildHeader(isDark, authService, controller),
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
+                        // Quick Actions Row
+                        const QuickActionsRow(),
+                        const SizedBox(height: AppSpacing.lg),
                         // KPI Section
                         Obx(() => KpiSection(
-                          totalAssetValue: 'Rs. ${(controller.totalAssetValue.value / 1000000).toStringAsFixed(1)}M',
-                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD Growth',
+                          totalAssetValue: PriceFormatter.formatLakhWords(controller.totalAssetValue.value),
+                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD',
                           unitsInStock: controller.unitsInStock.value,
                           lowStockAlert: controller.lowStockAlert.value,
-                          monthlySalesRevenue: 'Rs. ${(controller.monthlyRevenue.value / 1000000).toStringAsFixed(1)}M',
-                          salesTarget: 'Rs. 10.0M',
+                          monthlySalesRevenue: PriceFormatter.formatLakhWords(controller.monthlyRevenue.value),
+                          salesTarget: '10 Lac',
                           salesProgress: controller.revenueOnTrack.value ? 82 : 50,
-                          criticalArrears: 'Rs. ${(controller.pendingInstallments.value / 1000000).toStringAsFixed(2)}M',
-                          accountsOverdue: controller.overdueInstallments.value,
+                          totalInstallmentValue: PriceFormatter.formatLakhWords(controller.totalInstallmentValue.value),
+                          activeContractsCount: controller.activeContracts.value,
+                          onAssetValueTap: () => KpiDetailDialogs.showAssetValueDialog(context),
+                          onUnitsInStockTap: () => KpiDetailDialogs.showStockDialog(context),
+                          onSalesRevenueTap: () => KpiDetailDialogs.showRevenueDialog(context),
+                          onCriticalArrearsTap: () => KpiDetailDialogs.showInstallmentDialog(context),
                         )),
                         const SizedBox(height: AppSpacing.lg),
                         // Charts Row
@@ -142,12 +153,12 @@ class _DashboardViewState extends State<DashboardView> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        // Transaction Feed (using Recent Sales data)
-                        const SizedBox(
+                        // Upcoming Installments (replaces empty Transaction Feed)
+                        SizedBox(
                           height: 350,
-                          child: LiveTransactionFeed(
-                            transactions: [], // Empty for now - could add getRecentTransactions method
-                          ),
+                          child: Obx(() => UpcomingInstallmentsWidget(
+                            installments: controller.upcomingInstallments.toList(),
+                          )),
                         ),
                       ],
                     ),
@@ -162,7 +173,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildHeader(bool isDark, AuthService authService) {
+  Widget _buildHeader(bool isDark, AuthService authService, DashboardController controller) {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     
     return Container(
@@ -184,21 +195,26 @@ class _DashboardViewState extends State<DashboardView> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Executive Command Center',
-                style: TextStyle(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                'Tahir Showroom • Real-time Performance Metrics',
+              Obx(() {
+                final name = controller.ownerName.value;
+                return Text(
+                  name != null && name.isNotEmpty
+                      ? 'Welcome, $name'
+                      : 'Executive Command Center',
+                  style: TextStyle(
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              }),
+              Obx(() => Text(
+                '${controller.showroomName.value} • Real-time Performance Metrics',
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                   fontSize: 12,
                 ),
-              ),
+              )),
             ],
           ),
           // Right Section
@@ -223,14 +239,14 @@ class _DashboardViewState extends State<DashboardView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Live: 4 Active Sales Reps',
-                      style: TextStyle(
+                    Obx(() => Text(
+                      'Live: ${controller.activeContracts.value} Active Installments',
+                      style: const TextStyle(
                         color: Colors.green,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
+                    )),
                   ],
                 ),
               ),
@@ -243,9 +259,7 @@ class _DashboardViewState extends State<DashboardView> {
                   color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                 ),
                 onPressed: () {
-                  Get.changeThemeMode(
-                    Get.isDarkMode ? ThemeMode.light : ThemeMode.dark,
-                  );
+                  Get.find<ThemeService>().toggleTheme();
                 },
               ),
               // Notifications
@@ -384,24 +398,260 @@ class _DashboardViewState extends State<DashboardView> {
               }),
               // User Avatar
               const SizedBox(width: 8),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.15),
-                  shape: BoxShape.circle,
+              Obx(() {
+                final hasPic = controller.ownerProfilePicPath.value != null &&
+                    File(controller.ownerProfilePicPath.value!).existsSync();
+
+                return Tooltip(
+                  message: controller.ownerName.value ?? authService.currentUser.value?.displayName ?? 'User',
+                  child: InkWell(
+                    onTap: () => _showProfileCard(context, isDark, controller),
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: primaryColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        image: hasPic
+                            ? DecorationImage(
+                                image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: hasPic
+                          ? null
+                          : Center(
+                              child: Text(
+                                (controller.ownerName.value?.isNotEmpty == true
+                                        ? controller.ownerName.value!
+                                        : (authService.currentUser.value?.displayName ?? 'A'))
+                                    .substring(0, 1)
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showProfileCard(BuildContext context, bool isDark, DashboardController controller) {
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final showroomAddress = controller.showroomAddress.value;
+    final showroomPhone = controller.showroomPhone.value;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            width: 320,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: primaryColor.withOpacity(0.2),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.1),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
-                child: Center(
-                  child: Text(
-                    authService.currentUser.value?.displayName.substring(0, 1).toUpperCase() ?? 'A',
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header with gradient
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(top: 28, bottom: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        primaryColor.withOpacity(0.15),
+                        primaryColor.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Profile Picture
+                      Obx(() {
+                        final hasPic = controller.ownerProfilePicPath.value != null &&
+                            File(controller.ownerProfilePicPath.value!).existsSync();
+                        return Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: primaryColor, width: 2.5),
+                            color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                            image: hasPic
+                                ? DecorationImage(
+                                    image: FileImage(File(controller.ownerProfilePicPath.value!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: hasPic
+                              ? null
+                              : Icon(LucideIcons.user, size: 32,
+                                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                      // Owner Name
+                      Obx(() => Text(
+                        controller.ownerName.value ?? 'Owner',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        ),
+                      )),
+                      const SizedBox(height: 4),
+                      // Showroom Name
+                      Obx(() => Text(
+                        controller.showroomName.value,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )),
+                    ],
+                  ),
+                ),
+                // Details section
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: Column(
+                    children: [
+                      if (showroomAddress != null && showroomAddress.isNotEmpty)
+                        _profileDetailRow(
+                          icon: LucideIcons.mapPin,
+                          label: 'Address',
+                          value: showroomAddress,
+                          isDark: isDark,
+                          primaryColor: primaryColor,
+                        ),
+                      if (showroomPhone != null && showroomPhone.isNotEmpty)
+                        _profileDetailRow(
+                          icon: LucideIcons.phone,
+                          label: 'Phone',
+                          value: showroomPhone,
+                          isDark: isDark,
+                          primaryColor: primaryColor,
+                        ),
+                      if ((showroomAddress == null || showroomAddress.isEmpty) &&
+                          (showroomPhone == null || showroomPhone.isEmpty))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'Add your address and phone in Settings',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Bottom Action
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: Icon(LucideIcons.settings, size: 16, color: primaryColor),
+                      label: Text('Edit in Settings', style: TextStyle(color: primaryColor, fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: primaryColor.withOpacity(0.3)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                      onPressed: () {
+                        Get.back();
+                        Get.offNamed('/settings');
+                      },
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _profileDetailRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    required Color primaryColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: primaryColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

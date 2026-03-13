@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_showroom;
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:intl/intl.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// Controller for Customers screen
 class CustomersController extends GetxController {
@@ -14,6 +17,15 @@ class CustomersController extends GetxController {
   final customers = <CustomerWithTransactions>[].obs;
   final isLoading = true.obs;
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
+
+  bool get hasActiveFilters => searchQuery.value.isNotEmpty;
+
+  void clearFilters() {
+    searchQuery.value = '';
+    searchController.clear();
+    loadCustomers();
+  }
   
   // Expanded row tracking - DEPRECATED for Sidebar Layout but kept for compatibility during migration
   final expandedCustomerId = Rxn<int>();
@@ -54,7 +66,7 @@ class CustomersController extends GetxController {
         loadStats(),
       ]);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load customers: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to load customers: $e');
     } finally {
       isLoading.value = false;
     }
@@ -152,6 +164,21 @@ class CustomersController extends GetxController {
 
   /// Internal method to save customer
   Future<void> _addCustomer(Map<String, dynamic> data) async {
+    if (data['fullName'].toString().trim().isEmpty ||
+        data['fatherName'].toString().trim().isEmpty ||
+        data['cnicNumber'].toString().trim().isEmpty ||
+        data['phoneNumber'].toString().trim().isEmpty ||
+        data['address'].toString().trim().isEmpty ||
+        data['profileImage'] == null ||
+        data['cnicFrontImage'] == null ||
+        data['cnicBackImage'] == null) {
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back).',
+      );
+      return;
+    }
+
     isLoading.value = true;
     try {
       String? profileImageFilename;
@@ -198,10 +225,10 @@ class CustomersController extends GetxController {
         cnicBackFilename: cnicBackFilename,
       );
 
-      Get.snackbar('Success', 'Customer added successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Customer added successfully');
       loadData(); // Refresh list
     } catch (e) {
-      Get.snackbar('Error', 'Failed to add customer: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to add customer: $e');
     } finally {
       isLoading.value = false;
     }
@@ -218,20 +245,48 @@ class CustomersController extends GetxController {
 
   /// Delete customer
   Future<void> deleteCustomer(int id) async {
-    // 1. Check if safe to delete
+    // 1. Check if safe to delete (no history)
     final canDelete = await _repository.canDeleteCustomer(id);
+    
     if (!canDelete) {
-      Get.snackbar(
-        'Cannot Delete', 
-        'This customer has valueable sales history and cannot be deleted.',
-        backgroundColor: Get.theme.colorScheme.errorContainer,
-        colorText: Get.theme.colorScheme.onErrorContainer,
-        snackPosition: SnackPosition.BOTTOM,
+      // Show special "Delete with History" dialog
+      final confirmAll = await Get.dialog<bool>(
+        AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete History?'),
+            ],
+          ),
+          content: const Text(
+            'This customer has transaction history (Sales/Installments).\n\n'
+            'Do you want to delete the customer AND their entire history? This action is IRREVERSIBLE.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false), 
+              child: const Text('Cancel')
+            ),
+            ElevatedButton(
+              onPressed: () => Get.back(result: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('DELETE EVERYTHING'),
+            ),
+          ],
+        )
       );
+
+      if (confirmAll == true) {
+        await _executeDelete(id, withHistory: true);
+      }
       return;
     }
 
-    // 2. Confirm
+    // 2. Standard Confirm (No history case)
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Delete Customer?'),
@@ -248,27 +303,56 @@ class CustomersController extends GetxController {
     );
 
     if (confirm == true) {
-      isLoading.value = true;
-      try {
+      await _executeDelete(id, withHistory: false);
+    }
+  }
+
+  /// Internal helper to execute deletion and refresh UI
+  Future<void> _executeDelete(int id, {required bool withHistory}) async {
+    isLoading.value = true;
+    try {
+      if (withHistory) {
+        await _repository.deleteCustomerWithHistory(id);
+      } else {
         await _repository.deleteCustomer(id);
-        Get.snackbar('Success', 'Customer deleted successfully');
-        
-        // Clear selection if deleted
-        if (selectedCustomer.value?.customer.id == id) {
-          selectedCustomer.value = null;
-        }
-        
-        loadData();
-      } catch (e) {
-        Get.snackbar('Error', 'Failed to delete customer: $e');
-      } finally {
-        isLoading.value = false;
       }
+      
+      AppToast.showSuccess(title: 'Success', message: 'Customer ${withHistory ? 'and history ' : ''}deleted successfully');
+      
+      // Clear selection if deleted
+      if (selectedCustomer.value?.customer.id == id) {
+        selectedCustomer.value = null;
+      }
+      
+      loadData();
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to delete customer: $e');
+    } finally {
+      isLoading.value = false;
     }
   }
 
   /// Internal method to update customer
   Future<void> _updateCustomer(int id, Map<String, dynamic> data) async {
+    bool hasProfile = data['profileImage'] != null || data['existingProfileImage'] != null;
+    bool hasCnicFront = data['cnicFrontImage'] != null || data['existingCnicFrontImage'] != null;
+    bool hasCnicBack = data['cnicBackImage'] != null || data['existingCnicBackImage'] != null;
+
+    if (data['fullName'].toString().trim().isEmpty ||
+        data['fatherName'].toString().trim().isEmpty ||
+        data['cnicNumber'].toString().trim().isEmpty ||
+        data['phoneNumber'].toString().trim().isEmpty ||
+        data['address'].toString().trim().isEmpty ||
+        !hasProfile ||
+        !hasCnicFront ||
+        !hasCnicBack) {
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please fill all input fields and ensure all 3 images (Profile, CNIC Front, CNIC Back) are provided.',
+      );
+      return;
+    }
+
     isLoading.value = true;
     try {
       String? profileImageFilename = data['existingProfileImage'];
@@ -331,12 +415,65 @@ class CustomersController extends GetxController {
 
       await _repository.updateCustomer(updatedCustomer);
 
-      Get.snackbar('Success', 'Customer updated successfully');
+      AppToast.showSuccess(title: 'Success', message: 'Customer updated successfully');
       loadData(); // Refresh list
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update customer: $e');
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to update customer: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> exportCustomerData() async {
+    final customerObj = selectedCustomer.value;
+    if (customerObj == null) {
+      AppNotificationDialog.showError(title: 'Export Failed', message: 'No customer is selected.');
+      return;
+    }
+
+    try {
+      AppToast.showInfo(title: 'Exporting', message: 'Generating customer statement...');
+      final pdfService = Get.find<ReportPdfService>();
+
+      final customerMap = {
+        'fullName': customerObj.customer.fullName,
+        'phoneNumber': customerObj.customer.phoneNumber,
+        'cnicNumber': customerObj.customer.cnicNumber,
+        'address': customerObj.customer.address,
+      };
+
+      // Create transactions list mapped
+      final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+      final txList = customerObj.transactions.map((tx) {
+        final date = dateFormat.format(tx.sale.saleDate);
+        final vehicle = tx.bike.model;
+        final type = tx.isInstallment ? 'Installment' : 'Cash';
+        final total = tx.isInstallment ? (tx.contract?.totalAmount ?? tx.sale.totalAmount) : tx.sale.totalAmount;
+        final paid = tx.sale.receivedAmount;
+        final bal = total - paid;
+        
+        return {
+          'date': date,
+          'vehicle': vehicle,
+          'type': type,
+          'totalPrice': total,
+          'amountPaid': paid,
+          'amountRemaining': bal,
+        };
+      }).toList();
+
+      final filePath = await pdfService.generateCustomerStatement(
+        customerData: customerMap,
+        transactions: txList,
+      );
+
+      if (filePath != null) {
+        AppToast.showSuccess(title: 'Success', message: 'Statement saved to $filePath');
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate statement');
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed during export: $e');
     }
   }
 }

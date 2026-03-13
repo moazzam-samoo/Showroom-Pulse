@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class FinancialSettingsView extends GetView<SettingsController> {
@@ -68,6 +69,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                           controller.settings.refresh();
                           controller.saveSettings();
                         },
+                        onChangeEnd: (value) {
+                          AppToast.showSuccess(title: 'Financial Settings', message: 'Default markup set to ${value.toInt()}%');
+                        },
                       ),
                     ),
                   ),
@@ -91,7 +95,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: settings.emiRounding,
+                  value: ['Off', 'Nearest 10', 'Nearest 50', 'Nearest 100'].contains(settings.emiRounding) 
+                      ? settings.emiRounding 
+                      : 'Off',
                   dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                   isDense: true,
                   style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
@@ -103,6 +109,7 @@ class FinancialSettingsView extends GetView<SettingsController> {
                       settings.emiRounding = value;
                       controller.settings.refresh();
                       controller.saveSettings();
+                      AppToast.showSuccess(title: 'Financial Settings', message: 'EMI rounding set to $value');
                     }
                   },
                 ),
@@ -168,6 +175,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                             controller.settings.refresh();
                             controller.saveSettings();
                           },
+                          onChangeEnd: (value) {
+                            AppToast.showSuccess(title: 'Financial Settings', message: 'Late fee set to ${value.toInt()}%');
+                          },
                         ),
                       ),
                     ),
@@ -203,6 +213,7 @@ class FinancialSettingsView extends GetView<SettingsController> {
                   settings.defaultExpenseCategories = value;
                   controller.settings.refresh();
                   controller.saveSettings();
+                  AppToast.showSuccess(title: 'Financial Settings', message: 'Expense categories updated');
                 },
               ),
             ),

@@ -12,26 +12,50 @@ import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_filter_bar.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_bike_dialog.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 
 /// Inventory View
-/// 
+///
 /// Analyzed from: Dark Theme UI/Inventory Page.png
 /// Layout:
 /// - Sidebar navigation (left)
 /// - Main content:
 ///   - Filter bar (search, add button, dropdowns)
 ///   - Grid of bike cards (4 columns)
-class InventoryView extends StatelessWidget {
+class InventoryView extends StatefulWidget {
   const InventoryView({super.key});
 
   @override
+  State<InventoryView> createState() => _InventoryViewState();
+}
+
+class _InventoryViewState extends State<InventoryView> {
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    // Request focus after the first frame so we don't steal it from transitions
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(InventoryController());
+    final controller = Get.find<InventoryController>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
+      focusNode: _focusNode,
       onKeyEvent: (KeyEvent event) {
         if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
           Get.offNamed('/dashboard');
@@ -87,13 +111,23 @@ class InventoryView extends StatelessWidget {
                     selectedBrand: controller.selectedBrand.value,
                     selectedCC: controller.selectedCC.value,
                     selectedStatus: controller.selectedStatus.value,
+                    selectedCondition: controller.selectedCondition.value,
                     selectedColor: controller.selectedColor.value,
+                    selectedSkin: controller.selectedSkin.value,
                     minPrice: controller.minPrice.value,
                     maxPrice: controller.maxPrice.value,
                     onBrandChanged: (v) => controller.selectedBrand.value = v,
                     onCCChanged: (v) => controller.selectedCC.value = v,
                     onStatusChanged: (v) => controller.selectedStatus.value = v,
-                    onColorChanged: (v) => controller.selectedColor.value = v,
+                    onConditionChanged: (v) => controller.selectedCondition.value = v,
+                    onColorChanged: (v) {
+                      controller.selectedColor.value = v;
+                      if (v != null) controller.selectedSkin.value = null;
+                    },
+                    onSkinChanged: (v) {
+                      controller.selectedSkin.value = v;
+                      if (v != null) controller.selectedColor.value = null;
+                    },
                     onMinPriceChanged: (v) => controller.minPrice.value = v,
                     onMaxPriceChanged: (v) => controller.maxPrice.value = v,
                     onClearFilters: () {
@@ -101,7 +135,9 @@ class InventoryView extends StatelessWidget {
                       controller.selectedBrand.value = null;
                       controller.selectedCC.value = null;
                       controller.selectedStatus.value = null;
+                      controller.selectedCondition.value = null;
                       controller.selectedColor.value = null;
+                      controller.selectedSkin.value = null;
                       controller.minPrice.value = null;
                       controller.maxPrice.value = null;
                     },
@@ -166,18 +202,15 @@ class InventoryView extends StatelessWidget {
       builder: (context, constraints) {
         // Responsive columns: 4 for wide screens, 3 for smaller, 2 for very small
         int crossAxisCount = 4;
-        if (constraints.maxWidth < 900) crossAxisCount = 2;
-        else if (constraints.maxWidth < 1200) crossAxisCount = 3;
+        if (constraints.maxWidth < 700) crossAxisCount = 2;
+        else if (constraints.maxWidth < 1000) crossAxisCount = 3;
 
         return Scrollbar(
-          child: GridView.builder(
-          padding: const EdgeInsets.only(right: AppSpacing.md),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: AppSpacing.base,
-            mainAxisSpacing: AppSpacing.base,
-            childAspectRatio: 0.85,
-          ),
+          child: MasonryGridView.count(
+          padding: const EdgeInsets.only(right: AppSpacing.md, bottom: AppSpacing.xl),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: AppSpacing.base,
+          mainAxisSpacing: AppSpacing.base,
           itemCount: filteredBikes.length,
           itemBuilder: (context, index) {
             final bike = filteredBikes[index];

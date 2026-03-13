@@ -17,6 +17,12 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/utils/form_navigation_manager.dart';
+import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:intl/intl.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class NewSaleController extends GetxController {
   // Navigation Manager
@@ -96,15 +102,10 @@ class NewSaleController extends GetxController {
   }
 
   Future<void> searchCustomers(String query) async {
-    if (query.isEmpty) {
-      searchResults.clear();
-      return;
-    }
-
     try {
       isSearching.value = true;
       final results = await _customerRepository.getAllCustomersWithTransactions(
-        searchQuery: query,
+        searchQuery: query.isEmpty ? null : query,
         sortByDateDesc: true,
       );
       searchResults.assignAll(results);
@@ -131,13 +132,9 @@ class NewSaleController extends GetxController {
     searchResults.clear();
     customerSearchController.clear();
 
-    Get.snackbar(
-      'Customer Selected',
-      'Selected: ${customer.fullName}',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green.shade100,
-      colorText: Colors.green.shade900,
-      duration: const Duration(seconds: 2),
+    AppToast.showSuccess(
+      title: 'Customer Selected',
+      message: 'Selected: ${customer.fullName}',
     );
   }
 
@@ -188,6 +185,9 @@ class NewSaleController extends GetxController {
 
   // Calculations
   final calculationResult = Rxn<InstallmentCalculationResult>();
+  
+  // Settings
+  double _defaultMarkupPercentage = 40.0; // Default, will be overwritten by settings
 
   // Processing State
   final isProcessingSale = false.obs;
@@ -277,14 +277,37 @@ class NewSaleController extends GetxController {
     _initCustomerRepository();
     loadAvailableBikes();
 
+    // Listen to isNewCustomer toggle
+    ever(isNewCustomer, (bool newValue) {
+      if (!newValue && selectedCustomer.value == null) {
+        searchCustomers('');
+      } else if (newValue) {
+        searchResults.clear();
+      }
+    });
+
     // Register fields in Navigation Manager in logical order
     _registerNavigationFields();
+    
+    _loadDefaultSettings();
 
     downPaymentController.addListener(_calculateInstallment);
     discountController.addListener(_calculateInstallment);
     monthsController.addListener(_calculateInstallment);
     markupValueController.addListener(_calculateInstallment);
-    ever(markupType, (_) => _calculateInstallment());
+    ever(markupType, (type) {
+      // If user switches to Percentage and the field is currently 0, pre-fill it with the settings default
+      if (type == MarkupType.percentage && 
+         (markupValueController.text == '0' || markupValueController.text.isEmpty)) {
+        markupValueController.text = _defaultMarkupPercentage.toStringAsFixed(0);
+      } 
+      // If user switches back to Fixed and it's equal to the percentage default, reset to 0
+      else if (type == MarkupType.fixed && 
+               markupValueController.text == _defaultMarkupPercentage.toStringAsFixed(0)) {
+        markupValueController.text = '0';
+      }
+      _calculateInstallment();
+    });
     ever(
         selectedBike,
         (_) =>
@@ -396,6 +419,18 @@ class NewSaleController extends GetxController {
     );
   }
 
+  Future<void> _loadDefaultSettings() async {
+    try {
+      final settingsRepo = SettingsRepository(Get.find<IsarService>());
+      final settings = await settingsRepo.getSettings();
+      
+      // Store default markup but DO NOT instantly apply it to the UI (user requested Fixed/0 behavior by default)
+      _defaultMarkupPercentage = settings.defaultMarkupPercentage;
+    } catch (e) {
+      print('Could not load default settings: $e');
+    }
+  }
+
   Future<void> loadAvailableBikes() async {
     final service = Get.find<IsarService>();
     final fileService = Get.find<FileService>();
@@ -464,12 +499,9 @@ class NewSaleController extends GetxController {
 
     // Validate bike selection
     if (selectedBike.value == null) {
-      Get.snackbar(
-        'Missing Information',
-        'Please select a bike before completing the sale.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please select a bike before completing the sale.',
       );
       return;
     }
@@ -479,12 +511,9 @@ class NewSaleController extends GetxController {
       final cashAmount =
           double.tryParse(cashAmountController.text.replaceAll(',', ''));
       if (cashAmount == null || cashAmount <= 0) {
-        Get.snackbar(
-          'Invalid Amount',
-          'Please enter a valid cash amount for the sale.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
+        AppNotificationDialog.showError(
+          title: 'Invalid Amount',
+          message: 'Please enter a valid cash amount for the sale.',
         );
         return;
       }
@@ -496,36 +525,24 @@ class NewSaleController extends GetxController {
       try {
         final bikePrice = bike?.cashSalePrice;
         if (bikePrice == null || bikePrice <= 0) {
-          Get.snackbar(
-            'Invalid Bike Price',
-            'The selected bike does not have a valid price set. Please contact administrator.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red.shade100,
-            colorText: Colors.red.shade900,
-            duration: const Duration(seconds: 5),
+          AppNotificationDialog.showError(
+            title: 'Invalid Bike Price',
+            message: 'The selected bike does not have a valid price set. Please contact administrator.',
           );
           return;
         }
       } catch (e) {
-        Get.snackbar(
-          'Invalid Bike Price',
-          'The selected bike does not have a price set. Please select a different bike or contact administrator.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-          duration: const Duration(seconds: 5),
+        AppNotificationDialog.showError(
+          title: 'Invalid Bike Price',
+          message: 'The selected bike does not have a price set. Please select a different bike or contact administrator.',
         );
         return;
       }
 
       if (calculationResult.value == null) {
-        Get.snackbar(
-          'Calculation Required',
-          'The installment calculation is not complete. Please ensure the down payment and months are filled correctly. The calculation should update automatically.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.shade100,
-          colorText: Colors.orange.shade900,
-          duration: const Duration(seconds: 6),
+        AppNotificationDialog.showWarning(
+          title: 'Calculation Required',
+          message: 'The installment calculation is not complete. Please ensure the down payment and months are filled correctly. The calculation should update automatically.',
         );
         return;
       }
@@ -533,12 +550,9 @@ class NewSaleController extends GetxController {
       final downPayment =
           double.tryParse(downPaymentController.text.replaceAll(',', ''));
       if (downPayment == null || downPayment < 0) {
-        Get.snackbar(
-          'Invalid Down Payment',
-          'Please enter a valid down payment amount.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
+        AppNotificationDialog.showError(
+          title: 'Invalid Down Payment',
+          message: 'Please enter a valid down payment amount.',
         );
         return;
       }
@@ -546,62 +560,115 @@ class NewSaleController extends GetxController {
 
     // Validate customer information for new customers
     if (isNewCustomer.value) {
-      if (customerNameController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Missing Information',
-          'Please enter the customer\'s full name.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-        );
-        return;
-      }
-
-      if (customerCnicController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Missing Information',
-          'Please enter the customer\'s CNIC number.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
-        );
-        return;
-      }
-
-      if (customerPhoneController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Missing Information',
-          'Please enter the customer\'s phone number.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.shade100,
-          colorText: Colors.red.shade900,
+      if (customerNameController.text.trim().isEmpty ||
+          customerFatherNameController.text.trim().isEmpty ||
+          customerCnicController.text.trim().isEmpty ||
+          customerPhoneController.text.trim().isEmpty ||
+          customerAddressController.text.trim().isEmpty ||
+          customerProfileImagePath.value == null ||
+          customerCnicFrontPath.value == null ||
+          customerCnicBackPath.value == null) {
+        AppNotificationDialog.showError(
+          title: 'Missing Information',
+          message: 'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back) for the new customer.',
         );
         return;
       }
     }
 
-    // Validate witness information (Witness 1 is mandatory for all sales)
-    if (witness1NameController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Missing Information',
-        'Please enter Witness 1\'s full name.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
+    // Witness Validation Helpers
+    final bool isWitness1Empty =
+        witness1NameController.text.trim().isEmpty &&
+        witness1CnicController.text.trim().isEmpty &&
+        witness1PhoneController.text.trim().isEmpty &&
+        witness1AddressController.text.trim().isEmpty &&
+        witness1CnicFrontPath.value == null &&
+        witness1CnicBackPath.value == null;
+
+    final bool isWitness1Full =
+        witness1NameController.text.trim().isNotEmpty &&
+        witness1CnicController.text.trim().isNotEmpty &&
+        witness1PhoneController.text.trim().isNotEmpty &&
+        witness1AddressController.text.trim().isNotEmpty &&
+        witness1CnicFrontPath.value != null &&
+        witness1CnicBackPath.value != null;
+
+    final bool isWitness2Empty =
+        witness2NameController.text.trim().isEmpty &&
+        witness2CnicController.text.trim().isEmpty &&
+        witness2PhoneController.text.trim().isEmpty &&
+        witness2AddressController.text.trim().isEmpty &&
+        witness2CnicFrontPath.value == null &&
+        witness2CnicBackPath.value == null;
+
+    final bool isWitness2Full =
+        witness2NameController.text.trim().isNotEmpty &&
+        witness2CnicController.text.trim().isNotEmpty &&
+        witness2PhoneController.text.trim().isNotEmpty &&
+        witness2AddressController.text.trim().isNotEmpty &&
+        witness2CnicFrontPath.value != null &&
+        witness2CnicBackPath.value != null;
+
+    // Witness Validation Logic
+    if (isWitness1Empty && isWitness2Empty) {
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: Get.theme.canvasColor,
+          title: Text(
+            'Witnesses Required?',
+            style: TextStyle(color: Get.theme.textTheme.bodyLarge?.color),
+          ),
+          content: Text(
+            'You have not filled out any witness details. Would you like to proceed without witnesses, or go back to fill them in?',
+            style: TextStyle(color: Get.theme.textTheme.bodyMedium?.color),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Get.back(); // close dialog
+              },
+              child: const Text('Fill Witnesses'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Get.back(); // close dialog
+                _executeSale();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Proceed Without', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       );
       return;
     }
 
-    if (witness1CnicController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Missing Information',
-        'Please enter Witness 1\'s CNIC number.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
+    if (!isWitness1Empty && !isWitness1Full) {
+      AppNotificationDialog.showError(
+        title: 'Incomplete Witness 1',
+        message: 'Please fill all required fields and upload both CNIC images for Witness 1.',
       );
       return;
     }
+
+    if (!isWitness2Empty && !isWitness2Full) {
+      AppNotificationDialog.showError(
+        title: 'Incomplete Witness 2',
+        message: 'Please fill all required fields and upload both CNIC images for Witness 2.',
+      );
+      if (!showWitness2.value) {
+        showWitness2.value = true;
+      }
+      return;
+    }
+
+    // Validation passed, execute actual sale
+    _executeSale();
+  }
+
+  /// Internal method to execute the database operations after successful validation
+  Future<void> _executeSale() async {
+    // Witnesses validated previously. Included in actual execution depending on whether they were filled.
 
     // Set processing state to show loading indicator
     isProcessingSale.value = true;
@@ -760,22 +827,24 @@ class NewSaleController extends GetxController {
             : -sale
                 .id; // Use negative sale ID for cash sales to distinguish from contract IDs
 
-        // Save Witness 1 (Mandatory)
-        final witness1 = Witness()
-          ..fullName = witness1NameController.text
-          ..cnicNumber = witness1CnicController.text
-          ..phoneNumber = witness1PhoneController.text.isNotEmpty
-              ? witness1PhoneController.text
-              : ''
-          ..address = witness1AddressController.text.isNotEmpty
-              ? witness1AddressController.text
-              : null
-          ..cnicFrontFilename = witness1CnicFrontPath.value
-          ..cnicBackFilename = witness1CnicBackPath.value
-          ..contractId = witnessContractId
-          ..isPrimary = true;
+        // Save Witness 1 only if filled
+        if (witness1NameController.text.trim().isNotEmpty) {
+          final witness1 = Witness()
+            ..fullName = witness1NameController.text
+            ..cnicNumber = witness1CnicController.text
+            ..phoneNumber = witness1PhoneController.text.isNotEmpty
+                ? witness1PhoneController.text
+                : ''
+            ..address = witness1AddressController.text.isNotEmpty
+                ? witness1AddressController.text
+                : null
+            ..cnicFrontFilename = witness1CnicFrontPath.value
+            ..cnicBackFilename = witness1CnicBackPath.value
+            ..contractId = witnessContractId
+            ..isPrimary = true;
 
-        await _isarService.isar.witness.put(witness1);
+          await _isarService.isar.witness.put(witness1);
+        }
 
         // Save Witness 2 (Optional)
         if (witness2NameController.text.trim().isNotEmpty &&
@@ -958,6 +1027,30 @@ class NewSaleController extends GetxController {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () {
+                  Get.back();
+                  _generateInvoiceForCompletedSale();
+                },
+                icon: const Icon(LucideIcons.download, size: 18),
+                label: const Text(
+                  'Generate Invoice',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  foregroundColor: isDark ? Colors.black : Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1136,6 +1229,69 @@ class NewSaleController extends GetxController {
   void previousStep() {
     if (currentStep.value > 0) {
       currentStep.value--;
+    }
+  }
+
+  Future<void> _generateInvoiceForCompletedSale() async {
+    try {
+      AppToast.showInfo(title: 'Exporting', message: 'Generating invoice...');
+      final pdfService = Get.find<ReportPdfService>();
+      final isCash = saleType.value == SaleType.cash;
+      final today = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+      final witnesses = <Map<String, String>>[];
+      if (witness1NameController.text.isNotEmpty) {
+        witnesses.add({
+          'fullName': witness1NameController.text,
+          'cnicNumber': witness1CnicController.text,
+          'phoneNumber': witness1PhoneController.text,
+        });
+      }
+      if (showWitness2.value && witness2NameController.text.isNotEmpty) {
+        witnesses.add({
+          'fullName': witness2NameController.text,
+          'cnicNumber': witness2CnicController.text,
+          'phoneNumber': witness2PhoneController.text,
+        });
+      }
+
+      final saleMap = <String, dynamic>{
+        'customerName': customerNameController.text,
+        'customerCnic': customerCnicController.text,
+        'customerContact': customerPhoneController.text,
+        'customerAddress': customerAddressController.text,
+        'bikeModel': selectedBike.value?.model ?? '',
+        'bikeColor': selectedBike.value?.color ?? '',
+        'bikeChassisNumber': selectedBike.value?.chassisNumber ?? '',
+        'bikeEngineNumber': selectedBike.value?.engineNumber ?? '',
+        'isCash': isCash,
+        'saleDate': today,
+        'witnesses': witnesses,
+      };
+
+      if (isCash) {
+        final amount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+        saleMap['amountPaid'] = amount;
+        saleMap['sellingPrice'] = amount;
+        saleMap['amountRemaining'] = 0.0;
+      } else {
+        final calc = calculationResult.value;
+        final downPayment = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+        saleMap['amountPaid'] = downPayment;
+        saleMap['sellingPrice'] = calc?.grandTotal ?? 0;
+        saleMap['amountRemaining'] = (calc?.grandTotal ?? 0) - downPayment;
+        saleMap['installmentMonthlyPayment'] = calc?.monthlyEMI ?? 0;
+        saleMap['installmentDuration'] = int.tryParse(monthsController.text) ?? 12;
+      }
+
+      final filePath = await pdfService.generateSaleInvoice(saleData: saleMap);
+      if (filePath != null) {
+        AppToast.showSuccess(title: 'Success', message: 'Invoice saved to $filePath');
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate invoice');
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed: $e');
     }
   }
 }

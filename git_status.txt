@@ -1,0 +1,12 @@
+ M lib/app/features/dashboard/presentation/controllers/dashboard_controller.dart
+ M lib/app/features/dashboard/presentation/views/dashboard_view.dart
+ M lib/app/features/dashboard/presentation/widgets/kpi_section.dart
+ M lib/app/features/dashboard/presentation/widgets/performance_chart.dart
+ M lib/app/features/sales/domain/sales_service.dart
+ M lib/app/features/settings/presentation/widgets/general_settings_view.dart
+ M lib/main.dart
+?? git_status.txt
+?? lib/app/core/utils/price_formatter.dart
+?? lib/app/features/dashboard/presentation/widgets/kpi_detail_dialogs.dart
+?? lib/app/features/dashboard/presentation/widgets/quick_actions.dart
+?? lib/app/features/dashboard/presentation/widgets/upcoming_installments.dart

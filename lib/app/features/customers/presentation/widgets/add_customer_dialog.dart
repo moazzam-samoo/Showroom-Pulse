@@ -274,9 +274,9 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
                     color: sectionHeaderBg,
                     textColor: sectionHeaderText,
                     children: [
-                      _buildInputGroup('Full Name:', _nameController, 'e.g. John Doe', isDark, inputBg, inputBorder, labelColor, _nameFocus, autofocus: !isEdit),
+                      _buildInputGroup('Full Name:', _nameController, 'Customer Name', isDark, inputBg, inputBorder, labelColor, _nameFocus, autofocus: !isEdit, isAlpha: true),
                       const SizedBox(height: 12),
-                      _buildInputGroup('Father Name:', _fatherNameController, 'e.g. Richard Doe', isDark, inputBg, inputBorder, labelColor, _fatherNameFocus),
+                      _buildInputGroup('Father Name:', _fatherNameController, 'Father Name', isDark, inputBg, inputBorder, labelColor, _fatherNameFocus, isAlpha: true),
                        const SizedBox(height: 12),
                       _buildInputGroup('CNIC:', _cnicController, 'XXXXX-XXXXXXX-X', isDark, inputBg, inputBorder, labelColor, _cnicFocus, isCnic: true),
                     ],
@@ -404,7 +404,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool isPhone = false, bool isCnic = false, bool isOptional = false, bool autofocus = false}
+    {bool isNumber = false, bool isPhone = false, bool isCnic = false, bool isOptional = false, bool autofocus = false, bool isAlpha = false}
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,6 +429,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           inputFormatters: [
             if (isCnic) CnicInputFormatter(),
             if (isPhone) PhoneNumberInputFormatter(),
+            if (isAlpha) FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
           ],
           style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
           decoration: InputDecoration(

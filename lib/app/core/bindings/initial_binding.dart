@@ -5,6 +5,7 @@ import '../services/theme_service.dart';
 import '../../features/auth/presentation/controllers/login_controller.dart';
 import '../../features/auth/data/auth_service.dart';
 import '../services/notification_service.dart';
+import '../services/report_pdf_service.dart'; // Added import for ReportPdfService
 
 /// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
@@ -37,6 +38,9 @@ Future<void> initializeAsyncServices() async {
   final notificationService = NotificationService();
   await notificationService.init();
   Get.put(notificationService, permanent: true);
+
+  // Initialize ReportPdfService
+  Get.put(ReportPdfService()); // Added ReportPdfService initialization
   
   // Initial check and start timer
   await notificationService.checkAndNotify();

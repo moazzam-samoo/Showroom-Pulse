@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
-import '../../data/repositories/reports_repository.dart';
+import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
+import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+
+enum ReportFilterMode { monthly, yearly, allTime }
 
 class ReportsController extends GetxController {
   late final ReportsRepository _repository;
@@ -14,7 +20,8 @@ class ReportsController extends GetxController {
   final isLoading = true.obs;
   final selectedTab = 0.obs; // 0 = Reports, 1 = Revenue
 
-  // Month/Year filter
+  // Filter state
+  final filterMode = ReportFilterMode.monthly.obs;
   final selectedMonth = DateTime.now().month.obs;
   final selectedYear = DateTime.now().year.obs;
 
@@ -29,6 +36,7 @@ class ReportsController extends GetxController {
   final profitByBrand = <String, Map<String, double>>{}.obs;
   final revenueTrend = <MapEntry<String, double>>[].obs;
   final revenueChartFilter = 'Monthly'.obs; // 'Monthly' or 'Annual'
+  final yearlyBreakdownData = <MapEntry<String, double>>[].obs; // For yearly PDF
 
   // Expenses
   final expenses = <Expense>[].obs;
@@ -46,21 +54,23 @@ class ReportsController extends GetxController {
   Future<void> loadData() async {
     isLoading.value = true;
     try {
-      final month = selectedMonth.value;
-      final year = selectedYear.value;
+      final mode = filterMode.value;
+      final month = mode == ReportFilterMode.monthly ? selectedMonth.value : null;
+      final year = mode == ReportFilterMode.allTime ? null : selectedYear.value;
 
-      // Load all data in parallel
+      // Load data in parallel
       final results = await Future.wait([
-        _repository.getTotalRevenue(month, year),
-        _repository.getTotalExpenses(month, year),
+        _repository.getTotalRevenue(month: month, year: year),
+        _repository.getTotalExpenses(month: month, year: year),
         _repository.getMonthlyProfitTrend(6),
         _repository.getStockDistribution(),
-        _repository.getProfitByBrand(month, year),
-        _repository.getExpensesByMonth(month, year),
+        _repository.getProfitByBrand(month: month, year: year),
+        _repository.getExpensesInPeriod(month: month, year: year),
         _repository.getExpenseCategories(),
-        revenueChartFilter.value == 'Monthly'
-            ? _repository.getDailyRevenueTrend(month, year)
-            : _repository.getAnnualRevenueTrend(year),
+        (mode == ReportFilterMode.monthly && revenueChartFilter.value == 'Monthly')
+            ? _repository.getDailyRevenueTrend(selectedMonth.value, selectedYear.value)
+            : _repository.getAnnualRevenueTrend(selectedYear.value),
+        mode == ReportFilterMode.yearly ? _repository.getYearlyRevenueBreakdown(selectedYear.value) : Future.value(<MapEntry<String, double>>[]),
       ]);
 
       totalRevenue.value = results[0] as double;
@@ -71,8 +81,49 @@ class ReportsController extends GetxController {
       stockDistribution.assignAll(results[3] as Map<String, int>);
       profitByBrand.assignAll(results[4] as Map<String, Map<String, double>>);
       expenses.assignAll(results[5] as List<Expense>);
+      // 7. Expense Categories
       expenseCategories.assignAll(results[6] as List<String>);
       revenueTrend.assignAll(results[7] as List<MapEntry<String, double>>);
+      yearlyBreakdownData.assignAll(results[8] as List<MapEntry<String, double>>);
+      
+      // Merge default categories from settings
+      try {
+        final settingsRepo = SettingsRepository(Get.find<IsarService>());
+        final settings = await settingsRepo.getSettings();
+        if (settings.defaultExpenseCategories.isNotEmpty) {
+          final defaults = settings.defaultExpenseCategories
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+          
+          bool addedNew = false;
+          for (final cat in defaults) {
+            if (!expenseCategories.contains(cat)) {
+              expenseCategories.add(cat);
+              addedNew = true;
+            }
+          }
+          if (addedNew) {
+            expenseCategories.sort();
+          }
+        }
+      } catch (e) {
+        debugPrint('Error merging default expense categories: $e');
+      }
+
+      // If still empty, provide basic defaults
+      if (expenseCategories.isEmpty) {
+        expenseCategories.assignAll([
+          'Rent',
+          'Salaries',
+          'Utilities',
+          'Marketing',
+          'Maintenance',
+          'Supplies',
+          'Other',
+        ]);
+      }
     } catch (e) {
       debugPrint('Error loading reports data: $e');
     } finally {
@@ -83,6 +134,25 @@ class ReportsController extends GetxController {
   /// Change selected month/year and reload
   void changeMonth(int month, int year) {
     selectedMonth.value = month;
+    selectedYear.value = year;
+    filterMode.value = ReportFilterMode.monthly;
+    loadData();
+  }
+
+  /// Change selected filtering mode (Monthly/Yearly/AllTime)
+  void setFilterMode(ReportFilterMode mode) {
+    filterMode.value = mode;
+    // For AllTime, we reset chart to annual
+    if (mode == ReportFilterMode.allTime) {
+      revenueChartFilter.value = 'Annual';
+    } else if (mode == ReportFilterMode.yearly) {
+      revenueChartFilter.value = 'Annual';
+    }
+    loadData();
+  }
+
+  /// Change selected year and reload
+  void changeYear(int year) {
     selectedYear.value = year;
     loadData();
   }
@@ -115,22 +185,31 @@ class ReportsController extends GetxController {
   Future<void> downloadReport() async {
     String? path;
 
+    final mode = filterMode.value;
+    String dateRangeLabel;
+    if (mode == ReportFilterMode.monthly) {
+      dateRangeLabel = DateFormat('MMMM yyyy').format(DateTime(selectedYear.value, selectedMonth.value));
+    } else if (mode == ReportFilterMode.yearly) {
+      dateRangeLabel = 'Year ${selectedYear.value}';
+    } else {
+      dateRangeLabel = 'All Time';
+    }
+
     if (selectedTab.value == 0) {
-      // Reports Tab → Monthly Profit Report
+      // Reports Tab → Profit Report
       path = await _pdfService.generateProfitReport(
-        month: selectedMonth.value,
-        year: selectedYear.value,
+        dateRangeLabel: dateRangeLabel,
         totalRevenue: totalRevenue.value,
         totalExpenses: totalExpenses.value,
         netProfit: netProfit.value,
         profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
         stockDistribution: Map<String, int>.from(stockDistribution),
+        yearlyBreakdown: mode == ReportFilterMode.yearly ? List<MapEntry<String, double>>.from(yearlyBreakdownData) : null,
       );
     } else {
       // Revenue Tab → Revenue & Expense Statement
       path = await _pdfService.generateRevenueStatement(
-        month: selectedMonth.value,
-        year: selectedYear.value,
+        dateRangeLabel: dateRangeLabel,
         totalRevenue: totalRevenue.value,
         totalExpenses: totalExpenses.value,
         netProfit: netProfit.value,
@@ -139,23 +218,9 @@ class ReportsController extends GetxController {
     }
 
     if (path != null) {
-      Get.snackbar(
-        'PDF Saved',
-        'Report saved to: $path',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-        margin: const EdgeInsets.all(12),
-        backgroundColor: const Color(0xFF10B981),
-        colorText: const Color(0xFFFFFFFF),
-      );
+      AppToast.showSuccess(title: 'PDF Saved', message: 'Report saved to: $path');
     } else {
-      Get.snackbar(
-        'Error',
-        'Failed to generate PDF report.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFFEF4444),
-        colorText: const Color(0xFFFFFFFF),
-      );
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate PDF report.');
     }
   }
 }

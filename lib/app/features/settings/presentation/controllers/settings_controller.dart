@@ -5,6 +5,9 @@ import '../../../../data/models/app_settings.dart';
 import '../../../../core/services/backup_service.dart';
 import '../../../../core/services/isar_service.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -41,13 +44,10 @@ class SettingsController extends GetxController {
     if (settings.value != null) {
       await _repository.updateSettings(settings.value!);
       
-      Get.snackbar(
-        'Success', 
-        'Settings updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withValues(alpha: 0.1),
-        colorText: Colors.green,
-      );
+      // Notify DashboardController to reload profile and showroom data
+      if (Get.isRegistered<DashboardController>()) {
+        Get.find<DashboardController>().loadProfileSettings();
+      }
     }
   }
 
@@ -70,30 +70,20 @@ class SettingsController extends GetxController {
       );
 
       if (path != null) {
-        Get.snackbar(
-          'Backup Saved',
-          'Backup file saved successfully.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.1),
-          colorText: Colors.green,
-          duration: const Duration(seconds: 4),
+        AppToast.showSuccess(
+          title: 'Backup Saved',
+          message: 'Backup file saved successfully.',
         );
       } else {
-        Get.snackbar(
-          'Export Cancelled',
-          'No backup file was created.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.withValues(alpha: 0.1),
-          colorText: Colors.orange,
+        AppNotificationDialog.showWarning(
+          title: 'Export Cancelled',
+          message: 'No backup file was created.',
         );
       }
     } catch (e) {
-      Get.snackbar(
-        'Export Failed',
-        'Could not create backup: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Export Failed',
+        message: 'Could not create backup: $e',
       );
     } finally {
       isExporting.value = false;
@@ -111,12 +101,9 @@ class SettingsController extends GetxController {
     if (info == null) return;
 
     if (info.containsKey('error')) {
-      Get.snackbar(
-        'Invalid Backup',
-        info['error'] as String,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Invalid Backup',
+        message: info['error'] as String,
       );
       return;
     }
@@ -190,30 +177,20 @@ class SettingsController extends GetxController {
         // Reload settings from new DB
         await loadSettings();
 
-        Get.snackbar(
-          'Restore Complete',
-          'All data has been restored from backup. Please restart the app for full effect.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.1),
-          colorText: Colors.green,
-          duration: const Duration(seconds: 5),
+        AppToast.showSuccess(
+          title: 'Restore Complete',
+          message: 'All data has been restored from backup. Please restart the app for full effect.',
         );
       } else {
-        Get.snackbar(
-          'Restore Failed',
-          'Could not restore from backup. Your data may be incomplete — please try again.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withValues(alpha: 0.1),
-          colorText: Colors.red,
+        AppNotificationDialog.showError(
+          title: 'Restore Failed',
+          message: 'Could not restore from backup. Your data may be incomplete — please try again.',
         );
       }
     } catch (e) {
-      Get.snackbar(
-        'Import Error',
-        'Unexpected error: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Import Error',
+        message: 'Unexpected error: $e',
       );
     } finally {
       isImporting.value = false;

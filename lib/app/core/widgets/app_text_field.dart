@@ -27,6 +27,8 @@ class AppTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
   final FormNavigationManager? formNavigationManager;
+  final bool showClearIcon;
+  final VoidCallback? onClear;
 
   const AppTextField({
     super.key,
@@ -51,6 +53,8 @@ class AppTextField extends StatelessWidget {
     this.textInputAction,
     this.inputFormatters,
     this.formNavigationManager,
+    this.showClearIcon = false,
+    this.onClear,
   });
 
   @override
@@ -86,7 +90,7 @@ class AppTextField extends StatelessWidget {
             if (formNavigationManager != null && focusNode != null) {
               formNavigationManager!.handleEnter(focusNode!);
             } else if (onSubmitted != null) {
-              onSubmitted!(value);
+               onSubmitted!(value);
             }
           },
           decoration: InputDecoration(
@@ -94,12 +98,18 @@ class AppTextField extends StatelessWidget {
             prefix: prefix,
             suffix: suffix,
             prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20) : null,
-            suffixIcon: suffixIcon != null
-                ? GestureDetector(
-                    onTap: onSuffixTap,
-                    child: Icon(suffixIcon, size: 20),
+            suffixIcon: showClearIcon
+                ? IconButton(
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: onClear,
+                    tooltip: 'Clear input',
                   )
-                : null,
+                : (suffixIcon != null
+                    ? GestureDetector(
+                        onTap: onSuffixTap,
+                        child: Icon(suffixIcon, size: 20),
+                      )
+                    : null),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,

@@ -10,6 +10,12 @@ enum BikeStatusEnum {
   installment,
 }
 
+/// Bike Condition Enum
+enum BikeConditionEnum {
+  newBike,
+  usedBike,
+}
+
 /// Bike Collection - Represents a motorcycle in inventory
 /// 
 /// Unique identifiers: engineNumber, chassisNumber
@@ -46,6 +52,9 @@ class Bike {
   // -- Status --
   @enumerated
   BikeStatusEnum status = BikeStatusEnum.available;
+
+  @enumerated
+  BikeConditionEnum condition = BikeConditionEnum.newBike;
 
   // -- Relationships --
   final batch = IsarLink<PurchaseBatch>(); // Link to source batch (V2)

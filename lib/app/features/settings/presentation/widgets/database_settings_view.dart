@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/isar_service.dart';
+import '../../../../core/widgets/app_toast.dart';
+import '../../../../core/widgets/app_notification_dialog.dart';
 import '../controllers/settings_controller.dart';
 
 class DatabaseSettingsView extends GetView<SettingsController> {
@@ -156,48 +158,70 @@ class DatabaseSettingsView extends GetView<SettingsController> {
 
   void _handleClearData(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    bool isClearing = false;
 
     Get.dialog(
-      AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        title: Row(
-          children: [
-            Icon(LucideIcons.alertTriangle, color: isDark ? AppColors.darkError : AppColors.lightError, size: 20),
-            const SizedBox(width: AppSpacing.sm),
-            Text('Factory Reset', style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black)),
-          ],
-        ),
-        content: Text(
-          'Are you absolutely sure you want to delete all application data? This action cannot be undone.',
-          style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppColors.darkError : AppColors.lightError,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            title: Row(
+              children: [
+                Icon(LucideIcons.alertTriangle, color: isDark ? AppColors.darkError : AppColors.lightError, size: 20),
+                const SizedBox(width: AppSpacing.sm),
+                Text('Factory Reset', style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black)),
+              ],
             ),
-            onPressed: () async {
-              Get.back();
-              final isarService = Get.find<IsarService>();
-              await isarService.clearAllData();
-              Get.snackbar(
-                'Data Cleared',
-                'All application data has been permanently deleted.',
-                backgroundColor: (isDark ? AppColors.darkError : AppColors.lightError).withValues(alpha: 0.1),
-                colorText: isDark ? AppColors.darkError : AppColors.lightError,
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
-            child: const Text('Delete All Data', style: TextStyle(fontSize: 13)),
-          ),
-        ],
+            content: Text(
+              'Are you absolutely sure you want to delete all application data? This action cannot be undone.',
+              style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isClearing ? null : () => Get.back(),
+                child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkError : AppColors.lightError,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                onPressed: isClearing ? null : () async {
+                  setState(() => isClearing = true);
+                  
+                  // Use a small delay to let the UI render the loading spinner
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  
+                  try {
+                    final isarService = Get.find<IsarService>();
+                    await isarService.clearAllData();
+                    
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back(); // Only close the dialog after completion
+                    }
+                    
+                    AppToast.showSuccess(title: 'Data Cleared', message: 'All application data has been permanently deleted.');
+                  } catch (e) {
+                    if (Get.isDialogOpen ?? false) {
+                      Get.back(); 
+                    }
+                    AppNotificationDialog.showError(title: 'Error', message: 'Failed to clear data.');
+                  }
+                },
+                child: isClearing
+                    ? const SizedBox(
+                        width: 14, 
+                        height: 14, 
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)
+                      )
+                    : const Text('Delete All Data', style: TextStyle(fontSize: 13)),
+              ),
+            ],
+          );
+        }
       ),
+      barrierDismissible: false, // Prevent accidental dismissal during operation
     );
   }
 

@@ -10,6 +10,7 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
 
 class InstallmentSaleDetailDialog extends StatelessWidget {
@@ -266,13 +267,45 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
              
              // Details Grid
              Expanded(
-               child: Wrap(
-                 spacing: 24,
-                 runSpacing: 12,
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
                  children: [
-                   _buildFieldBox('Bike Name', data.bikeModel, isDark, minWidth: 150),
-                   _buildFieldBox('Chassis No', data.bikeChassisNumber, isDark, minWidth: 150, isMono: true),
-                   _buildFieldBox('Engine No', data.bikeEngineNumber, isDark, minWidth: 150, isMono: true),
+                   Wrap(
+                     spacing: 24,
+                     runSpacing: 12,
+                     children: [
+                       _buildFieldBox('Bike Name', data.bikeModel, isDark, minWidth: 150),
+                       _buildFieldBox('Chassis No', data.bikeChassisNumber, isDark, minWidth: 150, isMono: true),
+                       _buildFieldBox('Engine No', data.bikeEngineNumber, isDark, minWidth: 150, isMono: true),
+                     ],
+                   ),
+                   if (data.bikeCondition != null) ...[
+                     const SizedBox(height: 12),
+                     Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                       decoration: BoxDecoration(
+                         color: data.bikeCondition == BikeConditionEnum.newBike 
+                             ? const Color(0xFF3B82F6).withOpacity(0.1) 
+                             : const Color(0xFFA16207).withOpacity(0.1),
+                         borderRadius: BorderRadius.circular(4),
+                         border: Border.all(
+                           color: data.bikeCondition == BikeConditionEnum.newBike 
+                               ? const Color(0xFF3B82F6) 
+                               : const Color(0xFFA16207),
+                         ),
+                       ),
+                       child: Text(
+                         data.bikeCondition == BikeConditionEnum.newBike ? '🆕 NEW' : '🔄 USED',
+                         style: GoogleFonts.outfit(
+                           fontSize: 10,
+                           fontWeight: FontWeight.bold,
+                           color: data.bikeCondition == BikeConditionEnum.newBike 
+                               ? const Color(0xFF3B82F6) 
+                               : const Color(0xFFA16207),
+                         ),
+                       ),
+                     ),
+                   ],
                  ],
                ),
              ),
@@ -561,11 +594,11 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
            const SizedBox(width: AppSpacing.md),
            ElevatedButton.icon(
             onPressed: () {
-              Get.back();
-              Get.snackbar('Print', 'Sending Installment Plan to printer...');
+              Get.back(); // Close dialog
+              Get.find<SalesController>().exportSaleInvoice(data);
             },
-            icon: const Icon(LucideIcons.printer, size: 18),
-            label: const Text('Print Plan'),
+            icon: const Icon(LucideIcons.download, size: 18),
+            label: const Text('Download Invoice'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.darkPrimary,
               foregroundColor: Colors.black,

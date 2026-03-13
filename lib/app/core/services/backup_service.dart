@@ -181,15 +181,32 @@ class BackupService {
         return false;
       }
 
-      // 1. Close current Isar instance
+      // 1. Close current Isar instance and delete files
       onProgress?.call('Closing database...');
-      await _isarService.isar.close();
+      await _isarService.isar.close(deleteFromDisk: true);
 
-      // 2. Clear existing database files
+      // 2. Ensure db directory is cleared properly for Windows
       onProgress?.call('Clearing old data...');
       final dbDir = Directory(_fileService.databasePath);
       if (await dbDir.exists()) {
-        await dbDir.delete(recursive: true);
+        try {
+          // Attempt to delete directory entirely
+          await dbDir.delete(recursive: true);
+        } catch (e) {
+          debugPrint('BackupService: Could not delete entire dbDir, deleting contents instead - $e');
+          // If Windows locks the directory itself, delete files inside instead
+          final entities = dbDir.listSync();
+          for (var entity in entities) {
+            if (entity is File) {
+              try {
+                await entity.delete();
+              } catch (_) {}
+            }
+          }
+        }
+      }
+      
+      if (!await dbDir.exists()) {
         await dbDir.create(recursive: true);
       }
 

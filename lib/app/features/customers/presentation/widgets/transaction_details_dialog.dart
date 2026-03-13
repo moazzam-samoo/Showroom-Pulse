@@ -8,6 +8,7 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
 class TransactionDetailsDialog extends StatelessWidget {
   final TransactionRecord transaction;
@@ -50,7 +51,7 @@ class TransactionDetailsDialog extends StatelessWidget {
         ElevatedButton.icon(
           onPressed: () {
              // TODO: Implement Print Invoice
-             Get.snackbar('Print', 'Print functionality pending');
+             AppToast.showInfo(title: 'Print', message: 'Print functionality pending');
           },
           icon: const Icon(LucideIcons.printer, size: 16),
           label: const Text('Print Invoice'),

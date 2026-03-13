@@ -56,6 +56,13 @@ class AppSettings {
 
   /// Last backup date
   DateTime? lastBackupDate;
+  // -- NEW FIELDS FROM PROFILE SECTION --
+
+  /// Owner Name
+  String? ownerName;
+
+  /// Owner Profile Picture Path
+  String? ownerProfilePicPath;
 }
 
 // Authored by: Moazzam Samoo

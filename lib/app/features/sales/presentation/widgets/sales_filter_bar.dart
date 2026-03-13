@@ -20,13 +20,19 @@ class SalesFilterBar extends GetView<SalesController> {
         // Search
         Expanded(
           flex: 2,
-          child: AppTextField(
+          child: Obx(() => AppTextField(
+            controller: controller.searchController,
             hint: 'Search invoice, customer, or bike...',
             prefixIcon: LucideIcons.search,
+            showClearIcon: controller.searchQuery.value.isNotEmpty,
+            onClear: () {
+              controller.searchController.clear();
+              controller.setSearchQuery('');
+            },
             onChanged: (val) {
               controller.setSearchQuery(val);
             },
-          ),
+          )),
         ),
         const SizedBox(width: AppSpacing.md),
         
@@ -50,6 +56,31 @@ class SalesFilterBar extends GetView<SalesController> {
         ),
         
         const SizedBox(width: AppSpacing.md),
+
+        // Clear Filters Button
+        Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.md),
+          child: SizedBox(
+            height: 48,
+            child: OutlinedButton.icon(
+              onPressed: controller.clearFilters,
+              icon: const Icon(LucideIcons.filterX, size: 18),
+              label: const Text(
+                'Clear Filters',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isDark ? Colors.redAccent.shade200 : Colors.redAccent,
+                side: BorderSide(
+                  color: (isDark ? Colors.redAccent.shade200 : Colors.redAccent).withOpacity(0.5)
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.lg),
+                ),
+              ),
+            ),
+          ),
+        ),
 
         // Export Button
         IconButton(

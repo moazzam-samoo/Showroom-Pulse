@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// LoginController - Manages login form state and authentication flow
 class LoginController extends GetxController {
@@ -83,27 +84,17 @@ class LoginController extends GetxController {
         Get.offAllNamed('/dashboard');
       } else {
         errorMessage.value = result.errorMessage;
-        // Show error snackbar
-        Get.snackbar(
-          'Login Failed',
-          result.errorMessage ?? 'Unknown error',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withValues(alpha: 0.9),
-          colorText: Colors.white,
-          duration: const Duration(seconds: 3),
-          margin: const EdgeInsets.all(16),
+        // Show error notification dialog
+        AppNotificationDialog.showError(
+          title: 'Login Failed',
+          message: result.errorMessage ?? 'Unknown error',
         );
       }
     } catch (e) {
       errorMessage.value = 'An error occurred. Please try again.';
-      Get.snackbar(
-        'Error',
-        'An error occurred. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha: 0.9),
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.all(16),
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'An error occurred. Please try again.',
       );
     } finally {
       isLoading.value = false;

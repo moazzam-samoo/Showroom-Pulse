@@ -67,28 +67,38 @@ const AppSettingsSchema = CollectionSchema(
       name: r'lateFeePercentage',
       type: IsarType.double,
     ),
-    r'pdfDownloadLocation': PropertySchema(
+    r'ownerName': PropertySchema(
       id: 10,
+      name: r'ownerName',
+      type: IsarType.string,
+    ),
+    r'ownerProfilePicPath': PropertySchema(
+      id: 11,
+      name: r'ownerProfilePicPath',
+      type: IsarType.string,
+    ),
+    r'pdfDownloadLocation': PropertySchema(
+      id: 12,
       name: r'pdfDownloadLocation',
       type: IsarType.string,
     ),
     r'showroomAddress': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'showroomAddress',
       type: IsarType.string,
     ),
     r'showroomLogoPath': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'showroomLogoPath',
       type: IsarType.string,
     ),
     r'showroomName': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'showroomName',
       type: IsarType.string,
     ),
     r'showroomPhone': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'showroomPhone',
       type: IsarType.string,
     )
@@ -117,6 +127,18 @@ int _appSettingsEstimateSize(
   bytesCount += 3 + object.dateFormat.length * 3;
   bytesCount += 3 + object.defaultExpenseCategories.length * 3;
   bytesCount += 3 + object.emiRounding.length * 3;
+  {
+    final value = object.ownerName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.ownerProfilePicPath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.pdfDownloadLocation;
     if (value != null) {
@@ -161,11 +183,13 @@ void _appSettingsSerialize(
   writer.writeBool(offsets[7], object.isDarkTheme);
   writer.writeDateTime(offsets[8], object.lastBackupDate);
   writer.writeDouble(offsets[9], object.lateFeePercentage);
-  writer.writeString(offsets[10], object.pdfDownloadLocation);
-  writer.writeString(offsets[11], object.showroomAddress);
-  writer.writeString(offsets[12], object.showroomLogoPath);
-  writer.writeString(offsets[13], object.showroomName);
-  writer.writeString(offsets[14], object.showroomPhone);
+  writer.writeString(offsets[10], object.ownerName);
+  writer.writeString(offsets[11], object.ownerProfilePicPath);
+  writer.writeString(offsets[12], object.pdfDownloadLocation);
+  writer.writeString(offsets[13], object.showroomAddress);
+  writer.writeString(offsets[14], object.showroomLogoPath);
+  writer.writeString(offsets[15], object.showroomName);
+  writer.writeString(offsets[16], object.showroomPhone);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -186,11 +210,13 @@ AppSettings _appSettingsDeserialize(
   object.isDarkTheme = reader.readBool(offsets[7]);
   object.lastBackupDate = reader.readDateTimeOrNull(offsets[8]);
   object.lateFeePercentage = reader.readDouble(offsets[9]);
-  object.pdfDownloadLocation = reader.readStringOrNull(offsets[10]);
-  object.showroomAddress = reader.readStringOrNull(offsets[11]);
-  object.showroomLogoPath = reader.readStringOrNull(offsets[12]);
-  object.showroomName = reader.readString(offsets[13]);
-  object.showroomPhone = reader.readStringOrNull(offsets[14]);
+  object.ownerName = reader.readStringOrNull(offsets[10]);
+  object.ownerProfilePicPath = reader.readStringOrNull(offsets[11]);
+  object.pdfDownloadLocation = reader.readStringOrNull(offsets[12]);
+  object.showroomAddress = reader.readStringOrNull(offsets[13]);
+  object.showroomLogoPath = reader.readStringOrNull(offsets[14]);
+  object.showroomName = reader.readString(offsets[15]);
+  object.showroomPhone = reader.readStringOrNull(offsets[16]);
   return object;
 }
 
@@ -228,8 +254,12 @@ P _appSettingsDeserializeProp<P>(
     case 12:
       return (reader.readStringOrNull(offset)) as P;
     case 13:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 14:
+      return (reader.readStringOrNull(offset)) as P;
+    case 15:
+      return (reader.readString(offset)) as P;
+    case 16:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1165,6 +1195,314 @@ extension AppSettingsQueryFilter
   }
 
   QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'ownerName',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'ownerName',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'ownerProfilePicPath',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'ownerProfilePicPath',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerProfilePicPath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerProfilePicPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerProfilePicPath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerProfilePicPath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      ownerProfilePicPathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerProfilePicPath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
       pdfDownloadLocationIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2057,6 +2395,32 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByOwnerName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByOwnerNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByOwnerProfilePicPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerProfilePicPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      sortByOwnerProfilePicPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerProfilePicPath', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       sortByPdfDownloadLocation() {
     return QueryBuilder.apply(this, (query) {
@@ -2271,6 +2635,32 @@ extension AppSettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByOwnerName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByOwnerNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByOwnerProfilePicPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerProfilePicPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
+      thenByOwnerProfilePicPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerProfilePicPath', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       thenByPdfDownloadLocation() {
     return QueryBuilder.apply(this, (query) {
@@ -2411,6 +2801,21 @@ extension AppSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByOwnerName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ownerName', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QDistinct>
+      distinctByOwnerProfilePicPath({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ownerProfilePicPath',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QDistinct>
       distinctByPdfDownloadLocation({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2521,6 +2926,19 @@ extension AppSettingsQueryProperty
       lateFeePercentageProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lateFeePercentage');
+    });
+  }
+
+  QueryBuilder<AppSettings, String?, QQueryOperations> ownerNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ownerName');
+    });
+  }
+
+  QueryBuilder<AppSettings, String?, QQueryOperations>
+      ownerProfilePicPathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ownerProfilePicPath');
     });
   }
 

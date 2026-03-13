@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/controllers/customers_controller.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
@@ -46,13 +48,22 @@ class CustomerListSidebar extends GetView<CustomersController> {
           // Search
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: TextField(
+            child: Obx(() => TextField(
+              controller: controller.searchController,
               onChanged: controller.updateSearch,
               style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 hintText: 'Search customers...',
                 hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
                 prefixIcon: Icon(LucideIcons.search, size: 16, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                suffixIcon: controller.hasActiveFilters
+                    ? IconButton(
+                        icon: const Icon(LucideIcons.x, size: 16),
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        onPressed: controller.clearFilters,
+                        tooltip: 'Clear Search',
+                      )
+                    : null,
                 contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 filled: true,
                 fillColor: isDark ? AppColors.darkElevated : Colors.grey[100],
@@ -61,7 +72,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
                   borderSide: BorderSide.none,
                 ),
               ),
-            ),
+            )),
           ),
           const SizedBox(height: AppSpacing.md),
           const Divider(height: 1),
@@ -97,7 +108,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
                     return ListTile(
                       selected: isSelected,
                       selectedTileColor: primaryColor.withOpacity(0.1),
-                      leading: _buildAvatar(customer.initials, isDark, primaryColor),
+                      leading: _buildAvatar(customer, isDark, primaryColor, Get.find<FileService>()),
                       title: Text(
                         customer.customer.fullName, 
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
@@ -150,7 +161,18 @@ class CustomerListSidebar extends GetView<CustomersController> {
     );
   }
 
-  Widget _buildAvatar(String initials, bool isDark, Color primaryColor) {
+  Widget _buildAvatar(CustomerWithTransactions customerStats, bool isDark, Color primaryColor, FileService fileService) {
+    if (customerStats.customer.profileImageFilename != null && customerStats.customer.profileImageFilename!.isNotEmpty) {
+      final imagePath = fileService.getCustomerProfileImagePath(customerStats.customer.profileImageFilename!, customerStats.customer.cnicNumber);
+      if (File(imagePath).existsSync()) {
+        return CircleAvatar(
+          backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          backgroundImage: FileImage(File(imagePath)),
+          radius: 18,
+        );
+      }
+    }
+  
     return Container(
       width: 36,
       height: 36,
@@ -160,7 +182,7 @@ class CustomerListSidebar extends GetView<CustomersController> {
       ),
       child: Center(
         child: Text(
-          initials,
+          customerStats.initials,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,

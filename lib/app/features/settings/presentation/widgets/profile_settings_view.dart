@@ -5,13 +5,12 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
-import '../../../../core/services/theme_service.dart';
 import '../../../../core/widgets/app_notification_dialog.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
-class GeneralSettingsView extends GetView<SettingsController> {
-  const GeneralSettingsView({super.key});
+class ProfileSettingsView extends GetView<SettingsController> {
+  const ProfileSettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +25,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         children: [
           Text(
-            'General Settings',
+            'Profile Settings',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -35,46 +34,51 @@ class GeneralSettingsView extends GetView<SettingsController> {
           ),
           const SizedBox(height: AppSpacing.lg),
 
-          // Showroom Name
-          _buildSettingInputRow(
-            title: 'Showroom Name',
-            subtitle: 'Used in PDF headers, reports, and statements',
-            initialValue: settings.showroomName,
-            isDark: isDark,
-            onSubmitted: (value) {
-              settings.showroomName = value;
-              controller.settings.refresh();
-              controller.saveSettings();
-              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom name updated');
-            },
-          ),
-          _divider(isDark),
-
-          // Showroom Logo
+          // Profile Picture
           _buildSettingRow(
-            title: 'Showroom Logo',
-            subtitle: 'Upload a custom logo for printed reports',
+            title: 'Owner Profile Picture',
+            subtitle: 'Upload a picture to display on the dashboard',
             isDark: isDark,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (settings.showroomLogoPath != null && File(settings.showroomLogoPath!).existsSync())
+                if (settings.ownerProfilePicPath != null && File(settings.ownerProfilePicPath!).existsSync())
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 48,
+                    height: 48,
                     margin: const EdgeInsets.only(right: AppSpacing.sm),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                        width: 2,
+                      ),
                       image: DecorationImage(
-                        image: FileImage(File(settings.showroomLogoPath!)),
-                        fit: BoxFit.contain,
+                        image: FileImage(File(settings.ownerProfilePicPath!)),
+                        fit: BoxFit.cover,
                       ),
                     ),
+                  )
+                else
+                  Container(
+                    width: 48,
+                    height: 48,
+                    margin: const EdgeInsets.only(right: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    ),
+                    child: Icon(
+                      LucideIcons.user,
+                      size: 24,
+                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    ),
                   ),
+                const SizedBox(width: AppSpacing.sm),
                 ElevatedButton.icon(
-                  icon: const Icon(LucideIcons.image, size: 14),
-                  label: const Text('Upload Logo', style: TextStyle(fontSize: 12)),
+                  icon: const Icon(LucideIcons.camera, size: 14),
+                  label: const Text('Upload Photo', style: TextStyle(fontSize: 12)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                     foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
@@ -82,96 +86,28 @@ class GeneralSettingsView extends GetView<SettingsController> {
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
-                  onPressed: () => _handleLogoUpload(settings),
+                  onPressed: () => _handleProfilePicUpload(settings),
                 ),
               ],
             ),
           ),
           _divider(isDark),
 
-          // Showroom Address
+          // Owner Name
           _buildSettingInputRow(
-            title: 'Showroom Address',
-            subtitle: 'Optional — for PDF footers and printed statements',
-            initialValue: settings.showroomAddress ?? '',
+            title: 'Owner Name',
+            subtitle: 'Displays on the dashboard greeting',
+            initialValue: settings.ownerName ?? '',
+            hintText: 'e.g. Tahir',
             isDark: isDark,
-            hintText: '123 Main Street, City',
             onSubmitted: (value) {
-              settings.showroomAddress = value.isEmpty ? null : value;
+              settings.ownerName = value.isEmpty ? null : value;
               controller.settings.refresh();
               controller.saveSettings();
-              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom address updated');
+              AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
             },
           ),
           _divider(isDark),
-
-          // Showroom Phone
-          _buildSettingInputRow(
-            title: 'Showroom Phone',
-            subtitle: 'Optional — appears on PDF header/footer',
-            initialValue: settings.showroomPhone ?? '',
-            isDark: isDark,
-            hintText: '0300-1234567',
-            onSubmitted: (value) {
-              settings.showroomPhone = value.isEmpty ? null : value;
-              controller.settings.refresh();
-              controller.saveSettings();
-              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom phone updated');
-            },
-          ),
-          _divider(isDark),
-
-          // Currency Symbol
-          _buildSettingRow(
-            title: 'Currency Symbol',
-            subtitle: 'Local currency prefix displayed across the app',
-            isDark: isDark,
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isDark ? AppColors.darkBorderInput : AppColors.lightBorder, width: 0.5),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: ['Rs', 'PKR', '\$', '€', '£'].contains(settings.currencySymbol) ? settings.currencySymbol : 'Rs',
-                  dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
-                  isDense: true,
-                  style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                  items: ['Rs', 'PKR', '\$', '€', '£']
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      settings.currencySymbol = value;
-                      controller.settings.refresh();
-                      controller.saveSettings();
-                      AppToast.showSuccess(title: 'Settings Saved', message: 'Currency changed to $value');
-                    }
-                  },
-                ),
-              ),
-            ),
-          ),
-          _divider(isDark),
-
-          // Theme Toggle
-          _buildSettingRow(
-            title: 'Dark Theme (Executive Mode)',
-            subtitle: 'Switch between dark executive theme and light theme',
-            isDark: isDark,
-            trailing: Switch(
-              value: settings.isDarkTheme,
-              activeColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-              onChanged: (value) {
-                settings.isDarkTheme = value;
-                controller.settings.refresh();
-                controller.saveSettings();
-                Get.find<ThemeService>().setThemeMode(value);
-              },
-            ),
-          ),
 
           const SizedBox(height: 40),
         ],
@@ -186,19 +122,22 @@ class GeneralSettingsView extends GetView<SettingsController> {
     );
   }
 
-  Future<void> _handleLogoUpload(settings) async {
+  Future<void> _handleProfilePicUpload(settings) async {
     final fileService = Get.find<FileService>();
     final File? pickedFile = await fileService.pickImage();
 
     if (pickedFile != null) {
+      // Re-using saveShowroomLogo logic, or ideally saveProfilePic logic.
+      // Assuming saveShowroomLogo saves an image to the documents temp/db directory.
+      // We'll use fileService.saveShowroomLogo for now to save the image file safely.
       final savedPath = await fileService.saveShowroomLogo(pickedFile);
       if (savedPath != null) {
-        settings.showroomLogoPath = savedPath;
+        settings.ownerProfilePicPath = savedPath;
         controller.settings.refresh();
         controller.saveSettings();
-        AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom logo updated');
+        AppToast.showSuccess(title: 'Profile Updated', message: 'Profile picture saved successfully');
       } else {
-        AppNotificationDialog.showError(title: 'Error', message: 'Failed to save logo image');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to save profile picture');
       }
     }
   }

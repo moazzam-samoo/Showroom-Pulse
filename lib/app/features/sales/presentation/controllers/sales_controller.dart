@@ -1,6 +1,10 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class SalesController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -13,10 +17,23 @@ class SalesController extends GetxController {
   final selectedDateRange = 'All Time'.obs; // Default: All Time
   final selectedStatus = 'All Status'.obs;
   final searchQuery = ''.obs;
+  final searchController = TextEditingController();
 
   // Options
   final dateRangeOptions = ['This Month', 'Last Month', 'This Year', 'All Time'];
   final statusOptions = ['All Status', 'Cash', 'Installment'];
+
+  bool get hasActiveFilters =>
+      searchQuery.value.isNotEmpty ||
+      selectedDateRange.value != 'All Time' ||
+      selectedStatus.value != 'All Status';
+
+  void clearFilters() {
+    selectedDateRange.value = 'All Time';
+    selectedStatus.value = 'All Status';
+    searchQuery.value = '';
+    searchController.clear();
+  }
 
   @override
   void onInit() {
@@ -31,10 +48,9 @@ class SalesController extends GetxController {
       final sales = await _salesService.getAllSales();
       allSales.value = sales;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load sales: $e',
-        snackPosition: SnackPosition.BOTTOM,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to load sales: $e',
       );
     } finally {
       isLoading.value = false;
@@ -131,9 +147,95 @@ class SalesController extends GetxController {
 
 
 
-  void exportReport() {
-    // Placeholder for export logic
-    Get.snackbar('Export', 'Generating report for ${selectedDateRange.value}...');
+  Future<void> exportReport() async {
+    try {
+      final sales = filteredSales;
+      if (sales.isEmpty) {
+        AppToast.showInfo(title: 'No Data', message: 'No sales found for the selected filters.');
+        return;
+      }
+
+      AppToast.showInfo(title: 'Exporting', message: 'Generating sales report...');
+      final pdfService = Get.find<ReportPdfService>();
+
+      final cashSales = sales.where((s) => s.isCash).map((s) => <String, dynamic>{
+        'customerName': s.customerName,
+        'bikeModel': s.bikeModel,
+        'amountPaid': s.amountPaid,
+        'saleDate': s.saleDate,
+        'sellingPrice': s.sellingPrice ?? s.amountPaid,
+      }).toList();
+
+      final installmentSales = sales.where((s) => !s.isCash).map((s) => <String, dynamic>{
+        'customerName': s.customerName,
+        'bikeModel': s.bikeModel,
+        'amountPaid': s.amountPaid,
+        'saleDate': s.saleDate,
+        'sellingPrice': s.sellingPrice ?? 0,
+        'monthlyPayment': s.installmentMonthlyPayment ?? 0,
+        'duration': s.installmentDuration ?? 0,
+        'amountRemaining': s.amountRemaining ?? 0,
+      }).toList();
+
+      final filePath = await pdfService.generateSalesReport(
+        cashSales: cashSales,
+        installmentSales: installmentSales,
+        dateRange: selectedDateRange.value,
+      );
+
+      if (filePath != null) {
+        AppToast.showSuccess(title: 'Success', message: 'Report saved to $filePath');
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate report');
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Export failed: $e');
+    }
+  }
+
+  Future<void> exportSaleInvoice(SaleCardData data) async {
+    try {
+      AppToast.showInfo(title: 'Exporting', message: 'Generating invoice...');
+      final pdfService = Get.find<ReportPdfService>();
+      
+      final saleMap = {
+        'customerName': data.customerName,
+        'customerCnic': data.customerCnic,
+        'customerContact': data.customerContact,
+        'customerAddress': data.customerAddress,
+        'bikeModel': data.bikeModel,
+        'bikeColor': data.bikeColor,
+        'bikeChassisNumber': data.bikeChassisNumber,
+        'bikeEngineNumber': data.bikeEngineNumber,
+        'isCash': data.isCash,
+        'amountPaid': data.amountPaid,
+        'sellingPrice': data.sellingPrice,
+        'amountRemaining': data.amountRemaining,
+        'installmentMonthlyPayment': data.installmentMonthlyPayment,
+        'installmentDuration': data.installmentDuration,
+        'saleDate': data.saleDate,
+        'witnesses': (data.witnesses != null && data.witnesses!.isNotEmpty) 
+          ? data.witnesses!.map((w) => {
+              'fullName': w.fullName,
+              'cnicNumber': w.cnicNumber,
+              'phoneNumber': w.phoneNumber,
+            }).toList() 
+          : (data.witnessName != null ? [{
+              'fullName': data.witnessName ?? '',
+              'cnicNumber': data.witnessCnic ?? '',
+              'phoneNumber': data.witnessPhone ?? '',
+            }] : []),
+      };
+
+      final filePath = await pdfService.generateSaleInvoice(saleData: saleMap);
+      if (filePath != null) {
+        AppToast.showSuccess(title: 'Success', message: 'Invoice saved to $filePath');
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate invoice');
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed during export: $e');
+    }
   }
 
   String currencyFormat(double amount) {

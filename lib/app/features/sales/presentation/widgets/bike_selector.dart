@@ -23,15 +23,26 @@ class BikeSelector extends StatelessWidget {
         // Search & Filter
         BlinkingFocusBuilder(
           focusNode: saleController.searchBikeFocus,
-          child: AppTextField(
-            hint: 'Search by Model, Engine #, or Chassis #',
-            prefixIcon: LucideIcons.search,
-            focusNode: saleController.searchBikeFocus,
-            textInputAction: TextInputAction.next,
-            formNavigationManager: saleController.formNavigationManager,
-            onChanged: (val) {
-              invController.searchController.text = val;
-              invController.bikes.refresh(); // Trigger Obx in filteredBikes
+          child: ValueListenableBuilder<TextEditingValue>(
+            valueListenable: invController.searchController,
+            builder: (context, value, child) {
+              return AppTextField(
+                hint: 'Search by Model, Engine #, or Chassis #',
+                prefixIcon: LucideIcons.search,
+                focusNode: saleController.searchBikeFocus,
+                controller: invController.searchController,
+                textInputAction: TextInputAction.next,
+                formNavigationManager: saleController.formNavigationManager,
+                showClearIcon: value.text.isNotEmpty,
+                onClear: () {
+                  invController.searchController.clear();
+                  invController.bikes.refresh(); // Trigger Obx in filteredBikes
+                },
+                onChanged: (val) {
+                  // AppTextField inherently updates the controller
+                  invController.bikes.refresh(); // Trigger Obx in filteredBikes
+                },
+              );
             },
           ),
         ),
@@ -96,58 +107,68 @@ class BikeSelector extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio:
-                                    1.0, // Balanced for compact but readable cards
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                              ),
-                              itemCount: bikes.length,
-                              itemBuilder: (context, bikeIndex) {
-                                final bike = bikes[bikeIndex];
-                                return Obx(() {
-                                  final isSelected =
-                                      saleController.selectedBike.value == bike;
-                                  return GestureDetector(
-                                    onTap: () {
-                                      saleController.selectedBike.value = bike;
-                                      // Auto-scroll to customer section
-                                      Future.delayed(
-                                          const Duration(milliseconds: 300),
-                                          () {
-                                        if (saleController.customerSectionKey
-                                                .currentContext !=
-                                            null) {
-                                          Scrollable.ensureVisible(
-                                            saleController.customerSectionKey
-                                                .currentContext!,
-                                            duration: const Duration(
-                                                milliseconds: 500),
-                                            curve: Curves.easeInOut,
-                                          );
-                                        }
-                                      });
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        border: isSelected
-                                            ? Border.all(
-                                                color: AppColors.darkPrimary,
-                                                width: 3)
-                                            : null,
-                                        borderRadius:
-                                            BorderRadius.circular(AppRadius.md),
-                                      ),
-                                      child:
-                                          BikeCard(bike: bike, compact: true),
-                                    ),
-                                  );
-                                });
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                // Responsive columns: 4 for wide screens, 3 for smaller, 2 for very small
+                                int crossAxisCount = 4;
+                                if (constraints.maxWidth < 700) {
+                                  crossAxisCount = 2;
+                                } else if (constraints.maxWidth < 1000) {
+                                  crossAxisCount = 3;
+                                }
+
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    mainAxisExtent: 295, // Increased height to prevent overflow
+                                    crossAxisSpacing: 8,
+                                    mainAxisSpacing: 8,
+                                  ),
+                                  itemCount: bikes.length,
+                                  itemBuilder: (context, bikeIndex) {
+                                    final bike = bikes[bikeIndex];
+                                    return Obx(() {
+                                      final isSelected =
+                                          saleController.selectedBike.value == bike;
+                                      return GestureDetector(
+                                        onTap: () {
+                                          saleController.selectedBike.value = bike;
+                                          // Auto-scroll to customer section
+                                          Future.delayed(
+                                              const Duration(milliseconds: 300),
+                                              () {
+                                            if (saleController.customerSectionKey
+                                                    .currentContext !=
+                                                null) {
+                                              Scrollable.ensureVisible(
+                                                saleController.customerSectionKey
+                                                    .currentContext!,
+                                                duration: const Duration(
+                                                    milliseconds: 500),
+                                                curve: Curves.easeInOut,
+                                              );
+                                            }
+                                          });
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: isSelected
+                                                ? Border.all(
+                                                    color: AppColors.darkPrimary,
+                                                    width: 3)
+                                                : null,
+                                            borderRadius:
+                                                BorderRadius.circular(AppRadius.md),
+                                          ),
+                                          child:
+                                              BikeCard(bike: bike, compact: true),
+                                        ),
+                                      );
+                                    });
+                                  },
+                                );
                               },
                             ),
                           ),

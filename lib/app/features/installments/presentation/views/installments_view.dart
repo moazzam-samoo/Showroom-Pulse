@@ -97,7 +97,9 @@ class InstallmentsView extends StatelessWidget {
           // Search Box
           SizedBox(
             width: 280,
-            child: TextField(
+            height: 40,
+            child: Obx(() => TextField(
+              controller: controller.searchController,
               onChanged: controller.updateSearch,
               style: TextStyle(
                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
@@ -113,37 +115,57 @@ class InstallmentsView extends StatelessWidget {
                   size: 18,
                   color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                 ),
+                suffixIcon: controller.searchQuery.value.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(LucideIcons.x, size: 16),
+                        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                        onPressed: () {
+                          controller.searchController.clear();
+                          controller.updateSearch('');
+                        },
+                        tooltip: 'Clear Search',
+                      )
+                    : null,
                 filled: true,
                 fillColor: isDark ? AppColors.darkCard : AppColors.lightBackground,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               ),
-            ),
+            )),
           ),
           const SizedBox(width: AppSpacing.base),
           // Due This Week Filter
-          Obx(() => FilterChip(
-            selected: controller.showDueThisWeek.value,
-            onSelected: (_) => controller.toggleDueThisWeek(),
-            label: const Text('Due This Week'),
-            labelStyle: TextStyle(
-              color: controller.showDueThisWeek.value
-                  ? Colors.white
-                  : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-              fontSize: 12,
-            ),
-            selectedColor: isDark ? AppColors.darkWarning : AppColors.lightWarning,
-            backgroundColor: isDark ? AppColors.darkCard : AppColors.lightBackground,
-            side: BorderSide(
-              color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            ),
-          )),
+          SizedBox(
+            height: 40,
+            child: Obx(() => FilterChip(
+              selected: controller.showDueThisWeek.value,
+              onSelected: (_) => controller.toggleDueThisWeek(),
+              label: const Text('Due This Week'),
+              labelStyle: TextStyle(
+                color: controller.showDueThisWeek.value
+                    ? Colors.white
+                    : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              selectedColor: isDark ? AppColors.darkWarning : AppColors.lightWarning,
+              backgroundColor: isDark ? AppColors.darkCard : AppColors.lightBackground,
+              side: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+            )),
+          ),
           const SizedBox(width: AppSpacing.sm),
           // Status Filter Dropdown
           Obx(() => Container(
+            height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightBackground,
@@ -160,17 +182,20 @@ class InstallmentsView extends StatelessWidget {
                   style: TextStyle(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
+                icon: const Icon(Icons.arrow_drop_down, size: 20),
                 dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                   fontSize: 13,
+                  fontWeight: FontWeight.w500,
                 ),
                 items: [
                   DropdownMenuItem<ContractStatusEnum?>(
                     value: null,
-                    child: Text('All Status'),
+                    child: const Text('All Status'),
                   ),
                   ...ContractStatusEnum.values.map((status) => DropdownMenuItem(
                     value: status,
@@ -182,17 +207,46 @@ class InstallmentsView extends StatelessWidget {
             ),
           )),
           const SizedBox(width: AppSpacing.sm),
+
+          // Clear Filters Button
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.sm),
+            child: SizedBox(
+              height: 40, // Match typical button heights
+              child: OutlinedButton.icon(
+                onPressed: controller.clearFilters,
+                icon: const Icon(LucideIcons.filterX, size: 16),
+                label: const Text(
+                  'Clear Filters',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: isDark ? Colors.redAccent.shade200 : Colors.redAccent,
+                  side: BorderSide(
+                    color: (isDark ? Colors.redAccent.shade200 : Colors.redAccent).withOpacity(0.5)
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           // Export All Button
-          ElevatedButton.icon(
-            onPressed: () => controller.downloadAllStatements(),
-            icon: const Icon(LucideIcons.download, size: 16),
-            label: const Text('Export All'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+          SizedBox(
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () => controller.downloadAllStatements(),
+              icon: const Icon(LucideIcons.download, size: 16),
+              label: const Text('Export All', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
               ),
             ),
           ),
@@ -453,13 +507,15 @@ class InstallmentsView extends StatelessWidget {
   }
 
   String _getInitials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return '?';
+    
+    final parts = cleanName.split(RegExp(r'\s+'));
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
-      return parts[0][0].toUpperCase();
     }
-    return '?';
+    
+    return cleanName.substring(0, cleanName.length >= 2 ? 2 : 1).toUpperCase();
   }
 
   String _getStatusText(ContractStatusEnum status) {
