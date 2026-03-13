@@ -13,6 +13,7 @@ import '../widgets/financial_settings_view.dart';
 import '../widgets/database_settings_view.dart';
 import '../widgets/general_settings_view.dart';
 import '../widgets/profile_settings_view.dart';
+import '../widgets/inventory_settings_view.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -33,6 +34,8 @@ class _SettingsViewState extends State<SettingsView> {
   final GlobalKey _profilePicUploadKey = GlobalKey();
   final GlobalKey _ownerNameInputKey = GlobalKey();
   final GlobalKey _replayTourKey = GlobalKey();
+  final GlobalKey _bikeBrandsKey = GlobalKey();
+  final GlobalKey _bikeModelsKey = GlobalKey();
 
   bool _showCoachMarks = false;
 
@@ -124,6 +127,7 @@ class _SettingsViewState extends State<SettingsView> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           _buildCategoryItem(controller, 'Financials', LucideIcons.percent, isDark),
+                          _buildCategoryItem(controller, 'Inventory', LucideIcons.package, isDark),
                           _buildCategoryItem(controller, 'Database', LucideIcons.database, isDark),
                           _buildCategoryItem(controller, 'Profile', LucideIcons.user, isDark),
                           _buildCategoryItem(controller, 'General', LucideIcons.settings, isDark),
@@ -152,6 +156,11 @@ class _SettingsViewState extends State<SettingsView> {
                               return FinancialSettingsView(
                                 markupSliderKey: _markupSliderKey,
                                 lateFeeToggleKey: _lateFeeToggleKey,
+                              );
+                            case 'Inventory':
+                              return InventorySettingsView(
+                                bikeBrandsKey: _bikeBrandsKey,
+                                bikeModelsKey: _bikeModelsKey,
                               );
                             case 'Database':
                               return DatabaseSettingsView(
@@ -205,6 +214,21 @@ class _SettingsViewState extends State<SettingsView> {
                     targetKey: _lateFeeToggleKey,
                     title: 'Automatic Late Fee',
                     description: 'Enable/disable automatic penalty for overdue installment payments and set the percentage.',
+                    position: CoachMarkPosition.bottom,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _bikeBrandsKey,
+                    title: 'Bike Brands',
+                    description: 'Manage your list of motorcycle brands. These appear as dropdown options when adding new bikes.',
+                    position: CoachMarkPosition.bottom,
+                    onBeforeTarget: () async {
+                      Get.find<SettingsController>().changeCategory('Inventory');
+                    },
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _bikeModelsKey,
+                    title: 'Bike Models',
+                    description: 'Manage your list of motorcycle models. These also appear as dropdown suggestions.',
                     position: CoachMarkPosition.bottom,
                   ),
                   CoachMarkTarget(

@@ -9,6 +9,8 @@ import 'package:tahir_showroom/app/core/widgets/color_skin_selector.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
 
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
@@ -208,9 +210,34 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Brand:', _brandController, 'e.g. Honda', isDark, inputBg, inputBorder, labelColor, _brandFocus, autofocus: true),
+                          _buildAutocompleteGroup(
+                            label: 'Brand:',
+                            controller: _brandController,
+                            hint: 'e.g. Honda',
+                            isDark: isDark,
+                            bg: inputBg,
+                            border: inputBorder,
+                            labelColor: labelColor,
+                            focusNode: _brandFocus,
+                            autofocus: true,
+                            getOptions: () => Get.isRegistered<SettingsController>()
+                                ? Get.find<SettingsController>().getBikeBrandsList()
+                                : [],
+                          ),
                           const SizedBox(height: 16),
-                          _buildInputGroup('Model:', _modelController, 'e.g. CG125', isDark, inputBg, inputBorder, labelColor, _modelFocus),
+                          _buildAutocompleteGroup(
+                            label: 'Model:',
+                            controller: _modelController,
+                            hint: 'e.g. CG125',
+                            isDark: isDark,
+                            bg: inputBg,
+                            border: inputBorder,
+                            labelColor: labelColor,
+                            focusNode: _modelFocus,
+                            getOptions: () => Get.isRegistered<SettingsController>()
+                                ? Get.find<SettingsController>().getBikeModelsList()
+                                : [],
+                          ),
                           const SizedBox(height: 10),
                           _buildConditionGroup('Condition:', isDark, inputBg, inputBorder, labelColor, _conditionFocus),
                           const SizedBox(height: 10),
@@ -405,6 +432,145 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Required';
                 return null;
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAutocompleteGroup({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    required bool isDark,
+    required Color bg,
+    required Color border,
+    required Color? labelColor,
+    required FocusNode focusNode,
+    required Iterable<String> Function() getOptions,
+    bool autofocus = false,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label.replaceAll(':', ''),
+            style: TextStyle(
+              color: labelColor,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: BlinkingFocusBuilder(
+            focusNode: focusNode,
+            child: Autocomplete<String>(
+              optionsBuilder: (TextEditingValue textEditingValue) {
+                final currentOptions = getOptions();
+                if (textEditingValue.text.isEmpty) {
+                  return currentOptions;
+                }
+                return currentOptions.where((String option) {
+                  return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                });
+              },
+              onSelected: (String selection) {
+                controller.text = selection;
+              },
+              fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+                // Keep the internal text controller synced with our external one
+                fieldTextEditingController.text = controller.text;
+                fieldTextEditingController.addListener(() {
+                  controller.text = fieldTextEditingController.text;
+                });
+                
+                // Keep the focus node synced
+                focusNode.addListener(() {
+                  if (focusNode.hasFocus && !fieldFocusNode.hasFocus) {
+                     fieldFocusNode.requestFocus();
+                  }
+                });
+                fieldFocusNode.addListener(() {
+                  if (fieldFocusNode.hasFocus && !focusNode.hasFocus) {
+                     focusNode.requestFocus();
+                  }
+                });
+
+                return TextFormField(
+                  controller: fieldTextEditingController,
+                  focusNode: fieldFocusNode,
+                  autofocus: autofocus,
+                  textInputAction: TextInputAction.next,
+                  style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: hint,
+                    hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
+                    filled: true,
+                    fillColor: bg,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
+                    ),
+                    suffixIcon: Icon(Icons.arrow_drop_down, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                    suffixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Required';
+                    return null;
+                  },
+                );
+              },
+              optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4.0,
+                    borderRadius: BorderRadius.circular(8),
+                    color: isDark ? AppColors.darkElevated : AppColors.lightSurface,
+                    child: Container(
+                      width: 200, // Approximate width of the input field
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: options.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final String option = options.elementAt(index);
+                          return InkWell(
+                            onTap: () {
+                              onSelected(option);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text(
+                                option,
+                                style: TextStyle(
+                                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ),

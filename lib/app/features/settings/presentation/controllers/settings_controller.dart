@@ -58,6 +58,68 @@ class SettingsController extends GetxController {
     selectedCategory.value = category;
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  BIKE BRANDS & MODELS MANAGEMENT
+  // ═══════════════════════════════════════════════════════════
+
+  List<String> getBikeBrandsList() {
+    return settings.value?.bikeBrands
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeBrand(String brand) {
+    if (settings.value == null || brand.trim().isEmpty) return;
+    final b = brand.trim();
+    final current = getBikeBrandsList();
+    if (!current.any((m) => m.toLowerCase() == b.toLowerCase())) {
+      current.add(b);
+      settings.value!.bikeBrands = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeBrand(String brand) {
+    if (settings.value == null) return;
+    final current = getBikeBrandsList();
+    current.removeWhere((m) => m == brand);
+    settings.value!.bikeBrands = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
+  List<String> getBikeModelsList() {
+    return settings.value?.bikeModels
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeModel(String model) {
+    if (settings.value == null || model.trim().isEmpty) return;
+    final m = model.trim();
+    final current = getBikeModelsList();
+    if (!current.any((x) => x.toLowerCase() == m.toLowerCase())) {
+      current.add(m);
+      settings.value!.bikeModels = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeModel(String model) {
+    if (settings.value == null) return;
+    final current = getBikeModelsList();
+    current.removeWhere((x) => x == model);
+    settings.value!.bikeModels = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
   Future<void> replayWalkthrough() async {
     final walkthroughService = Get.find<tahir_showroom_walkthrough_service.WalkthroughService>();
     await walkthroughService.resetAllTabs();

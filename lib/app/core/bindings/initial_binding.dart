@@ -9,9 +9,8 @@ import '../services/report_pdf_service.dart';
 import '../services/checkpoint_service.dart';
 import '../services/customer_export_service.dart';
 import '../services/walkthrough_service.dart';
-
-
-/// InitialBinding - Registers all global services
+import '../../features/settings/data/repositories/settings_repository.dart';
+import '../../features/settings/presentation/controllers/settings_controller.dart';/// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
@@ -31,6 +30,12 @@ Future<void> initializeAsyncServices() async {
   final isarService = await IsarService().init();
   Get.put(isarService);
   
+  // Initialize Settings (depends on IsarService)
+  final settingsRepo = SettingsRepository(isarService);
+  Get.put(settingsRepo);
+  final settingsController = SettingsController(settingsRepo);
+  Get.put(settingsController, permanent: true);
+
   // Initialize CheckpointService (auto-snapshots)
   final checkpointService = CheckpointService(fileService, isarService);
   Get.put(checkpointService);
