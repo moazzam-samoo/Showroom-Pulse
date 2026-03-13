@@ -36,6 +36,12 @@ class CustomerListSidebar extends GetView<CustomersController> {
                 const Text('Customers', style: TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 IconButton(
+                  icon: const Icon(LucideIcons.download, size: 18),
+                  onPressed: () => controller.downloadAllCustomersData(), 
+                  tooltip: 'Download All Customers',
+                  color: primaryColor,
+                ),
+                IconButton(
                   icon: const Icon(LucideIcons.userPlus, size: 18),
                   // TODO: Implement Add Customer Dialog if needed, or link to sales
                   onPressed: () => controller.openAddCustomerDialog(), 
@@ -135,6 +141,17 @@ class CustomerListSidebar extends GetView<CustomersController> {
                               ],
                             ),
                             onTap: () => controller.editCustomer(customer),
+                          ),
+                          PopupMenuItem(
+                            height: 32,
+                            child: Row(
+                              children: [
+                                Icon(LucideIcons.download, size: 14, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+                                const SizedBox(width: 8),
+                                Text('Download ZIP', style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary)),
+                              ],
+                            ),
+                            onTap: () => controller.downloadCustomerData(customer),
                           ),
                           PopupMenuItem(
                             height: 32,

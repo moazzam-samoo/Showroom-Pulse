@@ -54,8 +54,6 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.3
   
-  # ZIP Archive
-  archive: ^3.4.10
 
   # Local Desktop Notifications
   local_notifier: ^0.1.6

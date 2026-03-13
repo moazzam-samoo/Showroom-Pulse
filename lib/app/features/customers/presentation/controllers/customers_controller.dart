@@ -5,6 +5,7 @@ import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_sho
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/core/services/customer_export_service.dart';
 import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
@@ -430,7 +431,10 @@ class CustomersController extends GetxController {
       AppNotificationDialog.showError(title: 'Export Failed', message: 'No customer is selected.');
       return;
     }
+  }
 
+  /// Download single customer data (Hybrid Zip)
+  Future<void> downloadCustomerData(CustomerWithTransactions customerData) async {
     try {
       AppToast.showInfo(title: 'Exporting', message: 'Generating customer statement...');
       final pdfService = Get.find<ReportPdfService>();
