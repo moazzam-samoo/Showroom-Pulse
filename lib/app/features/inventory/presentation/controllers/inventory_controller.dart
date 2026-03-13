@@ -6,6 +6,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class InventoryController extends GetxController {
   final InventoryService _inventoryService = InventoryService(); // Could be injected
@@ -20,6 +22,7 @@ class InventoryController extends GetxController {
   final RxnString selectedBrand = RxnString();
   final RxnString selectedCC = RxnString();
   final RxnString selectedStatus = RxnString();
+  final RxnString selectedCondition = RxnString();
   final RxnString selectedColor = RxnString();
   final RxnString selectedSkin = RxnString();
   final Rxn<double> minPrice = Rxn<double>();
@@ -57,10 +60,7 @@ class InventoryController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = 'Failed to load inventory: $e';
-      Get.snackbar('Error', errorMessage.value,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red);
+      AppNotificationDialog.showError(title: 'Error', message: errorMessage.value);
     } finally {
       isLoading.value = false;
     }
@@ -68,10 +68,25 @@ class InventoryController extends GetxController {
 
   /// Add a new bike
   Future<bool> addBike(Map<String, dynamic> data) async {
+    if ((data['brand'] ?? '').toString().trim().isEmpty && data['model'].toString().trim().isEmpty ||
+        data['color'].toString().trim().isEmpty ||
+        data['engineNumber'].toString().trim().isEmpty ||
+        data['chassisNumber'].toString().trim().isEmpty ||
+        (data['purchasePrice'] ?? 0) <= 0 ||
+        (data['sellingPrice'] ?? 0) <= 0 ||
+        data['imageFile'] == null) {
+      AppNotificationDialog.showError(
+        title: 'Missing Information',
+        message: 'Please fill all input fields and upload a bike image to proceed.',
+      );
+      return false;
+    }
+
     try {
       final bike = Bike()
         ..model = data['model']
         ..brand = data['brand'] ?? data['model'].toString().split(' ').first // Fallback to extraction if not provided
+        ..condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike
         ..color = data['color']
         ..modelYear = DateTime.now().year // Default to current year
 
@@ -95,19 +110,15 @@ class InventoryController extends GetxController {
       
       await loadBikes(); // Refresh list
       
-      Get.snackbar(
-        'Success',
-        'Bike added to inventory',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Bike added to inventory',
       );
       return true;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to add bike: $e',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to add bike: $e',
       );
       return false;
     }
@@ -119,18 +130,14 @@ class InventoryController extends GetxController {
       bike.cashSalePrice = newPrice;
       await _inventoryService.updateBike(bike);
       bikes.refresh(); // Trigger UI update
-      Get.snackbar(
-        'Success',
-        'Price updated successfully',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Price updated successfully',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update price: $e',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to update price: $e',
       );
     }
   }
@@ -141,6 +148,7 @@ class InventoryController extends GetxController {
       // Update bike fields
       bike.model = data['model'];
       bike.brand = data['brand'] ?? data['model'].toString().split(' ').first; // Update brand
+      bike.condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike;
       bike.color = data['color'];
       bike.engineNumber = data['engineNumber'];
       bike.chassisNumber = data['chassisNumber'];
@@ -175,19 +183,15 @@ class InventoryController extends GetxController {
       
       await loadBikes(); // Refresh list
       
-      Get.snackbar(
-        'Success',
-        'Bike updated successfully',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Bike updated successfully',
       );
       return true;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update bike: $e',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to update bike: $e',
       );
       return false;
     }
@@ -229,18 +233,14 @@ class InventoryController extends GetxController {
       
       await loadBikes();
       
-      Get.snackbar(
-        'Success',
-        'Bike deleted successfully',
-        backgroundColor: Colors.green.withOpacity(0.1),
-        colorText: Colors.green,
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Bike deleted successfully',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to delete bike: $e',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to delete bike: $e',
       );
     }
   }
@@ -274,6 +274,7 @@ class InventoryController extends GetxController {
             bike.chassisNumber.toLowerCase().contains(searchQuery) ||
             bike.purchasePrice.toInt().toString().contains(searchQuery) ||
             bike.cashSalePrice.toInt().toString().contains(searchQuery) ||
+            (bike.condition == BikeConditionEnum.newBike ? 'new' : 'used').contains(searchQuery) ||
             statusMatches; // Include status match
             
         if (!matches) return false;
@@ -304,6 +305,14 @@ class InventoryController extends GetxController {
           } else {
              return false;
           }
+        }
+      }
+
+      // Condition filter
+      if (selectedCondition.value != null && selectedCondition.value!.isNotEmpty) {
+        final conditionString = bike.condition == BikeConditionEnum.newBike ? 'New' : 'Used';
+        if (conditionString.toLowerCase() != selectedCondition.value!.toLowerCase()) {
+          return false;
         }
       }
 

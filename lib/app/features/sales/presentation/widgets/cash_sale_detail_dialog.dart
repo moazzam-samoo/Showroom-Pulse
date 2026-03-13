@@ -9,6 +9,7 @@ import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
 
 class CashSaleDetailDialog extends StatelessWidget {
@@ -208,13 +209,46 @@ class CashSaleDetailDialog extends StatelessWidget {
             ),
              const SizedBox(width: AppSpacing.md),
              Expanded(
-               child: Text(
-                  data.bikeModel,
-                  style: GoogleFonts.outfit(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Text(
+                      data.bikeModel,
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                   ),
+                   if (data.bikeCondition != null) ...[
+                     const SizedBox(height: 4),
+                     Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                       decoration: BoxDecoration(
+                         color: data.bikeCondition == BikeConditionEnum.newBike 
+                             ? const Color(0xFF3B82F6).withOpacity(0.1) 
+                             : const Color(0xFFA16207).withOpacity(0.1),
+                         borderRadius: BorderRadius.circular(4),
+                         border: Border.all(
+                           color: data.bikeCondition == BikeConditionEnum.newBike 
+                               ? const Color(0xFF3B82F6) 
+                               : const Color(0xFFA16207),
+                         ),
+                       ),
+                       child: Text(
+                         data.bikeCondition == BikeConditionEnum.newBike ? '🆕 NEW' : '🔄 USED',
+                         style: GoogleFonts.outfit(
+                           fontSize: 10,
+                           fontWeight: FontWeight.bold,
+                           color: data.bikeCondition == BikeConditionEnum.newBike 
+                               ? const Color(0xFF3B82F6) 
+                               : const Color(0xFFA16207),
+                         ),
+                       ),
+                     ),
+                   ],
+                 ],
                ),
              ),
           ],

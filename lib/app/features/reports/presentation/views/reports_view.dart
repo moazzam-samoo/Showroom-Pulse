@@ -108,9 +108,9 @@ class _ReportsViewState extends State<ReportsView> {
             ),
           ),
           const SizedBox(width: AppSpacing.lg),
-          // Month/Year Filter
+          // Filter Mode Selectors
           Obx(() => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : AppColors.lightBackground,
               borderRadius: BorderRadius.circular(8),
@@ -118,30 +118,75 @@ class _ReportsViewState extends State<ReportsView> {
                 color: isDark ? AppColors.darkBorderInput : AppColors.lightBorder,
               ),
             ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isDense: true,
-                value: '${controller.selectedMonth.value}-${controller.selectedYear.value}',
-                dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
-                style: TextStyle(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  fontSize: 14,
-                ),
-                icon: Icon(
-                  LucideIcons.chevronDown,
-                  size: 16,
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                ),
-                items: _buildMonthDropdownItems(monthNames, isDark),
-                onChanged: (value) {
-                  if (value != null) {
-                    final parts = value.split('-');
-                    controller.changeMonth(int.parse(parts[0]), int.parse(parts[1]));
-                  }
-                },
-              ),
+            child: Row(
+              children: [
+                _buildFilterModeButton('Monthly', ReportFilterMode.monthly, controller, isDark),
+                _buildFilterModeButton('Yearly', ReportFilterMode.yearly, controller, isDark),
+                _buildFilterModeButton('All', ReportFilterMode.allTime, controller, isDark),
+              ],
             ),
           )),
+          const SizedBox(width: AppSpacing.md),
+          // Period Selector (Month/Year or Year)
+          Obx(() {
+            final mode = controller.filterMode.value;
+            if (mode == ReportFilterMode.allTime) return const SizedBox.shrink();
+
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? AppColors.darkBorderInput : AppColors.lightBorder,
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: mode == ReportFilterMode.monthly
+                ? DropdownButton<String>(
+                    isDense: true,
+                    value: '${controller.selectedMonth.value}-${controller.selectedYear.value}',
+                    dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      fontSize: 14,
+                    ),
+                    icon: Icon(
+                      LucideIcons.chevronDown,
+                      size: 16,
+                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    ),
+                    items: _buildMonthDropdownItems(monthNames, isDark),
+                    onChanged: (value) {
+                      if (value != null) {
+                        final parts = value.split('-');
+                        controller.changeMonth(int.parse(parts[0]), int.parse(parts[1]));
+                      }
+                    },
+                  )
+                : DropdownButton<int>(
+                    isDense: true,
+                    value: controller.selectedYear.value,
+                    dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      fontSize: 14,
+                    ),
+                    icon: Icon(
+                      LucideIcons.chevronDown,
+                      size: 16,
+                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    ),
+                    items: _buildYearDropdownItems(isDark),
+                    onChanged: (value) {
+                      if (value != null) {
+                        controller.changeYear(value);
+                      }
+                    },
+                  ),
+              ),
+            );
+          }),
           const Spacer(),
           // Tab Switcher
           Obx(() => Container(
@@ -178,8 +223,8 @@ class _ReportsViewState extends State<ReportsView> {
     final now = DateTime.now();
     final items = <DropdownMenuItem<String>>[];
     
-    // Last 12 months
-    for (int i = 0; i < 12; i++) {
+    // List for dropdown
+    for (int i = 0; i < 24; i++) {
       final date = DateTime(now.year, now.month - i, 1);
       final value = '${date.month}-${date.year}';
       items.add(DropdownMenuItem(
@@ -188,6 +233,46 @@ class _ReportsViewState extends State<ReportsView> {
       ));
     }
     return items;
+  }
+
+  List<DropdownMenuItem<int>> _buildYearDropdownItems(bool isDark) {
+    final now = DateTime.now();
+    final items = <DropdownMenuItem<int>>[];
+    
+    for (int i = 0; i < 5; i++) {
+      final year = now.year - i;
+      items.add(DropdownMenuItem(
+        value: year,
+        child: Text('$year'),
+      ));
+    }
+    return items;
+  }
+
+  Widget _buildFilterModeButton(String label, ReportFilterMode mode, ReportsController controller, bool isDark) {
+    final isActive = controller.filterMode.value == mode;
+    return GestureDetector(
+      onTap: () => controller.setFilterMode(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive
+                ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+                : (isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary),
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTabButton(String label, int tabIndex, ReportsController controller, bool isDark) {

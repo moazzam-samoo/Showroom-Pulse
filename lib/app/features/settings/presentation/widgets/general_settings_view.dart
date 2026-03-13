@@ -6,6 +6,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
 import '../../../../core/services/theme_service.dart';
+import '../../../../core/widgets/app_notification_dialog.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class GeneralSettingsView extends GetView<SettingsController> {
@@ -43,6 +45,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
               settings.showroomName = value;
               controller.settings.refresh();
               controller.saveSettings();
+              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom name updated');
             },
           ),
           _divider(isDark),
@@ -97,6 +100,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
               settings.showroomAddress = value.isEmpty ? null : value;
               controller.settings.refresh();
               controller.saveSettings();
+              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom address updated');
             },
           ),
           _divider(isDark),
@@ -112,6 +116,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
               settings.showroomPhone = value.isEmpty ? null : value;
               controller.settings.refresh();
               controller.saveSettings();
+              AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom phone updated');
             },
           ),
           _divider(isDark),
@@ -142,6 +147,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
                       settings.currencySymbol = value;
                       controller.settings.refresh();
                       controller.saveSettings();
+                      AppToast.showSuccess(title: 'Settings Saved', message: 'Currency changed to $value');
                     }
                   },
                 ),
@@ -190,8 +196,9 @@ class GeneralSettingsView extends GetView<SettingsController> {
         settings.showroomLogoPath = savedPath;
         controller.settings.refresh();
         controller.saveSettings();
+        AppToast.showSuccess(title: 'Settings Saved', message: 'Showroom logo updated');
       } else {
-        Get.snackbar('Error', 'Failed to save logo image', backgroundColor: Colors.red.withValues(alpha: 0.1), colorText: Colors.red);
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to save logo image');
       }
     }
   }

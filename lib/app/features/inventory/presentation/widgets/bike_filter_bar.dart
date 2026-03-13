@@ -18,6 +18,7 @@ class BikeFilterBar extends StatelessWidget {
   final String? selectedBrand;
   final String? selectedCC;
   final String? selectedStatus;
+  final String? selectedCondition;
   final String? selectedColor;
   final String? selectedSkin;
   final double? minPrice;
@@ -25,6 +26,7 @@ class BikeFilterBar extends StatelessWidget {
   final ValueChanged<String?>? onBrandChanged;
   final ValueChanged<String?>? onCCChanged;
   final ValueChanged<String?>? onStatusChanged;
+  final ValueChanged<String?>? onConditionChanged;
   final ValueChanged<String?>? onColorChanged;
   final ValueChanged<String?>? onSkinChanged;
   final ValueChanged<double?>? onMinPriceChanged;
@@ -39,6 +41,7 @@ class BikeFilterBar extends StatelessWidget {
     this.selectedBrand,
     this.selectedCC,
     this.selectedStatus,
+    this.selectedCondition,
     this.selectedColor,
     this.selectedSkin,
     this.minPrice,
@@ -46,6 +49,7 @@ class BikeFilterBar extends StatelessWidget {
     this.onBrandChanged,
     this.onCCChanged,
     this.onStatusChanged,
+    this.onConditionChanged,
     this.onColorChanged,
     this.onSkinChanged,
     this.onMinPriceChanged,
@@ -59,6 +63,7 @@ class BikeFilterBar extends StatelessWidget {
   static const List<String> brands = ['Honda', 'Suzuki', 'Yamaha', 'Road Prince', 'United'];
   static const List<String> engineCCs = ['70cc', '100cc', '110cc', '125cc', '150cc'];
   static const List<String> statuses = ['Available', 'Sold', 'Pending'];
+  static const List<String> conditions = ['New', 'Used'];
   static const List<String> colors = [
     'Red', 'Black', 'Blue', 'Silver', 'White', 'Grey', 'Green',
     'Yellow', 'Orange', 'Purple', 'Maroon',
@@ -219,6 +224,14 @@ class BikeFilterBar extends StatelessWidget {
                 hint: 'Status',
                 items: statuses,
                 onChanged: onStatusChanged,
+                isDark: isDark,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _buildDropdown(
+                value: selectedCondition,
+                hint: 'Condition',
+                items: conditions,
+                onChanged: onConditionChanged,
                 isDark: isDark,
               ),
               const SizedBox(width: AppSpacing.sm),

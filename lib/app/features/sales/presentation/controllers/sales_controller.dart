@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class SalesController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -46,10 +48,9 @@ class SalesController extends GetxController {
       final sales = await _salesService.getAllSales();
       allSales.value = sales;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load sales: $e',
-        snackPosition: SnackPosition.BOTTOM,
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to load sales: $e',
       );
     } finally {
       isLoading.value = false;
@@ -150,11 +151,11 @@ class SalesController extends GetxController {
     try {
       final sales = filteredSales;
       if (sales.isEmpty) {
-        Get.snackbar('No Data', 'No sales found for the selected filters.');
+        AppToast.showInfo(title: 'No Data', message: 'No sales found for the selected filters.');
         return;
       }
 
-      Get.snackbar('Exporting', 'Generating sales report...');
+      AppToast.showInfo(title: 'Exporting', message: 'Generating sales report...');
       final pdfService = Get.find<ReportPdfService>();
 
       final cashSales = sales.where((s) => s.isCash).map((s) => <String, dynamic>{
@@ -183,18 +184,18 @@ class SalesController extends GetxController {
       );
 
       if (filePath != null) {
-        Get.snackbar('Success', 'Report saved to $filePath', duration: const Duration(seconds: 4));
+        AppToast.showSuccess(title: 'Success', message: 'Report saved to $filePath');
       } else {
-        Get.snackbar('Error', 'Failed to generate report');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate report');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Export failed: $e', snackPosition: SnackPosition.BOTTOM);
+      AppNotificationDialog.showError(title: 'Error', message: 'Export failed: $e');
     }
   }
 
   Future<void> exportSaleInvoice(SaleCardData data) async {
     try {
-      Get.snackbar('Exporting', 'Generating invoice...');
+      AppToast.showInfo(title: 'Exporting', message: 'Generating invoice...');
       final pdfService = Get.find<ReportPdfService>();
       
       final saleMap = {
@@ -228,12 +229,12 @@ class SalesController extends GetxController {
 
       final filePath = await pdfService.generateSaleInvoice(saleData: saleMap);
       if (filePath != null) {
-        Get.snackbar('Success', 'Invoice saved to $filePath', duration: const Duration(seconds: 4));
+        AppToast.showSuccess(title: 'Success', message: 'Invoice saved to $filePath');
       } else {
-        Get.snackbar('Error', 'Failed to generate invoice');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate invoice');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed during export: $e', snackPosition: SnackPosition.BOTTOM);
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed during export: $e');
     }
   }
 

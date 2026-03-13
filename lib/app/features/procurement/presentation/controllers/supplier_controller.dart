@@ -7,12 +7,15 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/features/procurement/domain/supplier_service.dart';
 import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class BikeEntry {
   String engineNumber = '';
   String chassisNumber = '';
   String model = '';
   String brand = 'Honda'; // Default
+  BikeConditionEnum condition = BikeConditionEnum.newBike;
   String color = '';
   int modelYear = DateTime.now().year;
   double purchasePrice = 0.0;
@@ -24,6 +27,7 @@ class BikeEntry {
   final FocusNode chassisFocus = FocusNode();
   final FocusNode brandFocus = FocusNode();
   final FocusNode modelFocus = FocusNode();
+  final FocusNode conditionFocus = FocusNode();
   final FocusNode colorFocus = FocusNode();
   final FocusNode yearFocus = FocusNode();
   final FocusNode priceFocus = FocusNode();
@@ -34,6 +38,7 @@ class BikeEntry {
     chassisFocus.dispose();
     brandFocus.dispose();
     modelFocus.dispose();
+    conditionFocus.dispose();
     colorFocus.dispose();
     yearFocus.dispose();
     priceFocus.dispose();
@@ -155,6 +160,7 @@ class SupplierController extends GetxController {
         ..chassisNumber = bike.chassisNumber
         ..model = bike.model
         ..brand = bike.brand
+        ..condition = bike.condition
         ..color = bike.color
         ..modelYear = bike.modelYear
         ..purchasePrice = bike.purchasePrice
@@ -179,6 +185,12 @@ class SupplierController extends GetxController {
   Future<void> deleteSupplier(Supplier supplier) async {
     await _supplierService.deleteSupplier(supplier);
     selectedSupplier.value = null; // Clear selection
+    await loadSuppliers();
+  }
+
+  Future<void> deleteSupplierOnly(Supplier supplier) async {
+    await _supplierService.deleteSupplierOnly(supplier);
+    selectedSupplier.value = null;
     await loadSuppliers();
   }
   
@@ -258,8 +270,15 @@ class SupplierController extends GetxController {
 
     // Validate Supplier
     if (isNewSupplier.value) {
-      if (newSupplierName.text.isEmpty || newSupplierPhone.text.isEmpty) {
-        Get.snackbar('Error', 'Please fill in required supplier details');
+      if (newSupplierName.text.isEmpty || 
+          newSupplierPhone.text.isEmpty || 
+          newSupplierCnic.text.isEmpty ||
+          newSupplierProfilePic.value == null ||
+          newSupplierCnicPic.value == null) {
+        AppNotificationDialog.showError(
+          title: 'Missing Information', 
+          message: 'Please fill all supplier details (Name, Phone, CNIC) and provide both Profile and CNIC images before proceeding.',
+        );
         return;
       }
       try {
@@ -273,12 +292,12 @@ class SupplierController extends GetxController {
         await loadSuppliers(); // Refresh list
         finalSupplier = newSupplier;
       } catch (e) {
-        Get.snackbar('Error', 'Failed to create supplier: $e');
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to create supplier: $e');
         return;
       }
     } else {
       if (selectedSupplier.value == null) {
-        Get.snackbar('Error', 'Please select a supplier');
+        AppNotificationDialog.showError(title: 'Error', message: 'Please select a supplier');
         return;
       }
       finalSupplier = selectedSupplier.value;
@@ -287,8 +306,20 @@ class SupplierController extends GetxController {
     if (finalSupplier == null) return;
 
     if (bikeEntries.isEmpty) {
-      Get.snackbar('Error', 'Please add at least one bike');
+      AppNotificationDialog.showError(title: 'Error', message: 'Please add at least one bike');
       return;
+    }
+
+    for (int i = 0; i < bikeEntries.length; i++) {
+      var e = bikeEntries[i];
+      if (e.engineNumber.isEmpty || e.chassisNumber.isEmpty || e.brand.isEmpty || 
+          e.model.isEmpty || e.color.isEmpty || e.purchasePrice <= 0 || e.imageFile == null) {
+        AppNotificationDialog.showError(
+          title: 'Missing Details', 
+          message: 'Row ${i + 1} is incomplete. Engine, Chassis, Brand, Model, Color, Year, Purchase Price, and Image must all be filled.',
+        );
+        return;
+      }
     }
 
     try {
@@ -301,14 +332,71 @@ class SupplierController extends GetxController {
         await _handleCreateBatch(finalSupplier);
       }
 
-      Get.snackbar('Success', 'Batch saved successfully');
-      Get.back(); // Go back to history view
       clearBatchForm();
-      await loadSuppliers(); 
+      await loadSuppliers();
       _refreshSelectedSupplier();
+
+      Get.dialog(
+        Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Success!',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'The bikes have been successfully added to your inventory.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: 200, // Fixed width instead of double.infinity
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Get.back(); // Close dialog
+                      Get.back(); // Navigate back to previous screen
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Continue'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
       
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('unique index violated') || errorMessage.contains('unique')) {
+        AppNotificationDialog.showError(
+          title: 'Duplicate Entry', 
+          message: 'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
+        );
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: e.toString());
+      }
     }
   }
 
@@ -324,6 +412,7 @@ class SupplierController extends GetxController {
           ..chassisNumber = entry.chassisNumber
           ..model = entry.model
           ..brand = entry.brand
+          ..condition = entry.condition
           ..color = entry.color
           ..modelYear = entry.modelYear
           ..purchasePrice = entry.purchasePrice
@@ -375,6 +464,7 @@ class SupplierController extends GetxController {
           ..chassisNumber = entry.chassisNumber
           ..model = entry.model
           ..brand = entry.brand
+          ..condition = entry.condition
           ..color = entry.color
           ..modelYear = entry.modelYear
           ..purchasePrice = entry.purchasePrice;

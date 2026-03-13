@@ -89,6 +89,42 @@ class SupplierService extends GetxService {
     });
   }
 
+  /// Deletes only the supplier record and associated batches/files,
+  /// but keeps all bikes in inventory with their batch link cleared.
+  Future<void> deleteSupplierOnly(Supplier supplier) async {
+    // 1. Load all batches
+    await supplier.batches.load();
+    final batches = supplier.batches.toList();
+
+    for (var batch in batches) {
+      // Delete batch folder (invoices, etc.)
+      if (batch.supplier.value != null) {
+        await _fileService.deleteBatchDirectory(batch.supplier.value!.name, batch.purchaseDate);
+      }
+
+      // Unlink bikes from batch (keep bikes in DB)
+      await batch.bikes.load();
+      final bikes = batch.bikes.toList();
+      
+      await _isar.writeTxn(() async {
+        for (var bike in bikes) {
+          bike.batch.value = null;
+          await bike.batch.save();
+        }
+        // Delete batch record
+        await _isar.purchaseBatchs.delete(batch.id);
+      });
+    }
+
+    // 2. Delete Supplier Directory
+    await _fileService.deleteSupplierDirectory(supplier.name);
+
+    // 3. Delete Supplier Record
+    await _isar.writeTxn(() async {
+      await _isar.suppliers.delete(supplier.id);
+    });
+  }
+
   // --- Procurement (Batches) ---
 
   /// Saves a complete purchase batch with multiple bikes in a single transaction

@@ -328,6 +328,12 @@ class FileService extends GetxService {
     return p.join(customersMediaPath, sanitizedCnic, 'Witness', filename);
   }
 
+  /// Get full path to a supplier profile image synchronously
+  String getSupplierProfileImagePathSync(String filename, String supplierName) {
+    final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    return p.join(suppliersMediaPath, sanitized, 'Profile', filename);
+  }
+
   /// Pick an image from gallery/filesystem
   Future<File?> pickImage() async {
     try {

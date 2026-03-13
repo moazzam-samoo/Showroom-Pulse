@@ -36,30 +36,33 @@ class ReportPdfService {
   // ═══════════════════════════════════════════════════════════
 
   Future<String?> generateProfitReport({
-    required int month,
-    required int year,
+    required String dateRangeLabel,
     required double totalRevenue,
     required double totalExpenses,
     required double netProfit,
     required Map<String, Map<String, double>> profitByBrand,
     required Map<String, int> stockDistribution,
+    List<MapEntry<String, double>>? yearlyBreakdown,
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
       final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
-      final monthYear = _monthYearFormat.format(DateTime(year, month));
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Profit Report', monthYear, settings),
+          header: (context) => _buildHeader(context, 'Profit Report', dateRangeLabel, settings),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit),
             pw.SizedBox(height: 20),
+            if (yearlyBreakdown != null && yearlyBreakdown.isNotEmpty) ...[
+              _buildYearlyBreakdownTable(yearlyBreakdown),
+              pw.SizedBox(height: 20),
+            ],
             _buildProfitTable(profitByBrand),
             pw.SizedBox(height: 20),
             _buildStockList(stockDistribution),
@@ -79,8 +82,7 @@ class ReportPdfService {
   // ═══════════════════════════════════════════════════════════
 
   Future<String?> generateRevenueStatement({
-    required int month,
-    required int year,
+    required String dateRangeLabel,
     required double totalRevenue,
     required double totalExpenses,
     required double netProfit,
@@ -91,13 +93,12 @@ class ReportPdfService {
       final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
-      final monthYear = _monthYearFormat.format(DateTime(year, month));
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Revenue & Expense Statement', monthYear, settings),
+          header: (context) => _buildHeader(context, 'Revenue & Expense Statement', dateRangeLabel, settings),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit, isRevenue: true),
@@ -320,6 +321,45 @@ class ReportPdfService {
                 _tableCell(_currencyFormat.format(totalEarned), color: _primaryColor, bold: true),
               ],
             ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ─── Yearly Breakdown Table ──────────────────────────────
+
+  pw.Widget _buildYearlyBreakdownTable(List<MapEntry<String, double>> data) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Monthly Revenue breakdown'),
+        pw.SizedBox(height: 8),
+        pw.Table(
+          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(3),
+            1: const pw.FlexColumnWidth(2),
+          },
+          children: [
+            pw.TableRow(
+              decoration: const pw.BoxDecoration(color: _headerBg),
+              children: [
+                _tableHeader('Month'),
+                _tableHeader('Revenue Earned'),
+              ],
+            ),
+            ...data.asMap().entries.map((e) {
+              final isAlt = e.key.isOdd;
+              final entry = e.value;
+              return pw.TableRow(
+                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                children: [
+                  _tableCell(entry.key),
+                  _tableCell(_currencyFormat.format(entry.value), color: _successColor, bold: true),
+                ],
+              );
+            }),
           ],
         ),
       ],

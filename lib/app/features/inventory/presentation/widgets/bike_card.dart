@@ -130,31 +130,58 @@ class _BikeCardState extends State<BikeCard> {
                       ),
                     ),
 
-                    // Status Badge
+                    // Status & Condition Badges
                     Positioned(
                       top: widget.compact ? 4 : 10,
                       left: widget.compact ? 4 : 10,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: widget.compact ? 4 : 10,
-                          vertical: widget.compact ? 1 : 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(widget.bike.status),
-                          borderRadius: BorderRadius.circular(widget.compact ? 8 : 12),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
-                          ],
-                        ),
-                        child: Text(
-                          _getStatusText(widget.bike.status),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: widget.compact ? 8 : 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: widget.compact ? 4 : 10,
+                              vertical: widget.compact ? 1 : 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(widget.bike.status),
+                              borderRadius: BorderRadius.circular(widget.compact ? 8 : 12),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
+                              ],
+                            ),
+                            child: Text(
+                              _getStatusText(widget.bike.status),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: widget.compact ? 8 : 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: widget.compact ? 4 : 10,
+                              vertical: widget.compact ? 1 : 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: widget.bike.condition == BikeConditionEnum.newBike ? Colors.blueAccent : Colors.brown,
+                              borderRadius: BorderRadius.circular(widget.compact ? 8 : 12),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
+                              ],
+                            ),
+                            child: Text(
+                              widget.bike.condition == BikeConditionEnum.newBike ? '🆕 NEW' : '🔄 USED',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: widget.compact ? 8 : 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 

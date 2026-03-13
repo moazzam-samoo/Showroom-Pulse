@@ -6,6 +6,7 @@ import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:intl/intl.dart';
 
 class NotificationService extends GetxService {
@@ -126,16 +127,7 @@ class NotificationService extends GetxService {
         msg = '$criticalCount payments are overdue or due today.';
       }
 
-      Get.snackbar(
-        'Installment Alerts',
-        msg,
-        icon: const Icon(Icons.notifications_active, color: Colors.white),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange.shade800,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-      );
+      AppToast.showInfo(title: 'Installment Alerts', message: msg);
     }
   }
 

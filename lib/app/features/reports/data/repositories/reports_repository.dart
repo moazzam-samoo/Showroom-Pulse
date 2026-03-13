@@ -12,10 +12,17 @@ class ReportsRepository {
 
   // ─── Revenue Queries ───────────────────────────────────────
 
-  /// Get all sales in a given month/year
-  Future<List<Sale>> getSalesByMonth(int month, int year) async {
-    final start = DateTime(year, month, 1);
-    final end = DateTime(year, month + 1, 0, 23, 59, 59);
+  /// Get all sales in a given range (optional month/year)
+  Future<List<Sale>> getSalesInPeriod({int? month, int? year}) async {
+    if (month == null && year == null) {
+      // All time
+      return await _isar.sales.where().findAll();
+    }
+    
+    final start = DateTime(year!, month ?? 1, 1);
+    final end = month != null 
+        ? DateTime(year, month + 1, 0, 23, 59, 59)
+        : DateTime(year, 12, 31, 23, 59, 59);
 
     return await _isar.sales
         .filter()
@@ -23,9 +30,9 @@ class ReportsRepository {
         .findAll();
   }
 
-  /// Calculate total revenue using proportional recognition for installments
-  Future<double> getTotalRevenue(int month, int year) async {
-    final sales = await getSalesByMonth(month, year);
+  /// Calculate total revenue using proportional recognition
+  Future<double> getTotalRevenue({int? month, int? year}) async {
+    final sales = await getSalesInPeriod(month: month, year: year);
     double total = 0;
 
     for (final sale in sales) {
@@ -69,8 +76,8 @@ class ReportsRepository {
   }
 
   /// Revenue grouped by brand — full amounts + earned (proportional recovery)
-  Future<Map<String, Map<String, double>>> getProfitByBrand(int month, int year) async {
-    final sales = await getSalesByMonth(month, year);
+  Future<Map<String, Map<String, double>>> getProfitByBrand({int? month, int? year}) async {
+    final sales = await getSalesInPeriod(month: month, year: year);
     final Map<String, Map<String, double>> result = {};
 
     for (final sale in sales) {
@@ -133,8 +140,20 @@ class ReportsRepository {
 
     for (int i = months - 1; i >= 0; i--) {
       final date = DateTime(now.year, now.month - i, 1);
-      final revenue = await getTotalRevenue(date.month, date.year);
+      final revenue = await getTotalRevenue(month: date.month, year: date.year);
       trend.add(MapEntry(monthNames[date.month - 1], revenue));
+    }
+    return trend;
+  }
+
+  /// Get monthly revenue breakdown for a specific year (for Yearly Report)
+  Future<List<MapEntry<String, double>>> getYearlyRevenueBreakdown(int year) async {
+    final List<MapEntry<String, double>> trend = [];
+    final monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    for (int i = 1; i <= 12; i++) {
+      final revenue = await getTotalRevenue(month: i, year: year);
+      trend.add(MapEntry(monthNames[i - 1], revenue));
     }
     return trend;
   }
@@ -219,7 +238,7 @@ class ReportsRepository {
     final monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     for (int i = 1; i <= 12; i++) {
-      final revenue = await getTotalRevenue(i, year);
+      final revenue = await getTotalRevenue(month: i, year: year);
       trend.add(MapEntry(monthNames[i - 1], revenue));
     }
     return trend;
@@ -227,10 +246,16 @@ class ReportsRepository {
 
   // ─── Expense CRUD ──────────────────────────────────────────
 
-  /// Get all expenses for a given month/year
-  Future<List<Expense>> getExpensesByMonth(int month, int year) async {
-    final start = DateTime(year, month, 1);
-    final end = DateTime(year, month + 1, 0, 23, 59, 59);
+  /// Get all expenses for a given period (optional month/year)
+  Future<List<Expense>> getExpensesInPeriod({int? month, int? year}) async {
+    if (month == null && year == null) {
+      return await _isar.expenses.where().sortByDateDesc().findAll();
+    }
+
+    final start = DateTime(year!, month ?? 1, 1);
+    final end = month != null 
+        ? DateTime(year, month + 1, 0, 23, 59, 59)
+        : DateTime(year, 12, 31, 23, 59, 59);
 
     return await _isar.expenses
         .filter()
@@ -239,9 +264,9 @@ class ReportsRepository {
         .findAll();
   }
 
-  /// Get total expenses for a month
-  Future<double> getTotalExpenses(int month, int year) async {
-    final expenses = await getExpensesByMonth(month, year);
+  /// Get total expenses for a period
+  Future<double> getTotalExpenses({int? month, int? year}) async {
+    final expenses = await getExpensesInPeriod(month: month, year: year);
     return expenses.fold<double>(0.0, (double sum, e) => sum + e.amount);
   }
 
