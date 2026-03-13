@@ -10,7 +10,14 @@ import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class ProfileSettingsView extends GetView<SettingsController> {
-  const ProfileSettingsView({super.key});
+  final GlobalKey? profilePicUploadKey;
+  final GlobalKey? ownerNameInputKey;
+
+  const ProfileSettingsView({
+    super.key,
+    this.profilePicUploadKey,
+    this.ownerNameInputKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +42,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
           const SizedBox(height: AppSpacing.lg),
 
           // Profile Picture
-          _buildSettingRow(
+          Container(
+            key: profilePicUploadKey,
+            child: _buildSettingRow(
             title: 'Owner Profile Picture',
             subtitle: 'Upload a picture to display on the dashboard',
             isDark: isDark,
@@ -90,22 +99,26 @@ class ProfileSettingsView extends GetView<SettingsController> {
                 ),
               ],
             ),
+            ),
           ),
           _divider(isDark),
 
           // Owner Name
-          _buildSettingInputRow(
-            title: 'Owner Name',
-            subtitle: 'Displays on the dashboard greeting',
-            initialValue: settings.ownerName ?? '',
-            hintText: 'e.g. Tahir',
-            isDark: isDark,
-            onSubmitted: (value) {
-              settings.ownerName = value.isEmpty ? null : value;
-              controller.settings.refresh();
-              controller.saveSettings();
-              AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
-            },
+          Container(
+            key: ownerNameInputKey,
+            child: _buildSettingInputRow(
+              title: 'Owner Name',
+              subtitle: 'Displays on the dashboard greeting',
+              initialValue: settings.ownerName ?? '',
+              hintText: 'e.g. Tahir',
+              isDark: isDark,
+              onSubmitted: (value) {
+                settings.ownerName = value.isEmpty ? null : value;
+                controller.settings.refresh();
+                controller.saveSettings();
+                AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
+              },
+            ),
           ),
           _divider(isDark),
 

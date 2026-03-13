@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -9,6 +10,7 @@ import '../../../../core/services/checkpoint_service.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart' as tahir_showroom_walkthrough_service;
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -54,6 +56,12 @@ class SettingsController extends GetxController {
 
   void changeCategory(String category) {
     selectedCategory.value = category;
+  }
+
+  Future<void> replayWalkthrough() async {
+    final walkthroughService = Get.find<tahir_showroom_walkthrough_service.WalkthroughService>();
+    await walkthroughService.resetAllTabs();
+    Get.offAllNamed('/walkthrough');
   }
 
   // ═══════════════════════════════════════════════════════════

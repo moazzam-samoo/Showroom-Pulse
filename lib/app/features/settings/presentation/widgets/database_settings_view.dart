@@ -9,7 +9,14 @@ import '../../../../core/widgets/app_notification_dialog.dart';
 import '../controllers/settings_controller.dart';
 
 class DatabaseSettingsView extends GetView<SettingsController> {
-  const DatabaseSettingsView({super.key});
+  final GlobalKey? exportDatabaseKey;
+  final GlobalKey? importDatabaseKey;
+
+  const DatabaseSettingsView({
+    super.key,
+    this.exportDatabaseKey,
+    this.importDatabaseKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +64,9 @@ class DatabaseSettingsView extends GetView<SettingsController> {
         _divider(isDark),
 
         // Export
-        _buildActionRow(
+        Container(
+          key: exportDatabaseKey,
+          child: _buildActionRow(
           title: 'Export Database Backup',
           subtitle: 'Save a copy of your entire system (database + images)',
           buttonLabel: controller.isExporting.value ? 'Exporting...' : 'Export Data',
@@ -66,7 +75,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           isDanger: false,
           isLoading: controller.isExporting.value,
           onPressed: controller.isExporting.value ? null : () => controller.exportDatabase(),
-        ),
+        ),),
 
         // Export progress indicator
         if (controller.isExporting.value && controller.exportProgress.value.isNotEmpty)
@@ -93,7 +102,9 @@ class DatabaseSettingsView extends GetView<SettingsController> {
         _divider(isDark),
 
         // Import
-        _buildActionRow(
+        Container(
+          key: importDatabaseKey,
+          child: _buildActionRow(
           title: 'Import Database Backup',
           subtitle: 'Restore from a previously exported .tahir backup file',
           buttonLabel: controller.isImporting.value ? 'Importing...' : 'Import Data',
@@ -102,7 +113,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           isDanger: false,
           isLoading: controller.isImporting.value,
           onPressed: controller.isImporting.value ? null : () => controller.importDatabase(),
-        ),
+        ),),
 
         // Import progress indicator
         if (controller.isImporting.value && controller.importProgress.value.isNotEmpty)
