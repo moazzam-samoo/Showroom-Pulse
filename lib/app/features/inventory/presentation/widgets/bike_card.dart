@@ -47,7 +47,7 @@ class _BikeCardState extends State<BikeCard> {
     
     // Pro Max Colors
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final primaryColor = const Color(0xFF00ACC1); // Cyan
+    const primaryColor = Color(0xFF00ACC1); // Cyan
     
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

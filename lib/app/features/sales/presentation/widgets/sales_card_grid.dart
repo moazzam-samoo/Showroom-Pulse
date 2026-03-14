@@ -160,7 +160,7 @@ class SalesCardGrid extends StatelessWidget {
     for (var sale in salesList) {
       final parts = sale.saleDate.split('/');
       if (parts.length == 3) {
-        final monthKey = _getMonthName(int.parse(parts[1])) + ' ' + parts[2];
+        final monthKey = '${_getMonthName(int.parse(parts[1]))} ${parts[2]}';
         if (groupedSales[monthKey] == null) {
           groupedSales[monthKey] = [];
         }

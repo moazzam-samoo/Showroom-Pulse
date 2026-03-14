@@ -7,7 +7,6 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/views/new_sale_view.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_sale_controller.dart';
-import 'package:tahir_showroom/app/features/sales/presentation/widgets/recent_sales_table.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sales_filter_bar.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sales_card_grid.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';

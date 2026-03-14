@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
-import 'package:tahir_showroom/app/features/sales/presentation/controllers/new_sale_controller.dart';
 
 class PriceSummaryCard extends StatelessWidget {
   final InstallmentCalculationResult result;

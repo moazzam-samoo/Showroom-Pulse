@@ -161,11 +161,11 @@ class CustomerListSidebar extends GetView<CustomersController> {
                           ),
                           PopupMenuItem(
                             height: 32,
-                            child: Row(
+                            child: const Row(
                               children: [
-                                const Icon(LucideIcons.trash2, size: 14, color: Colors.red),
-                                const SizedBox(width: 8),
-                                const Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
+                                Icon(LucideIcons.trash2, size: 14, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
                               ],
                             ),
                             onTap: () => controller.deleteCustomer(customer.customer.id),

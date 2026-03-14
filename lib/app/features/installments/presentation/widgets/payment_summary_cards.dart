@@ -173,9 +173,7 @@ class PaymentSummaryCards extends StatelessWidget {
 
   Widget _buildNextDueCard(BuildContext context, bool isDark) {
     final dateFormat = DateFormat('d MMM, yyyy');
-    final daysUntil = nextDueDate != null
-        ? nextDueDate!.difference(DateTime.now()).inDays
-        : null;
+    final daysUntil = nextDueDate?.difference(DateTime.now()).inDays;
 
     String? subtitle;
     Color subtitleColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;

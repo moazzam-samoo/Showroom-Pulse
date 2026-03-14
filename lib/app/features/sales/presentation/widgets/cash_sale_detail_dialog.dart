@@ -289,7 +289,7 @@ class CashSaleDetailDialog extends StatelessWidget {
                 final witness = entry.value;
                 final witnessNumber = index + 1;
                 
-                return Container(
+                return SizedBox(
                   width: (850 - (AppSpacing.xl * 4)) / 2, // Two columns
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +394,7 @@ class CashSaleDetailDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildPhotoBox(String? imagePath, bool isDark, {required IconData icon, bool isAsset = false, double width = 60, double height = 60}) {
+  Widget _buildPhotoBox(String? imagePath, bool isDark, {required IconData icon, double width = 60, double height = 60}) {
     return Container(
        width: width,
        height: height,

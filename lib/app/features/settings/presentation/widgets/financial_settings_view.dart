@@ -137,7 +137,7 @@ class FinancialSettingsView extends GetView<SettingsController> {
             isDark: isDark,
             trailing: Switch(
               value: settings.automaticLateFeeEnabled,
-              activeColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              activeThumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
               onChanged: (value) {
                 settings.automaticLateFeeEnabled = value;
                 controller.settings.refresh();

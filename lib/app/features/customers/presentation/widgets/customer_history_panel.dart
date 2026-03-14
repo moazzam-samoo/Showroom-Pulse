@@ -7,7 +7,6 @@ import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/controllers/customers_controller.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/vehicle_card.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/transaction_details_dialog.dart';
-import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 class CustomerHistoryPanel extends GetView<CustomersController> {
@@ -115,10 +114,8 @@ class CustomerHistoryPanel extends GetView<CustomersController> {
                            const SizedBox(width: 8),
                            OutlinedButton.icon(
                              onPressed: () {
-                                if (customer != null) {
-                                   controller.downloadCustomerData(customer);
-                                }
-                             },
+                                 controller.downloadCustomerData(customer);
+                                                           },
                              icon: const Icon(LucideIcons.download, size: 16),
                              label: const Text('EXPORT DATA'),
                              style: OutlinedButton.styleFrom(

@@ -18,7 +18,6 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
-import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
@@ -528,7 +527,6 @@ class SupplierHistoryView extends GetView<SupplierController> {
                     width: 400,
                     onSubmit: () => Get.back(result: true),
                     onCancel: () => Get.back(result: false),
-                    child: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
                     actions: [
                       TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel (Esc)')),
                       ElevatedButton(
@@ -537,6 +535,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                         child: const Text('Delete (Enter)'),
                       ),
                     ],
+                    child: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
                   ),
                 );
                 if (confirm == true) {

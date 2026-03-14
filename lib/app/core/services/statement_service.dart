@@ -175,7 +175,7 @@ class StatementService {
                     ),
                     pw.Text(
                       'Installment Statement',
-                      style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
                     ),
                   ],
                 ),
@@ -220,11 +220,11 @@ class StatementService {
           children: [
             pw.Text(
               'Generated: ${_dateFormat.format(DateTime.now())}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
           ],
         ),
@@ -346,7 +346,7 @@ class StatementService {
 
     return pw.Row(
       children: [
-        pw.Text('Status: ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+        pw.Text('Status: ', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: pw.BoxDecoration(
@@ -381,7 +381,7 @@ class StatementService {
           pw.SizedBox(height: 8),
           pw.Text(
             'Witnesses are on file at AL-AL-TAHIR Showroom.',
-            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],
       ),
@@ -398,7 +398,7 @@ class StatementService {
         pw.Text('Payment History', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 8),
         if (allPayments.isEmpty)
-          pw.Text('No payments recorded yet.', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600))
+          pw.Text('No payments recorded yet.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600))
         else
           pw.TableHelper.fromTextArray(
             headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),

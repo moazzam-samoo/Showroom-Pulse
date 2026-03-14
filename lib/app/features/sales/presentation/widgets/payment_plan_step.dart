@@ -257,7 +257,7 @@ class PaymentPlanStep extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: DropdownButtonFormField<MarkupType>(
-                      value: controller.markupType.value,
+                      initialValue: controller.markupType.value,
                       items: const [
                         DropdownMenuItem(
                             value: MarkupType.percentage,

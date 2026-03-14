@@ -1112,7 +1112,7 @@ class NewSaleController extends GetxController {
         title = 'Sale Failed - Database Error';
         // Provide more details in the error message
         final errorDetails = errorMessage.length > 200
-            ? errorMessage.substring(0, 200) + '...'
+            ? '${errorMessage.substring(0, 200)}...'
             : errorMessage;
         errorMessage = 'A database error occurred while saving the sale.\n\n'
             'Details: $errorDetails\n\n'
@@ -1121,7 +1121,7 @@ class NewSaleController extends GetxController {
         // Generic error with more details
         title = 'Sale Failed';
         errorMessage =
-            'Could not complete the sale. Error: ${errorMessage.length > 150 ? errorMessage.substring(0, 150) + '...' : errorMessage}';
+            'Could not complete the sale. Error: ${errorMessage.length > 150 ? '${errorMessage.substring(0, 150)}...' : errorMessage}';
       }
 
       // Show error dialog instead of just snackbar for better visibility

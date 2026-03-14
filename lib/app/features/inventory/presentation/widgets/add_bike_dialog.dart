@@ -157,7 +157,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final sectionHeaderText = Colors.white;
+    const sectionHeaderText = Colors.white;
     // Updated to use AppColors directly for consistency
     final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
@@ -642,7 +642,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             focusNode: focusNode,
             child: DropdownButtonFormField<String>(
               focusNode: focusNode,
-              value: _selectedCondition,
+              initialValue: _selectedCondition,
               decoration: InputDecoration(
                 isDense: true,
                 filled: true,

@@ -12,7 +12,6 @@ import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
 import 'package:tahir_showroom/app/core/services/theme_service.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
-import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
 import '../controllers/dashboard_controller.dart';
@@ -455,7 +454,7 @@ class _DashboardViewState extends State<DashboardView> {
                     return items;
                   },
                   onSelected: (alert) {
-                    Get.toNamed('/installments', arguments: alert?.contractId);
+                    Get.toNamed('/installments', arguments: alert.contractId);
                   },
                 );
               }),

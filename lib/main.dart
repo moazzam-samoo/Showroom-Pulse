@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_binding.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
-import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 

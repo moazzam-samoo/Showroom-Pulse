@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -34,12 +33,18 @@ class AddStockView extends GetView<SupplierController> {
           else if (controller.newSupplierPhoneFocus.hasFocus) { controller.newSupplierCnicFocus.requestFocus(); return; }
           else if (controller.newSupplierCnicFocus.hasFocus) { controller.newSupplierProfilePicFocus.requestFocus(); return; }
           else if (controller.newSupplierProfilePicFocus.hasFocus) {
-            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickSupplierProfilePic();
-            else controller.newSupplierCnicPicFocus.requestFocus();
+            if (event.logicalKey == LogicalKeyboardKey.enter) {
+              controller.pickSupplierProfilePic();
+            } else {
+              controller.newSupplierCnicPicFocus.requestFocus();
+            }
             return;
           } else if (controller.newSupplierCnicPicFocus.hasFocus) {
-            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickSupplierCnicPic();
-            else controller.purchaseDateFocus.requestFocus();
+            if (event.logicalKey == LogicalKeyboardKey.enter) {
+              controller.pickSupplierCnicPic();
+            } else {
+              controller.purchaseDateFocus.requestFocus();
+            }
             return;
           }
         } else {
@@ -48,12 +53,16 @@ class AddStockView extends GetView<SupplierController> {
 
         if (controller.purchaseDateFocus.hasFocus) { controller.billImageFocus.requestFocus(); return; }
         else if (controller.billImageFocus.hasFocus) {
-          if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickBatchImage();
-          else controller.addRowFocus.requestFocus();
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            controller.pickBatchImage();
+          } else {
+            controller.addRowFocus.requestFocus();
+          }
           return;
         } else if (controller.addRowFocus.hasFocus) {
-          if (event.logicalKey == LogicalKeyboardKey.enter) controller.addBikeEntry();
-          else if (controller.bikeEntries.isNotEmpty) controller.bikeEntries[0].engineFocus.requestFocus();
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            controller.addBikeEntry();
+          } else if (controller.bikeEntries.isNotEmpty) controller.bikeEntries[0].engineFocus.requestFocus();
           else controller.saveBatchFocus.requestFocus();
           return;
         }
@@ -69,8 +78,9 @@ class AddStockView extends GetView<SupplierController> {
           else if (entry.yearFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
           else if (entry.priceFocus.hasFocus) { entry.imageFocus.requestFocus(); return; }
           else if (entry.imageFocus.hasFocus) {
-            if (event.logicalKey == LogicalKeyboardKey.enter) controller.pickEntryImage(i);
-            else if (i + 1 < controller.bikeEntries.length) controller.bikeEntries[i + 1].engineFocus.requestFocus();
+            if (event.logicalKey == LogicalKeyboardKey.enter) {
+              controller.pickEntryImage(i);
+            } else if (i + 1 < controller.bikeEntries.length) controller.bikeEntries[i + 1].engineFocus.requestFocus();
             else controller.saveBatchFocus.requestFocus();
             return;
           }
@@ -83,8 +93,11 @@ class AddStockView extends GetView<SupplierController> {
 
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         if (controller.saveBatchFocus.hasFocus) {
-          if (controller.bikeEntries.isNotEmpty) controller.bikeEntries.last.imageFocus.requestFocus();
-          else controller.addRowFocus.requestFocus();
+          if (controller.bikeEntries.isNotEmpty) {
+            controller.bikeEntries.last.imageFocus.requestFocus();
+          } else {
+            controller.addRowFocus.requestFocus();
+          }
           return;
         }
 
@@ -99,8 +112,11 @@ class AddStockView extends GetView<SupplierController> {
           else if (entry.brandFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
           else if (entry.chassisFocus.hasFocus) { entry.engineFocus.requestFocus(); return; }
           else if (entry.engineFocus.hasFocus) {
-            if (i > 0) controller.bikeEntries[i - 1].imageFocus.requestFocus();
-            else controller.addRowFocus.requestFocus();
+            if (i > 0) {
+              controller.bikeEntries[i - 1].imageFocus.requestFocus();
+            } else {
+              controller.addRowFocus.requestFocus();
+            }
             return;
           }
         }
@@ -108,8 +124,11 @@ class AddStockView extends GetView<SupplierController> {
         if (controller.addRowFocus.hasFocus) { controller.billImageFocus.requestFocus(); return; }
         else if (controller.billImageFocus.hasFocus) { controller.purchaseDateFocus.requestFocus(); return; }
         else if (controller.purchaseDateFocus.hasFocus) {
-          if (controller.isNewSupplier.value) controller.newSupplierCnicPicFocus.requestFocus();
-          else controller.existingSupplierDropdownFocus.requestFocus();
+          if (controller.isNewSupplier.value) {
+            controller.newSupplierCnicPicFocus.requestFocus();
+          } else {
+            controller.existingSupplierDropdownFocus.requestFocus();
+          }
           return;
         }
 
@@ -505,8 +524,8 @@ class AddStockView extends GetView<SupplierController> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             color: isDark ? AppColors.darkElevated : Colors.grey[200],
-            child: Row(
-              children: const [
+            child: const Row(
+              children: [
                 Expanded(flex: 2, child: Text('Engine #')),
                 Expanded(flex: 2, child: Text('Chassis #')),
                 Expanded(flex: 2, child: Text('Brand')),
@@ -622,7 +641,7 @@ class AddStockView extends GetView<SupplierController> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButtonFormField<BikeConditionEnum>(
                             focusNode: entry.conditionFocus,
-                            value: entry.condition,
+                            initialValue: entry.condition,
                             decoration: _inputDecoration('Condition', isDark),
                             dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
                             style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
