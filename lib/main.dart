@@ -340,17 +340,31 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             // Logo
             Container(
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                    .withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.motorcycle,
-                size: 48,
-                color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'assets/app_logo.jpeg',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.motorcycle,
+                    size: 48,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),

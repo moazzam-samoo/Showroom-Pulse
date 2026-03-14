@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 
 /// Sidebar Navigation Widget
 /// 
@@ -91,19 +92,27 @@ class SidebarNavigation extends StatelessWidget {
   }
 
   Widget _buildLogo(bool isDark) {
-    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    
     return Container(
-      width: 40,
-      height: 40,
+      width: 48,
+      height: 48,
+      padding: const EdgeInsets.all(AppSpacing.xs),
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Icon(
-        _getSelectedIcon(selectedIndex),
-        size: 20,
-        color: primaryColor,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Image.asset(
+          AppAssets.logo,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }

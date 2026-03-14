@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_button.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 
+import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import '../controllers/login_controller.dart';
 
 /// Login Card Widget - Main authentication card
@@ -52,16 +53,31 @@ class LoginCard extends GetView<LoginController> {
           children: [
             // Logo Container
             Container(
-              width: 64,
-              height: 64,
+              width: 80,
+              height: 80,
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.15),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                LucideIcons.bike,
-                size: 32,
-                color: primaryColor,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Image.asset(
+                  AppAssets.logo,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.motorcycle,
+                    size: 40,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
               ),
             ),
             
