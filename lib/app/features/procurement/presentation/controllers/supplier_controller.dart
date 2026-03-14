@@ -14,7 +14,7 @@ class BikeEntry {
   String engineNumber = '';
   String chassisNumber = '';
   String model = '';
-  String brand = 'Honda'; // Default
+  String brand = ''; // Default
   BikeConditionEnum condition = BikeConditionEnum.newBike;
   String color = '';
   int modelYear = DateTime.now().year;

@@ -7,9 +7,10 @@ import '../../features/auth/data/auth_service.dart';
 import '../services/notification_service.dart';
 import '../services/report_pdf_service.dart';
 import '../services/checkpoint_service.dart';
-import '../services/customer_export_service.dart'; // Added import for CustomerExportService
-
-/// InitialBinding - Registers all global services
+import '../services/customer_export_service.dart';
+import '../services/walkthrough_service.dart';
+import '../../features/settings/data/repositories/settings_repository.dart';
+import '../../features/settings/presentation/controllers/settings_controller.dart';/// InitialBinding - Registers all global services
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
@@ -29,6 +30,12 @@ Future<void> initializeAsyncServices() async {
   final isarService = await IsarService().init();
   Get.put(isarService);
   
+  // Initialize Settings (depends on IsarService)
+  final settingsRepo = SettingsRepository(isarService);
+  Get.put(settingsRepo);
+  final settingsController = SettingsController(settingsRepo);
+  Get.put(settingsController, permanent: true);
+
   // Initialize CheckpointService (auto-snapshots)
   final checkpointService = CheckpointService(fileService, isarService);
   Get.put(checkpointService);
@@ -37,6 +44,10 @@ Future<void> initializeAsyncServices() async {
   // Initialize AuthService (authentication + session)
   final authService = await AuthService().init();
   Get.put(authService);
+  
+  // Initialize WalkthroughService
+  final walkthroughService = await WalkthroughService().init();
+  Get.put(walkthroughService);
   
   // Ensure default admin user exists
   await authService.ensureDefaultUser();

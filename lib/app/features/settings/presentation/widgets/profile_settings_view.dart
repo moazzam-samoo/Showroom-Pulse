@@ -7,10 +7,18 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
 import '../../../../core/widgets/app_notification_dialog.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../auth/data/auth_service.dart';
 import '../controllers/settings_controller.dart';
 
 class ProfileSettingsView extends GetView<SettingsController> {
-  const ProfileSettingsView({super.key});
+  final GlobalKey? profilePicUploadKey;
+  final GlobalKey? ownerNameInputKey;
+
+  const ProfileSettingsView({
+    super.key,
+    this.profilePicUploadKey,
+    this.ownerNameInputKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +43,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
           const SizedBox(height: AppSpacing.lg),
 
           // Profile Picture
-          _buildSettingRow(
+          Container(
+            key: profilePicUploadKey,
+            child: _buildSettingRow(
             title: 'Owner Profile Picture',
             subtitle: 'Upload a picture to display on the dashboard',
             isDark: isDark,
@@ -90,29 +100,230 @@ class ProfileSettingsView extends GetView<SettingsController> {
                 ),
               ],
             ),
+            ),
           ),
           _divider(isDark),
 
           // Owner Name
-          _buildSettingInputRow(
-            title: 'Owner Name',
-            subtitle: 'Displays on the dashboard greeting',
-            initialValue: settings.ownerName ?? '',
-            hintText: 'e.g. Tahir',
-            isDark: isDark,
-            onSubmitted: (value) {
-              settings.ownerName = value.isEmpty ? null : value;
-              controller.settings.refresh();
-              controller.saveSettings();
-              AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
-            },
-          ),
-          _divider(isDark),
+          Container(
+            key: ownerNameInputKey,
+            child: _buildSettingInputRow(
+              title: 'Owner Name',
+              subtitle: 'Displays on the dashboard greeting',
+              initialValue: settings.ownerName ?? '',
+              hintText: 'e.g. Tahir',
+              isDark: isDark,
+      onSubmitted: (value) {
+        settings.ownerName = value.isEmpty ? null : value;
+        controller.settings.refresh();
+        controller.saveSettings();
+        AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
+      },
+    ),
+  ),
+  _divider(isDark),
 
-          const SizedBox(height: 40),
-        ],
+  // Credential Management Section
+  Padding(
+    padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
+    child: Text(
+      'Account Credentials',
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+      ),
+    ),
+  ),
+
+  // Update Username
+  _buildCredentialRow(
+    title: 'Login Username',
+    subtitle: 'Current: ${Get.find<AuthService>().currentUser.value?.username ?? "admin"}',
+    isDark: isDark,
+    buttonLabel: 'Update Username',
+    onTap: () => _showUpdateUsernameDialog(context, isDark),
+  ),
+  _divider(isDark),
+
+  // Update Password
+  _buildCredentialRow(
+    title: 'Login Password',
+    subtitle: 'Choose a strong password for account security',
+    isDark: isDark,
+    buttonLabel: 'Change Password',
+    onTap: () => _showUpdatePasswordDialog(context, isDark),
+  ),
+  _divider(isDark),
+
+  const SizedBox(height: 40),
+],
       );
     });
+  }
+
+  Widget _buildCredentialRow({
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    required String buttonLabel,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          ElevatedButton(
+            onPressed: onTap,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+              foregroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(buttonLabel, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUpdateUsernameDialog(BuildContext context, bool isDark) {
+    final usernameController = TextEditingController(text: Get.find<AuthService>().currentUser.value?.username);
+    
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text('Update Username', style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: usernameController,
+              autofocus: true,
+              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              decoration: InputDecoration(
+                labelText: 'New Username',
+                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (usernameController.text.trim().isEmpty) {
+                AppToast.showError(title: 'Error', message: 'Username cannot be empty');
+                return;
+              }
+              final success = await controller.updateCredentials(usernameController.text.trim(), '');
+              if (success) {
+                Get.back();
+                AppToast.showSuccess(title: 'Success', message: 'Username updated successfully');
+              } else {
+                AppToast.showError(title: 'Error', message: 'Failed to update username');
+              }
+            },
+            child: const Text('Save Changes'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUpdatePasswordDialog(BuildContext context, bool isDark) {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text('Change Password', style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              controller: passwordController,
+              obscureText: true,
+              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              decoration: InputDecoration(
+                labelText: 'New Password',
+                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: confirmController,
+              obscureText: true,
+              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (passwordController.text.isEmpty) {
+                AppToast.showError(title: 'Error', message: 'Password cannot be empty');
+                return;
+              }
+              if (passwordController.text != confirmController.text) {
+                AppToast.showError(title: 'Error', message: 'Passwords do not match');
+                return;
+              }
+              final success = await controller.updateCredentials('', passwordController.text);
+              if (success) {
+                Get.back();
+                AppToast.showSuccess(title: 'Success', message: 'Password changed successfully');
+              } else {
+                AppToast.showError(title: 'Error', message: 'Failed to change password');
+              }
+            },
+            child: const Text('Update Password'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _divider(bool isDark) {

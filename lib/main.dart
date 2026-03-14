@@ -1,5 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
+import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_binding.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -39,12 +44,16 @@ void main() async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
-    title: 'Tahir Showroom',
+    title: 'AL-AL-TAHIR Showroom',
   );
   
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
+    // Set taskbar icon explicitly for Windows
+    if (Platform.isWindows) {
+      await windowManager.setIcon('assets/app_icon.ico');
+    }
     // Prevent default close so we can handle it
     await windowManager.setPreventClose(true);
   });
@@ -77,7 +86,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
     );
     
     // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
-    await trayManager.setToolTip('Tahir Showroom');
+    await trayManager.setToolTip('AL-AL-TAHIR Showroom');
     
     // Create tray context menu
     Menu menu = Menu(
@@ -109,7 +118,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
     if (isPreventClose) {
       Get.snackbar(
         'App Minimized to Tray',
-        'Tahir Showroom is now hiding in your System Tray.',
+        'AL-AL-TAHIR Showroom is now hiding in your System Tray.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.blueGrey.shade800,
         colorText: Colors.white,
@@ -203,6 +212,11 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         page: () => const SettingsView(),
         binding: SettingsBinding(),
       ),
+      GetPage(
+        name: '/walkthrough',
+        page: () => const WalkthroughView(),
+        binding: WalkthroughBinding(),
+      ),
     ];
     Get.addPages(getPages);
     
@@ -210,7 +224,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       init: Get.rootController,
       builder: (ctrl) => MaterialApp(
         navigatorKey: Get.key,
-        title: 'Tahir Showroom',
+        title: 'AL-AL-TAHIR Showroom',
         debugShowCheckedModeBanner: false,
         
         // Theme
@@ -294,19 +308,24 @@ class _SplashScreenState extends State<SplashScreen> {
       // Initialize all async services
       await initializeAsyncServices();
       
-      // Check for saved session ("Keep me logged in")
+      final walkthroughService = Get.find<WalkthroughService>();
       final authService = Get.find<AuthService>();
-      final hasSession = await authService.checkSavedSession();
-      
+
+      // 1. Check if walkthrough is needed (First run)
+      if (!walkthroughService.hasCompletedWalkthrough.value) {
+        Get.offAllNamed('/walkthrough');
+        return;
+      }
+
+      // 2. Already completed walkthrough, check for session
+      final bool hasSession = await authService.checkSavedSession();
       if (hasSession) {
-        // User is already logged in, go to dashboard
         Get.offAllNamed('/dashboard');
       } else {
-        // No session, go to login
         Get.offAllNamed('/login');
       }
     } catch (e) {
-      // On error, go to login
+      // On error, default to login
       Get.offAllNamed('/login');
     }
   }
@@ -325,23 +344,41 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             // Logo
             Container(
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
+              padding: const EdgeInsets.all(4.0),
               decoration: BoxDecoration(
-                color: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
-                    .withOpacity(0.15),
-                borderRadius: BorderRadius.circular(16),
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.motorcycle,
-                size: 48,
-                color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'assets/app_logo.jpeg',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.motorcycle,
+                    size: 48,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 24),
             // Title
             Text(
-              'Tahir Showroom',
+              'AL-TAHIR Showroom',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// LoginController - Manages login form state and authentication flow
@@ -80,8 +81,18 @@ class LoginController extends GetxController {
       );
 
       if (result.success) {
-        // Navigate to Dashboard
-        Get.offAllNamed('/dashboard');
+        // Navigate to Walkthrough if first time, else Dashboard
+        final walkthroughService = Get.find<WalkthroughService>();
+        if (!walkthroughService.hasCompletedWalkthrough.value) {
+          Get.offAllNamed('/walkthrough');
+        } else {
+          // If we came from a successful walkthrough, show coach marks
+          final bool isFirstInstall = Get.arguments?['first_install'] == true;
+          Get.offAllNamed(
+            '/dashboard', 
+            arguments: isFirstInstall ? {'show_coach_marks': true} : null,
+          );
+        }
       } else {
         errorMessage.value = result.errorMessage;
         // Show error notification dialog

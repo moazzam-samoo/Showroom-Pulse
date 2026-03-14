@@ -11,7 +11,12 @@ import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class GeneralSettingsView extends GetView<SettingsController> {
-  const GeneralSettingsView({super.key});
+  final GlobalKey? replayTourKey;
+
+  const GeneralSettingsView({
+    super.key,
+    this.replayTourKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -171,6 +176,36 @@ class GeneralSettingsView extends GetView<SettingsController> {
                 Get.find<ThemeService>().setThemeMode(value);
               },
             ),
+          ),
+          _divider(isDark),
+
+          // Walkthrough Replay
+          Container(
+            key: replayTourKey,
+            child: _buildSettingRow(
+            title: 'App Walkthrough',
+            subtitle: 'Restart the guided tour of AL-AL-TAHIR Showroom',
+            isDark: isDark,
+            trailing: ElevatedButton.icon(
+              icon: const Icon(LucideIcons.playCircle, size: 14),
+              label: const Text('Replay Tour', style: TextStyle(fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              onPressed: () {
+                AppNotificationDialog.showConfirmation(
+                  title: 'Replay Walkthrough?',
+                  message: 'This will take you back to the intro screens and reset the dashboard tour.',
+                  onConfirm: () => controller.replayWalkthrough(),
+                  confirmText: 'Replay',
+                );
+              },
+            ),
+          ),
           ),
 
           const SizedBox(height: 40),

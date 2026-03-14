@@ -6,12 +6,13 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/expense.dart';
-import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 /// PDF generation service for Reports & Revenue tabs
@@ -21,15 +22,14 @@ class ReportPdfService {
     symbol: 'Rs ',
     decimalDigits: 0,
   );
-  final _dateFormat = DateFormat('dd/MM/yyyy');
-  final _monthYearFormat = DateFormat('MMMM yyyy');
+  final DateFormat _dateFormat = DateFormat('dd MMM yyyy');
 
   // ─── Colors ──────────────────────────────────────────────
-  static const _primaryColor = PdfColor.fromInt(0xFF00BCD4);    // Cyan
-  static const _successColor = PdfColor.fromInt(0xFF10B981);    // Green
-  static const _warningColor = PdfColor.fromInt(0xFFF59E0B);    // Orange
-  static const _headerBg = PdfColor.fromInt(0xFF0A0E17);        // Dark navy
-  static const _rowAltBg = PdfColor.fromInt(0xFFF8FAFC);        // Light alt row
+  static const _primaryColor = PdfColor.fromInt(0xFF00BCD4); // Cyan
+  static const _successColor = PdfColor.fromInt(0xFF10B981); // Green
+  static const _warningColor = PdfColor.fromInt(0xFFF59E0B); // Orange
+  static const _headerBg = PdfColor.fromInt(0xFF0A0E17); // Dark navy
+  static const _rowAltBg = PdfColor.fromInt(0xFFF8FAFC); // Light alt row
 
   // ═══════════════════════════════════════════════════════════
   //  REPORTS TAB — Monthly Profit Report
@@ -46,25 +46,28 @@ class ReportPdfService {
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
-      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Profit Report', dateRangeLabel, settings),
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(
+              context, 'Profit Report', dateRangeLabel, settings, logo),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             if (yearlyBreakdown != null && yearlyBreakdown.isNotEmpty) ...[
               _buildYearlyBreakdownTable(yearlyBreakdown),
-              pw.SizedBox(height: 20),
+              pw.SizedBox(height: 12),
             ],
             _buildProfitTable(profitByBrand),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             _buildStockList(stockDistribution),
           ],
         ),
@@ -90,18 +93,22 @@ class ReportPdfService {
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
-      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'Revenue & Expense Statement', dateRangeLabel, settings),
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(context,
+              'Revenue & Expense Statement', dateRangeLabel, settings, logo),
           footer: _buildFooter,
           build: (context) => [
-            _buildKpiSummary(totalRevenue, totalExpenses, netProfit, isRevenue: true),
+            _buildKpiSummary(totalRevenue, totalExpenses, netProfit,
+                isRevenue: true),
             pw.SizedBox(height: 20),
             _buildExpenseCategoryBreakdown(expenses),
             pw.SizedBox(height: 20),
@@ -123,42 +130,44 @@ class ReportPdfService {
   //  SHARED COMPONENTS
   // ═══════════════════════════════════════════════════════════
 
-  pw.Widget _buildHeader(pw.Context context, String title, String monthYear, AppSettings settings) {
-    pw.Widget? logoWidget;
-    if (settings.showroomLogoPath != null) {
-      final file = File(settings.showroomLogoPath!);
-      if (file.existsSync()) {
-        final image = pw.MemoryImage(file.readAsBytesSync());
-        logoWidget = pw.Image(image, width: 40, height: 40);
-      }
-    }
-
+  pw.Widget _buildHeader(pw.Context context, String title, String monthYear,
+      AppSettings settings, pw.MemoryImage? logo) {
     return pw.Column(
       children: [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: pw.CrossAxisAlignment.end,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+            pw.Row(
               children: [
-                pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.center,
+                if (logo != null) ...[
+                  pw.Container(
+                    width: 50,
+                    height: 50,
+                    child: pw.Image(logo, fit: pw.BoxFit.contain),
+                  ),
+                  pw.SizedBox(width: 12),
+                ],
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    if (logoWidget != null) ...[
-                      logoWidget,
-                      pw.SizedBox(width: 8),
-                    ],
                     pw.Text(
-                      settings.showroomName.isNotEmpty ? settings.showroomName : 'AL-TAHIR SHOWROOM',
-                      style: pw.TextStyle(fontSize: settings.showroomName.length > 20 ? 16 : 22, fontWeight: pw.FontWeight.bold),
+                      settings.showroomName.isNotEmpty
+                          ? settings.showroomName
+                          : 'AL-AL-TAHIR Showroom',
+                      style: pw.TextStyle(
+                          fontSize: 20,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.cyan700),
+                    ),
+                    pw.Text(
+                      title,
+                      style: const pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                          letterSpacing: 1.2),
                     ),
                   ],
-                ),
-                pw.SizedBox(height: 2),
-                pw.Text(
-                  title,
-                  style: pw.TextStyle(fontSize: 12, color: PdfColors.grey600),
                 ),
               ],
             ),
@@ -167,21 +176,44 @@ class ReportPdfService {
               children: [
                 pw.Text(
                   monthYear,
-                  style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800),
+                  style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.grey800),
                 ),
                 pw.SizedBox(height: 2),
                 pw.Text(
                   'Generated: ${_dateFormat.format(DateTime.now())}',
-                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                  style:
+                      const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
                 ),
               ],
             ),
           ],
         ),
-        pw.Divider(thickness: 1.5),
+        pw.SizedBox(height: 8),
+        pw.Divider(thickness: 1.5, color: PdfColors.cyan700),
         pw.SizedBox(height: 10),
       ],
     );
+  }
+
+  Future<pw.MemoryImage?> _loadLogo(AppSettings settings) async {
+    // Try custom logo from settings first
+    if (settings.showroomLogoPath != null) {
+      final file = File(settings.showroomLogoPath!);
+      if (file.existsSync()) {
+        return pw.MemoryImage(file.readAsBytesSync());
+      }
+    }
+    // Fallback to app logo asset
+    try {
+      final data = await rootBundle.load(AppAssets.logo);
+      return pw.MemoryImage(data.buffer.asUint8List());
+    } catch (e) {
+      debugPrint('Error loading app logo: $e');
+      return null;
+    }
   }
 
   pw.Widget _buildFooter(pw.Context context) {
@@ -193,12 +225,12 @@ class ReportPdfService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'AL-TAHIR SHOWROOM - Confidential',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+              'AL-AL-TAHIR Showroom - Confidential',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
             pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
           ],
         ),
@@ -208,9 +240,8 @@ class ReportPdfService {
 
   // ─── KPI Summary (3 boxes) ───────────────────────────────
 
-  pw.Widget _buildKpiSummary(
-    double revenue, double expenses, double net, {bool isRevenue = false}
-  ) {
+  pw.Widget _buildKpiSummary(double revenue, double expenses, double net,
+      {bool isRevenue = false}) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -220,9 +251,11 @@ class ReportPdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _kpiBox('Total Revenue', _currencyFormat.format(revenue), _primaryColor),
+          _kpiBox(
+              'Total Revenue', _currencyFormat.format(revenue), _primaryColor),
           _kpiDivider(),
-          _kpiBox('Total Expenses', _currencyFormat.format(expenses), _warningColor),
+          _kpiBox('Total Expenses', _currencyFormat.format(expenses),
+              _warningColor),
           _kpiDivider(),
           _kpiBox(
             isRevenue ? 'Hands-On Amount' : 'Net Profit',
@@ -238,11 +271,14 @@ class ReportPdfService {
     return pw.Expanded(
       child: pw.Column(
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+          pw.Text(label,
+              style:
+                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
           pw.SizedBox(height: 4),
           pw.Text(
             value,
-            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: color),
+            style: pw.TextStyle(
+                fontSize: 16, fontWeight: pw.FontWeight.bold, color: color),
           ),
         ],
       ),
@@ -256,7 +292,10 @@ class ReportPdfService {
   // ─── Profit By Brand Table (5 columns) ───────────────────
 
   pw.Widget _buildProfitTable(Map<String, Map<String, double>> data) {
-    double totalCash = 0, totalInstallment = 0, totalProfit = 0, totalEarned = 0;
+    double totalCash = 0,
+        totalInstallment = 0,
+        totalProfit = 0,
+        totalEarned = 0;
     for (final v in data.values) {
       totalCash += v['cash'] ?? 0;
       totalInstallment += v['installment'] ?? 0;
@@ -297,28 +336,37 @@ class ReportPdfService {
               final installment = brand.value['installment'] ?? 0;
 
               return pw.TableRow(
-                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                decoration:
+                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
                   _tableCell(brand.key, bold: true),
                   _tableCell(_currencyFormat.format(brand.value['cash'] ?? 0)),
-                  _tableCell(installment == 0 ? 'Sold on Cash' : _currencyFormat.format(installment)),
-                  _tableCell(_currencyFormat.format(brand.value['total'] ?? 0), color: _successColor, bold: true),
-                  _tableCell(_currencyFormat.format(brand.value['earned'] ?? 0), color: _primaryColor, bold: true),
+                  _tableCell(installment == 0
+                      ? 'Sold on Cash'
+                      : _currencyFormat.format(installment)),
+                  _tableCell(_currencyFormat.format(brand.value['total'] ?? 0),
+                      color: _successColor, bold: true),
+                  _tableCell(_currencyFormat.format(brand.value['earned'] ?? 0),
+                      color: _primaryColor, bold: true),
                 ],
               );
             }),
             // Total row
             pw.TableRow(
-              decoration: pw.BoxDecoration(
+              decoration: const pw.BoxDecoration(
                 color: PdfColors.grey100,
-                border: pw.Border(top: pw.BorderSide(color: PdfColors.grey400, width: 1)),
+                border: pw.Border(
+                    top: pw.BorderSide(color: PdfColors.grey400, width: 1)),
               ),
               children: [
                 _tableCell('TOTAL', bold: true),
                 _tableCell(_currencyFormat.format(totalCash), bold: true),
-                _tableCell(_currencyFormat.format(totalInstallment), bold: true),
-                _tableCell(_currencyFormat.format(totalProfit), color: _successColor, bold: true),
-                _tableCell(_currencyFormat.format(totalEarned), color: _primaryColor, bold: true),
+                _tableCell(_currencyFormat.format(totalInstallment),
+                    bold: true),
+                _tableCell(_currencyFormat.format(totalProfit),
+                    color: _successColor, bold: true),
+                _tableCell(_currencyFormat.format(totalEarned),
+                    color: _primaryColor, bold: true),
               ],
             ),
           ],
@@ -353,10 +401,12 @@ class ReportPdfService {
               final isAlt = e.key.isOdd;
               final entry = e.value;
               return pw.TableRow(
-                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                decoration:
+                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
                   _tableCell(entry.key),
-                  _tableCell(_currencyFormat.format(entry.value), color: _successColor, bold: true),
+                  _tableCell(_currencyFormat.format(entry.value),
+                      color: _successColor, bold: true),
                 ],
               );
             }),
@@ -385,18 +435,26 @@ class ReportPdfService {
           child: pw.Wrap(
             spacing: 20,
             runSpacing: 8,
-            children: data.entries.map((e) => pw.Row(
-              mainAxisSize: pw.MainAxisSize.min,
-              children: [
-                pw.Container(width: 8, height: 8, decoration: pw.BoxDecoration(
-                  color: _brandColor(e.key),
-                  shape: pw.BoxShape.circle,
-                )),
-                pw.SizedBox(width: 6),
-                pw.Text('${e.key}: ', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-                pw.Text('${e.value} bikes', style: const pw.TextStyle(fontSize: 11)),
-              ],
-            )).toList(),
+            children: data.entries
+                .map((e) => pw.Row(
+                      mainAxisSize: pw.MainAxisSize.min,
+                      children: [
+                        pw.Container(
+                            width: 8,
+                            height: 8,
+                            decoration: pw.BoxDecoration(
+                              color: _brandColor(e.key),
+                              shape: pw.BoxShape.circle,
+                            )),
+                        pw.SizedBox(width: 6),
+                        pw.Text('${e.key}: ',
+                            style: pw.TextStyle(
+                                fontSize: 11, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('${e.value} bikes',
+                            style: const pw.TextStyle(fontSize: 11)),
+                      ],
+                    ))
+                .toList(),
           ),
         ),
       ],
@@ -413,7 +471,8 @@ class ReportPdfService {
           _sectionTitle('Expense Breakdown by Category'),
           pw.SizedBox(height: 8),
           pw.Text('No expenses recorded this month.',
-            style: pw.TextStyle(fontSize: 11, color: PdfColors.grey500)),
+              style:
+                  const pw.TextStyle(fontSize: 11, color: PdfColors.grey500)),
         ],
       );
     }
@@ -447,10 +506,12 @@ class ReportPdfService {
             ...categoryTotals.entries.toList().asMap().entries.map((e) {
               final isAlt = e.key.isOdd;
               return pw.TableRow(
-                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                decoration:
+                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
                   _tableCell(e.value.key),
-                  _tableCell(_currencyFormat.format(e.value.value), color: _warningColor),
+                  _tableCell(_currencyFormat.format(e.value.value),
+                      color: _warningColor),
                 ],
               );
             }),
@@ -458,7 +519,8 @@ class ReportPdfService {
               decoration: const pw.BoxDecoration(color: PdfColors.grey100),
               children: [
                 _tableCell('TOTAL EXPENSES', bold: true),
-                _tableCell(_currencyFormat.format(totalExpenses), bold: true, color: _warningColor),
+                _tableCell(_currencyFormat.format(totalExpenses),
+                    bold: true, color: _warningColor),
               ],
             ),
           ],
@@ -504,13 +566,16 @@ class ReportPdfService {
               final expense = e.value;
               final isAlt = idx.isOdd;
               return pw.TableRow(
-                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                decoration:
+                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
                   _tableCell('${idx + 1}'),
                   _tableCell(expense.category),
-                  _tableCell(_currencyFormat.format(expense.amount), color: _warningColor),
+                  _tableCell(_currencyFormat.format(expense.amount),
+                      color: _warningColor),
                   _tableCell(_dateFormat.format(expense.date)),
-                  _tableCell(expense.description ?? '—', color: PdfColors.grey500),
+                  _tableCell(expense.description ?? '—',
+                      color: PdfColors.grey500),
                 ],
               );
             }),
@@ -520,7 +585,8 @@ class ReportPdfService {
               children: [
                 _tableCell(''),
                 _tableCell(''),
-                _tableCell(_currencyFormat.format(total), bold: true, color: _warningColor),
+                _tableCell(_currencyFormat.format(total),
+                    bold: true, color: _warningColor),
                 _tableCell(''),
                 _tableCell(''),
               ],
@@ -544,27 +610,41 @@ class ReportPdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text('Bottom Line', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.Text('Bottom Line',
+              style:
+                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.Divider(thickness: 0.5, color: PdfColors.grey400),
           pw.SizedBox(height: 8),
-          _bottomLineRow('Revenue', _currencyFormat.format(revenue), _primaryColor),
+          _bottomLineRow(
+              'Revenue', _currencyFormat.format(revenue), _primaryColor),
           pw.SizedBox(height: 4),
-          _bottomLineRow('Expenses', '- ${_currencyFormat.format(expenses)}', _warningColor),
+          _bottomLineRow('Expenses', '- ${_currencyFormat.format(expenses)}',
+              _warningColor),
           pw.SizedBox(height: 4),
           pw.Divider(thickness: 1, color: PdfColors.grey600),
           pw.SizedBox(height: 6),
-          _bottomLineRow('Hands-On Amount', _currencyFormat.format(net), _successColor, bold: true, fontSize: 16),
+          _bottomLineRow(
+              'Hands-On Amount', _currencyFormat.format(net), _successColor,
+              bold: true, fontSize: 16),
         ],
       ),
     );
   }
 
-  pw.Widget _bottomLineRow(String label, String value, PdfColor color, {bool bold = false, double fontSize = 12}) {
+  pw.Widget _bottomLineRow(String label, String value, PdfColor color,
+      {bool bold = false, double fontSize = 12}) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(label, style: pw.TextStyle(fontSize: fontSize, fontWeight: bold ? pw.FontWeight.bold : null)),
-        pw.Text(value, style: pw.TextStyle(fontSize: fontSize, fontWeight: pw.FontWeight.bold, color: color)),
+        pw.Text(label,
+            style: pw.TextStyle(
+                fontSize: fontSize,
+                fontWeight: bold ? pw.FontWeight.bold : null)),
+        pw.Text(value,
+            style: pw.TextStyle(
+                fontSize: fontSize,
+                fontWeight: pw.FontWeight.bold,
+                color: color)),
       ],
     );
   }
@@ -574,26 +654,31 @@ class ReportPdfService {
   // ═══════════════════════════════════════════════════════════
 
   pw.Widget _sectionTitle(String text) {
-    return pw.Text(text, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold));
+    return pw.Text(text,
+        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold));
   }
 
   pw.Widget _tableHeader(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-      child: pw.Text(text, style: pw.TextStyle(
-        fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white,
-      )),
+      child: pw.Text(text,
+          style: pw.TextStyle(
+            fontSize: 10,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.white,
+          )),
     );
   }
 
   pw.Widget _tableCell(String text, {bool bold = false, PdfColor? color}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
-      child: pw.Text(text, style: pw.TextStyle(
-        fontSize: 10,
-        fontWeight: bold ? pw.FontWeight.bold : null,
-        color: color,
-      )),
+      child: pw.Text(text,
+          style: pw.TextStyle(
+            fontSize: 10,
+            fontWeight: bold ? pw.FontWeight.bold : null,
+            color: color,
+          )),
     );
   }
 
@@ -639,34 +724,39 @@ class ReportPdfService {
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
-      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
-
       final pdf = pw.Document();
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
+
+      final logo = await _loadLogo(settings);
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildInvoiceHeader(context, saleData, settings),
+          header: (context) =>
+              _buildInvoiceHeader(context, saleData, settings, logo),
           footer: _buildFooter,
           build: (context) => [
-             _buildCustomerAndBikeInfo(saleData),
-             pw.SizedBox(height: 20),
-             if (saleData['witnesses'] != null && (saleData['witnesses'] as List).isNotEmpty) ...[
-               _buildWitnessesInfo(saleData['witnesses']),
-               pw.SizedBox(height: 20),
-             ],
-             _buildInvoiceFinancials(saleData),
-             pw.Spacer(),
-             _buildSignatures(),
+            _buildCustomerAndBikeInfo(saleData),
+            pw.SizedBox(height: 12),
+            if (saleData['witnesses'] != null &&
+                (saleData['witnesses'] as List).isNotEmpty) ...[
+              _buildWitnessesInfo(saleData['witnesses']),
+              pw.SizedBox(height: 12),
+            ],
+            _buildInvoiceFinancials(saleData),
+            pw.Spacer(),
+            _buildSignatures(),
           ],
         ),
       );
 
-      final customerName = (saleData['customerName'] as String).replaceAll(' ', '_');
+      final customerName =
+          (saleData['customerName'] as String).replaceAll(' ', '_');
       final invoiceType = saleData['isCash'] == true ? 'Cash' : 'Installment';
       final fileName = 'Invoice_${invoiceType}_$customerName';
-      
+
       return await _savePdf(pdf, fileName);
     } catch (e) {
       debugPrint('Error generating sale invoice pdf: $e');
@@ -682,20 +772,25 @@ class ReportPdfService {
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
-      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
       final monthYear = dateRange;
       final totalSales = cashSales.length + installmentSales.length;
-      final totalCashRevenue = cashSales.fold<double>(0, (sum, s) => sum + ((s['amountPaid'] as num?)?.toDouble() ?? 0));
-      final totalInstRevenue = installmentSales.fold<double>(0, (sum, s) => sum + ((s['sellingPrice'] as num?)?.toDouble() ?? 0));
+      final totalCashRevenue = cashSales.fold<double>(
+          0, (sum, s) => sum + ((s['amountPaid'] as num?)?.toDouble() ?? 0));
+      final totalInstRevenue = installmentSales.fold<double>(
+          0, (sum, s) => sum + ((s['sellingPrice'] as num?)?.toDouble() ?? 0));
       final totalRevenue = totalCashRevenue + totalInstRevenue;
 
       final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'SALES REPORT', monthYear, settings),
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) =>
+              _buildHeader(context, 'SALES REPORT', monthYear, settings, logo),
           footer: _buildFooter,
           build: (context) => [
             // Summary KPIs
@@ -710,11 +805,16 @@ class ReportPdfService {
                 children: [
                   _kpiBox('Total Sales', '$totalSales', PdfColors.blue800),
                   _kpiDivider(),
-                  _kpiBox('Cash Sales', '${cashSales.length}', PdfColors.green800),
+                  _kpiBox(
+                      'Cash Sales', '${cashSales.length}', PdfColors.green800),
                   _kpiDivider(),
-                  _kpiBox('Installment Sales', '${installmentSales.length}', PdfColors.orange800),
+                  _kpiBox('Installment Sales', '${installmentSales.length}',
+                      PdfColors.orange800),
                   _kpiDivider(),
-                  _kpiBox('Total Revenue', 'Rs ${NumberFormat('#,###').format(totalRevenue)}', PdfColors.teal800),
+                  _kpiBox(
+                      'Total Revenue',
+                      'Rs ${NumberFormat('#,###').format(totalRevenue)}',
+                      PdfColors.teal800),
                 ],
               ),
             ),
@@ -727,10 +827,15 @@ class ReportPdfService {
               pw.TableHelper.fromTextArray(
                 headerAlignment: pw.Alignment.centerLeft,
                 cellAlignment: pw.Alignment.centerLeft,
-                headerDecoration: pw.BoxDecoration(color: PdfColors.green50),
-                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.green900),
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.green50),
+                headerStyle: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.green900),
                 cellStyle: const pw.TextStyle(fontSize: 10),
-                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                cellPadding:
+                    const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 headers: ['#', 'Customer', 'Bike', 'Amount', 'Date'],
                 data: cashSales.asMap().entries.map((e) {
                   final s = e.value;
@@ -748,10 +853,13 @@ class ReportPdfService {
                 alignment: pw.Alignment.centerRight,
                 child: pw.Text(
                   'Cash Total: Rs ${NumberFormat('#,###').format(totalCashRevenue)}',
-                  style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.green800),
+                  style: pw.TextStyle(
+                      fontSize: 11,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.green800),
                 ),
               ),
-              pw.SizedBox(height: 24),
+              pw.SizedBox(height: 12),
             ],
 
             // Installment Sales Section
@@ -761,11 +869,25 @@ class ReportPdfService {
               pw.TableHelper.fromTextArray(
                 headerAlignment: pw.Alignment.centerLeft,
                 cellAlignment: pw.Alignment.centerLeft,
-                headerDecoration: pw.BoxDecoration(color: PdfColors.orange50),
-                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.orange900),
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.orange50),
+                headerStyle: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.orange900),
                 cellStyle: const pw.TextStyle(fontSize: 10),
-                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                headers: ['#', 'Customer', 'Bike', 'Paid', 'Monthly', 'Months', 'Remaining', 'Date'],
+                cellPadding:
+                    const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                headers: [
+                  '#',
+                  'Customer',
+                  'Bike',
+                  'Paid',
+                  'Monthly',
+                  'Months',
+                  'Remaining',
+                  'Date'
+                ],
                 data: installmentSales.asMap().entries.map((e) {
                   final s = e.value;
                   return [
@@ -785,7 +907,10 @@ class ReportPdfService {
                 alignment: pw.Alignment.centerRight,
                 child: pw.Text(
                   'Installment Total: Rs ${NumberFormat('#,###').format(totalInstRevenue)}',
-                  style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800),
+                  style: pw.TextStyle(
+                      fontSize: 11,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.orange800),
                 ),
               ),
             ],
@@ -798,7 +923,10 @@ class ReportPdfService {
               alignment: pw.Alignment.centerRight,
               child: pw.Text(
                 'Grand Total Revenue: Rs ${NumberFormat('#,###').format(totalRevenue)}',
-                style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900),
+                style: pw.TextStyle(
+                    fontSize: 13,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.blue900),
               ),
             ),
           ],
@@ -813,9 +941,16 @@ class ReportPdfService {
     }
   }
 
-  pw.Widget _buildInvoiceHeader(pw.Context context, Map<String, dynamic> saleData, AppSettings settings) {
-    pw.Widget? logoWidget;
-    if (settings.showroomLogoPath != null) {
+  pw.Widget _buildInvoiceHeader(
+      pw.Context context,
+      Map<String, dynamic> saleData,
+      AppSettings settings,
+      pw.MemoryImage? logo) {
+    pw.Widget? logoWidget = logo != null
+        ? pw.Image(logo, width: 50, height: 50, fit: pw.BoxFit.contain)
+        : null;
+
+    if (settings.showroomLogoPath != null && logoWidget == null) {
       final file = File(settings.showroomLogoPath!);
       if (file.existsSync()) {
         final image = pw.MemoryImage(file.readAsBytesSync());
@@ -843,10 +978,17 @@ class ReportPdfService {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      settings.showroomName.isNotEmpty ? settings.showroomName.toUpperCase() : 'AL-TAHIR SHOWROOM',
-                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: _primaryColor),
+                      settings.showroomName.isNotEmpty
+                          ? settings.showroomName.toUpperCase()
+                          : 'AL-AL-TAHIR Showroom',
+                      style: pw.TextStyle(
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                          color: _primaryColor),
                     ),
-                    pw.Text('Motors & Installment Center', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    pw.Text('Motors & Installment Center',
+                        style: const pw.TextStyle(
+                            fontSize: 10, color: PdfColors.grey700)),
                   ],
                 ),
               ],
@@ -856,7 +998,10 @@ class ReportPdfService {
               children: [
                 pw.Text(
                   invoiceType,
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: isCash ? _successColor : _warningColor),
+                  style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                      color: isCash ? _successColor : _warningColor),
                 ),
                 pw.SizedBox(height: 4),
                 pw.Text('Date: $date', style: const pw.TextStyle(fontSize: 12)),
@@ -878,7 +1023,7 @@ class ReportPdfService {
         // Purchaser Detail
         pw.Expanded(
           child: pw.Container(
-            padding: const pw.EdgeInsets.all(12),
+            padding: const pw.EdgeInsets.all(8),
             decoration: pw.BoxDecoration(
               border: pw.Border.all(color: PdfColors.grey300),
               borderRadius: pw.BorderRadius.circular(6),
@@ -900,7 +1045,7 @@ class ReportPdfService {
         // Bike Detail
         pw.Expanded(
           child: pw.Container(
-            padding: const pw.EdgeInsets.all(12),
+            padding: const pw.EdgeInsets.all(8),
             decoration: pw.BoxDecoration(
               border: pw.Border.all(color: PdfColors.grey300),
               borderRadius: pw.BorderRadius.circular(6),
@@ -924,7 +1069,7 @@ class ReportPdfService {
 
   pw.Widget _buildWitnessesInfo(List<dynamic> witnesses) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: pw.BorderRadius.circular(6),
@@ -936,20 +1081,26 @@ class ReportPdfService {
           pw.SizedBox(height: 8),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: witnesses.map((w) => pw.Expanded(
-              child: pw.Padding(
-                padding: const pw.EdgeInsets.only(right: 8.0),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('Witness', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: _primaryColor)),
-                    _infoRow('Name:', w['fullName']),
-                    _infoRow('CNIC:', w['cnicNumber']),
-                    _infoRow('Contact:', w['phoneNumber']),
-                  ],
-                ),
-              ),
-            )).toList(),
+            children: witnesses
+                .map((w) => pw.Expanded(
+                      child: pw.Padding(
+                        padding: const pw.EdgeInsets.only(right: 8.0),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text('Witness',
+                                style: pw.TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: _primaryColor)),
+                            _infoRow('Name:', w['fullName']),
+                            _infoRow('CNIC:', w['cnicNumber']),
+                            _infoRow('Contact:', w['phoneNumber']),
+                          ],
+                        ),
+                      ),
+                    ))
+                .toList(),
           ),
         ],
       ),
@@ -963,9 +1114,9 @@ class ReportPdfService {
     final remaining = saleData['amountRemaining'] as double?;
     final monthly = saleData['installmentMonthlyPayment'] as double?;
     final duration = saleData['installmentDuration'] as int?;
-
+    
     return pw.Container(
-      padding: const pw.EdgeInsets.all(20),
+      padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         color: _rowAltBg,
         border: pw.Border.all(color: _primaryColor),
@@ -976,29 +1127,45 @@ class ReportPdfService {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text('FINANCIAL SUMMARY', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: _primaryColor)),
-              pw.Text(isCash ? 'Settled in Full' : 'Installment Plan', style: pw.TextStyle(fontSize: 12, fontStyle: pw.FontStyle.italic, color: PdfColors.grey700)),
+              pw.Text('FINANCIAL SUMMARY',
+                  style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                      color: _primaryColor)),
+              pw.Text(isCash ? 'Settled in Full' : 'Installment Plan',
+                  style: pw.TextStyle(
+                      fontSize: 12,
+                      fontStyle: pw.FontStyle.italic,
+                      color: PdfColors.grey700)),
             ],
           ),
           pw.SizedBox(height: 15),
           pw.Divider(color: PdfColors.grey300),
           pw.SizedBox(height: 10),
-          
           if (isCash) ...[
-            _financialRow('Total Sale Price', _currencyFormat.format(totalAmount), isBold: true, size: 16),
+            _financialRow(
+                'Total Sale Price', _currencyFormat.format(totalAmount),
+                isBold: true, size: 16),
             pw.SizedBox(height: 8),
             _financialRow('Amount Paid', _currencyFormat.format(totalAmount)),
             _financialRow('Balance Due', 'Rs 0'),
           ] else ...[
-            _financialRow('Total Selling Price', _currencyFormat.format(sellingPrice ?? 0), isBold: true, size: 14),
+            _financialRow('Total Selling Price',
+                _currencyFormat.format(sellingPrice ?? 0),
+                isBold: true, size: 14),
             pw.SizedBox(height: 8),
-            _financialRow('Advance / Down Payment', _currencyFormat.format(totalAmount)),
-            _financialRow('Remaining Balance', _currencyFormat.format(remaining ?? 0)),
+            _financialRow(
+                'Advance / Down Payment', _currencyFormat.format(totalAmount)),
+            _financialRow(
+                'Remaining Balance', _currencyFormat.format(remaining ?? 0)),
             pw.SizedBox(height: 8),
-            pw.Divider(color: PdfColors.grey300, borderStyle: pw.BorderStyle.dashed),
+            pw.Divider(
+                color: PdfColors.grey300, borderStyle: pw.BorderStyle.dashed),
             pw.SizedBox(height: 8),
             _financialRow('Duration', '$duration Months'),
-            _financialRow('Monthly Installment', _currencyFormat.format(monthly ?? 0), isBold: true, color: _primaryColor),
+            _financialRow(
+                'Monthly Installment', _currencyFormat.format(monthly ?? 0),
+                isBold: true, color: _primaryColor),
           ],
         ],
       ),
@@ -1031,21 +1198,37 @@ class ReportPdfService {
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.SizedBox(width: 60, child: pw.Text(label, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700))),
-          pw.Expanded(child: pw.Text(value ?? '—', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold))),
+          pw.SizedBox(
+              width: 60,
+              child: pw.Text(label,
+                  style: const pw.TextStyle(
+                      fontSize: 10, color: PdfColors.grey700))),
+          pw.Expanded(
+              child: pw.Text(value ?? '—',
+                  style: pw.TextStyle(
+                      fontSize: 10, fontWeight: pw.FontWeight.bold))),
         ],
       ),
     );
   }
 
-  pw.Widget _financialRow(String label, String value, {bool isBold = false, double size = 12, PdfColor? color}) {
+  pw.Widget _financialRow(String label, String value,
+      {bool isBold = false, double size = 12, PdfColor? color}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: size, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
-          pw.Text(value, style: pw.TextStyle(fontSize: size, fontWeight: pw.FontWeight.bold, color: color)),
+          pw.Text(label,
+              style: pw.TextStyle(
+                  fontSize: size,
+                  fontWeight:
+                      isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+          pw.Text(value,
+              style: pw.TextStyle(
+                  fontSize: size,
+                  fontWeight: pw.FontWeight.bold,
+                  color: color)),
         ],
       ),
     );
@@ -1061,7 +1244,8 @@ class ReportPdfService {
   }) async {
     try {
       final isar = Get.find<IsarService>().isar;
-      final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
 
@@ -1076,27 +1260,39 @@ class ReportPdfService {
         totalRemaining += tx['amountRemaining'] ?? 0;
       }
 
+      final logo = await _loadLogo(settings);
+
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
-          header: (context) => _buildHeader(context, 'CUSTOMER STATEMENT OF ACCOUNT', _dateFormat.format(DateTime.now()), settings),
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(
+              context,
+              'CUSTOMER STATEMENT OF ACCOUNT',
+              _dateFormat.format(DateTime.now()),
+              settings,
+              logo),
           footer: _buildFooter,
           build: (context) => [
             _buildCustomerBlock(customerData),
-            pw.SizedBox(height: 20),
-            _buildKpiSummary(totalPurchased, totalPaid, totalRemaining, isRevenue: false), // Resusing KPI layout
+            pw.SizedBox(height: 12),
+            _buildKpiSummary(totalPurchased, totalPaid, totalRemaining,
+                isRevenue: false), // Resusing KPI layout
             pw.SizedBox(height: 20),
             _buildCustomerTransactionsTable(transactions),
             pw.SizedBox(height: 30),
-            pw.Center(child: pw.Text('*** End of Statement ***', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600))),
+            pw.Center(
+                child: pw.Text('*** End of Statement ***',
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey600))),
           ],
         ),
       );
 
-      final customerName = (customerData['fullName'] as String).replaceAll(' ', '_');
+      final customerName =
+          (customerData['fullName'] as String).replaceAll(' ', '_');
       final fileName = 'Statement_$customerName';
-      
+
       return await _savePdf(pdf, fileName);
     } catch (e) {
       debugPrint('Error generating customer statement pdf: $e');
@@ -1115,7 +1311,11 @@ class ReportPdfService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(customer['fullName'].toString().toUpperCase(), style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: _primaryColor)),
+          pw.Text(customer['fullName'].toString().toUpperCase(),
+              style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                  color: _primaryColor)),
           pw.SizedBox(height: 8),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -1123,15 +1323,20 @@ class ReportPdfService {
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  pw.Text('Contact: ${customer['phoneNumber']}', style: const pw.TextStyle(fontSize: 11)),
-                  pw.Text('CNIC: ${customer['cnicNumber']}', style: const pw.TextStyle(fontSize: 11)),
+                  pw.Text('Contact: ${customer['phoneNumber']}',
+                      style: const pw.TextStyle(fontSize: 11)),
+                  pw.Text('CNIC: ${customer['cnicNumber']}',
+                      style: const pw.TextStyle(fontSize: 11)),
                 ],
               ),
               pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
-                  pw.Text('Address:', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
-                  pw.Text(customer['address'] ?? '', style: const pw.TextStyle(fontSize: 11)),
+                  pw.Text('Address:',
+                      style: const pw.TextStyle(
+                          fontSize: 10, color: PdfColors.grey600)),
+                  pw.Text(customer['address'] ?? '',
+                      style: const pw.TextStyle(fontSize: 11)),
                 ],
               ),
             ],
@@ -1141,8 +1346,9 @@ class ReportPdfService {
     );
   }
 
-  pw.Widget _buildCustomerTransactionsTable(List<Map<String, dynamic>> transactions) {
-     return pw.Column(
+  pw.Widget _buildCustomerTransactionsTable(
+      List<Map<String, dynamic>> transactions) {
+    return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         _sectionTitle('TRANSACTION HISTORY'),
@@ -1150,8 +1356,8 @@ class ReportPdfService {
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
           columnWidths: {
-            0: const pw.FlexColumnWidth(1),   // Date
-            1: const pw.FlexColumnWidth(2),   // Vehicle
+            0: const pw.FlexColumnWidth(1), // Date
+            1: const pw.FlexColumnWidth(2), // Vehicle
             2: const pw.FlexColumnWidth(1), // Type
             3: const pw.FlexColumnWidth(1.5), // Total
             4: const pw.FlexColumnWidth(1.5), // Paid
@@ -1173,14 +1379,22 @@ class ReportPdfService {
               final tx = e.value;
               final isAlt = e.key.isOdd;
               return pw.TableRow(
-                decoration: isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                decoration:
+                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
                   _tableCell(tx['date']),
                   _tableCell(tx['vehicle']),
-                  _tableCell(tx['type'], color: tx['type'] == 'Cash' ? _successColor : _warningColor, bold: true),
+                  _tableCell(tx['type'],
+                      color:
+                          tx['type'] == 'Cash' ? _successColor : _warningColor,
+                      bold: true),
                   _tableCell(_currencyFormat.format(tx['totalPrice'])),
-                  _tableCell(_currencyFormat.format(tx['amountPaid']), color: _successColor),
-                  _tableCell(_currencyFormat.format(tx['amountRemaining']), color: tx['amountRemaining'] > 0 ? _warningColor : PdfColors.grey600),
+                  _tableCell(_currencyFormat.format(tx['amountPaid']),
+                      color: _successColor),
+                  _tableCell(_currencyFormat.format(tx['amountRemaining']),
+                      color: tx['amountRemaining'] > 0
+                          ? _warningColor
+                          : PdfColors.grey600),
                 ],
               );
             }),
@@ -1193,7 +1407,7 @@ class ReportPdfService {
   /// Generate a PDF document containing a list of customer details including financial summary
   Future<String?> generateCustomerProfilePdf({
     required List<CustomerWithTransactions> customers,
-    String? customTitle, 
+    String? customTitle,
   }) async {
     try {
       final pdf = pw.Document(
@@ -1206,56 +1420,78 @@ class ReportPdfService {
       final isar = Get.find<IsarService>().isar;
       final settings = await isar.appSettings.where().findFirst();
       if (settings == null) throw Exception('App settings not found');
-      
-      final title = customTitle ?? (customers.length == 1 ? 'Customer Profile' : 'Customers Profile List');
+
+      final title = customTitle ??
+          (customers.length == 1
+              ? 'Customer Profile'
+              : 'Customers Profile List');
+
+      final logo = await _loadLogo(settings);
 
       // Pagination setup
       const int itemsPerPage = 10;
-      
+
       for (var i = 0; i < customers.length; i += itemsPerPage) {
-        final end = (i + itemsPerPage < customers.length) ? i + itemsPerPage : customers.length;
+        final end = (i + itemsPerPage < customers.length)
+            ? i + itemsPerPage
+            : customers.length;
         final pageCustomers = customers.sublist(i, end);
 
         pdf.addPage(
           pw.Page(
-            pageFormat: PdfPageFormat.a4.landscape, // Switching to landscape to fit more data
+            pageFormat: PdfPageFormat
+                .a4.landscape, // Switching to landscape to fit more data
             margin: const pw.EdgeInsets.all(32),
             build: (pw.Context context) {
               return pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                   _buildHeader(context, title, DateFormat('dd MMM yyyy').format(DateTime.now()), settings),
+                  _buildHeader(
+                      context,
+                      title,
+                      DateFormat('dd MMM yyyy').format(DateTime.now()),
+                      settings,
+                      logo),
                   pw.SizedBox(height: 20),
-                  
+
                   // Table Header
                   pw.Container(
-                    decoration: pw.BoxDecoration(
-                      color: _headerBg, // Fixed: Using dark background for white text
-                      borderRadius: const pw.BorderRadius.vertical(top: pw.Radius.circular(4)),
+                    decoration: const pw.BoxDecoration(
+                      color:
+                          _headerBg, // Fixed: Using dark background for white text
+                      borderRadius:
+                          pw.BorderRadius.vertical(top: pw.Radius.circular(4)),
                     ),
                     padding: const pw.EdgeInsets.all(12),
                     child: pw.Row(
                       children: [
-                        pw.Expanded(flex: 20, child: _tableHeader('Name & Father Name')),
-                        pw.Expanded(flex: 20, child: _tableHeader('CNIC Number')),
+                        pw.Expanded(
+                            flex: 20,
+                            child: _tableHeader('Name & Father Name')),
+                        pw.Expanded(
+                            flex: 20, child: _tableHeader('CNIC Number')),
                         pw.Expanded(flex: 15, child: _tableHeader('Phone')),
                         pw.Expanded(flex: 20, child: _tableHeader('Address')),
-                        pw.Expanded(flex: 12, child: _tableHeader('Total Purchase')),
-                        pw.Expanded(flex: 12, child: _tableHeader('Total Paid')),
+                        pw.Expanded(
+                            flex: 12, child: _tableHeader('Total Purchase')),
+                        pw.Expanded(
+                            flex: 12, child: _tableHeader('Total Paid')),
                         pw.Expanded(flex: 12, child: _tableHeader('Balance')),
                       ],
                     ),
                   ),
-                  
+
                   // Table Content
                   ...pageCustomers.map((customerData) {
                     final customer = customerData.customer;
                     final isEven = pageCustomers.indexOf(customerData) % 2 == 0;
-                    
+
                     double totalPurchased = 0;
                     double totalPaid = 0;
                     for (var tx in customerData.transactions) {
-                      totalPurchased += tx.isInstallment ? (tx.contract?.totalAmount ?? tx.sale.totalAmount) : tx.sale.totalAmount;
+                      totalPurchased += tx.isInstallment
+                          ? (tx.contract?.totalAmount ?? tx.sale.totalAmount)
+                          : tx.sale.totalAmount;
                       totalPaid += tx.sale.receivedAmount;
                     }
                     final balance = totalPurchased - totalPaid;
@@ -1265,31 +1501,51 @@ class ReportPdfService {
                         color: isEven ? PdfColors.white : PdfColors.grey50,
                         border: pw.Border.all(color: PdfColors.grey200),
                       ),
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const pw.EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                       child: pw.Row(
                         crossAxisAlignment: pw.CrossAxisAlignment.center,
                         children: [
                           pw.Expanded(
-                            flex: 20, 
-                            child: pw.Column(
-                              crossAxisAlignment: pw.CrossAxisAlignment.start,
-                              children: [
-                                _tableCell(customer.fullName, bold: true),
-                                if (customer.fatherName != null && customer.fatherName!.isNotEmpty)
-                                  pw.Text('S/O: ${customer.fatherName}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
-                              ]
-                            )
-                          ),
-                          pw.Expanded(flex: 20, child: _tableCell(customer.cnicNumber)),
-                          pw.Expanded(flex: 15, child: _tableCell(customer.phoneNumber)),
-                          pw.Expanded(flex: 20, child: _tableCell(customer.address ?? 'N/A')),
-                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(totalPurchased))),
-                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(totalPaid), color: _successColor)),
-                          pw.Expanded(flex: 12, child: _tableCell(_currencyFormat.format(balance), color: balance > 0 ? _warningColor : null, bold: true)),
+                              flex: 20,
+                              child: pw.Column(
+                                  crossAxisAlignment:
+                                      pw.CrossAxisAlignment.start,
+                                  children: [
+                                    _tableCell(customer.fullName, bold: true),
+                                    if (customer.fatherName != null &&
+                                        customer.fatherName!.isNotEmpty)
+                                      pw.Text('S/O: ${customer.fatherName}',
+                                          style: const pw.TextStyle(
+                                              fontSize: 8,
+                                              color: PdfColors.grey700)),
+                                  ])),
+                          pw.Expanded(
+                              flex: 20, child: _tableCell(customer.cnicNumber)),
+                          pw.Expanded(
+                              flex: 15,
+                              child: _tableCell(customer.phoneNumber)),
+                          pw.Expanded(
+                              flex: 20,
+                              child: _tableCell(customer.address ?? 'N/A')),
+                          pw.Expanded(
+                              flex: 12,
+                              child: _tableCell(
+                                  _currencyFormat.format(totalPurchased))),
+                          pw.Expanded(
+                              flex: 12,
+                              child: _tableCell(
+                                  _currencyFormat.format(totalPaid),
+                                  color: _successColor)),
+                          pw.Expanded(
+                              flex: 12,
+                              child: _tableCell(_currencyFormat.format(balance),
+                                  color: balance > 0 ? _warningColor : null,
+                                  bold: true)),
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   pw.Spacer(),
                   _buildFooter(context),
@@ -1300,7 +1556,7 @@ class ReportPdfService {
         );
       }
 
-      final fileName = customers.length == 1 
+      final fileName = customers.length == 1
           ? 'Profile_${customers.first.customer.cnicNumber}.pdf'
           : 'All_Customers_Profile_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf';
 

@@ -24,7 +24,16 @@ import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
-  const SupplierHistoryView({super.key});
+  final GlobalKey? addSupplierKey;
+  final GlobalKey? supplierListKey;
+  final GlobalKey? historyPanelKey;
+
+  const SupplierHistoryView({
+    super.key,
+    this.addSupplierKey,
+    this.supplierListKey,
+    this.historyPanelKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +62,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 ),
               ),
               ElevatedButton.icon(
+                key: addSupplierKey,
                 onPressed: () => Get.to(() => const AddStockView()),
                 icon: const Icon(LucideIcons.plus),
                 label: const Text('Add Stock (Batch)'),
@@ -74,6 +84,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 Expanded(
                   flex: 1,
                   child: Container(
+                    key: supplierListKey,
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -372,6 +383,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 Expanded(
                   flex: 2,
                   child: Container(
+                    key: historyPanelKey,
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(AppRadius.lg),

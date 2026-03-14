@@ -266,7 +266,7 @@ class BackupService {
     final isar = _isarService.isar;
 
     return {
-      'appName': 'Tahir Showroom',
+      'appName': 'AL-TAHIR Showroom',
       'appVersion': '1.0.0',
       'backupDate': DateTime.now().toIso8601String(),
       'isarVersion': '3.1.0+1',

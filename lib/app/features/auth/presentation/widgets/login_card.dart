@@ -7,6 +7,7 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_button.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 
+import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import '../controllers/login_controller.dart';
 
 /// Login Card Widget - Main authentication card
@@ -14,7 +15,7 @@ import '../controllers/login_controller.dart';
 /// Analyzed from: Dark Theme UI/Login Page.png
 /// Components:
 /// - Motorcycle icon in rounded container (cyan on dark, blue on light)
-/// - "Tahir Showroom" title
+/// - "AL-TAHIR Showroom" title
 /// - "Inventory Management System" subtitle
 /// - Username input with user icon
 /// - Password input with lock icon
@@ -52,16 +53,35 @@ class LoginCard extends GetView<LoginController> {
           children: [
             // Logo Container
             Container(
-              width: 64,
-              height: 64,
+              width: 80,
+              height: 80,
+              padding: const EdgeInsets.all(4.0),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.15),
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                LucideIcons.bike,
-                size: 32,
-                color: primaryColor,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Image.asset(
+                  AppAssets.logo,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.motorcycle,
+                    size: 40,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
               ),
             ),
             
@@ -69,7 +89,7 @@ class LoginCard extends GetView<LoginController> {
             
             // Title
             Text(
-              'Tahir Showroom',
+              'AL-AL-TAHIR Showroom',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

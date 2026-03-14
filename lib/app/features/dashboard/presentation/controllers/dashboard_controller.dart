@@ -20,7 +20,7 @@ class DashboardController extends GetxController {
   // Profile Settings
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
-  final showroomName = RxString('AL-TAHIR SHOWROOM');
+  final showroomName = RxString('AL-AL-TAHIR Showroom');
   final showroomAddress = RxnString();
   final showroomPhone = RxnString();
 
@@ -137,8 +137,7 @@ class DashboardController extends GetxController {
       
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
-        b.status == BikeStatusEnum.available || 
-        b.status == BikeStatusEnum.installment
+        b.status == BikeStatusEnum.available
       ).length;
       
       final lowStock = await _salesService.getLowStockAlert();

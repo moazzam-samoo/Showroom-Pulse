@@ -151,6 +151,29 @@ class AuthService extends GetxService {
     return user;
   }
 
+  /// Update current user's credentials
+  Future<bool> updateCredentials({String? newUsername, String? newPassword}) async {
+    final user = currentUser.value;
+    if (user == null) return false;
+
+    final isarService = Get.find<IsarService>();
+    
+    await isarService.isar.writeTxn(() async {
+      if (newUsername != null && newUsername.trim().isNotEmpty) {
+        user.username = newUsername.trim().toLowerCase();
+      }
+      
+      if (newPassword != null && newPassword.isNotEmpty) {
+        user.passwordHash = hashPassword(newPassword);
+      }
+      
+      await isarService.isar.users.put(user);
+    });
+
+    currentUser.refresh(); // Notify listeners
+    return true;
+  }
+
   /// Check if any users exist (for first-time setup)
   Future<bool> hasUsers() async {
     final isarService = Get.find<IsarService>();

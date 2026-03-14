@@ -1,6 +1,6 @@
-# 🧠 Tahir Showroom – AI Design Memory System
+# 🧠 AL-TAHIR Showroom – AI Design Memory System
 
-> **Purpose:** Ensure AI remembers and preserves the Tahir Showroom design language.  
+> **Purpose:** Ensure AI remembers and preserves the AL-TAHIR Showroom design language.  
 > **Rule:** NO UI drift, NO random colors, NO foreign typography.
 
 ---
@@ -9,7 +9,7 @@
 
 ### Brand Essence
 
-- **Name:** Tahir Showroom
+- **Name:** AL-TAHIR Showroom
 - **Tagline:** Inventory Management System
 - **Domain:** Motorcycle Dealership ERP
 - **Platform:** Windows Desktop (Flutter)
@@ -156,7 +156,7 @@
 ### When User Says "Is jaisa change kro" (Change like this)
 
 1. Extract the **behavior/functionality** only
-2. **Preserve** Tahir Showroom theme
+2. **Preserve** AL-TAHIR Showroom theme
 3. Apply change using design tokens above
 4. ❌ Do NOT introduce new colors
 5. ❌ Do NOT use random fonts
