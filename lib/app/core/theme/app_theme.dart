@@ -142,11 +142,11 @@ class AppTheme {
 
     // Scrollbar
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: MaterialStateProperty.all(AppColors.darkPrimary.withOpacity(0.5)),
-      trackColor: MaterialStateProperty.all(AppColors.darkSurface.withOpacity(0.5)),
-      trackVisibility: MaterialStateProperty.all(true),
-      thumbVisibility: MaterialStateProperty.all(true),
-      thickness: MaterialStateProperty.all(6.0),
+      thumbColor: WidgetStateProperty.all(AppColors.darkPrimary.withOpacity(0.5)),
+      trackColor: WidgetStateProperty.all(AppColors.darkSurface.withOpacity(0.5)),
+      trackVisibility: WidgetStateProperty.all(true),
+      thumbVisibility: WidgetStateProperty.all(true),
+      thickness: WidgetStateProperty.all(6.0),
       radius: const Radius.circular(8.0),
       crossAxisMargin: 4.0,
       interactive: true,
@@ -320,11 +320,11 @@ class AppTheme {
 
     // Scrollbar
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: MaterialStateProperty.all(AppColors.lightPrimary.withOpacity(0.5)),
-      trackColor: MaterialStateProperty.all(AppColors.lightSurface.withOpacity(0.5)),
-      trackVisibility: MaterialStateProperty.all(true),
-      thumbVisibility: MaterialStateProperty.all(true),
-      thickness: MaterialStateProperty.all(6.0),
+      thumbColor: WidgetStateProperty.all(AppColors.lightPrimary.withOpacity(0.5)),
+      trackColor: WidgetStateProperty.all(AppColors.lightSurface.withOpacity(0.5)),
+      trackVisibility: WidgetStateProperty.all(true),
+      thumbVisibility: WidgetStateProperty.all(true),
+      thickness: WidgetStateProperty.all(6.0),
       radius: const Radius.circular(8.0),
       crossAxisMargin: 4.0,
       interactive: true,

@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_binding.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
-import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'app/core/bindings/initial_binding.dart';
 import 'app/core/theme/app_theme.dart';
@@ -31,9 +30,18 @@ import 'app/features/reports/presentation/bindings/reports_binding.dart';
 import 'app/features/settings/presentation/views/settings_view.dart';
 import 'app/features/settings/presentation/bindings/settings_binding.dart';
 
-void main() async {
+void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  await WindowsSingleInstance.ensureSingleInstance(
+    args,
+    "ALTAHIRShowroomInstance",
+    onSecondWindow: (args) async {
+      await windowManager.show();
+      await windowManager.focus();
+    },
+  );
+
   // Initialize window manager for desktop
   await windowManager.ensureInitialized();
   
@@ -114,20 +122,8 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
 
   @override
   void onWindowClose() async {
-    bool isPreventClose = await windowManager.isPreventClose();
-    if (isPreventClose) {
-      Get.snackbar(
-        'App Minimized to Tray',
-        'AL-AL-TAHIR Showroom is now hiding in your System Tray.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blueGrey.shade800,
-        colorText: Colors.white,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      );
-      // Hide completely from taskbar
-      await windowManager.hide();
-    }
+    // Instantly terminate the process for better responsiveness
+    exit(0);
   }
 
   @override
@@ -306,18 +302,27 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initializeApp() async {
     try {
       // Initialize all async services
-      await initializeAsyncServices();
+      bool isFreshDb = await initializeAsyncServices();
       
       final walkthroughService = Get.find<WalkthroughService>();
       final authService = Get.find<AuthService>();
 
-      // 1. Check if walkthrough is needed (First run)
+      // 1. Detect true fresh install (No users in database)
+      // This handles cases where the user deleted the database but SharedPreferences remained
+      if (isFreshDb) {
+        await authService.clearSession();
+        await walkthroughService.resetWalkthrough();
+        Get.offAllNamed('/walkthrough');
+        return;
+      }
+
+      // 2. Check if walkthrough is needed (First run flag in SharedPreferences)
       if (!walkthroughService.hasCompletedWalkthrough.value) {
         Get.offAllNamed('/walkthrough');
         return;
       }
 
-      // 2. Already completed walkthrough, check for session
+      // 3. Already completed walkthrough, check for session
       final bool hasSession = await authService.checkSavedSession();
       if (hasSession) {
         Get.offAllNamed('/dashboard');

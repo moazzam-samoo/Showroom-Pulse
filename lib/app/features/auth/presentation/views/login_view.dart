@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
-import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/features/auth/presentation/widgets/login_card.dart';
 
 /// Login View - Entry point for authentication
@@ -38,7 +35,7 @@ class LoginView extends StatelessWidget {
           // Dark: solid dark background
           // Light: blue gradient
           color: isDark ? AppColors.darkBackground : null,
-          gradient: isDark ? null : LinearGradient(
+          gradient: isDark ? null : const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
@@ -207,12 +208,12 @@ class InstallmentRepository {
 
   /// Repair legacy data (aggressive fix for missing down payments)
   Future<void> repairLegacyData() async {
-    print('Starting Legacy Data Repair...');
+    debugPrint('Starting Legacy Data Repair...');
     try {
       await _isar.writeTxn(() async {
         // 1. Check ALL contracts to avoid filter issues
         final allContracts = await _isar.installmentContracts.where().findAll();
-        print('Found ${allContracts.length} contracts to check.');
+        debugPrint('Found ${allContracts.length} contracts to check.');
 
         int fixedCount = 0;
 
@@ -231,7 +232,7 @@ class InstallmentRepository {
               final validPayment = payments.firstWhereOrNull((p) => p.amount > 0);
               
               if (validPayment != null) {
-                print('Fixing Contract #${contract.id}: Found 0 down payment. Using payment #${validPayment.id} of ${validPayment.amount}');
+                debugPrint('Fixing Contract #${contract.id}: Found 0 down payment. Using payment #${validPayment.id} of ${validPayment.amount}');
                 
                 // Update Contract
                 contract.downPayment = validPayment.amount;
@@ -245,31 +246,31 @@ class InstallmentRepository {
                      validPayment.notes = 'Down Payment (Repaired)';
                   }
                   await _isar.payments.put(validPayment);
-                  print('  - Marked Payment #${validPayment.id} as Down Payment');
+                  debugPrint('  - Marked Payment #${validPayment.id} as Down Payment');
                 }
               } else {
-                 print('Skipping Contract #${contract.id}: No valid (>0) payments found.');
+                 debugPrint('Skipping Contract #${contract.id}: No valid (>0) payments found.');
               }
             } else {
-               print('Skipping Contract #${contract.id}: No payments found.');
+               debugPrint('Skipping Contract #${contract.id}: No payments found.');
             }
           }
         }
-        print('Legacy Repair Complete. Fixed $fixedCount contracts.');
+        debugPrint('Legacy Repair Complete. Fixed $fixedCount contracts.');
       });
       
       // Run the Rounding & Overpayment Fix
       await fixOverpaymentAndRounding();
       
     } catch (e) {
-      print('Error in legacy repair: $e');
+      debugPrint('Error in legacy repair: $e');
     }
   }
 
   /// Fixes rounding issues (EMI to nearest 50) and recalculates totals/counts
   Future<void> fixOverpaymentAndRounding() async {
     try {
-      print('Starting Rounding & Overpayment Fix...');
+      debugPrint('Starting Rounding & Overpayment Fix...');
       int fixedCount = 0;
       
       final contracts = await _isar.installmentContracts
@@ -291,14 +292,14 @@ class InstallmentRepository {
           double roundedEMI = (currentEMI / 50).ceil() * 50.0;
           
           if (roundedEMI != currentEMI) {
-            print('Fixing Contract #${contract.id} EMI: $currentEMI -> $roundedEMI');
+            debugPrint('Fixing Contract #${contract.id} EMI: $currentEMI -> $roundedEMI');
             contract.monthlyEMI = roundedEMI;
             
             // Recalculate Grand Total based on new EMI
             // Total = DownPayment + (EMI * Months)
             double newTotal = contract.downPayment + (roundedEMI * contract.months);
             if (newTotal != contract.totalAmount) {
-               print('  - Updated Total Amount: ${contract.totalAmount} -> $newTotal');
+               debugPrint('  - Updated Total Amount: ${contract.totalAmount} -> $newTotal');
                contract.totalAmount = newTotal;
             }
             changed = true;
@@ -317,9 +318,9 @@ class InstallmentRepository {
           int installmentCount = payments.where((p) => !p.isDownPayment).length;
           
           if (contract.totalPaid != validTotalPaid || contract.paymentsMade != installmentCount) {
-             print('Fixing Contract #${contract.id} Counts:');
-             print('  - TotalPaid: ${contract.totalPaid} -> $validTotalPaid');
-             print('  - PaymentsMade: ${contract.paymentsMade} -> $installmentCount');
+             debugPrint('Fixing Contract #${contract.id} Counts:');
+             debugPrint('  - TotalPaid: ${contract.totalPaid} -> $validTotalPaid');
+             debugPrint('  - PaymentsMade: ${contract.paymentsMade} -> $installmentCount');
              
              contract.totalPaid = validTotalPaid;
              contract.paymentsMade = installmentCount;
@@ -334,7 +335,7 @@ class InstallmentRepository {
           
           // Check Completion
           if (remaining <= 0) {
-             print('  - marking as COMPLETED (Balance 0)');
+             debugPrint('  - marking as COMPLETED (Balance 0)');
              contract.status = ContractStatusEnum.completed;
              changed = true;
           }
@@ -346,10 +347,10 @@ class InstallmentRepository {
         }
       });
       
-      print('Rounding & Overpayment Fix Complete. Updated $fixedCount contracts.');
+      debugPrint('Rounding & Overpayment Fix Complete. Updated $fixedCount contracts.');
       
     } catch (e) {
-      print('Error in Rounding/Overpayment fix: $e');
+      debugPrint('Error in Rounding/Overpayment fix: $e');
     }
   }
 }

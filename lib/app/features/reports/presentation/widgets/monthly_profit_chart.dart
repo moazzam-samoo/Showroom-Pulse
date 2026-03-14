@@ -56,7 +56,7 @@ class MonthlyProfitChart extends StatelessWidget {
                           getTooltipItem: (group, groupIndex, rod, rodIndex) {
                             return BarTooltipItem(
                               'Rs ${currencyFormat.format(rod.toY)}',
-                              TextStyle(
+                              const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,

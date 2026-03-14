@@ -60,6 +60,9 @@ dependencies:
   tray_manager: ^0.5.2
   smooth_page_indicator: ^2.0.1
 
+  archive: any
+  collection: any
+  windows_single_instance: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

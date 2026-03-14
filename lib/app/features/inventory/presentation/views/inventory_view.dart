@@ -270,8 +270,9 @@ class _InventoryViewState extends State<InventoryView> {
       builder: (context, constraints) {
         // Responsive columns: 4 for wide screens, 3 for smaller, 2 for very small
         int crossAxisCount = 4;
-        if (constraints.maxWidth < 700) crossAxisCount = 2;
-        else if (constraints.maxWidth < 1000) crossAxisCount = 3;
+        if (constraints.maxWidth < 700) {
+          crossAxisCount = 2;
+        } else if (constraints.maxWidth < 1000) crossAxisCount = 3;
 
         return Scrollbar(
           child: MasonryGridView.count(

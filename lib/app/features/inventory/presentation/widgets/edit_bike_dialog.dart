@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
@@ -187,7 +186,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final sectionHeaderText = Colors.white;
+    const sectionHeaderText = Colors.white;
     final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
     final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
@@ -686,7 +685,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
             child: Focus(
               focusNode: focusNode,
               child: DropdownButtonFormField<BikeConditionEnum>(
-                value: _selectedCondition,
+                initialValue: _selectedCondition,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   filled: true,

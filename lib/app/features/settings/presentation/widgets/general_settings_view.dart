@@ -168,7 +168,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
             isDark: isDark,
             trailing: Switch(
               value: settings.isDarkTheme,
-              activeColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              activeThumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
               onChanged: (value) {
                 settings.isDarkTheme = value;
                 controller.settings.refresh();

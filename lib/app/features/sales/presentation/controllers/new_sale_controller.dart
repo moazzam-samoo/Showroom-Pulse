@@ -110,7 +110,7 @@ class NewSaleController extends GetxController {
       );
       searchResults.assignAll(results);
     } catch (e) {
-      print('Error searching customers: $e');
+      debugPrint('Error searching customers: $e');
       searchResults.clear();
     } finally {
       isSearching.value = false;
@@ -427,7 +427,7 @@ class NewSaleController extends GetxController {
       // Store default markup but DO NOT instantly apply it to the UI (user requested Fixed/0 behavior by default)
       _defaultMarkupPercentage = settings.defaultMarkupPercentage;
     } catch (e) {
-      print('Could not load default settings: $e');
+      debugPrint('Could not load default settings: $e');
     }
   }
 
@@ -481,7 +481,7 @@ class NewSaleController extends GetxController {
       );
       calculationResult.value = result;
     } catch (e) {
-      print('Calculation Error: $e');
+      debugPrint('Calculation Error: $e');
       calculationResult.value = null;
     }
   }
@@ -888,7 +888,7 @@ class NewSaleController extends GetxController {
         final salesController = Get.find<SalesController>();
         await salesController.refreshSales();
       } catch (e) {
-        print('SalesController refresh warning: $e');
+        debugPrint('SalesController refresh warning: $e');
       }
 
       // Only refresh dashboard if controller is registered
@@ -897,7 +897,7 @@ class NewSaleController extends GetxController {
           final dashboardController = Get.find<DashboardController>();
           await dashboardController.refreshStats();
         } catch (e) {
-          print('DashboardController refresh warning: $e');
+          debugPrint('DashboardController refresh warning: $e');
         }
       }
 
@@ -1058,11 +1058,11 @@ class NewSaleController extends GetxController {
       );
     } catch (e, stackTrace) {
       // Only reach here if the transaction actually failed
-      print('======= SALE CREATION ERROR =======');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
-      print('==================================');
+      debugPrint('======= SALE CREATION ERROR =======');
+      debugPrint('Error type: ${e.runtimeType}');
+      debugPrint('Error message: $e');
+      debugPrint('Stack trace: $stackTrace');
+      debugPrint('==================================');
 
       String errorMessage = e.toString();
       String title = 'Sale Failed';
@@ -1112,7 +1112,7 @@ class NewSaleController extends GetxController {
         title = 'Sale Failed - Database Error';
         // Provide more details in the error message
         final errorDetails = errorMessage.length > 200
-            ? errorMessage.substring(0, 200) + '...'
+            ? '${errorMessage.substring(0, 200)}...'
             : errorMessage;
         errorMessage = 'A database error occurred while saving the sale.\n\n'
             'Details: $errorDetails\n\n'
@@ -1121,7 +1121,7 @@ class NewSaleController extends GetxController {
         // Generic error with more details
         title = 'Sale Failed';
         errorMessage =
-            'Could not complete the sale. Error: ${errorMessage.length > 150 ? errorMessage.substring(0, 150) + '...' : errorMessage}';
+            'Could not complete the sale. Error: ${errorMessage.length > 150 ? '${errorMessage.substring(0, 150)}...' : errorMessage}';
       }
 
       // Show error dialog instead of just snackbar for better visibility

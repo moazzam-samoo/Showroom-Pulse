@@ -21,7 +21,7 @@ class InitialBinding extends Bindings {
 
 /// Initialize async services
 /// Call this in splash screen or app startup
-Future<void> initializeAsyncServices() async {
+Future<bool> initializeAsyncServices() async {
   // Initialize FileService first (creates directory structure)
   final fileService = await FileService().init();
   Get.put(fileService);
@@ -50,7 +50,7 @@ Future<void> initializeAsyncServices() async {
   Get.put(walkthroughService);
   
   // Ensure default admin user exists
-  await authService.ensureDefaultUser();
+  bool isFreshDb = await authService.ensureDefaultUser();
   
   // Initialize NotificationService
   final notificationService = NotificationService();
@@ -66,6 +66,8 @@ Future<void> initializeAsyncServices() async {
   // Initial check and start timer
   await notificationService.checkAndNotify();
   notificationService.startPeriodicCheck();
+
+  return isFreshDb;
 }
 
 /// Register Login page dependencies

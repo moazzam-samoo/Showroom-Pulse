@@ -31,7 +31,7 @@ class PriceFormatter {
     
     // Reverse the grouped pairs
     final groups = buffer.toString().split(',').where((s) => s.isNotEmpty).toList().reversed;
-    final formatted = '${groups.join(',')},${last3}';
+    final formatted = '${groups.join(',')},$last3';
     
     return showDecimal
         ? 'Rs. $formatted.${_decimalPart(amount)}'

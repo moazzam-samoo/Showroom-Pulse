@@ -151,6 +151,7 @@ class CustomersController extends GetxController {
   }
 
   /// Refresh all data
+  @override
   Future<void> refresh() async {
     await loadData();
   }

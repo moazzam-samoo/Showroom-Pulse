@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/app_radius.dart';
-import '../constants/app_shadows.dart';
 import '../constants/app_spacing.dart';
 
 /// AppCard - Standard card component with theme support
@@ -36,7 +35,7 @@ class _AppCardState extends State<AppCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = const Color(0xFF00ACC1); // Cyan
+    const primaryColor = Color(0xFF00ACC1); // Cyan
     
     // Pro Max Aesthetic: Slate 800 for Dark, White for Light
     final defaultColor = isDark ? const Color(0xFF1E293B) : Colors.white;
