@@ -137,8 +137,7 @@ class DashboardController extends GetxController {
       
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
-        b.status == BikeStatusEnum.available || 
-        b.status == BikeStatusEnum.installment
+        b.status == BikeStatusEnum.available
       ).length;
       
       final lowStock = await _salesService.getLowStockAlert();

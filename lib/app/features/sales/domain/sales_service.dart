@@ -338,7 +338,10 @@ class SalesService {
   /// Note: Currently all bikes are treated as new models since isPreOwned property doesn't exist
   Future<Map<String, dynamic>> getStockAllocation() async {
     final isar = _isarService.isar;
-    final allBikes = await isar.bikes.where().findAll();
+    final allBikes = await isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.available)
+        .findAll();
     
     // For now, treat all bikes as new models
     // TODO: Add isPreOwned field to Bike model or use another differentiation

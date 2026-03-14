@@ -97,7 +97,7 @@ class _SettingsViewState extends State<SettingsView> {
               // ═══ Settings Content Area ═══
               Expanded(
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // ─── Settings Category Sidebar ───
                     Container(
@@ -131,6 +131,60 @@ class _SettingsViewState extends State<SettingsView> {
                           _buildCategoryItem(controller, 'Database', LucideIcons.database, isDark),
                           _buildCategoryItem(controller, 'Profile', LucideIcons.user, isDark),
                           _buildCategoryItem(controller, 'General', LucideIcons.settings, isDark),
+                          const Spacer(),
+                          // ─── Footer / Credits ───
+                          Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Built & Created by',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Creative District',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Container(
+                                  height: 1,
+                                  width: 40,
+                                  color: (isDark ? AppColors.darkBorder : AppColors.lightBorder).withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Developers',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Moazam Samoo\nTameer Khyber',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    height: 1.4,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
