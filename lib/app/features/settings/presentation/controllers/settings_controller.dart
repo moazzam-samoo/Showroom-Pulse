@@ -11,6 +11,7 @@ import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart' as tahir_showroom_walkthrough_service;
+import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -118,6 +119,15 @@ class SettingsController extends GetxController {
     settings.value!.bikeModels = current.join(',');
     settings.refresh();
     saveSettings();
+  }
+
+  Future<bool> updateCredentials(String username, String password) async {
+    final authService = Get.find<AuthService>();
+    final success = await authService.updateCredentials(
+      newUsername: username.isNotEmpty ? username : null,
+      newPassword: password.isNotEmpty ? password : null,
+    );
+    return success;
   }
 
   Future<void> replayWalkthrough() async {

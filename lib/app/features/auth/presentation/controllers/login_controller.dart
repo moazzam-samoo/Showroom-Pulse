@@ -86,7 +86,12 @@ class LoginController extends GetxController {
         if (!walkthroughService.hasCompletedWalkthrough.value) {
           Get.offAllNamed('/walkthrough');
         } else {
-          Get.offAllNamed('/dashboard');
+          // If we came from a successful walkthrough, show coach marks
+          final bool isFirstInstall = Get.arguments?['first_install'] == true;
+          Get.offAllNamed(
+            '/dashboard', 
+            arguments: isFirstInstall ? {'show_coach_marks': true} : null,
+          );
         }
       } else {
         errorMessage.value = result.errorMessage;

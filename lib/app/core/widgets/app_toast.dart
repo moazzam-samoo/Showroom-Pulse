@@ -9,6 +9,11 @@ class AppToast {
     _showToast(title, message, LucideIcons.checkCircle2, color);
   }
 
+  static void showError({required String title, required String message}) {
+    final color = Get.isDarkMode ? AppColors.darkError : AppColors.lightError;
+    _showToast(title, message, LucideIcons.alertCircle, color);
+  }
+
   static void showInfo({required String title, required String message}) {
     final color = Get.isDarkMode ? AppColors.darkInfo : AppColors.lightPrimary;
     _showToast(title, message, LucideIcons.info, color);

@@ -204,7 +204,7 @@ class _DashboardViewState extends State<DashboardView> {
                   CoachMarkTarget(
                     targetKey: _sidebarKey,
                     title: 'Navigation Menu',
-                    description: 'Access all modules of Tahir Showroom from here. Switch between sales, inventory, and customers seamlessly.',
+                    description: 'Access all modules of AL-TAHIR Showroom from here. Switch between sales, inventory, and customers seamlessly.',
                     position: CoachMarkPosition.right,
                   ),
                   CoachMarkTarget(

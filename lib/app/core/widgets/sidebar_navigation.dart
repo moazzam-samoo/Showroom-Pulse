@@ -95,14 +95,18 @@ class SidebarNavigation extends StatelessWidget {
     return Container(
       width: 48,
       height: 48,
-      padding: const EdgeInsets.all(AppSpacing.xs),
+      padding: const EdgeInsets.all(2.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],

@@ -21,7 +21,7 @@ class WalkthroughController extends GetxController {
 
   Future<void> complete() async {
     await _walkthroughService.markWalkthroughComplete();
-    Get.offAllNamed('/dashboard', arguments: {'show_coach_marks': true});
+    Get.offAllNamed('/login', arguments: {'first_install': true});
   }
 
   Future<void> skip() async {

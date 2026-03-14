@@ -33,7 +33,7 @@ class AppDialog extends StatelessWidget {
   const AppDialog({
     super.key,
     required this.title,
-    this.subtitle = 'Tahir Showroom Management',
+    this.subtitle = 'AL-AL-TAHIR Showroom Management',
     required this.child,
     this.onSubmit,
     this.onCancel,

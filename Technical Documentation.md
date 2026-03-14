@@ -1,4 +1,4 @@
-# **Tahir Showroom Management System \- Technical Documentation**
+# **AL-TAHIR Showroom Management System - Technical Documentation**
 
 **Version:** 1.0
 
@@ -10,7 +10,7 @@
 
 ## **1\. Project Overview**
 
-**Tahir Showroom** is a specialized ERP solution for motorcycle dealerships. The system focuses on unique asset tracking (Engine/Chassis numbers) and a complex installment management engine with automated markup calculations.
+**AL-TAHIR Showroom** is a specialized ERP solution for motorcycle dealerships. The system focuses on unique asset tracking (Engine/Chassis numbers) and a complex installment management engine with automated markup calculations.
 
 **Core Philosophy:**
 

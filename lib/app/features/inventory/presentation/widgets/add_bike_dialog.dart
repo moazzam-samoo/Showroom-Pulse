@@ -165,7 +165,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
     return AppDialog(
       title: 'Add New Motorcycle',
-      subtitle: 'Tahir Showroom Inventory Management',
+      subtitle: 'AL-AL-TAHIR Showroom Inventory Management',
       onSubmit: _handleSave, // Binds ENTER key to this
       actions: [
         Expanded(

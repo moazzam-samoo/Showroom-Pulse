@@ -131,16 +131,15 @@ class StatementService {
               pw.Expanded(child: _buildBikeSection(bike)),
             ],
           ),
-          pw.SizedBox(height: 16),
-
+          pw.SizedBox(height: 12),
           // Contract Summary
           _buildContractSummary(contract),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 12),
 
-          // Witnesses
+          // Witnesses - Only if actually present (placeholder has no height if hidden)
           if (data.payments.isNotEmpty) ...[
             _buildWitnessSection(data),
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 12),
           ],
 
           // Payment History Table
@@ -171,7 +170,7 @@ class StatementService {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      settings.showroomName.isNotEmpty ? settings.showroomName : 'Tahir Showroom',
+                      settings.showroomName.isNotEmpty ? settings.showroomName : 'AL-TAHIR Showroom',
                       style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.cyan700),
                     ),
                     pw.Text(
@@ -235,7 +234,7 @@ class StatementService {
 
   pw.Widget _buildCustomerSection(Customer customer) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -256,7 +255,7 @@ class StatementService {
 
   pw.Widget _buildBikeSection(Bike bike) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -277,7 +276,7 @@ class StatementService {
 
   pw.Widget _buildContractSummary(InstallmentContract contract) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         color: PdfColors.grey100,
         border: pw.Border.all(color: PdfColors.grey300),
@@ -370,7 +369,7 @@ class StatementService {
   pw.Widget _buildWitnessSection(ContractDisplayData data) {
     // Fetch witnesses from repository would be ideal, but we work with what ContractDisplayData provides
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -381,7 +380,7 @@ class StatementService {
           pw.Text('Witness Information', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Witnesses are on file at Tahir Showroom.',
+            'Witnesses are on file at AL-AL-TAHIR Showroom.',
             style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],
@@ -405,7 +404,8 @@ class StatementService {
             headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
             cellStyle: const pw.TextStyle(fontSize: 10),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-            cellHeight: 28,
+            cellHeight: 22,
+            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             headers: ['#', 'Date', 'Amount', 'Method', 'Collector', 'Notes'],
             data: List.generate(allPayments.length, (i) {
               final p = allPayments[i];

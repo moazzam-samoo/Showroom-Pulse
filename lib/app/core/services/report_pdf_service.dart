@@ -55,19 +55,19 @@ class ReportPdfService {
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
+          margin: const pw.EdgeInsets.all(32),
           header: (context) => _buildHeader(
               context, 'Profit Report', dateRangeLabel, settings, logo),
           footer: _buildFooter,
           build: (context) => [
             _buildKpiSummary(totalRevenue, totalExpenses, netProfit),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             if (yearlyBreakdown != null && yearlyBreakdown.isNotEmpty) ...[
               _buildYearlyBreakdownTable(yearlyBreakdown),
-              pw.SizedBox(height: 20),
+              pw.SizedBox(height: 12),
             ],
             _buildProfitTable(profitByBrand),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             _buildStockList(stockDistribution),
           ],
         ),
@@ -102,7 +102,7 @@ class ReportPdfService {
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
+          margin: const pw.EdgeInsets.all(32),
           header: (context) => _buildHeader(context,
               'Revenue & Expense Statement', dateRangeLabel, settings, logo),
           footer: _buildFooter,
@@ -154,7 +154,7 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName
-                          : 'Tahir Showroom',
+                          : 'AL-AL-TAHIR Showroom',
                       style: pw.TextStyle(
                           fontSize: 20,
                           fontWeight: pw.FontWeight.bold,
@@ -162,7 +162,7 @@ class ReportPdfService {
                     ),
                     pw.Text(
                       title,
-                      style: pw.TextStyle(
+                      style: const pw.TextStyle(
                           fontSize: 10,
                           color: PdfColors.grey600,
                           letterSpacing: 1.2),
@@ -184,7 +184,8 @@ class ReportPdfService {
                 pw.SizedBox(height: 2),
                 pw.Text(
                   'Generated: ${_dateFormat.format(DateTime.now())}',
-                  style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+                  style:
+                      const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
                 ),
               ],
             ),
@@ -224,12 +225,12 @@ class ReportPdfService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'AL-TAHIR SHOWROOM - Confidential',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+              'AL-AL-TAHIR Showroom - Confidential',
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
             pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
           ],
         ),
@@ -271,7 +272,8 @@ class ReportPdfService {
       child: pw.Column(
         children: [
           pw.Text(label,
-              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+              style:
+                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
           pw.SizedBox(height: 4),
           pw.Text(
             value,
@@ -351,7 +353,7 @@ class ReportPdfService {
             }),
             // Total row
             pw.TableRow(
-              decoration: pw.BoxDecoration(
+              decoration: const pw.BoxDecoration(
                 color: PdfColors.grey100,
                 border: pw.Border(
                     top: pw.BorderSide(color: PdfColors.grey400, width: 1)),
@@ -469,7 +471,8 @@ class ReportPdfService {
           _sectionTitle('Expense Breakdown by Category'),
           pw.SizedBox(height: 8),
           pw.Text('No expenses recorded this month.',
-              style: pw.TextStyle(fontSize: 11, color: PdfColors.grey500)),
+              style:
+                  const pw.TextStyle(fontSize: 11, color: PdfColors.grey500)),
         ],
       );
     }
@@ -736,11 +739,11 @@ class ReportPdfService {
           footer: _buildFooter,
           build: (context) => [
             _buildCustomerAndBikeInfo(saleData),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             if (saleData['witnesses'] != null &&
                 (saleData['witnesses'] as List).isNotEmpty) ...[
               _buildWitnessesInfo(saleData['witnesses']),
-              pw.SizedBox(height: 20),
+              pw.SizedBox(height: 12),
             ],
             _buildInvoiceFinancials(saleData),
             pw.Spacer(),
@@ -785,7 +788,7 @@ class ReportPdfService {
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
+          margin: const pw.EdgeInsets.all(32),
           header: (context) =>
               _buildHeader(context, 'SALES REPORT', monthYear, settings, logo),
           footer: _buildFooter,
@@ -824,7 +827,8 @@ class ReportPdfService {
               pw.TableHelper.fromTextArray(
                 headerAlignment: pw.Alignment.centerLeft,
                 cellAlignment: pw.Alignment.centerLeft,
-                headerDecoration: pw.BoxDecoration(color: PdfColors.green50),
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.green50),
                 headerStyle: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -855,7 +859,7 @@ class ReportPdfService {
                       color: PdfColors.green800),
                 ),
               ),
-              pw.SizedBox(height: 24),
+              pw.SizedBox(height: 12),
             ],
 
             // Installment Sales Section
@@ -865,7 +869,8 @@ class ReportPdfService {
               pw.TableHelper.fromTextArray(
                 headerAlignment: pw.Alignment.centerLeft,
                 cellAlignment: pw.Alignment.centerLeft,
-                headerDecoration: pw.BoxDecoration(color: PdfColors.orange50),
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.orange50),
                 headerStyle: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -936,8 +941,11 @@ class ReportPdfService {
     }
   }
 
-  pw.Widget _buildInvoiceHeader(pw.Context context,
-      Map<String, dynamic> saleData, AppSettings settings, pw.MemoryImage? logo) {
+  pw.Widget _buildInvoiceHeader(
+      pw.Context context,
+      Map<String, dynamic> saleData,
+      AppSettings settings,
+      pw.MemoryImage? logo) {
     pw.Widget? logoWidget = logo != null
         ? pw.Image(logo, width: 50, height: 50, fit: pw.BoxFit.contain)
         : null;
@@ -972,14 +980,14 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName.toUpperCase()
-                          : 'AL-TAHIR SHOWROOM',
+                          : 'AL-AL-TAHIR Showroom',
                       style: pw.TextStyle(
                           fontSize: 24,
                           fontWeight: pw.FontWeight.bold,
                           color: _primaryColor),
                     ),
                     pw.Text('Motors & Installment Center',
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                             fontSize: 10, color: PdfColors.grey700)),
                   ],
                 ),
@@ -1015,7 +1023,7 @@ class ReportPdfService {
         // Purchaser Detail
         pw.Expanded(
           child: pw.Container(
-            padding: const pw.EdgeInsets.all(12),
+            padding: const pw.EdgeInsets.all(8),
             decoration: pw.BoxDecoration(
               border: pw.Border.all(color: PdfColors.grey300),
               borderRadius: pw.BorderRadius.circular(6),
@@ -1037,7 +1045,7 @@ class ReportPdfService {
         // Bike Detail
         pw.Expanded(
           child: pw.Container(
-            padding: const pw.EdgeInsets.all(12),
+            padding: const pw.EdgeInsets.all(8),
             decoration: pw.BoxDecoration(
               border: pw.Border.all(color: PdfColors.grey300),
               borderRadius: pw.BorderRadius.circular(6),
@@ -1061,7 +1069,7 @@ class ReportPdfService {
 
   pw.Widget _buildWitnessesInfo(List<dynamic> witnesses) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: pw.BorderRadius.circular(6),
@@ -1106,9 +1114,9 @@ class ReportPdfService {
     final remaining = saleData['amountRemaining'] as double?;
     final monthly = saleData['installmentMonthlyPayment'] as double?;
     final duration = saleData['installmentDuration'] as int?;
-
+    
     return pw.Container(
-      padding: const pw.EdgeInsets.all(20),
+      padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         color: _rowAltBg,
         border: pw.Border.all(color: _primaryColor),
@@ -1193,7 +1201,8 @@ class ReportPdfService {
           pw.SizedBox(
               width: 60,
               child: pw.Text(label,
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700))),
+                  style: const pw.TextStyle(
+                      fontSize: 10, color: PdfColors.grey700))),
           pw.Expanded(
               child: pw.Text(value ?? '—',
                   style: pw.TextStyle(
@@ -1256,7 +1265,7 @@ class ReportPdfService {
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(40),
+          margin: const pw.EdgeInsets.all(32),
           header: (context) => _buildHeader(
               context,
               'CUSTOMER STATEMENT OF ACCOUNT',
@@ -1266,7 +1275,7 @@ class ReportPdfService {
           footer: _buildFooter,
           build: (context) => [
             _buildCustomerBlock(customerData),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 12),
             _buildKpiSummary(totalPurchased, totalPaid, totalRemaining,
                 isRevenue: false), // Resusing KPI layout
             pw.SizedBox(height: 20),
@@ -1274,8 +1283,8 @@ class ReportPdfService {
             pw.SizedBox(height: 30),
             pw.Center(
                 child: pw.Text('*** End of Statement ***',
-                    style:
-                        pw.TextStyle(fontSize: 10, color: PdfColors.grey600))),
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey600))),
           ],
         ),
       );
@@ -1324,8 +1333,8 @@ class ReportPdfService {
                 crossAxisAlignment: pw.CrossAxisAlignment.end,
                 children: [
                   pw.Text('Address:',
-                      style:
-                          pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                      style: const pw.TextStyle(
+                          fontSize: 10, color: PdfColors.grey600)),
                   pw.Text(customer['address'] ?? '',
                       style: const pw.TextStyle(fontSize: 11)),
                 ],
@@ -1447,11 +1456,11 @@ class ReportPdfService {
 
                   // Table Header
                   pw.Container(
-                    decoration: pw.BoxDecoration(
+                    decoration: const pw.BoxDecoration(
                       color:
                           _headerBg, // Fixed: Using dark background for white text
-                      borderRadius: const pw.BorderRadius.vertical(
-                          top: pw.Radius.circular(4)),
+                      borderRadius:
+                          pw.BorderRadius.vertical(top: pw.Radius.circular(4)),
                     ),
                     padding: const pw.EdgeInsets.all(12),
                     child: pw.Row(
@@ -1536,7 +1545,7 @@ class ReportPdfService {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   pw.Spacer(),
                   _buildFooter(context),

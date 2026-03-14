@@ -12,7 +12,7 @@ import 'package:tahir_showroom/app/features/auth/presentation/widgets/login_card
 /// Analyzed from: Dark Theme UI/Login Page.png
 /// - Centered login card on dark/gradient background
 /// - Motorcycle icon in rounded container
-/// - "Tahir Showroom" title + "Inventory Management System" subtitle
+/// - "AL-TAHIR Showroom" title + "Inventory Management System" subtitle
 /// - Username and Password inputs with icons
 /// - Cyan "Sign In" button
 /// - Copyright footer
@@ -60,7 +60,7 @@ class LoginView extends StatelessWidget {
                 
                 // Copyright footer
                 Text(
-                  '© 2026 Tahir Showroom. All rights reserved.',
+                  '© 2026 AL-TAHIR Showroom. All rights reserved.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark 
                         ? AppColors.darkTextMuted 

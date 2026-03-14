@@ -43,7 +43,7 @@ class WalkthroughView extends GetView<WalkthroughController> {
                 onPageChanged: controller.onPageChanged,
                 children: [
                   IntroSlide(
-                    title: 'Welcome to Tahir Showroom',
+                    title: 'Welcome to AL-TAHIR Showroom',
                     description: 'Explore the next generation of showroom management. Fast, intuitive, and powerful.',
                     visualIcon: LucideIcons.layoutDashboard,
                     iconColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,

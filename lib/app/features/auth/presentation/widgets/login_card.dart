@@ -15,7 +15,7 @@ import '../controllers/login_controller.dart';
 /// Analyzed from: Dark Theme UI/Login Page.png
 /// Components:
 /// - Motorcycle icon in rounded container (cyan on dark, blue on light)
-/// - "Tahir Showroom" title
+/// - "AL-TAHIR Showroom" title
 /// - "Inventory Management System" subtitle
 /// - Username input with user icon
 /// - Password input with lock icon
@@ -55,13 +55,17 @@ class LoginCard extends GetView<LoginController> {
             Container(
               width: 80,
               height: 80,
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(4.0),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -85,7 +89,7 @@ class LoginCard extends GetView<LoginController> {
             
             // Title
             Text(
-              'Tahir Showroom',
+              'AL-AL-TAHIR Showroom',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
