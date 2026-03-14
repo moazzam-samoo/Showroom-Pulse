@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
@@ -99,7 +100,7 @@ class DashboardController extends GetxController {
       monthlyRevenue.value = stats['monthlyRevenue'];
       revenueOnTrack.value = stats['isRevenueOnTrack'];
     } catch (e) {
-      print('Error loading dashboard stats: $e');
+      debugPrint('Error loading dashboard stats: $e');
     }
   }
 
@@ -112,7 +113,7 @@ class DashboardController extends GetxController {
       final today = await _salesService.getTodaySalesCount();
       todaySalesCount.value = today;
     } catch (e) {
-      print('Error loading chart data: $e');
+      debugPrint('Error loading chart data: $e');
     }
   }
 
@@ -125,7 +126,7 @@ class DashboardController extends GetxController {
       preOwnedPercent.value = allocation['preOwnedPercent'];
       preOwnedCount.value = allocation['preOwnedCount'];
     } catch (e) {
-      print('Error loading stock allocation: $e');
+      debugPrint('Error loading stock allocation: $e');
     }
   }
 
@@ -156,7 +157,7 @@ class DashboardController extends GetxController {
         0, (sum, c) => sum + c.remainingBalance,
       );
     } catch (e) {
-      print('Error loading KPI data: $e');
+      debugPrint('Error loading KPI data: $e');
     }
   }
 
@@ -172,7 +173,7 @@ class DashboardController extends GetxController {
         showroomPhone.value = settingsList.first.showroomPhone;
       }
     } catch (e) {
-      print('Error loading profile settings: $e');
+      debugPrint('Error loading profile settings: $e');
     }
   }
 
@@ -191,7 +192,7 @@ class DashboardController extends GetxController {
         });
       }
     } catch (e) {
-      print('Error updating owner name: $e');
+      debugPrint('Error updating owner name: $e');
     }
   }
 
@@ -321,7 +322,7 @@ class DashboardController extends GetxController {
 
       upcomingInstallments.value = upcoming;
     } catch (e) {
-      print('Error loading upcoming installments: $e');
+      debugPrint('Error loading upcoming installments: $e');
     }
   }
 

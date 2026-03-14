@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:local_notifier/local_notifier.dart';
@@ -26,7 +27,7 @@ class NotificationService extends GetxService {
       );
       _isInitialized = true;
     } catch (e) {
-      print('Failed to initialize local_notifier: $e');
+      debugPrint('Failed to initialize local_notifier: $e');
       // If we are on non-desktop platforms or it fails, we just rely on in-app notifications
     }
   }
@@ -149,7 +150,7 @@ class NotificationService extends GetxService {
       );
 
       notification.onShow = () {
-        print('Notification onShow');
+        debugPrint('Notification onShow');
       };
       
       notification.onClick = () {
@@ -160,7 +161,7 @@ class NotificationService extends GetxService {
 
       notification.show();
     } catch (e) {
-      print('Error showing local notification: $e');
+      debugPrint('Error showing local notification: $e');
     }
   }
 

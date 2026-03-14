@@ -106,11 +106,8 @@ class InstallmentsController extends GetxController {
       } else if (showDueThisWeek.value) {
         rawContracts = await _repository.getContractsDueSoon(7);
       } else {
-        // Smart default: show active first, fallback to all if no active
-        rawContracts = await _repository.getActiveContracts();
-        if (rawContracts.isEmpty) {
-          rawContracts = await _repository.getAllContracts();
-        }
+        // Default to showing all contracts
+        rawContracts = await _repository.getAllContracts();
       }
 
       // Load display data for each contract

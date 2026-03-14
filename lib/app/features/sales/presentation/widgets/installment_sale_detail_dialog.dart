@@ -21,7 +21,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = Get.find<SalesController>();
-    print('Installment Dialog - Purchaser Image: ${data.purchaserImage}');
+    debugPrint('Installment Dialog - Purchaser Image: ${data.purchaserImage}');
 
     return Dialog(
       backgroundColor: Colors.transparent,
