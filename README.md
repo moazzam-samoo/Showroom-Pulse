@@ -54,7 +54,7 @@
 ### Executive Dashboard
 > *Real-time KPI metrics, graphical asset tracking, and recent transactions.*
 <p align="center">
-  <img src="assets/screenshots/dashboard.png" alt="Dashboard View" width="800" style="border-radius:12px"/>
+  <img src="assets/screenshots/Dashboard.png" alt="Dashboard View" width="800" style="border-radius:12px"/>
 </p>
 
 ### Inventory Management
