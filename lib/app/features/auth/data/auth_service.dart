@@ -181,8 +181,8 @@ class AuthService extends GetxService {
     return count > 0;
   }
 
-  /// Create default admin user if no users exist
-  Future<void> ensureDefaultUser() async {
+  /// Create default admin user if no users exist. Returns true if created.
+  Future<bool> ensureDefaultUser() async {
     final hasExisting = await hasUsers();
     if (!hasExisting) {
       await createUser(
@@ -190,7 +190,9 @@ class AuthService extends GetxService {
         password: 'admin123',
         displayName: 'Administrator',
       );
+      return true;
     }
+    return false;
   }
 }
 

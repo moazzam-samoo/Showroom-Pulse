@@ -304,18 +304,27 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _initializeApp() async {
     try {
       // Initialize all async services
-      await initializeAsyncServices();
+      bool isFreshDb = await initializeAsyncServices();
       
       final walkthroughService = Get.find<WalkthroughService>();
       final authService = Get.find<AuthService>();
 
-      // 1. Check if walkthrough is needed (First run)
+      // 1. Detect true fresh install (No users in database)
+      // This handles cases where the user deleted the database but SharedPreferences remained
+      if (isFreshDb) {
+        await authService.clearSession();
+        await walkthroughService.resetWalkthrough();
+        Get.offAllNamed('/walkthrough');
+        return;
+      }
+
+      // 2. Check if walkthrough is needed (First run flag in SharedPreferences)
       if (!walkthroughService.hasCompletedWalkthrough.value) {
         Get.offAllNamed('/walkthrough');
         return;
       }
 
-      // 2. Already completed walkthrough, check for session
+      // 3. Already completed walkthrough, check for session
       final bool hasSession = await authService.checkSavedSession();
       if (hasSession) {
         Get.offAllNamed('/dashboard');
