@@ -655,47 +655,55 @@ class SupplierHistoryView extends GetView<SupplierController> {
       }
     }
 
+    void handleSave() {
+      final List<String> missingFields = [];
+      if (controller.newSupplierName.text.trim().isEmpty) missingFields.add('Supplier Name');
+      if (controller.newSupplierPhone.text.trim().isEmpty) missingFields.add('Phone');
+      if (controller.newSupplierCnic.text.trim().isEmpty) missingFields.add('CNIC');
+      if (controller.newSupplierProfilePic.value == null) missingFields.add('Profile Picture');
+      if (controller.newSupplierCnicPic.value == null) missingFields.add('CNIC Image');
+
+      void executeSave() async {
+        if (supplier != null) {
+          await controller.updateSupplier(
+            supplier,
+            controller.newSupplierName.text,
+            controller.newSupplierCnic.text,
+            controller.newSupplierPhone.text,
+            profilePic: controller.newSupplierProfilePic.value,
+            cnicPic: controller.newSupplierCnicPic.value,
+          );
+          Get.back(); // close Add/Edit dialog
+          AppToast.showSuccess(title: 'Success', message: 'Supplier updated successfully');
+        } else {
+          await controller.createSupplier(
+            controller.newSupplierName.text,
+            controller.newSupplierCnic.text,
+            controller.newSupplierPhone.text,
+            controller.newSupplierProfilePic.value, 
+            cnicPic: controller.newSupplierCnicPic.value,
+          );
+          Get.back(); // close Add/Edit dialog
+          AppToast.showSuccess(title: 'Success', message: 'Supplier added successfully');
+        }
+      }
+
+      if (missingFields.isNotEmpty) {
+        AppNotificationDialog.showOptionalFieldsWarning(
+          missingFields: missingFields,
+          onProceed: executeSave,
+        );
+      } else {
+        executeSave();
+      }
+    }
+
     Get.dialog(
       AppDialog(
         title: supplier == null ? 'Add New Supplier' : 'Edit Supplier',
         subtitle: 'Manage Supplier Details',
         width: 500,
-        onSubmit: () async {
-            // Replicating Save Logic for Enter Key
-            if (controller.newSupplierName.text.isEmpty || 
-                controller.newSupplierPhone.text.isEmpty ||
-                controller.newSupplierCnic.text.isEmpty ||
-                controller.newSupplierProfilePic.value == null ||
-                controller.newSupplierCnicPic.value == null) {
-              AppNotificationDialog.showError(
-                title: 'Missing Information', 
-                message: 'Name, Phone, CNIC and both Images are required.',
-              );
-              return;
-            }
-            if (supplier != null) {
-              await controller.updateSupplier(
-                supplier,
-                controller.newSupplierName.text,
-                controller.newSupplierCnic.text,
-                controller.newSupplierPhone.text,
-                profilePic: controller.newSupplierProfilePic.value,
-                cnicPic: controller.newSupplierCnicPic.value,
-              );
-              Get.back();
-              AppToast.showSuccess(title: 'Success', message: 'Supplier updated successfully');
-            } else {
-              await controller.createSupplier(
-                controller.newSupplierName.text,
-                controller.newSupplierCnic.text,
-                controller.newSupplierPhone.text,
-                controller.newSupplierProfilePic.value, 
-                cnicPic: controller.newSupplierCnicPic.value,
-              );
-              Get.back();
-              AppToast.showSuccess(title: 'Success', message: 'Supplier added successfully');
-            }
-        },
+        onSubmit: handleSave,
         child: KeyboardListener(
           focusNode: FocusNode(), // Not requested focus because inputs have focus
           onKeyEvent: handleKeyboardNavigation,
@@ -818,42 +826,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                     focusNode: submitFocus,
                     child: ElevatedButton(
                       focusNode: submitFocus,
-                      onPressed: () async {
-                        if (controller.newSupplierName.text.isEmpty || 
-                            controller.newSupplierPhone.text.isEmpty ||
-                            controller.newSupplierCnic.text.isEmpty ||
-                            controller.newSupplierProfilePic.value == null ||
-                            controller.newSupplierCnicPic.value == null) {
-                          AppNotificationDialog.showError(
-                            title: 'Missing Information', 
-                            message: 'Name, Phone, CNIC and both Images are required.',
-                          );
-                          return;
-                        }
-
-                        if (supplier != null) {
-                          await controller.updateSupplier(
-                            supplier,
-                            controller.newSupplierName.text,
-                            controller.newSupplierCnic.text,
-                            controller.newSupplierPhone.text,
-                            profilePic: controller.newSupplierProfilePic.value,
-                            cnicPic: controller.newSupplierCnicPic.value,
-                          );
-                          Get.back();
-                          AppToast.showSuccess(title: 'Success', message: 'Supplier updated successfully');
-                        } else {
-                          await controller.createSupplier(
-                            controller.newSupplierName.text,
-                            controller.newSupplierCnic.text,
-                            controller.newSupplierPhone.text,
-                            controller.newSupplierProfilePic.value, 
-                            cnicPic: controller.newSupplierCnicPic.value,
-                          );
-                          Get.back();
-                          AppToast.showSuccess(title: 'Success', message: 'Supplier added successfully');
-                        }
-                      },
+                      onPressed: handleSave,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         foregroundColor: Colors.white,

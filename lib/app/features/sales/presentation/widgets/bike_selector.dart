@@ -49,15 +49,19 @@ class BikeSelector extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Grouped List
-        Expanded(
-          child: Obx(() {
+        Obx(() {
             final groupedBikes = saleController.groupedBikes;
 
             if (groupedBikes.isEmpty) {
-              return const Center(child: Text('No available bikes found.'));
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: Text('No available bikes found.')),
+              );
             }
 
             return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: groupedBikes.length,
               itemBuilder: (context, index) {
                 final model = groupedBikes.keys.elementAt(index);
@@ -152,18 +156,38 @@ class BikeSelector extends StatelessWidget {
                                             }
                                           });
                                         },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            border: isSelected
-                                                ? Border.all(
+                                        child: Stack(
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                border: isSelected
+                                                    ? Border.all(
+                                                        color: AppColors.darkPrimary,
+                                                        width: 3)
+                                                    : Border.all(color: Colors.transparent, width: 3),
+                                                borderRadius:
+                                                    BorderRadius.circular(AppRadius.md),
+                                              ),
+                                              child: BikeCard(bike: bike, compact: true),
+                                            ),
+                                            if (isSelected)
+                                              Positioned(
+                                                top: 8,
+                                                right: 8,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(4),
+                                                  decoration: const BoxDecoration(
+                                                    shape: BoxShape.circle,
                                                     color: AppColors.darkPrimary,
-                                                    width: 3)
-                                                : null,
-                                            borderRadius:
-                                                BorderRadius.circular(AppRadius.md),
-                                          ),
-                                          child:
-                                              BikeCard(bike: bike, compact: true),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.check,
+                                                    size: 16,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       );
                                     });
@@ -180,7 +204,6 @@ class BikeSelector extends StatelessWidget {
               },
             );
           }),
-        ),
       ],
     );
   }

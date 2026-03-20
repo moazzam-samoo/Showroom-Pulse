@@ -135,19 +135,42 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
-      if (widget.onSave != null) {
-        widget.onSave!({
-          'brand': _brandController.text,
-          'model': _modelController.text,
-          'condition': _selectedCondition,
-          'color': _selectedColor,
-          'engineNumber': _engineNoController.text,
-          'chassisNumber': _chassisNoController.text,
-          'purchasePrice': double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ?? 0.0,
-          'sellingPrice': double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ?? 0.0,
-          'imageFile': _selectedImage,
-        });
-        Navigator.pop(context);
+      final List<String> missingFields = [];
+      if (_brandController.text.trim().isEmpty) missingFields.add('Brand');
+      if (_modelController.text.trim().isEmpty) missingFields.add('Model');
+      if (_selectedColor == null) missingFields.add('Color');
+      
+      final purchase = double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ?? 0.0;
+      final selling = double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ?? 0.0;
+      
+      if (purchase <= 0) missingFields.add('Purchase Price');
+      if (selling <= 0) missingFields.add('Selling Price');
+      if (_selectedImage == null) missingFields.add('Bike Image');
+
+      void executeSave() {
+        if (widget.onSave != null) {
+          widget.onSave!({
+            'brand': _brandController.text,
+            'model': _modelController.text,
+            'condition': _selectedCondition,
+            'color': _selectedColor,
+            'engineNumber': _engineNoController.text,
+            'chassisNumber': _chassisNoController.text,
+            'purchasePrice': purchase,
+            'sellingPrice': selling,
+            'imageFile': _selectedImage,
+          });
+          Navigator.pop(context);
+        }
+      }
+
+      if (missingFields.isNotEmpty) {
+        AppNotificationDialog.showOptionalFieldsWarning(
+          missingFields: missingFields,
+          onProceed: executeSave,
+        );
+      } else {
+        executeSave();
       }
     }
   }
@@ -250,9 +273,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus, maxLength: 17),
+                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus, maxLength: 17, isRequired: true),
                           const SizedBox(height: 10),
-                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus, maxLength: 17),
+                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus, maxLength: 17, isRequired: true),
                         ],
                       ),
                     ],
@@ -377,7 +400,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false, int? maxLength}
+    {bool isNumber = false, bool autofocus = false, int? maxLength, bool isRequired = false}
   ) {
     return Row(
       children: [
@@ -429,10 +452,10 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
               ),
             ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Required';
+              validator: isRequired ? (value) {
+                if (value == null || value.trim().isEmpty) return 'Required';
                 return null;
-              },
+              } : null,
             ),
           ),
         ),
@@ -606,7 +629,6 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               child: ColorSkinSelector(
                 initialValue: _selectedColor,
                 onChanged: (value) => setState(() => _selectedColor = value),
-                validator: (v) => v == null ? 'Required' : null,
               ),
             ),
           ),

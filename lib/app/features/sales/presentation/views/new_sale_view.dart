@@ -59,11 +59,8 @@ class NewSaleView extends GetView<NewSaleController> {
             // Section 1: Select Bike
             _buildSectionHeader(context, '1. Vehicle Selection', LucideIcons.bike),
             const SizedBox(height: AppSpacing.sm),
-            AppCard(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 550), // Increased to show model name and full card
-                child: const BikeSelector(),
-              ),
+            const AppCard(
+              child: BikeSelector(),
             ),
             const SizedBox(height: AppSpacing.xl),
 

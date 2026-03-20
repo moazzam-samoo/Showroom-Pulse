@@ -506,16 +506,15 @@ class NewSaleController extends GetxController {
       return;
     }
 
+    // Collect missing optional fields
+    final List<String> missingFields = [];
+
     // Validate payment details based on sale type
     if (saleType.value == SaleType.cash) {
       final cashAmount =
           double.tryParse(cashAmountController.text.replaceAll(',', ''));
       if (cashAmount == null || cashAmount <= 0) {
-        AppNotificationDialog.showError(
-          title: 'Invalid Amount',
-          message: 'Please enter a valid cash amount for the sale.',
-        );
-        return;
+        missingFields.add('Cash Sale Amount');
       }
     } else {
       // Installment validation
@@ -525,18 +524,10 @@ class NewSaleController extends GetxController {
       try {
         final bikePrice = bike?.cashSalePrice;
         if (bikePrice == null || bikePrice <= 0) {
-          AppNotificationDialog.showError(
-            title: 'Invalid Bike Price',
-            message: 'The selected bike does not have a valid price set. Please contact administrator.',
-          );
-          return;
+          missingFields.add('Bike Base Price');
         }
       } catch (e) {
-        AppNotificationDialog.showError(
-          title: 'Invalid Bike Price',
-          message: 'The selected bike does not have a price set. Please select a different bike or contact administrator.',
-        );
-        return;
+        missingFields.add('Bike Base Price');
       }
 
       if (calculationResult.value == null) {
@@ -558,25 +549,21 @@ class NewSaleController extends GetxController {
       }
     }
 
-    // Validate customer information for new customers
+    // Customer Validation
     if (isNewCustomer.value) {
-      if (customerNameController.text.trim().isEmpty ||
-          customerFatherNameController.text.trim().isEmpty ||
-          customerCnicController.text.trim().isEmpty ||
-          customerPhoneController.text.trim().isEmpty ||
-          customerAddressController.text.trim().isEmpty ||
-          customerProfileImagePath.value == null ||
-          customerCnicFrontPath.value == null ||
-          customerCnicBackPath.value == null) {
-        AppNotificationDialog.showError(
-          title: 'Missing Information',
-          message: 'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back) for the new customer.',
-        );
-        return;
-      }
+      // Images
+      if (customerCnicFrontPath.value == null) missingFields.add('Customer CNIC Front Image');
+      if (customerCnicBackPath.value == null) missingFields.add('Customer CNIC Back Image');
+
+      if (customerNameController.text.trim().isEmpty) missingFields.add('Customer Name');
+      if (customerFatherNameController.text.trim().isEmpty) missingFields.add('Customer Father Name');
+      if (customerCnicController.text.trim().isEmpty) missingFields.add('Customer CNIC');
+      if (customerPhoneController.text.trim().isEmpty) missingFields.add('Customer Phone');
+      if (customerAddressController.text.trim().isEmpty) missingFields.add('Customer Address');
+      if (customerProfileImagePath.value == null) missingFields.add('Customer Profile Photo');
     }
 
-    // Witness Validation Helpers
+    // Witness 1 Validation
     final bool isWitness1Empty =
         witness1NameController.text.trim().isEmpty &&
         witness1CnicController.text.trim().isEmpty &&
@@ -585,14 +572,19 @@ class NewSaleController extends GetxController {
         witness1CnicFrontPath.value == null &&
         witness1CnicBackPath.value == null;
 
-    final bool isWitness1Full =
-        witness1NameController.text.trim().isNotEmpty &&
-        witness1CnicController.text.trim().isNotEmpty &&
-        witness1PhoneController.text.trim().isNotEmpty &&
-        witness1AddressController.text.trim().isNotEmpty &&
-        witness1CnicFrontPath.value != null &&
-        witness1CnicBackPath.value != null;
+    if (isWitness1Empty) {
+      missingFields.add('Witness 1 (All details missing)');
+    } else {
+      if (witness1CnicFrontPath.value == null) missingFields.add('Witness 1 CNIC Front Image');
+      if (witness1CnicBackPath.value == null) missingFields.add('Witness 1 CNIC Back Image');
 
+      if (witness1NameController.text.trim().isEmpty) missingFields.add('Witness 1 Name');
+      if (witness1CnicController.text.trim().isEmpty) missingFields.add('Witness 1 CNIC');
+      if (witness1PhoneController.text.trim().isEmpty) missingFields.add('Witness 1 Phone');
+      if (witness1AddressController.text.trim().isEmpty) missingFields.add('Witness 1 Address');
+    }
+
+    // Witness 2 Validation
     final bool isWitness2Empty =
         witness2NameController.text.trim().isEmpty &&
         witness2CnicController.text.trim().isEmpty &&
@@ -601,69 +593,26 @@ class NewSaleController extends GetxController {
         witness2CnicFrontPath.value == null &&
         witness2CnicBackPath.value == null;
 
-    final bool isWitness2Full =
-        witness2NameController.text.trim().isNotEmpty &&
-        witness2CnicController.text.trim().isNotEmpty &&
-        witness2PhoneController.text.trim().isNotEmpty &&
-        witness2AddressController.text.trim().isNotEmpty &&
-        witness2CnicFrontPath.value != null &&
-        witness2CnicBackPath.value != null;
+    if (isWitness2Empty) {
+      missingFields.add('Witness 2 (All details missing)');
+    } else {
+      if (witness2CnicFrontPath.value == null) missingFields.add('Witness 2 CNIC Front Image');
+      if (witness2CnicBackPath.value == null) missingFields.add('Witness 2 CNIC Back Image');
 
-    // Witness Validation Logic
-    if (isWitness1Empty && isWitness2Empty) {
-      Get.dialog(
-        AlertDialog(
-          backgroundColor: Get.theme.canvasColor,
-          title: Text(
-            'Witnesses Required?',
-            style: TextStyle(color: Get.theme.textTheme.bodyLarge?.color),
-          ),
-          content: Text(
-            'You have not filled out any witness details. Would you like to proceed without witnesses, or go back to fill them in?',
-            style: TextStyle(color: Get.theme.textTheme.bodyMedium?.color),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Get.back(); // close dialog
-              },
-              child: const Text('Fill Witnesses'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Get.back(); // close dialog
-                _executeSale();
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Proceed Without', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      );
-      return;
+      if (witness2NameController.text.trim().isEmpty) missingFields.add('Witness 2 Name');
+      if (witness2CnicController.text.trim().isEmpty) missingFields.add('Witness 2 CNIC');
+      if (witness2PhoneController.text.trim().isEmpty) missingFields.add('Witness 2 Phone');
+      if (witness2AddressController.text.trim().isEmpty) missingFields.add('Witness 2 Address');
     }
 
-    if (!isWitness1Empty && !isWitness1Full) {
-      AppNotificationDialog.showError(
-        title: 'Incomplete Witness 1',
-        message: 'Please fill all required fields and upload both CNIC images for Witness 1.',
+    if (missingFields.isNotEmpty) {
+      AppNotificationDialog.showOptionalFieldsWarning(
+        missingFields: missingFields,
+        onProceed: _executeSale,
       );
-      return;
+    } else {
+      _executeSale();
     }
-
-    if (!isWitness2Empty && !isWitness2Full) {
-      AppNotificationDialog.showError(
-        title: 'Incomplete Witness 2',
-        message: 'Please fill all required fields and upload both CNIC images for Witness 2.',
-      );
-      if (!showWitness2.value) {
-        showWitness2.value = true;
-      }
-      return;
-    }
-
-    // Validation passed, execute actual sale
-    _executeSale();
   }
 
   /// Internal method to execute the database operations after successful validation

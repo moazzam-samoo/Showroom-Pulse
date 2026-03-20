@@ -1,4 +1,4 @@
-# Plan: Hybrid UX Pattern for Notifications
+# Plan: Hybrid UX Pattern for NotifVications
 
 This document outlines the implementation plan for replacing the 50+ existing `Get.snackbar` notifications with a Hybrid UX Pattern (Toasts for info/success, Pop-ups for errors/critical alerts), serving as Phase 1 of the orchestration process.
 
