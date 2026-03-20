@@ -164,21 +164,6 @@ class CustomersController extends GetxController {
 
   /// Internal method to save customer
   Future<void> _addCustomer(Map<String, dynamic> data) async {
-    if (data['fullName'].toString().trim().isEmpty ||
-        data['fatherName'].toString().trim().isEmpty ||
-        data['cnicNumber'].toString().trim().isEmpty ||
-        data['phoneNumber'].toString().trim().isEmpty ||
-        data['address'].toString().trim().isEmpty ||
-        data['profileImage'] == null ||
-        data['cnicFrontImage'] == null ||
-        data['cnicBackImage'] == null) {
-      AppNotificationDialog.showError(
-        title: 'Missing Information',
-        message: 'Please fill all input fields and upload all 3 images (Profile, CNIC Front, CNIC Back).',
-      );
-      return;
-    }
-
     isLoading.value = true;
     try {
       String? profileImageFilename;
@@ -334,25 +319,6 @@ class CustomersController extends GetxController {
 
   /// Internal method to update customer
   Future<void> _updateCustomer(int id, Map<String, dynamic> data) async {
-    bool hasProfile = data['profileImage'] != null || data['existingProfileImage'] != null;
-    bool hasCnicFront = data['cnicFrontImage'] != null || data['existingCnicFrontImage'] != null;
-    bool hasCnicBack = data['cnicBackImage'] != null || data['existingCnicBackImage'] != null;
-
-    if (data['fullName'].toString().trim().isEmpty ||
-        data['fatherName'].toString().trim().isEmpty ||
-        data['cnicNumber'].toString().trim().isEmpty ||
-        data['phoneNumber'].toString().trim().isEmpty ||
-        data['address'].toString().trim().isEmpty ||
-        !hasProfile ||
-        !hasCnicFront ||
-        !hasCnicBack) {
-      AppNotificationDialog.showError(
-        title: 'Missing Information',
-        message: 'Please fill all input fields and ensure all 3 images (Profile, CNIC Front, CNIC Back) are provided.',
-      );
-      return;
-    }
-
     isLoading.value = true;
     try {
       String? profileImageFilename = data['existingProfileImage'];
