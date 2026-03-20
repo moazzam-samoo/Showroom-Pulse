@@ -11,6 +11,7 @@ import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 class AddCustomerDialog extends StatefulWidget {
   final Customer? customer;
@@ -186,32 +187,43 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
 
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
-      if (widget.onSave != null) {
-        widget.onSave!({
-          'fullName': _nameController.text,
-          'fatherName': _fatherNameController.text,
-          'cnicNumber': _cnicController.text,
-          'phoneNumber': _phoneController.text,
-          'address': _addressController.text,
-          'profileImage': _profileImage,
-          'cnicFrontImage': _cnicFrontImage,
-          'cnicBackImage': _cnicBackImage,
-          'existingProfileImage': _existingProfileImage != null && _profileImage == null ? widget.customer?.profileImageFilename : null, // Logic handled in controller? Controller expects filenames or files.
-          // Controller logic: "if data['profileImage'] != null ... save ... else if existing? "
-          // Controller _updateCustomer logic:
-          // String? profileImageFilename = data['existingProfileImage']; ...
-          // if (data['profileImage'] != null) ...
-          
-          // So I need to pass the existing filenames if they are kept.
-          // If a new image is picked (_profileImage != null), controller uses that.
-          // If no new image, controller needs to know if we keep the old one.
-          // The controller implementation I wrote: `String? profileImageFilename = data['existingProfileImage'];`
-          // So I should pass the filename here if I want to keep it.
-           'existingProfileImage': _profileImage == null ? widget.customer?.profileImageFilename : null,
-           'existingCnicFrontImage': _cnicFrontImage == null ? widget.customer?.cnicFrontFilename : null,
-           'existingCnicBackImage': _cnicBackImage == null ? widget.customer?.cnicBackFilename : null,
-        });
-        Get.back();
+      final List<String> missingFields = [];
+      if (_nameController.text.trim().isEmpty) missingFields.add('Full Name');
+      if (_fatherNameController.text.trim().isEmpty) missingFields.add('Father Name');
+      if (_cnicController.text.trim().isEmpty) missingFields.add('CNIC');
+      if (_phoneController.text.trim().isEmpty) missingFields.add('Phone');
+      if (_addressController.text.trim().isEmpty) missingFields.add('Address');
+
+      if (_profileImage == null && _existingProfileImage == null) missingFields.add('Profile Photo');
+      if (_cnicFrontImage == null && _existingCnicFrontImage == null) missingFields.add('CNIC Front Image');
+      if (_cnicBackImage == null && _existingCnicBackImage == null) missingFields.add('CNIC Back Image');
+
+      void executeSave() {
+        if (widget.onSave != null) {
+          widget.onSave!({
+            'fullName': _nameController.text.trim(),
+            'fatherName': _fatherNameController.text.trim(),
+            'cnicNumber': _cnicController.text.trim(),
+            'phoneNumber': _phoneController.text.trim(),
+            'address': _addressController.text.trim(),
+            'profileImage': _profileImage,
+            'cnicFrontImage': _cnicFrontImage,
+            'cnicBackImage': _cnicBackImage,
+            'existingProfileImage': _profileImage == null ? widget.customer?.profileImageFilename : null,
+            'existingCnicFrontImage': _cnicFrontImage == null ? widget.customer?.cnicFrontFilename : null,
+            'existingCnicBackImage': _cnicBackImage == null ? widget.customer?.cnicBackFilename : null,
+          });
+          Get.back();
+        }
+      }
+
+      if (missingFields.isNotEmpty) {
+        AppNotificationDialog.showOptionalFieldsWarning(
+          missingFields: missingFields,
+          onProceed: executeSave,
+        );
+      } else {
+        executeSave();
       }
     }
   }
@@ -452,8 +464,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
             ),
           ),
           validator: (value) {
-            if (isOptional && (value == null || value.isEmpty)) return null;
-            if (value == null || value.isEmpty) return 'Required';
+            if (value == null || value.trim().isEmpty) return null;
             if (isCnic && value.length < 15) return 'Invalid CNIC (13 digits required)';
             if (isPhone && value.length < 12) return 'Invalid Phone (11 digits required)';
             return null;
