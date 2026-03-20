@@ -266,45 +266,7 @@ class SupplierController extends GetxController {
   }
 
   Future<void> saveBatch() async {
-    Supplier? finalSupplier;
-
-    // Validate Supplier
-    if (isNewSupplier.value) {
-      if (newSupplierName.text.isEmpty || 
-          newSupplierPhone.text.isEmpty || 
-          newSupplierCnic.text.isEmpty ||
-          newSupplierProfilePic.value == null ||
-          newSupplierCnicPic.value == null) {
-        AppNotificationDialog.showError(
-          title: 'Missing Information', 
-          message: 'Please fill all supplier details (Name, Phone, CNIC) and provide both Profile and CNIC images before proceeding.',
-        );
-        return;
-      }
-      try {
-        final newSupplier = await _supplierService.createSupplier(
-          newSupplierName.text,
-          newSupplierCnic.text, 
-          newSupplierPhone.text,
-          profilePic: newSupplierProfilePic.value,
-          cnicPic: newSupplierCnicPic.value,
-        );
-        await loadSuppliers(); // Refresh list
-        finalSupplier = newSupplier;
-      } catch (e) {
-        AppNotificationDialog.showError(title: 'Error', message: 'Failed to create supplier: $e');
-        return;
-      }
-    } else {
-      if (selectedSupplier.value == null) {
-        AppNotificationDialog.showError(title: 'Error', message: 'Please select a supplier');
-        return;
-      }
-      finalSupplier = selectedSupplier.value;
-    }
-
-    if (finalSupplier == null) return;
-
+    // 1. Check strict requirements first: Engine, Chassis, and having at least 1 row.
     if (bikeEntries.isEmpty) {
       AppNotificationDialog.showError(title: 'Error', message: 'Please add at least one bike');
       return;
@@ -312,91 +274,145 @@ class SupplierController extends GetxController {
 
     for (int i = 0; i < bikeEntries.length; i++) {
       var e = bikeEntries[i];
-      if (e.engineNumber.isEmpty || e.chassisNumber.isEmpty || e.brand.isEmpty || 
-          e.model.isEmpty || e.color.isEmpty || e.purchasePrice <= 0 || e.imageFile == null) {
+      if (e.engineNumber.trim().isEmpty || e.chassisNumber.trim().isEmpty) {
         AppNotificationDialog.showError(
-          title: 'Missing Details', 
-          message: 'Row ${i + 1} is incomplete. Engine, Chassis, Brand, Model, Color, Year, Purchase Price, and Image must all be filled.',
+          title: 'Missing Required Details',
+          message: 'Row ${i + 1} is missing Engine Number or Chassis Number. These are strictly required.',
         );
         return;
       }
     }
 
-    try {
-      // Logic split for Create vs Update
-      if (editingBatch.value != null) {
-        // --- UPDATE EXISTING ---
-        await _handleUpdateBatch(editingBatch.value!, finalSupplier);
-      } else {
-        // --- CREATE NEW ---
-        await _handleCreateBatch(finalSupplier);
-      }
+    if (!isNewSupplier.value && selectedSupplier.value == null) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Please select a supplier');
+      return;
+    }
 
-      clearBatchForm();
-      await loadSuppliers();
-      _refreshSelectedSupplier();
+    // 2. Compile missing optional fields
+    final List<String> missingFields = [];
 
-      Get.dialog(
-        Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Success!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'The bikes have been successfully added to your inventory.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: 200, // Fixed width instead of double.infinity
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.back(); // Close dialog
-                      Get.back(); // Navigate back to previous screen
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    if (isNewSupplier.value) {
+      if (newSupplierName.text.trim().isEmpty) missingFields.add('Supplier Name');
+      if (newSupplierPhone.text.trim().isEmpty) missingFields.add('Supplier Phone');
+      if (newSupplierCnic.text.trim().isEmpty) missingFields.add('Supplier CNIC');
+      if (newSupplierProfilePic.value == null) missingFields.add('Supplier Profile Picture');
+      if (newSupplierCnicPic.value == null) missingFields.add('Supplier CNIC Image');
+    }
+
+    if (billImage.value == null && (editingBatch.value == null || editingBatch.value?.billImageFilename == null)) {
+      missingFields.add('Batch Invoice / Bill Image');
+    }
+
+    for (int i = 0; i < bikeEntries.length; i++) {
+      var e = bikeEntries[i];
+      if (e.brand.trim().isEmpty) missingFields.add('Row ${i + 1}: Brand');
+      if (e.model.trim().isEmpty) missingFields.add('Row ${i + 1}: Model');
+      if (e.color.trim().isEmpty) missingFields.add('Row ${i + 1}: Color');
+      if (e.purchasePrice <= 0) missingFields.add('Row ${i + 1}: Purchase Price');
+      if (e.imageFile == null && e.existingBike == null) missingFields.add('Row ${i + 1}: Image');
+    }
+
+    // 3. Define execution logic
+    Future<void> executeSave() async {
+      Supplier? finalSupplier;
+      try {
+        if (isNewSupplier.value) {
+          final newSupplier = await _supplierService.createSupplier(
+            newSupplierName.text,
+            newSupplierCnic.text, 
+            newSupplierPhone.text,
+            profilePic: newSupplierProfilePic.value,
+            cnicPic: newSupplierCnicPic.value,
+          );
+          await loadSuppliers();
+          finalSupplier = newSupplier;
+        } else {
+          finalSupplier = selectedSupplier.value;
+        }
+
+        if (finalSupplier == null) return;
+
+        if (editingBatch.value != null) {
+          await _handleUpdateBatch(editingBatch.value!, finalSupplier);
+        } else {
+          await _handleCreateBatch(finalSupplier);
+        }
+
+        clearBatchForm();
+        await loadSuppliers();
+        _refreshSelectedSupplier();
+
+        Get.dialog(
+          Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                    child: const Text('Continue'),
+                    child: const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Success!',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'The batch has been successfully saved.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: 200,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back(); // close dialog
+                        Get.back(); // navigate back
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Continue'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        barrierDismissible: false,
-      );
-      
-    } catch (e) {
-      final errorMessage = e.toString().toLowerCase();
-      if (errorMessage.contains('unique index violated') || errorMessage.contains('unique')) {
-        AppNotificationDialog.showError(
-          title: 'Duplicate Entry', 
-          message: 'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
+          barrierDismissible: false,
         );
-      } else {
-        AppNotificationDialog.showError(title: 'Error', message: e.toString());
+        
+      } catch (e) {
+        final errorMessage = e.toString().toLowerCase();
+        if (errorMessage.contains('unique index violated') || errorMessage.contains('unique')) {
+          AppNotificationDialog.showError(
+            title: 'Duplicate Entry', 
+            message: 'A bike with this Engine Number or Chassis Number already exists in the system. Please change them and try again.',
+          );
+        } else {
+          AppNotificationDialog.showError(title: 'Error', message: e.toString());
+        }
       }
+    }
+
+    if (missingFields.isNotEmpty) {
+      AppNotificationDialog.showOptionalFieldsWarning(
+        missingFields: missingFields,
+        onProceed: executeSave,
+      );
+    } else {
+      executeSave();
     }
   }
 
