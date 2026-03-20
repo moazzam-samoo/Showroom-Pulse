@@ -352,7 +352,7 @@ class ExpenseTracker extends StatelessWidget {
                   children: [
                     // Category dropdown
                     DropdownButtonFormField<String>(
-                      value: selectedCategory,
+                      initialValue: selectedCategory,
                       dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                       decoration: InputDecoration(
                         labelText: 'Category',

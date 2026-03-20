@@ -34,6 +34,7 @@ class BikeFilterBar extends StatelessWidget {
   final ValueChanged<String>? onSearchChanged;
   final VoidCallback? onClearFilters;
   final VoidCallback? onAddBike;
+  final GlobalKey? addBtnKey;
 
   const BikeFilterBar({
     super.key,
@@ -57,6 +58,7 @@ class BikeFilterBar extends StatelessWidget {
     this.onSearchChanged,
     this.onClearFilters,
     this.onAddBike,
+    this.addBtnKey,
   });
 
   // Sample data
@@ -173,6 +175,7 @@ class BikeFilterBar extends StatelessWidget {
             
             // Add Bike Button
             SizedBox(
+              key: addBtnKey,
               height: 48,
               child: ElevatedButton.icon(
                 onPressed: onAddBike,

@@ -10,8 +10,10 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/features/installments/presentation/controllers/installments_controller.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 
@@ -31,7 +33,7 @@ class StatementService {
       final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
 
       final pdf = pw.Document();
-      _addStatementPage(pdf, data, settings);
+      await _addStatementPage(pdf, data, settings);
 
       final outputPath = await _getDownloadsPath();
       final sanitizedName = data.customer.fullName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
@@ -55,7 +57,7 @@ class StatementService {
       final pdf = pw.Document();
 
       for (final data in allData) {
-        _addStatementPage(pdf, data, settings);
+        await _addStatementPage(pdf, data, settings);
       }
 
       final outputPath = await _getDownloadsPath();
@@ -81,7 +83,7 @@ class StatementService {
 
       for (final data in allData) {
         final pdf = pw.Document();
-        _addStatementPage(pdf, data, settings);
+        await _addStatementPage(pdf, data, settings);
 
         final sanitizedName = data.customer.fullName.replaceAll(RegExp(r'[^\w\s]'), '').replaceAll(' ', '_');
         final fileName = 'Statement_$sanitizedName.pdf';
@@ -106,17 +108,18 @@ class StatementService {
     }
   }
 
-  void _addStatementPage(pw.Document pdf, ContractDisplayData data, AppSettings settings) {
+  Future<void> _addStatementPage(pw.Document pdf, ContractDisplayData data, AppSettings settings) async {
     final contract = data.contract;
     final customer = data.customer;
     final bike = data.bike;
     final payments = data.payments;
+    final logo = await _loadLogo(settings);
 
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
-        header: (context) => _buildHeader(context, settings),
+        header: (context) => _buildHeader(context, settings, logo),
         footer: (context) => _buildFooter(context),
         build: (context) => [
           // Customer & Bike Info
@@ -128,16 +131,15 @@ class StatementService {
               pw.Expanded(child: _buildBikeSection(bike)),
             ],
           ),
-          pw.SizedBox(height: 16),
-
+          pw.SizedBox(height: 12),
           // Contract Summary
           _buildContractSummary(contract),
-          pw.SizedBox(height: 16),
+          pw.SizedBox(height: 12),
 
-          // Witnesses
+          // Witnesses - Only if actually present (placeholder has no height if hidden)
           if (data.payments.isNotEmpty) ...[
             _buildWitnessSection(data),
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 12),
           ],
 
           // Payment History Table
@@ -147,44 +149,65 @@ class StatementService {
     );
   }
 
-  pw.Widget _buildHeader(pw.Context context, AppSettings settings) {
-    pw.Widget? logoWidget;
-    if (settings.showroomLogoPath != null) {
-      final file = File(settings.showroomLogoPath!);
-      if (file.existsSync()) {
-        final image = pw.MemoryImage(file.readAsBytesSync());
-        logoWidget = pw.Image(image, width: 40, height: 40);
-      }
-    }
-
+  pw.Widget _buildHeader(pw.Context context, AppSettings settings, pw.MemoryImage? logo) {
     return pw.Column(
       children: [
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Row(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
               children: [
-                if (logoWidget != null) ...[
-                  logoWidget,
-                  pw.SizedBox(width: 8),
+                if (logo != null) ...[
+                  pw.Container(
+                    width: 50,
+                    height: 50,
+                    child: pw.Image(logo, fit: pw.BoxFit.contain),
+                  ),
+                  pw.SizedBox(width: 12),
                 ],
-                pw.Text(
-                  settings.showroomName.isNotEmpty ? settings.showroomName : 'Tahir Showroom',
-                  style: pw.TextStyle(fontSize: settings.showroomName.length > 20 ? 16 : 22, fontWeight: pw.FontWeight.bold),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text(
+                      settings.showroomName.isNotEmpty ? settings.showroomName : 'AL-TAHIR Showroom',
+                      style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.cyan700),
+                    ),
+                    pw.Text(
+                      'Installment Statement',
+                      style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                    ),
+                  ],
                 ),
               ],
             ),
             pw.Text(
-              'Installment Statement',
-              style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700),
+              'STATEMENT',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey400),
             ),
           ],
         ),
-        pw.Divider(thickness: 1.5),
+        pw.SizedBox(height: 8),
+        pw.Divider(thickness: 1.5, color: PdfColors.cyan700),
         pw.SizedBox(height: 10),
       ],
     );
+  }
+
+  Future<pw.MemoryImage?> _loadLogo(AppSettings settings) async {
+    if (settings.showroomLogoPath != null) {
+      final file = File(settings.showroomLogoPath!);
+      if (file.existsSync()) {
+        return pw.MemoryImage(file.readAsBytesSync());
+      }
+    }
+    try {
+      final data = await rootBundle.load(AppAssets.logo);
+      return pw.MemoryImage(data.buffer.asUint8List());
+    } catch (e) {
+      debugPrint('Error loading app logo: $e');
+      return null;
+    }
   }
 
   pw.Widget _buildFooter(pw.Context context) {
@@ -197,11 +220,11 @@ class StatementService {
           children: [
             pw.Text(
               'Generated: ${_dateFormat.format(DateTime.now())}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
             pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
             ),
           ],
         ),
@@ -211,7 +234,7 @@ class StatementService {
 
   pw.Widget _buildCustomerSection(Customer customer) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -232,7 +255,7 @@ class StatementService {
 
   pw.Widget _buildBikeSection(Bike bike) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -253,7 +276,7 @@ class StatementService {
 
   pw.Widget _buildContractSummary(InstallmentContract contract) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         color: PdfColors.grey100,
         border: pw.Border.all(color: PdfColors.grey300),
@@ -323,7 +346,7 @@ class StatementService {
 
     return pw.Row(
       children: [
-        pw.Text('Status: ', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+        pw.Text('Status: ', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: pw.BoxDecoration(
@@ -346,7 +369,7 @@ class StatementService {
   pw.Widget _buildWitnessSection(ContractDisplayData data) {
     // Fetch witnesses from repository would be ideal, but we work with what ContractDisplayData provides
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding: const pw.EdgeInsets.all(8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey300),
         borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
@@ -357,8 +380,8 @@ class StatementService {
           pw.Text('Witness Information', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Witnesses are on file at Tahir Showroom.',
-            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+            'Witnesses are on file at AL-AL-TAHIR Showroom.',
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],
       ),
@@ -375,13 +398,14 @@ class StatementService {
         pw.Text('Payment History', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
         pw.SizedBox(height: 8),
         if (allPayments.isEmpty)
-          pw.Text('No payments recorded yet.', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600))
+          pw.Text('No payments recorded yet.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600))
         else
           pw.TableHelper.fromTextArray(
             headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
             cellStyle: const pw.TextStyle(fontSize: 10),
             headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
-            cellHeight: 28,
+            cellHeight: 22,
+            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4),
             headers: ['#', 'Date', 'Amount', 'Method', 'Collector', 'Notes'],
             data: List.generate(allPayments.length, (i) {
               final p = allPayments[i];

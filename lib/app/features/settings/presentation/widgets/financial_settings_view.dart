@@ -6,7 +6,14 @@ import '../../../../core/widgets/app_toast.dart';
 import '../controllers/settings_controller.dart';
 
 class FinancialSettingsView extends GetView<SettingsController> {
-  const FinancialSettingsView({super.key});
+  final GlobalKey? markupSliderKey;
+  final GlobalKey? lateFeeToggleKey;
+
+  const FinancialSettingsView({
+    super.key,
+    this.markupSliderKey,
+    this.lateFeeToggleKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +38,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
           const SizedBox(height: AppSpacing.lg),
 
           // Installment Markup
-          _buildSettingRow(
+          Container(
+            key: markupSliderKey,
+            child: _buildSettingRow(
             title: 'Default Installment Markup (%)',
             subtitle: 'Pre-fills markup when creating new installment sales',
             isDark: isDark,
@@ -79,6 +88,7 @@ class FinancialSettingsView extends GetView<SettingsController> {
               ),
             ),
           ),
+          ),
           _divider(isDark),
 
           // EMI Rounding
@@ -119,18 +129,21 @@ class FinancialSettingsView extends GetView<SettingsController> {
           _divider(isDark),
 
           // Late Fee Toggle
-          _buildSettingRow(
+          Container(
+            key: lateFeeToggleKey,
+            child: _buildSettingRow(
             title: 'Automatic Late Fee',
             subtitle: 'Apply penalty for overdue installments',
             isDark: isDark,
             trailing: Switch(
               value: settings.automaticLateFeeEnabled,
-              activeColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              activeThumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
               onChanged: (value) {
                 settings.automaticLateFeeEnabled = value;
                 controller.settings.refresh();
                 controller.saveSettings();
               },
+            ),
             ),
           ),
 

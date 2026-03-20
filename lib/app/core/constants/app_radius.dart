@@ -1,4 +1,4 @@
-/// Tahir Showroom Border Radius System
+/// AL-TAHIR Showroom Border Radius System
 /// Based on UI_colors_and_design_file.md
 class AppRadius {
   AppRadius._();

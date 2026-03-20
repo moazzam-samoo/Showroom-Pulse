@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
-import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 
 // Intents
 class SubmitIntent extends Intent {
@@ -33,7 +32,7 @@ class AppDialog extends StatelessWidget {
   const AppDialog({
     super.key,
     required this.title,
-    this.subtitle = 'Tahir Showroom Management',
+    this.subtitle = 'AL-AL-TAHIR Showroom Management',
     required this.child,
     this.onSubmit,
     this.onCancel,

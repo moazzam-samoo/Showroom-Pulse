@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
-import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/features/auth/presentation/widgets/login_card.dart';
 
 /// Login View - Entry point for authentication
@@ -12,7 +9,7 @@ import 'package:tahir_showroom/app/features/auth/presentation/widgets/login_card
 /// Analyzed from: Dark Theme UI/Login Page.png
 /// - Centered login card on dark/gradient background
 /// - Motorcycle icon in rounded container
-/// - "Tahir Showroom" title + "Inventory Management System" subtitle
+/// - "AL-TAHIR Showroom" title + "Inventory Management System" subtitle
 /// - Username and Password inputs with icons
 /// - Cyan "Sign In" button
 /// - Copyright footer
@@ -38,7 +35,7 @@ class LoginView extends StatelessWidget {
           // Dark: solid dark background
           // Light: blue gradient
           color: isDark ? AppColors.darkBackground : null,
-          gradient: isDark ? null : LinearGradient(
+          gradient: isDark ? null : const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
@@ -60,7 +57,7 @@ class LoginView extends StatelessWidget {
                 
                 // Copyright footer
                 Text(
-                  '© 2026 Tahir Showroom. All rights reserved.',
+                  '© 2026 AL-TAHIR Showroom. All rights reserved.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isDark 
                         ? AppColors.darkTextMuted 

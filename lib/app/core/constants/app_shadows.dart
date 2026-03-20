@@ -1,5 +1,6 @@
-/// Tahir Showroom Shadow System
+/// AL-TAHIR Showroom Shadow System
 /// Based on UI_colors_and_design_file.md
+library;
 import 'package:flutter/material.dart';
 
 class AppShadows {

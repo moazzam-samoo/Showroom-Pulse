@@ -10,7 +10,12 @@ import 'package:tahir_showroom/app/features/customers/presentation/controllers/c
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 
 class CustomerListSidebar extends GetView<CustomersController> {
-  const CustomerListSidebar({super.key});
+  final GlobalKey? downloadBtnKey;
+
+  const CustomerListSidebar({
+    super.key,
+    this.downloadBtnKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +40,13 @@ class CustomerListSidebar extends GetView<CustomersController> {
                 const SizedBox(width: 8),
                 const Text('Customers', style: TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
+                IconButton(
+                  key: downloadBtnKey,
+                  icon: const Icon(LucideIcons.download, size: 18),
+                  onPressed: () => controller.downloadAllCustomersData(), 
+                  tooltip: 'Download All Customers',
+                  color: primaryColor,
+                ),
                 IconButton(
                   icon: const Icon(LucideIcons.userPlus, size: 18),
                   // TODO: Implement Add Customer Dialog if needed, or link to sales
@@ -140,9 +152,20 @@ class CustomerListSidebar extends GetView<CustomersController> {
                             height: 32,
                             child: Row(
                               children: [
-                                const Icon(LucideIcons.trash2, size: 14, color: Colors.red),
+                                Icon(LucideIcons.download, size: 14, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
                                 const SizedBox(width: 8),
-                                const Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
+                                Text('Download ZIP', style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary)),
+                              ],
+                            ),
+                            onTap: () => controller.downloadCustomerData(customer),
+                          ),
+                          PopupMenuItem(
+                            height: 32,
+                            child: const Row(
+                              children: [
+                                Icon(LucideIcons.trash2, size: 14, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(fontSize: 13, color: Colors.red)),
                               ],
                             ),
                             onTap: () => controller.deleteCustomer(customer.customer.id),

@@ -76,7 +76,7 @@ class BikeSelector extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 8),
                       child: ExpansionTile(
                         // Force rebuild when expansion state changes to respect initiallyExpanded
-                        key: Key('${model}_${isExpanded}'),
+                        key: Key('${model}_$isExpanded'),
                         initiallyExpanded: isExpanded,
                         onExpansionChanged: (expanded) {
                           if (expanded) {

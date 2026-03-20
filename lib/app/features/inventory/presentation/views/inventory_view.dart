@@ -13,7 +13,9 @@ import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_bike_dialog.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
 
 /// Inventory View
 ///
@@ -33,6 +35,13 @@ class InventoryView extends StatefulWidget {
 class _InventoryViewState extends State<InventoryView> {
   late final FocusNode _focusNode;
 
+  // Coach mark keys
+  final GlobalKey _filterBarKey = GlobalKey();
+  final GlobalKey _addBtnKey = GlobalKey();
+  final GlobalKey _bikeGridKey = GlobalKey();
+  
+  bool _showCoachMarks = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +50,28 @@ class _InventoryViewState extends State<InventoryView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusNode.requestFocus();
     });
+    _checkWalkthroughStatus();
+  }
+
+  Future<void> _checkWalkthroughStatus() async {
+    final walkthroughService = Get.find<WalkthroughService>();
+    if (!walkthroughService.hasCompletedTab('inventory')) {
+      // Delay slightly to ensure layout is built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _showCoachMarks = true;
+          });
+        }
+      });
+    }
+  }
+
+  void _completeTour() {
+    setState(() {
+      _showCoachMarks = false;
+    });
+    Get.find<WalkthroughService>().markTabComplete('inventory');
   }
 
   @override
@@ -63,103 +94,140 @@ class _InventoryViewState extends State<InventoryView> {
       },
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        body: Row(
-        children: [
-          // Sidebar
-          SidebarNavigation(
-            selectedIndex: 2, // Inventory is now index 2
-            onItemSelected: (index) {
-              // Navigate based on index
-              switch (index) {
-                case 0:
-                  Get.offNamed('/dashboard');
-                  break;
-                case 1:
-                   Get.offNamed('/procurement');
-                   break;
-                case 2:
-                  // Already on inventory
-                  break;
-                case 3:
-                  Get.offNamed('/sales');
-                  break;
-                case 4:
-                  Get.offNamed('/installments');
-                  break;
-                case 5:
-                  Get.offNamed('/customers');
-                  break;
-                case 6:
-                  Get.offNamed('/reports');
-                  break;
-                case 7:
-                  Get.offNamed('/settings');
-                  break;
-              }
-            },
-          ),
-          // Main Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Filter Bar
-                  Obx(() => BikeFilterBar(
-                    searchController: controller.searchController,
-                    selectedBrand: controller.selectedBrand.value,
-                    selectedCC: controller.selectedCC.value,
-                    selectedStatus: controller.selectedStatus.value,
-                    selectedCondition: controller.selectedCondition.value,
-                    selectedColor: controller.selectedColor.value,
-                    selectedSkin: controller.selectedSkin.value,
-                    minPrice: controller.minPrice.value,
-                    maxPrice: controller.maxPrice.value,
-                    onBrandChanged: (v) => controller.selectedBrand.value = v,
-                    onCCChanged: (v) => controller.selectedCC.value = v,
-                    onStatusChanged: (v) => controller.selectedStatus.value = v,
-                    onConditionChanged: (v) => controller.selectedCondition.value = v,
-                    onColorChanged: (v) {
-                      controller.selectedColor.value = v;
-                      if (v != null) controller.selectedSkin.value = null;
-                    },
-                    onSkinChanged: (v) {
-                      controller.selectedSkin.value = v;
-                      if (v != null) controller.selectedColor.value = null;
-                    },
-                    onMinPriceChanged: (v) => controller.minPrice.value = v,
-                    onMaxPriceChanged: (v) => controller.maxPrice.value = v,
-                    onClearFilters: () {
-                      controller.searchController.clear();
-                      controller.selectedBrand.value = null;
-                      controller.selectedCC.value = null;
-                      controller.selectedStatus.value = null;
-                      controller.selectedCondition.value = null;
-                      controller.selectedColor.value = null;
-                      controller.selectedSkin.value = null;
-                      controller.minPrice.value = null;
-                      controller.maxPrice.value = null;
-                    },
-                    onAddBike: () => _showAddBikeDialog(context, controller),
-                  )),
-                  const SizedBox(height: AppSpacing.lg),
-                  // Bike Grid
-                  Expanded(
-                    child: Obx(() {
-                      if (controller.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      
-                      return _buildBikeGrid(context, controller, isDark);
-                    }),
+        body: Stack(
+          children: [
+            Row(
+              children: [
+                // Sidebar
+                SidebarNavigation(
+                  selectedIndex: 2, // Inventory is now index 2
+                  onItemSelected: (index) {
+                    // Navigate based on index
+                    switch (index) {
+                      case 0:
+                        Get.offNamed('/dashboard');
+                        break;
+                      case 1:
+                         Get.offNamed('/procurement');
+                         break;
+                      case 2:
+                        // Already on inventory
+                        break;
+                      case 3:
+                        Get.offNamed('/sales');
+                        break;
+                      case 4:
+                        Get.offNamed('/installments');
+                        break;
+                      case 5:
+                        Get.offNamed('/customers');
+                        break;
+                      case 6:
+                        Get.offNamed('/reports');
+                        break;
+                      case 7:
+                        Get.offNamed('/settings');
+                        break;
+                    }
+                  },
+                ),
+                // Main Content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Filter Bar
+                        Container(
+                          key: _filterBarKey,
+                          child: Obx(() => BikeFilterBar(
+                            searchController: controller.searchController,
+                            selectedBrand: controller.selectedBrand.value,
+                            selectedCC: controller.selectedCC.value,
+                            selectedStatus: controller.selectedStatus.value,
+                            selectedCondition: controller.selectedCondition.value,
+                            selectedColor: controller.selectedColor.value,
+                            selectedSkin: controller.selectedSkin.value,
+                            minPrice: controller.minPrice.value,
+                            maxPrice: controller.maxPrice.value,
+                            onBrandChanged: (v) => controller.selectedBrand.value = v,
+                            onCCChanged: (v) => controller.selectedCC.value = v,
+                            onStatusChanged: (v) => controller.selectedStatus.value = v,
+                            onConditionChanged: (v) => controller.selectedCondition.value = v,
+                            onColorChanged: (v) {
+                              controller.selectedColor.value = v;
+                              if (v != null) controller.selectedSkin.value = null;
+                            },
+                            onSkinChanged: (v) {
+                              controller.selectedSkin.value = v;
+                              if (v != null) controller.selectedColor.value = null;
+                            },
+                            onMinPriceChanged: (v) => controller.minPrice.value = v,
+                            onMaxPriceChanged: (v) => controller.maxPrice.value = v,
+                            onClearFilters: () {
+                              controller.searchController.clear();
+                              controller.selectedBrand.value = null;
+                              controller.selectedCC.value = null;
+                              controller.selectedStatus.value = null;
+                              controller.selectedCondition.value = null;
+                              controller.selectedColor.value = null;
+                              controller.selectedSkin.value = null;
+                              controller.minPrice.value = null;
+                              controller.maxPrice.value = null;
+                            },
+                            onAddBike: () => _showAddBikeDialog(context, controller),
+                            addBtnKey: _addBtnKey,
+                          )),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        // Bike Grid
+                        Expanded(
+                          key: _bikeGridKey,
+                          child: Obx(() {
+                            if (controller.isLoading.value) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            
+                            return _buildBikeGrid(context, controller, isDark);
+                          }),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
+            
+            // Coach Marks Overlay
+            if (_showCoachMarks)
+              Positioned.fill(
+                child: CoachMarkOverlay(
+                  targets: [
+                    CoachMarkTarget(
+                      targetKey: _filterBarKey,
+                      title: 'Search & Filters',
+                      description: 'Find bikes instantly by brand, CC, status, or price.',
+                      position: CoachMarkPosition.bottom,
+                    ),
+                    CoachMarkTarget(
+                      targetKey: _addBtnKey,
+                      title: 'Add New Bike',
+                      description: 'Add new bikes to your inventory with full details.',
+                      position: CoachMarkPosition.bottom,
+                    ),
+                    CoachMarkTarget(
+                      targetKey: _bikeGridKey,
+                      title: 'Inventory Grid',
+                      description: 'View all bikes at a glance. Tap any card for details or editing.',
+                      position: CoachMarkPosition.top,
+                    ),
+                  ],
+                  onComplete: _completeTour,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -202,8 +270,9 @@ class _InventoryViewState extends State<InventoryView> {
       builder: (context, constraints) {
         // Responsive columns: 4 for wide screens, 3 for smaller, 2 for very small
         int crossAxisCount = 4;
-        if (constraints.maxWidth < 700) crossAxisCount = 2;
-        else if (constraints.maxWidth < 1000) crossAxisCount = 3;
+        if (constraints.maxWidth < 700) {
+          crossAxisCount = 2;
+        } else if (constraints.maxWidth < 1000) crossAxisCount = 3;
 
         return Scrollbar(
           child: MasonryGridView.count(

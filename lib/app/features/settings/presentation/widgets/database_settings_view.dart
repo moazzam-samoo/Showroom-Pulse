@@ -9,7 +9,14 @@ import '../../../../core/widgets/app_notification_dialog.dart';
 import '../controllers/settings_controller.dart';
 
 class DatabaseSettingsView extends GetView<SettingsController> {
-  const DatabaseSettingsView({super.key});
+  final GlobalKey? exportDatabaseKey;
+  final GlobalKey? importDatabaseKey;
+
+  const DatabaseSettingsView({
+    super.key,
+    this.exportDatabaseKey,
+    this.importDatabaseKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +64,9 @@ class DatabaseSettingsView extends GetView<SettingsController> {
         _divider(isDark),
 
         // Export
-        _buildActionRow(
+        Container(
+          key: exportDatabaseKey,
+          child: _buildActionRow(
           title: 'Export Database Backup',
           subtitle: 'Save a copy of your entire system (database + images)',
           buttonLabel: controller.isExporting.value ? 'Exporting...' : 'Export Data',
@@ -66,7 +75,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           isDanger: false,
           isLoading: controller.isExporting.value,
           onPressed: controller.isExporting.value ? null : () => controller.exportDatabase(),
-        ),
+        ),),
 
         // Export progress indicator
         if (controller.isExporting.value && controller.exportProgress.value.isNotEmpty)
@@ -93,7 +102,9 @@ class DatabaseSettingsView extends GetView<SettingsController> {
         _divider(isDark),
 
         // Import
-        _buildActionRow(
+        Container(
+          key: importDatabaseKey,
+          child: _buildActionRow(
           title: 'Import Database Backup',
           subtitle: 'Restore from a previously exported .tahir backup file',
           buttonLabel: controller.isImporting.value ? 'Importing...' : 'Import Data',
@@ -102,7 +113,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           isDanger: false,
           isLoading: controller.isImporting.value,
           onPressed: controller.isImporting.value ? null : () => controller.importDatabase(),
-        ),
+        ),),
 
         // Import progress indicator
         if (controller.isImporting.value && controller.importProgress.value.isNotEmpty)
@@ -128,15 +139,15 @@ class DatabaseSettingsView extends GetView<SettingsController> {
 
         _divider(isDark),
 
-        // Factory Reset
+        // Reset App
         _buildActionRow(
-          title: 'Factory Data Reset',
-          subtitle: 'Permanently delete all Bikes, Sales, Installments, and Customers',
-          buttonLabel: 'Clear All Data',
-          icon: LucideIcons.trash2,
+          title: 'Reset App',
+          subtitle: 'Roll back to a checkpoint or factory reset',
+          buttonLabel: 'Reset Options',
+          icon: LucideIcons.rotateCcw,
           isDark: isDark,
           isDanger: true,
-          onPressed: () => _handleClearData(context),
+          onPressed: () => _handleResetApp(context),
         ),
 
         const SizedBox(height: 40),
@@ -154,6 +165,100 @@ class DatabaseSettingsView extends GetView<SettingsController> {
   Future<String> _getDatabasePath() async {
     final isarService = Get.find<IsarService>();
     return isarService.isar.directory ?? 'Unknown Location';
+  }
+
+  void _handleResetApp(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Row(
+          children: [
+            Icon(LucideIcons.alertTriangle, color: isDark ? AppColors.darkError : AppColors.lightError, size: 20),
+            const SizedBox(width: AppSpacing.sm),
+            Text('Reset Options', style: TextStyle(fontSize: 16, color: isDark ? Colors.white : Colors.black)),
+          ],
+        ),
+        content: Text(
+          'How would you like to reset the application?',
+          style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+              foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            ),
+            onPressed: () {
+              Get.back();
+              _showCheckpointChooser(context);
+            },
+            child: const Text('Restore from Checkpoint'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkError : AppColors.lightError,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Get.back();
+              _handleClearData(context);
+            },
+            child: const Text('Complete Factory Reset'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCheckpointChooser(BuildContext context) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final checkpoints = await controller.getCheckpoints();
+
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text('Select Checkpoint', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+        content: SizedBox(
+          width: 400,
+          child: checkpoints.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'No checkpoints available yet. Checkpoints are created automatically every 7 days.',
+                    style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: checkpoints.length,
+                  itemBuilder: (context, index) {
+                    final cp = checkpoints[index];
+                    return ListTile(
+                      title: Text(cp.formattedDate, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                      subtitle: Text(cp.formattedSize, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
+                      trailing: const Icon(LucideIcons.history),
+                      onTap: () {
+                        Get.back(); // close chooser
+                        controller.restoreFromCheckpoint(cp.filePath);
+                      },
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _handleClearData(BuildContext context) {

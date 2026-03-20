@@ -5,6 +5,7 @@ import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_sho
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/core/services/customer_export_service.dart';
 import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
@@ -150,6 +151,7 @@ class CustomersController extends GetxController {
   }
 
   /// Refresh all data
+  @override
   Future<void> refresh() async {
     await loadData();
   }
@@ -396,21 +398,24 @@ class CustomersController extends GetxController {
       AppNotificationDialog.showError(title: 'Export Failed', message: 'No customer is selected.');
       return;
     }
+  }
 
+  /// Download single customer data (Hybrid Zip)
+  Future<void> downloadCustomerData(CustomerWithTransactions customerData) async {
     try {
       AppToast.showInfo(title: 'Exporting', message: 'Generating customer statement...');
       final pdfService = Get.find<ReportPdfService>();
 
       final customerMap = {
-        'fullName': customerObj.customer.fullName,
-        'phoneNumber': customerObj.customer.phoneNumber,
-        'cnicNumber': customerObj.customer.cnicNumber,
-        'address': customerObj.customer.address,
+        'fullName': customerData.customer.fullName,
+        'phoneNumber': customerData.customer.phoneNumber,
+        'cnicNumber': customerData.customer.cnicNumber,
+        'address': customerData.customer.address,
       };
 
       // Create transactions list mapped
       final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
-      final txList = customerObj.transactions.map((tx) {
+      final txList = customerData.transactions.map((tx) {
         final date = dateFormat.format(tx.sale.saleDate);
         final vehicle = tx.bike.model;
         final type = tx.isInstallment ? 'Installment' : 'Cash';
@@ -440,6 +445,29 @@ class CustomersController extends GetxController {
       }
     } catch (e) {
       AppNotificationDialog.showError(title: 'Error', message: 'Failed during export: $e');
+    }
+  }
+
+  /// Download all customers as ZIP
+  Future<void> downloadAllCustomersData() async {
+    if (customers.isEmpty) {
+      AppNotificationDialog.showError(title: 'Export Failed', message: 'No customers found to export.');
+      return;
+    }
+
+    try {
+      AppToast.showInfo(title: 'Exporting', message: 'Generating bulk export ZIP...');
+      final exportService = Get.find<CustomerExportService>();
+      
+      final filePath = await exportService.downloadAllCustomers(customers);
+
+      if (filePath != null) {
+        AppToast.showSuccess(title: 'Success', message: 'Bulk export saved to $filePath');
+      } else {
+        AppNotificationDialog.showError(title: 'Error', message: 'Failed to generate bulk export');
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed during bulk export: $e');
     }
   }
 }

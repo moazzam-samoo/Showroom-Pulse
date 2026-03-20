@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
+import 'package:path/path.dart' as p;
+import 'package:file_picker/file_picker.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
@@ -16,7 +21,7 @@ class DashboardController extends GetxController {
   // Profile Settings
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
-  final showroomName = RxString('AL-TAHIR SHOWROOM');
+  final showroomName = RxString('AL-AL-TAHIR Showroom');
   final showroomAddress = RxnString();
   final showroomPhone = RxnString();
 
@@ -95,7 +100,7 @@ class DashboardController extends GetxController {
       monthlyRevenue.value = stats['monthlyRevenue'];
       revenueOnTrack.value = stats['isRevenueOnTrack'];
     } catch (e) {
-      print('Error loading dashboard stats: $e');
+      debugPrint('Error loading dashboard stats: $e');
     }
   }
 
@@ -108,7 +113,7 @@ class DashboardController extends GetxController {
       final today = await _salesService.getTodaySalesCount();
       todaySalesCount.value = today;
     } catch (e) {
-      print('Error loading chart data: $e');
+      debugPrint('Error loading chart data: $e');
     }
   }
 
@@ -121,7 +126,7 @@ class DashboardController extends GetxController {
       preOwnedPercent.value = allocation['preOwnedPercent'];
       preOwnedCount.value = allocation['preOwnedCount'];
     } catch (e) {
-      print('Error loading stock allocation: $e');
+      debugPrint('Error loading stock allocation: $e');
     }
   }
 
@@ -133,8 +138,7 @@ class DashboardController extends GetxController {
       
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
-        b.status == BikeStatusEnum.available || 
-        b.status == BikeStatusEnum.installment
+        b.status == BikeStatusEnum.available
       ).length;
       
       final lowStock = await _salesService.getLowStockAlert();
@@ -153,7 +157,7 @@ class DashboardController extends GetxController {
         0, (sum, c) => sum + c.remainingBalance,
       );
     } catch (e) {
-      print('Error loading KPI data: $e');
+      debugPrint('Error loading KPI data: $e');
     }
   }
 
@@ -169,7 +173,7 @@ class DashboardController extends GetxController {
         showroomPhone.value = settingsList.first.showroomPhone;
       }
     } catch (e) {
-      print('Error loading profile settings: $e');
+      debugPrint('Error loading profile settings: $e');
     }
   }
 
@@ -188,7 +192,82 @@ class DashboardController extends GetxController {
         });
       }
     } catch (e) {
-      print('Error updating owner name: $e');
+      debugPrint('Error updating owner name: $e');
+    }
+  }
+
+  /// Upload a new profile picture using file picker
+  Future<void> uploadProfilePicture() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final sourceFile = File(result.files.single.path!);
+        
+        final fileService = Get.find<FileService>();
+        // Ensure profile media directory exists
+        final profileDir = Directory(fileService.profileMediaPath);
+        if (!await profileDir.exists()) {
+          await profileDir.create(recursive: true);
+        }
+
+        // Generate unique filename to avoid caching issues
+        final ext = p.extension(sourceFile.path);
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final newPath = p.join(profileDir.path, 'profile_$timestamp$ext');
+
+        // Delete old picture if it exists
+        if (ownerProfilePicPath.value != null) {
+          final oldFile = File(ownerProfilePicPath.value!);
+          if (await oldFile.exists()) {
+            await oldFile.delete();
+          }
+        }
+
+        // Copy new image
+        await sourceFile.copy(newPath);
+
+        // Update state and DB
+        ownerProfilePicPath.value = newPath;
+        final settingsList = await _isarService.isar.appSettings.where().findAll();
+        if (settingsList.isNotEmpty) {
+          final settings = settingsList.first;
+          await _isarService.isar.writeTxn(() async {
+            settings.ownerProfilePicPath = newPath;
+            await _isarService.isar.appSettings.put(settings);
+          });
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to upload profile picture: $e');
+    }
+  }
+
+  /// Remove current profile picture
+  Future<void> removeProfilePicture() async {
+    try {
+      if (ownerProfilePicPath.value != null) {
+        final file = File(ownerProfilePicPath.value!);
+        if (await file.exists()) {
+          await file.delete();
+        }
+        ownerProfilePicPath.value = null;
+
+        // Update DB
+        final settingsList = await _isarService.isar.appSettings.where().findAll();
+        if (settingsList.isNotEmpty) {
+          final settings = settingsList.first;
+          await _isarService.isar.writeTxn(() async {
+            settings.ownerProfilePicPath = null;
+            await _isarService.isar.appSettings.put(settings);
+          });
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to remove profile picture: $e');
     }
   }
 
@@ -243,7 +322,7 @@ class DashboardController extends GetxController {
 
       upcomingInstallments.value = upcoming;
     } catch (e) {
-      print('Error loading upcoming installments: $e');
+      debugPrint('Error loading upcoming installments: $e');
     }
   }
 

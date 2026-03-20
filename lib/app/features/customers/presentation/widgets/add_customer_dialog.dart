@@ -233,7 +233,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
     // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final sectionHeaderText = Colors.white;
+    const sectionHeaderText = Colors.white;
     final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
     final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
@@ -502,7 +502,7 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           File(existingImagePath), 
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Center(child: Icon(LucideIcons.imageOff, size: 32, color: Colors.grey));
+            return const Center(child: Icon(LucideIcons.imageOff, size: 32, color: Colors.grey));
           },
         ),
       );
@@ -550,11 +550,11 @@ class _AddCustomerDialogState extends State<AddCustomerDialog> {
           Center(
             child: InkWell(
               onTap: onRemoveNew,
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
+              child: const Padding(
+                padding: EdgeInsets.all(4.0),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Icon(LucideIcons.minusCircle, size: 14, color: Colors.orange),
                     SizedBox(width: 4),
                     Text('Undo New Selection', style: TextStyle(color: Colors.orange, fontSize: 12)),

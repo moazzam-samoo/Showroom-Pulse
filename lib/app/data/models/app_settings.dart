@@ -27,7 +27,7 @@ class AppSettings {
   // -- NEW FIELDS FROM SETTINGS UI UPDATE --
 
   /// Showroom Name (General Settings)
-  String showroomName = 'AL-TAHIR SHOWROOM';
+  String showroomName = 'AL-AL-TAHIR Showroom';
 
   /// Showroom Logo path (General Settings)
   String? showroomLogoPath;
@@ -63,6 +63,11 @@ class AppSettings {
 
   /// Owner Profile Picture Path
   String? ownerProfilePicPath;
+  /// Custom bike brands (comma-separated)
+  String bikeBrands = 'Honda,Suzuki,Yamaha,United,Road Prince,Super Power,Hi Speed,Unique,Crown,Pak Hero';
+
+  /// Custom bike models (comma-separated)
+  String bikeModels = 'CG125,CD70,GS150,CB150F,Pridor,CG125S,CB150F-SE,YBR125,GD110,GR150';
 }
 
 // Authored by: Moazzam Samoo

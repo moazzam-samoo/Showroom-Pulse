@@ -18,13 +18,21 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
-import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
-  const SupplierHistoryView({super.key});
+  final GlobalKey? addSupplierKey;
+  final GlobalKey? supplierListKey;
+  final GlobalKey? historyPanelKey;
+
+  const SupplierHistoryView({
+    super.key,
+    this.addSupplierKey,
+    this.supplierListKey,
+    this.historyPanelKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +61,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 ),
               ),
               ElevatedButton.icon(
+                key: addSupplierKey,
                 onPressed: () => Get.to(() => const AddStockView()),
                 icon: const Icon(LucideIcons.plus),
                 label: const Text('Add Stock (Batch)'),
@@ -74,6 +83,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 Expanded(
                   flex: 1,
                   child: Container(
+                    key: supplierListKey,
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -372,6 +382,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                 Expanded(
                   flex: 2,
                   child: Container(
+                    key: historyPanelKey,
                     decoration: BoxDecoration(
                       color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -516,7 +527,6 @@ class SupplierHistoryView extends GetView<SupplierController> {
                     width: 400,
                     onSubmit: () => Get.back(result: true),
                     onCancel: () => Get.back(result: false),
-                    child: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
                     actions: [
                       TextButton(onPressed: () => Get.back(result: false), child: const Text('Cancel (Esc)')),
                       ElevatedButton(
@@ -525,6 +535,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                         child: const Text('Delete (Enter)'),
                       ),
                     ],
+                    child: const Text('This will delete the batch and all associated bikes. This action cannot be undone.'),
                   ),
                 );
                 if (confirm == true) {

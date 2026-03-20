@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +21,7 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final controller = Get.find<SalesController>();
-    print('Installment Dialog - Purchaser Image: ${data.purchaserImage}');
+    debugPrint('Installment Dialog - Purchaser Image: ${data.purchaserImage}');
 
     return Dialog(
       backgroundColor: Colors.transparent,

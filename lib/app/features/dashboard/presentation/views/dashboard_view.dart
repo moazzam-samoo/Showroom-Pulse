@@ -12,6 +12,8 @@ import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
 import 'package:tahir_showroom/app/core/services/theme_service.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
 import '../controllers/dashboard_controller.dart';
 
 import '../widgets/kpi_section.dart';
@@ -42,6 +44,25 @@ class _DashboardViewState extends State<DashboardView> {
   int _selectedNavIndex = 0;
   final DashboardController controller = Get.put(DashboardController());
 
+  // Coach Mark Keys
+  final _sidebarKey = GlobalKey();
+  final _kpiKey = GlobalKey();
+  final _quickActionsKey = GlobalKey();
+  final _performanceChartKey = GlobalKey();
+  bool _showCoachMarks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.arguments != null && Get.arguments['show_coach_marks'] == true) {
+        setState(() {
+          _showCoachMarks = true;
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -56,11 +77,14 @@ class _DashboardViewState extends State<DashboardView> {
       },
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        body: Row(
-        children: [
-          // Sidebar
-          SidebarNavigation(
-            selectedIndex: _selectedNavIndex,
+        body: Stack(
+          children: [
+            Row(
+              children: [
+                // Sidebar
+                SidebarNavigation(
+                  key: _sidebarKey,
+                  selectedIndex: _selectedNavIndex,
             onItemSelected: (index) {
               setState(() => _selectedNavIndex = index);
               switch (index) {
@@ -104,10 +128,11 @@ class _DashboardViewState extends State<DashboardView> {
                     child: Column(
                       children: [
                         // Quick Actions Row
-                        const QuickActionsRow(),
+                        QuickActionsRow(key: _quickActionsKey),
                         const SizedBox(height: AppSpacing.lg),
                         // KPI Section
                         Obx(() => KpiSection(
+                          key: _kpiKey,
                           totalAssetValue: PriceFormatter.formatLakhWords(controller.totalAssetValue.value),
                           totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD',
                           unitsInStock: controller.unitsInStock.value,
@@ -132,6 +157,7 @@ class _DashboardViewState extends State<DashboardView> {
                               Expanded(
                                 flex: 2,
                                 child: Obx(() => PerformanceChart(
+                                  key: _performanceChartKey,
                                   weeklyData: controller.weeklySalesData.isNotEmpty 
                                       ? controller.weeklySalesData.toList() 
                                       : [0, 0, 0, 0, 0, 0, 0],
@@ -169,6 +195,42 @@ class _DashboardViewState extends State<DashboardView> {
           ),
         ],
       ),
+            
+            // Coach Marks Overlay
+            if (_showCoachMarks)
+              CoachMarkOverlay(
+                targets: [
+                  CoachMarkTarget(
+                    targetKey: _sidebarKey,
+                    title: 'Navigation Menu',
+                    description: 'Access all modules of AL-TAHIR Showroom from here. Switch between sales, inventory, and customers seamlessly.',
+                    position: CoachMarkPosition.right,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _quickActionsKey,
+                    title: 'Quick Actions',
+                    description: 'Perform common tasks instantly with these shortcuts for the most frequent dealership operations.',
+                    position: CoachMarkPosition.bottom,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _kpiKey,
+                    title: 'Key Performance Indicators',
+                    description: 'Monitor your critical business metrics—assets, stock, revenue, and active installments—at a glance.',
+                    position: CoachMarkPosition.bottom,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _performanceChartKey,
+                    title: 'Performance Chart',
+                    description: 'Track your daily and weekly sales velocity and trends visually.',
+                    position: CoachMarkPosition.right,
+                  ),
+                ],
+                onComplete: () {
+                  setState(() => _showCoachMarks = false);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -392,7 +454,7 @@ class _DashboardViewState extends State<DashboardView> {
                     return items;
                   },
                   onSelected: (alert) {
-                    Get.toNamed('/installments', arguments: alert?.contractId);
+                    Get.toNamed('/installments', arguments: alert.contractId);
                   },
                 );
               }),

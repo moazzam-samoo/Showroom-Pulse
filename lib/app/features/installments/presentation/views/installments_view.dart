@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
@@ -14,9 +13,52 @@ import 'package:tahir_showroom/app/features/installments/presentation/widgets/pa
 import 'package:tahir_showroom/app/features/installments/presentation/widgets/payment_timeline.dart';
 import 'package:tahir_showroom/app/features/installments/presentation/widgets/record_payment_dialog.dart';
 
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
+import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
+
 /// Installments View - Split layout with customer list and detail panel
-class InstallmentsView extends StatelessWidget {
+class InstallmentsView extends StatefulWidget {
   const InstallmentsView({super.key});
+
+  @override
+  State<InstallmentsView> createState() => _InstallmentsViewState();
+}
+
+class _InstallmentsViewState extends State<InstallmentsView> {
+  // Coach mark keys
+  final GlobalKey _searchBarKey = GlobalKey();
+  final GlobalKey _customerListKey = GlobalKey();
+  final GlobalKey _detailPanelKey = GlobalKey();
+  
+  bool _showCoachMarks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkWalkthroughStatus();
+  }
+
+  Future<void> _checkWalkthroughStatus() async {
+    final walkthroughService = Get.find<WalkthroughService>();
+    if (!walkthroughService.hasCompletedTab('installments')) {
+      // Delay slightly to ensure layout is built
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _showCoachMarks = true;
+          });
+        }
+      });
+    }
+  }
+
+  void _completeTour() {
+    setState(() {
+      _showCoachMarks = false;
+    });
+    Get.find<WalkthroughService>().markTabComplete('installments');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,41 +74,100 @@ class InstallmentsView extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        body: Row(
-        children: [
-          // Sidebar Navigation
-          SidebarNavigation(
-            selectedIndex: 4, // Installments index
-            onItemSelected: (index) => _handleNavigation(index),
-          ),
-          // Main Content
-          Expanded(
-            child: Column(
+        body: Stack(
+          children: [
+            Row(
               children: [
-                // Top Bar with Search and Filters
-                _buildTopBar(context, controller, isDark),
-                // Split Layout
+                // Sidebar Navigation
+                SidebarNavigation(
+                  selectedIndex: 4, // Installments index
+                  onItemSelected: (index) {
+                    switch (index) {
+                      case 0:
+                        Get.offNamed('/dashboard');
+                        break;
+                      case 1:
+                        Get.offNamed('/procurement');
+                        break;
+                      case 2:
+                        Get.offNamed('/inventory');
+                        break;
+                      case 3:
+                        Get.offNamed('/sales');
+                        break;
+                      case 4:
+                        // Already on Installments
+                        break;
+                      case 5:
+                        Get.offNamed('/customers');
+                        break;
+                      case 6:
+                        Get.offNamed('/reports');
+                        break;
+                      case 7:
+                        Get.offNamed('/settings');
+                        break;
+                    }
+                  },
+                ),
+                // Main Content
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Column(
                     children: [
-                      // Left Panel - Customer List
-                      SizedBox(
-                        width: 320,
-                        child: _buildCustomerList(controller, isDark),
-                      ),
-                      // Right Panel - Detail
+                      // Top Bar with Search and Filters
+                      _buildTopBar(context, controller, isDark),
+                      // Split Layout
                       Expanded(
-                        child: _buildDetailPanel(controller, isDark),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left Panel - Customer List
+                            SizedBox(
+                              width: 320,
+                              child: _buildCustomerList(controller, isDark),
+                            ),
+                            // Right Panel - Detail
+                            Expanded(
+                              child: _buildDetailPanel(controller, isDark),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
+            
+            // Coach Marks Overlay
+            if (_showCoachMarks)
+              Positioned.fill(
+                child: CoachMarkOverlay(
+                  targets: [
+                    CoachMarkTarget(
+                      targetKey: _searchBarKey,
+                      title: 'Search Contracts',
+                      description: 'Find installment contracts by customer name quickly.',
+                      position: CoachMarkPosition.bottom,
+                    ),
+                    CoachMarkTarget(
+                      targetKey: _customerListKey,
+                      title: 'Active Contracts',
+                      description: 'Browse all active installment customers here.',
+                      position: CoachMarkPosition.right,
+                    ),
+                    CoachMarkTarget(
+                      targetKey: _detailPanelKey,
+                      title: 'Payment Details',
+                      description: 'View payment timeline, record payments, and track remaining balance.',
+                      position: CoachMarkPosition.left,
+                    ),
+                  ],
+                  onComplete: _completeTour,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -96,6 +197,7 @@ class InstallmentsView extends StatelessWidget {
           const Spacer(),
           // Search Box
           SizedBox(
+            key: _searchBarKey,
             width: 280,
             height: 40,
             child: Obx(() => TextField(
@@ -193,9 +295,9 @@ class InstallmentsView extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 items: [
-                  DropdownMenuItem<ContractStatusEnum?>(
+                  const DropdownMenuItem<ContractStatusEnum?>(
                     value: null,
-                    child: const Text('All Status'),
+                    child: Text('All Status'),
                   ),
                   ...ContractStatusEnum.values.map((status) => DropdownMenuItem(
                     value: status,
@@ -257,6 +359,7 @@ class InstallmentsView extends StatelessWidget {
 
   Widget _buildCustomerList(InstallmentsController controller, bool isDark) {
     return Container(
+      key: _customerListKey,
       margin: const EdgeInsets.all(AppSpacing.base),
       child: Obx(() {
         if (controller.isLoading.value) {
@@ -308,6 +411,7 @@ class InstallmentsView extends StatelessWidget {
 
   Widget _buildDetailPanel(InstallmentsController controller, bool isDark) {
     return Container(
+      key: _detailPanelKey,
       margin: const EdgeInsets.only(
         top: AppSpacing.base,
         right: AppSpacing.base,

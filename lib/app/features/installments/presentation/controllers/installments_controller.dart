@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
@@ -107,11 +106,8 @@ class InstallmentsController extends GetxController {
       } else if (showDueThisWeek.value) {
         rawContracts = await _repository.getContractsDueSoon(7);
       } else {
-        // Smart default: show active first, fallback to all if no active
-        rawContracts = await _repository.getActiveContracts();
-        if (rawContracts.isEmpty) {
-          rawContracts = await _repository.getAllContracts();
-        }
+        // Default to showing all contracts
+        rawContracts = await _repository.getAllContracts();
       }
 
       // Load display data for each contract

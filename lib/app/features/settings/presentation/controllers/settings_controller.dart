@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -5,9 +6,12 @@ import '../../../../data/models/app_settings.dart';
 import '../../../../core/services/backup_service.dart';
 import '../../../../core/services/isar_service.dart';
 import '../../../../core/services/file_service.dart';
+import '../../../../core/services/checkpoint_service.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart' as tahir_showroom_walkthrough_service;
+import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
 
 class SettingsController extends GetxController {
   final SettingsRepository _repository;
@@ -53,6 +57,83 @@ class SettingsController extends GetxController {
 
   void changeCategory(String category) {
     selectedCategory.value = category;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  BIKE BRANDS & MODELS MANAGEMENT
+  // ═══════════════════════════════════════════════════════════
+
+  List<String> getBikeBrandsList() {
+    return settings.value?.bikeBrands
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeBrand(String brand) {
+    if (settings.value == null || brand.trim().isEmpty) return;
+    final b = brand.trim();
+    final current = getBikeBrandsList();
+    if (!current.any((m) => m.toLowerCase() == b.toLowerCase())) {
+      current.add(b);
+      settings.value!.bikeBrands = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeBrand(String brand) {
+    if (settings.value == null) return;
+    final current = getBikeBrandsList();
+    current.removeWhere((m) => m == brand);
+    settings.value!.bikeBrands = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
+  List<String> getBikeModelsList() {
+    return settings.value?.bikeModels
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeModel(String model) {
+    if (settings.value == null || model.trim().isEmpty) return;
+    final m = model.trim();
+    final current = getBikeModelsList();
+    if (!current.any((x) => x.toLowerCase() == m.toLowerCase())) {
+      current.add(m);
+      settings.value!.bikeModels = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeModel(String model) {
+    if (settings.value == null) return;
+    final current = getBikeModelsList();
+    current.removeWhere((x) => x == model);
+    settings.value!.bikeModels = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
+  Future<bool> updateCredentials(String username, String password) async {
+    final authService = Get.find<AuthService>();
+    final success = await authService.updateCredentials(
+      newUsername: username.isNotEmpty ? username : null,
+      newPassword: password.isNotEmpty ? password : null,
+    );
+    return success;
+  }
+
+  Future<void> replayWalkthrough() async {
+    final walkthroughService = Get.find<tahir_showroom_walkthrough_service.WalkthroughService>();
+    await walkthroughService.resetAllTabs();
+    Get.offAllNamed('/walkthrough');
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -215,5 +296,46 @@ class SettingsController extends GetxController {
     final spaced = key.replaceAllMapped(RegExp(r'[A-Z]'), (m) => ' ${m.group(0)}').trim();
     if (spaced.isEmpty) return spaced;
     return spaced[0].toUpperCase() + spaced.substring(1);
+  }
+
+  // --- Checkpoint / Reset logic ---
+  Future<List<CheckpointInfo>> getCheckpoints() async {
+    final checkpointService = Get.find<CheckpointService>();
+    return await checkpointService.getCheckpoints();
+  }
+
+  Future<void> restoreFromCheckpoint(String checkpointPath) async {
+    isImporting.value = true;
+    importProgress.value = 'Preparing checkpoint restore...';
+    try {
+      final checkpointService = Get.find<CheckpointService>();
+      final success = await checkpointService.restoreFromCheckpoint(checkpointPath);
+      
+      if (success) {
+        await Get.dialog(
+          barrierDismissible: false,
+          AlertDialog(
+            title: const Text('Checkpoint Restored'),
+            content: const Text('The checkpoint has been staged. The app will now restart to apply the rollback.'),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Process.start(Platform.resolvedExecutable, []);
+                  exit(0);
+                },
+                child: const Text('Restart App'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar('Error', 'Failed to restore checkpoint.');
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'An error occurred restoring checkpoint: $e');
+    } finally {
+      isImporting.value = false;
+      importProgress.value = '';
+    }
   }
 }

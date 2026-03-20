@@ -18,9 +18,12 @@ class FileService extends GetxService {
   
   String get rootPath => _rootPath;
   String get databasePath => p.join(_rootPath, 'Database');
+  String get checkpointPath => p.join(_rootPath, 'Checkpoints');
+  String get stagingPath => p.join(_rootPath, 'RestoreStaging');
   String get mediaPath => p.join(_rootPath, 'Media');
   String get bikesMediaPath => p.join(mediaPath, 'Bikes');
   String get customersMediaPath => p.join(mediaPath, 'Customers');
+  String get profileMediaPath => p.join(mediaPath, 'Profile');
 
   /// Initialize the file service and create directory structure
   Future<FileService> init() async {
@@ -39,6 +42,7 @@ class FileService extends GetxService {
     final directories = [
       _rootPath,
       databasePath,
+      checkpointPath,
       mediaPath,
       bikesMediaPath,
       customersMediaPath,

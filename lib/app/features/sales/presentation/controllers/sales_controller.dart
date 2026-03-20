@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/sales/domain/sales_service.dart';
@@ -64,12 +65,12 @@ class SalesController extends GetxController {
 
   void setDateRange(String range) {
     selectedDateRange.value = range;
-    print('Date Range Changed: $range');
+    debugPrint('Date Range Changed: $range');
   }
 
   void setStatusFilter(String status) {
     selectedStatus.value = status;
-    print('Status Changed: $status');
+    debugPrint('Status Changed: $status');
   }
 
   void setSearchQuery(String query) {

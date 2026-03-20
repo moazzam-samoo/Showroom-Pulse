@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -266,7 +265,7 @@ class BackupService {
     final isar = _isarService.isar;
 
     return {
-      'appName': 'Tahir Showroom',
+      'appName': 'AL-TAHIR Showroom',
       'appVersion': '1.0.0',
       'backupDate': DateTime.now().toIso8601String(),
       'isarVersion': '3.1.0+1',

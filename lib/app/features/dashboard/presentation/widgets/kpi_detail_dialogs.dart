@@ -4,8 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
-import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
-import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
