@@ -68,26 +68,23 @@ class InventoryController extends GetxController {
 
   /// Add a new bike
   Future<bool> addBike(Map<String, dynamic> data) async {
-    if ((data['brand'] ?? '').toString().trim().isEmpty && data['model'].toString().trim().isEmpty ||
-        data['color'].toString().trim().isEmpty ||
-        data['engineNumber'].toString().trim().isEmpty ||
-        data['chassisNumber'].toString().trim().isEmpty ||
-        (data['purchasePrice'] ?? 0) <= 0 ||
-        (data['sellingPrice'] ?? 0) <= 0 ||
-        data['imageFile'] == null) {
+    if (data['engineNumber'].toString().trim().isEmpty ||
+        data['chassisNumber'].toString().trim().isEmpty) {
       AppNotificationDialog.showError(
         title: 'Missing Information',
-        message: 'Please fill all input fields and upload a bike image to proceed.',
+        message: 'Engine Number and Chassis Number are strictly required.',
       );
       return false;
     }
 
     try {
       final bike = Bike()
-        ..model = data['model']
-        ..brand = data['brand'] ?? data['model'].toString().split(' ').first // Fallback to extraction if not provided
+        ..model = data['model'] ?? ''
+        ..brand = data['brand']?.toString().trim().isNotEmpty == true 
+            ? data['brand'] 
+            : (data['model']?.toString().split(' ').first ?? '')
         ..condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike
-        ..color = data['color']
+        ..color = data['color'] ?? ''
         ..modelYear = DateTime.now().year // Default to current year
 
         ..engineNumber = data['engineNumber']
@@ -146,14 +143,16 @@ class InventoryController extends GetxController {
   Future<bool> updateBikeDetails(Bike bike, Map<String, dynamic> data) async {
     try {
       // Update bike fields
-      bike.model = data['model'];
-      bike.brand = data['brand'] ?? data['model'].toString().split(' ').first; // Update brand
+      bike.model = data['model'] ?? '';
+      bike.brand = data['brand']?.toString().trim().isNotEmpty == true 
+          ? data['brand'] 
+          : (data['model']?.toString().split(' ').first ?? ''); // Update brand
       bike.condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike;
-      bike.color = data['color'];
-      bike.engineNumber = data['engineNumber'];
-      bike.chassisNumber = data['chassisNumber'];
-      bike.purchasePrice = data['purchasePrice'];
-      bike.cashSalePrice = data['sellingPrice'];
+      bike.color = data['color'] ?? '';
+      bike.engineNumber = data['engineNumber'] ?? '';
+      bike.chassisNumber = data['chassisNumber'] ?? '';
+      bike.purchasePrice = data['purchasePrice'] ?? 0.0;
+      bike.cashSalePrice = data['sellingPrice'] ?? 0.0;
 
       // Handle Image update if new file provided
       if (data['imageFile'] != null && data['imageFile'] is File) {
