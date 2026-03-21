@@ -68,90 +68,95 @@ const InstallmentContractSchema = CollectionSchema(
       name: r'isOverdue',
       type: IsarType.bool,
     ),
-    r'lastPaymentDate': PropertySchema(
+    r'isWaived': PropertySchema(
       id: 10,
+      name: r'isWaived',
+      type: IsarType.bool,
+    ),
+    r'lastPaymentDate': PropertySchema(
+      id: 11,
       name: r'lastPaymentDate',
       type: IsarType.dateTime,
     ),
     r'lateFeeEnabled': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'lateFeeEnabled',
       type: IsarType.bool,
     ),
     r'lateFeePercentage': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'lateFeePercentage',
       type: IsarType.double,
     ),
     r'markupType': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'markupType',
       type: IsarType.byte,
       enumMap: _InstallmentContractmarkupTypeEnumValueMap,
     ),
     r'markupValue': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'markupValue',
       type: IsarType.double,
     ),
     r'monthlyEMI': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'monthlyEMI',
       type: IsarType.double,
     ),
     r'months': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'months',
       type: IsarType.long,
     ),
     r'nextDueDate': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'nextDueDate',
       type: IsarType.dateTime,
     ),
     r'notes': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'notes',
       type: IsarType.string,
     ),
     r'paymentProgress': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'paymentProgress',
       type: IsarType.double,
     ),
     r'paymentsMade': PropertySchema(
-      id: 20,
+      id: 21,
       name: r'paymentsMade',
       type: IsarType.long,
     ),
     r'paymentsRemaining': PropertySchema(
-      id: 21,
+      id: 22,
       name: r'paymentsRemaining',
       type: IsarType.long,
     ),
     r'remainingBalance': PropertySchema(
-      id: 22,
+      id: 23,
       name: r'remainingBalance',
       type: IsarType.double,
     ),
     r'status': PropertySchema(
-      id: 23,
+      id: 24,
       name: r'status',
       type: IsarType.byte,
       enumMap: _InstallmentContractstatusEnumValueMap,
     ),
     r'totalAmount': PropertySchema(
-      id: 24,
+      id: 25,
       name: r'totalAmount',
       type: IsarType.double,
     ),
     r'totalMarkupAmount': PropertySchema(
-      id: 25,
+      id: 26,
       name: r'totalMarkupAmount',
       type: IsarType.double,
     ),
     r'totalPaid': PropertySchema(
-      id: 26,
+      id: 27,
       name: r'totalPaid',
       type: IsarType.double,
     )
@@ -201,23 +206,24 @@ void _installmentContractSerialize(
   writer.writeDouble(offsets[7], object.downPayment);
   writer.writeDateTime(offsets[8], object.firstDueDate);
   writer.writeBool(offsets[9], object.isOverdue);
-  writer.writeDateTime(offsets[10], object.lastPaymentDate);
-  writer.writeBool(offsets[11], object.lateFeeEnabled);
-  writer.writeDouble(offsets[12], object.lateFeePercentage);
-  writer.writeByte(offsets[13], object.markupType.index);
-  writer.writeDouble(offsets[14], object.markupValue);
-  writer.writeDouble(offsets[15], object.monthlyEMI);
-  writer.writeLong(offsets[16], object.months);
-  writer.writeDateTime(offsets[17], object.nextDueDate);
-  writer.writeString(offsets[18], object.notes);
-  writer.writeDouble(offsets[19], object.paymentProgress);
-  writer.writeLong(offsets[20], object.paymentsMade);
-  writer.writeLong(offsets[21], object.paymentsRemaining);
-  writer.writeDouble(offsets[22], object.remainingBalance);
-  writer.writeByte(offsets[23], object.status.index);
-  writer.writeDouble(offsets[24], object.totalAmount);
-  writer.writeDouble(offsets[25], object.totalMarkupAmount);
-  writer.writeDouble(offsets[26], object.totalPaid);
+  writer.writeBool(offsets[10], object.isWaived);
+  writer.writeDateTime(offsets[11], object.lastPaymentDate);
+  writer.writeBool(offsets[12], object.lateFeeEnabled);
+  writer.writeDouble(offsets[13], object.lateFeePercentage);
+  writer.writeByte(offsets[14], object.markupType.index);
+  writer.writeDouble(offsets[15], object.markupValue);
+  writer.writeDouble(offsets[16], object.monthlyEMI);
+  writer.writeLong(offsets[17], object.months);
+  writer.writeDateTime(offsets[18], object.nextDueDate);
+  writer.writeString(offsets[19], object.notes);
+  writer.writeDouble(offsets[20], object.paymentProgress);
+  writer.writeLong(offsets[21], object.paymentsMade);
+  writer.writeLong(offsets[22], object.paymentsRemaining);
+  writer.writeDouble(offsets[23], object.remainingBalance);
+  writer.writeByte(offsets[24], object.status.index);
+  writer.writeDouble(offsets[25], object.totalAmount);
+  writer.writeDouble(offsets[26], object.totalMarkupAmount);
+  writer.writeDouble(offsets[27], object.totalPaid);
 }
 
 InstallmentContract _installmentContractDeserialize(
@@ -237,24 +243,25 @@ InstallmentContract _installmentContractDeserialize(
   object.downPayment = reader.readDouble(offsets[7]);
   object.firstDueDate = reader.readDateTime(offsets[8]);
   object.id = id;
-  object.lastPaymentDate = reader.readDateTimeOrNull(offsets[10]);
-  object.lateFeeEnabled = reader.readBool(offsets[11]);
-  object.lateFeePercentage = reader.readDouble(offsets[12]);
+  object.isWaived = reader.readBool(offsets[10]);
+  object.lastPaymentDate = reader.readDateTimeOrNull(offsets[11]);
+  object.lateFeeEnabled = reader.readBool(offsets[12]);
+  object.lateFeePercentage = reader.readDouble(offsets[13]);
   object.markupType = _InstallmentContractmarkupTypeValueEnumMap[
-          reader.readByteOrNull(offsets[13])] ??
+          reader.readByteOrNull(offsets[14])] ??
       MarkupType.percentage;
-  object.markupValue = reader.readDouble(offsets[14]);
-  object.monthlyEMI = reader.readDouble(offsets[15]);
-  object.months = reader.readLong(offsets[16]);
-  object.nextDueDate = reader.readDateTimeOrNull(offsets[17]);
-  object.notes = reader.readStringOrNull(offsets[18]);
-  object.paymentsMade = reader.readLong(offsets[20]);
+  object.markupValue = reader.readDouble(offsets[15]);
+  object.monthlyEMI = reader.readDouble(offsets[16]);
+  object.months = reader.readLong(offsets[17]);
+  object.nextDueDate = reader.readDateTimeOrNull(offsets[18]);
+  object.notes = reader.readStringOrNull(offsets[19]);
+  object.paymentsMade = reader.readLong(offsets[21]);
   object.status = _InstallmentContractstatusValueEnumMap[
-          reader.readByteOrNull(offsets[23])] ??
+          reader.readByteOrNull(offsets[24])] ??
       ContractStatusEnum.active;
-  object.totalAmount = reader.readDouble(offsets[24]);
-  object.totalMarkupAmount = reader.readDouble(offsets[25]);
-  object.totalPaid = reader.readDouble(offsets[26]);
+  object.totalAmount = reader.readDouble(offsets[25]);
+  object.totalMarkupAmount = reader.readDouble(offsets[26]);
+  object.totalPaid = reader.readDouble(offsets[27]);
   return object;
 }
 
@@ -286,42 +293,44 @@ P _installmentContractDeserializeProp<P>(
     case 9:
       return (reader.readBool(offset)) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 11:
       return (reader.readBool(offset)) as P;
+    case 11:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
       return (_InstallmentContractmarkupTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           MarkupType.percentage) as P;
-    case 14:
-      return (reader.readDouble(offset)) as P;
     case 15:
       return (reader.readDouble(offset)) as P;
     case 16:
-      return (reader.readLong(offset)) as P;
-    case 17:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 18:
-      return (reader.readStringOrNull(offset)) as P;
-    case 19:
       return (reader.readDouble(offset)) as P;
-    case 20:
+    case 17:
       return (reader.readLong(offset)) as P;
+    case 18:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 19:
+      return (reader.readStringOrNull(offset)) as P;
+    case 20:
+      return (reader.readDouble(offset)) as P;
     case 21:
       return (reader.readLong(offset)) as P;
     case 22:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 23:
+      return (reader.readDouble(offset)) as P;
+    case 24:
       return (_InstallmentContractstatusValueEnumMap[
               reader.readByteOrNull(offset)] ??
           ContractStatusEnum.active) as P;
-    case 24:
-      return (reader.readDouble(offset)) as P;
     case 25:
       return (reader.readDouble(offset)) as P;
     case 26:
+      return (reader.readDouble(offset)) as P;
+    case 27:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1052,6 +1061,16 @@ extension InstallmentContractQueryFilter on QueryBuilder<InstallmentContract,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isOverdue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterFilterCondition>
+      isWaivedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isWaived',
         value: value,
       ));
     });
@@ -2327,6 +2346,20 @@ extension InstallmentContractQuerySortBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByIsWaived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWaived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      sortByIsWaivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWaived', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       sortByLastPaymentDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaymentDate', Sort.asc);
@@ -2722,6 +2755,20 @@ extension InstallmentContractQuerySortThenBy
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByIsWaived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWaived', Sort.asc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
+      thenByIsWaivedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWaived', Sort.desc);
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QAfterSortBy>
       thenByLastPaymentDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastPaymentDate', Sort.asc);
@@ -3033,6 +3080,13 @@ extension InstallmentContractQueryWhereDistinct
   }
 
   QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
+      distinctByIsWaived() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isWaived');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, InstallmentContract, QDistinct>
       distinctByLastPaymentDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastPaymentDate');
@@ -3226,6 +3280,12 @@ extension InstallmentContractQueryProperty
       isOverdueProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<InstallmentContract, bool, QQueryOperations> isWaivedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isWaived');
     });
   }
 

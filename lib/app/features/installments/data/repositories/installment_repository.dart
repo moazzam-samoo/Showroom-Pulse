@@ -140,6 +140,8 @@ class InstallmentRepository {
         // Update status based on payment
         if (contract.totalPaid >= contract.totalAmount) {
           contract.status = ContractStatusEnum.completed;
+          contract.months = contract.paymentsMade; // Adjust duration for early completion
+          contract.nextDueDate = null;
         } else if (contract.totalPaid > 0) {
           contract.status = ContractStatusEnum.partiallyPaid;
         }
@@ -147,12 +149,47 @@ class InstallmentRepository {
         // Calculate next due date
         if (contract.status != ContractStatusEnum.completed) {
           contract.nextDueDate = _calculateNextDueDate(contract);
-        } else {
-          contract.nextDueDate = null;
         }
 
         await _isar.installmentContracts.put(contract);
       }
+    });
+  }
+
+  /// Admin manually completes a contract (Paid vs Waived)
+  Future<void> adminCompleteContract({
+    required int contractId,
+    required bool allPaymentReceived,
+  }) async {
+    await _isar.writeTxn(() async {
+      final contract = await _isar.installmentContracts.get(contractId);
+      if (contract == null) return;
+
+      if (allPaymentReceived) {
+        // Record remaining as a final payment
+        final remaining = contract.totalAmount - contract.totalPaid;
+        if (remaining > 0) {
+          final payment = Payment()
+            ..contractId = contractId
+            ..amount = remaining
+            ..method = PaymentMethod.cash
+            ..notes = 'Final payment (Admin completed)'
+            ..paymentDate = DateTime.now();
+          await _isar.payments.put(payment);
+          contract.totalPaid = contract.totalAmount;
+          contract.paymentsMade += 1;
+        }
+      } else {
+        // Waive remaining → don't add to revenue
+        contract.isWaived = true;
+      }
+
+      contract.status = ContractStatusEnum.completed;
+      contract.months = contract.paymentsMade;
+      contract.nextDueDate = null;
+      contract.lastPaymentDate = DateTime.now();
+
+      await _isar.installmentContracts.put(contract);
     });
   }
 
@@ -337,6 +374,8 @@ class InstallmentRepository {
           if (remaining <= 0) {
              debugPrint('  - marking as COMPLETED (Balance 0)');
              contract.status = ContractStatusEnum.completed;
+             contract.months = contract.paymentsMade; // Adjust duration
+             contract.nextDueDate = null;
              changed = true;
           }
           

@@ -310,6 +310,42 @@ class _InstallmentsViewState extends State<InstallmentsView> {
           )),
           const SizedBox(width: AppSpacing.sm),
 
+          // Date Filter Dropdown
+          Obx(() => Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<DateFilter>(
+                value: controller.dateFilter.value,
+                icon: const Icon(LucideIcons.calendar, size: 16),
+                dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                style: TextStyle(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                items: const [
+                  DropdownMenuItem(value: DateFilter.all, child: Text('All Time')),
+                  DropdownMenuItem(value: DateFilter.thisMonth, child: Text('This Month')),
+                  DropdownMenuItem(value: DateFilter.lastMonth, child: Text('Last Month')),
+                  DropdownMenuItem(value: DateFilter.last3Months, child: Text('Last 3 Months')),
+                  DropdownMenuItem(value: DateFilter.thisYear, child: Text('This Year')),
+                ],
+                onChanged: (val) {
+                  if (val != null) controller.setDateFilter(val);
+                },
+              ),
+            ),
+          )),
+          const SizedBox(width: AppSpacing.sm),
+
           // Clear Filters Button
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.sm),
@@ -461,6 +497,29 @@ class _InstallmentsViewState extends State<InstallmentsView> {
                 isCompleted: selected.contract.status == ContractStatusEnum.completed,
               ),
               const SizedBox(height: AppSpacing.base),
+
+              // Admin Action: Complete Installment
+              if (selected.contract.status != ContractStatusEnum.completed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.base),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showCompleteInstallmentDialog(context, controller),
+                      icon: const Icon(LucideIcons.checkCircle2, size: 18),
+                      label: const Text('Complete Installment Manually'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
+                        side: BorderSide(color: isDark ? AppColors.darkSuccess : AppColors.lightSuccess),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
               // Payment Timeline (exclude initial Down Payment record)
               PaymentTimeline(
                 payments: selected.payments.where((p) => !p.isDownPayment && p.notes != 'Down Payment').toList(),
@@ -664,6 +723,57 @@ class _InstallmentsViewState extends State<InstallmentsView> {
         Get.offNamed('/settings');
         break;
     }
+  }
+
+  /// Show dialog to manually complete an installment
+  void _showCompleteInstallmentDialog(BuildContext context, InstallmentsController controller) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Complete This Installment?'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('You are about to mark this installment as completed.'),
+            SizedBox(height: 16),
+            Text(
+              'Was all remaining payment received?',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              controller.adminComplete(allPaymentReceived: false);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkWarning : AppColors.lightWarning,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('No, Waive It'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              controller.adminComplete(allPaymentReceived: true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, All Paid'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
