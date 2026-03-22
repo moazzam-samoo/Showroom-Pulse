@@ -25,6 +25,8 @@ class SettingsController extends GetxController {
   final isImporting = false.obs;
   final exportProgress = ''.obs;
   final importProgress = ''.obs;
+  
+  final ownerNameController = TextEditingController();
 
   late final BackupService _backupService;
 
@@ -41,6 +43,9 @@ class SettingsController extends GetxController {
   Future<void> loadSettings() async {
     isLoading.value = true;
     settings.value = await _repository.getSettings();
+    if (settings.value != null) {
+      ownerNameController.text = settings.value!.ownerName ?? '';
+    }
     isLoading.value = false;
   }
 
@@ -52,6 +57,27 @@ class SettingsController extends GetxController {
       if (Get.isRegistered<DashboardController>()) {
         Get.find<DashboardController>().loadProfileSettings();
       }
+    }
+  }
+
+  Future<void> updateOwnerName() async {
+    if (settings.value == null) return;
+    
+    final newName = ownerNameController.text.trim();
+    settings.value!.ownerName = newName.isEmpty ? null : newName;
+    
+    try {
+      await saveSettings();
+      settings.refresh();
+      AppToast.showSuccess(
+        title: 'Profile Updated',
+        message: 'Owner name saved successfully',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Save Failed',
+        message: 'Could not save owner name: $e',
+      );
     }
   }
 

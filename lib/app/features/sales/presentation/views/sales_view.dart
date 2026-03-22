@@ -151,9 +151,7 @@ class _SalesViewState extends State<SalesView> {
                                   ElevatedButton.icon(
                                     key: _newSaleBtnKey,
                                     onPressed: () {
-                                      Get.to(() => const NewSaleView(), binding: BindingsBuilder(() {
-                                        Get.put(NewSaleController());
-                                      }));
+                                      Get.toNamed('/sales/new');
                                     },
                                     icon: const Icon(LucideIcons.plusCircle, size: 20),
                                     label: const Text('New Sale'),

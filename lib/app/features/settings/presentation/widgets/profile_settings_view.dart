@@ -110,17 +110,22 @@ class ProfileSettingsView extends GetView<SettingsController> {
             child: _buildSettingInputRow(
               title: 'Owner Name',
               subtitle: 'Displays on the dashboard greeting',
-              initialValue: settings.ownerName ?? '',
+              controller: controller.ownerNameController,
               hintText: 'e.g. Tahir',
               isDark: isDark,
-      onSubmitted: (value) {
-        settings.ownerName = value.isEmpty ? null : value;
-        controller.settings.refresh();
-        controller.saveSettings();
-        AppToast.showSuccess(title: 'Profile Updated', message: 'Owner name saved successfully');
-      },
-    ),
-  ),
+              action: ElevatedButton(
+                onPressed: () => controller.updateOwnerName(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Save', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
   _divider(isDark),
 
   // Credential Management Section
@@ -356,33 +361,41 @@ class ProfileSettingsView extends GetView<SettingsController> {
   Widget _buildSettingInputRow({
     required String title,
     required String subtitle,
-    required String initialValue,
+    required TextEditingController controller,
     required bool isDark,
-    required Function(String) onSubmitted,
     String? hintText,
+    Widget? action,
   }) {
     return _buildSettingRow(
       title: title,
       subtitle: subtitle,
       isDark: isDark,
-      trailing: SizedBox(
-        width: 240,
-        child: TextFormField(
-          initialValue: initialValue,
-          style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-            filled: true,
-            fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide.none,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 240,
+            child: TextFormField(
+              controller: controller,
+              style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                filled: true,
+                fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
           ),
-          onFieldSubmitted: onSubmitted,
-        ),
+          if (action != null) ...[
+            const SizedBox(width: AppSpacing.md),
+            action,
+          ],
+        ],
       ),
     );
   }

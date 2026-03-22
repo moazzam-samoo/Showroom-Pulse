@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/widgets/app_bike_image.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
@@ -184,29 +185,13 @@ class CashSaleDetailDialog extends StatelessWidget {
 
         Row(
           children: [
-             Container(
-               width: 60,
-               height: 60,
-               decoration: BoxDecoration(
-                 color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade100,
-                 borderRadius: BorderRadius.circular(AppRadius.md),
-                 border: Border.all(
-                   color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade200,
-                 ),
-               ),
-               child: data.bikeImage.isNotEmpty
-                 ? ClipRRect(
-                     borderRadius: BorderRadius.circular(AppRadius.md),
-                     child: Image.file(
-                        File(data.bikeImage),
-                        fit: BoxFit.cover,
-                        width: 60,
-                        height: 60,
-                        errorBuilder: (_,__,___) => const Icon(LucideIcons.bike, size: 24, color: Colors.grey),
-                     ),
-                   )
-                 : const Icon(LucideIcons.bike, size: 24, color: Colors.grey),
-            ),
+              AppBikeImage(
+                imagePath: data.bikeImage,
+                width: 60,
+                height: 60,
+                borderRadius: AppRadius.md,
+                iconSize: 24,
+              ),
              const SizedBox(width: AppSpacing.md),
              Expanded(
                child: Column(

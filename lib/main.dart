@@ -30,6 +30,9 @@ import 'app/features/reports/presentation/bindings/reports_binding.dart';
 import 'app/features/settings/presentation/views/settings_view.dart';
 import 'app/features/settings/presentation/bindings/settings_binding.dart';
 
+import 'package:tahir_showroom/app/features/sales/presentation/views/new_sale_view.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/bindings/new_sale_binding.dart';
+
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -182,6 +185,11 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         name: '/inventory',
         page: () => const InventoryView(),
         binding: InventoryBinding(),
+      ),
+      GetPage(
+        name: '/sales/new',
+        page: () => const NewSaleView(),
+        binding: NewSaleBinding(),
       ),
       GetPage(
         name: '/sales',

@@ -32,7 +32,7 @@ class QuickActionsRow extends StatelessWidget {
         label: 'New Sale',
         icon: LucideIcons.shoppingCart,
         color: const Color(0xFF10B981),
-        onTap: () => Get.offNamed('/sales'),
+        onTap: () => Get.toNamed('/sales/new'),
       ),
       QuickActionButton(
         label: 'Add Bike',

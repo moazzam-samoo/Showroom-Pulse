@@ -7,7 +7,7 @@ import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/widgets/app_button.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 
-import 'package:tahir_showroom/app/core/constants/app_assets.dart';
+import 'package:tahir_showroom/app/core/widgets/app_showroom_logo.dart';
 import '../controllers/login_controller.dart';
 
 /// Login Card Widget - Main authentication card
@@ -52,37 +52,10 @@ class LoginCard extends GetView<LoginController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Logo Container
-            Container(
-              width: 80,
-              height: 80,
-              padding: const EdgeInsets.all(4.0),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                child: Image.asset(
-                  AppAssets.logo,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.motorcycle,
-                    size: 40,
-                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                  ),
-                ),
-              ),
+            // Logo
+            const AppShowroomLogo(
+              size: 80,
+              borderRadius: 16,
             ),
             
             const SizedBox(height: AppSpacing.lg),
