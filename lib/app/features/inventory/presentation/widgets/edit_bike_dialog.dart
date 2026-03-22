@@ -13,6 +13,8 @@ import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 
 class EditBikeDialog extends StatefulWidget {
   final Bike bike;
@@ -32,12 +34,15 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   final _formKey = GlobalKey<FormState>();
   
   // Form controllers
-  late final TextEditingController _brandController;
-  late final TextEditingController _modelController;
+  late final TextEditingController _makerController;
+  late final TextEditingController _hpController;
   late final TextEditingController _engineNoController;
   late final TextEditingController _chassisNoController;
   late final TextEditingController _purchasePriceController;
   late final TextEditingController _sellingPriceController;
+  late final TextEditingController _purchaserNameController;
+  late final TextEditingController _purchaserPhoneController;
+  late final TextEditingController _purchaserCnicController;
 
   String? _selectedColor;
   BikeConditionEnum _selectedCondition = BikeConditionEnum.newBike;
@@ -45,23 +50,26 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   File? _selectedImage;
   String? _existingImagePath;
 
-  final _brandFocus = FocusNode();
-  final _modelFocus = FocusNode();
+  final _makerFocus = FocusNode();
+  final _hpFocus = FocusNode();
   final _conditionFocus = FocusNode();
   final _colorFocus = FocusNode();
   final _engineFocus = FocusNode();
   final _chassisFocus = FocusNode();
   final _purchaseFocus = FocusNode();
   final _sellingFocus = FocusNode();
+  final _purchaserNameFocus = FocusNode();
+  final _purchaserPhoneFocus = FocusNode();
+  final _purchaserCnicFocus = FocusNode();
   final _imageFocus = FocusNode();
   final _submitFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
-        if (_brandFocus.hasFocus) {
-          _modelFocus.requestFocus();
-        } else if (_modelFocus.hasFocus) {
+        if (_makerFocus.hasFocus) {
+          _hpFocus.requestFocus();
+        } else if (_hpFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
           _colorFocus.requestFocus();
@@ -74,6 +82,12 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
         } else if (_purchaseFocus.hasFocus) {
           _sellingFocus.requestFocus();
         } else if (_sellingFocus.hasFocus) {
+          _purchaserNameFocus.requestFocus();
+        } else if (_purchaserNameFocus.hasFocus) {
+          _purchaserPhoneFocus.requestFocus();
+        } else if (_purchaserPhoneFocus.hasFocus) {
+          _purchaserCnicFocus.requestFocus();
+        } else if (_purchaserCnicFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
           if (event.logicalKey == LogicalKeyboardKey.enter) {
@@ -86,6 +100,12 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
         if (_submitFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
+          _purchaserCnicFocus.requestFocus();
+        } else if (_purchaserCnicFocus.hasFocus) {
+          _purchaserPhoneFocus.requestFocus();
+        } else if (_purchaserPhoneFocus.hasFocus) {
+          _purchaserNameFocus.requestFocus();
+        } else if (_purchaserNameFocus.hasFocus) {
           _sellingFocus.requestFocus();
         } else if (_sellingFocus.hasFocus) {
           _purchaseFocus.requestFocus();
@@ -98,9 +118,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
         } else if (_colorFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
-          _modelFocus.requestFocus();
-        } else if (_modelFocus.hasFocus) {
-          _brandFocus.requestFocus();
+          _hpFocus.requestFocus();
+        } else if (_hpFocus.hasFocus) {
+          _makerFocus.requestFocus();
         }
       }
     }
@@ -110,8 +130,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   void initState() {
     super.initState();
     // Pre-fill controllers with existing bike data
-    _brandController = TextEditingController(text: widget.bike.brand);
-    _modelController = TextEditingController(text: widget.bike.model);
+    _makerController = TextEditingController(text: widget.bike.model);
+    _hpController = TextEditingController(text: widget.bike.brand);
     _engineNoController = TextEditingController(text: widget.bike.engineNumber);
     _chassisNoController = TextEditingController(text: widget.bike.chassisNumber);
     
@@ -123,6 +143,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _sellingPriceController = TextEditingController(
       text: widget.bike.cashSalePrice > 0 ? numberFormat.format(widget.bike.cashSalePrice) : ''
     );
+    _purchaserNameController = TextEditingController(text: widget.bike.purchaserName ?? '');
+    _purchaserPhoneController = TextEditingController(text: widget.bike.purchaserPhone ?? '');
+    _purchaserCnicController = TextEditingController(text: widget.bike.purchaserCnic ?? '');
     
     _selectedColor = widget.bike.color;
     _selectedCondition = widget.bike.condition;
@@ -131,20 +154,26 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
 
   @override
   void dispose() {
-    _brandController.dispose();
-    _modelController.dispose();
+    _makerController.dispose();
+    _hpController.dispose();
     _engineNoController.dispose();
     _chassisNoController.dispose();
     _purchasePriceController.dispose();
     _sellingPriceController.dispose();
-    _brandFocus.dispose();
-    _modelFocus.dispose();
+    _purchaserNameController.dispose();
+    _purchaserPhoneController.dispose();
+    _purchaserCnicController.dispose();
+    _makerFocus.dispose();
+    _hpFocus.dispose();
     _conditionFocus.dispose();
     _colorFocus.dispose();
     _engineFocus.dispose();
     _chassisFocus.dispose();
     _purchaseFocus.dispose();
     _sellingFocus.dispose();
+    _purchaserNameFocus.dispose();
+    _purchaserPhoneFocus.dispose();
+    _purchaserCnicFocus.dispose();
     _imageFocus.dispose();
     _submitFocus.dispose();
     super.dispose();
@@ -166,8 +195,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     if (_formKey.currentState!.validate()) {
       if (widget.onSave != null) {
         widget.onSave!({
-          'brand': _brandController.text,
-          'model': _modelController.text,
+          'maker': _makerController.text,
+          'horsePower': _hpController.text,
           'condition': _selectedCondition == BikeConditionEnum.newBike ? 'New' : 'Used',
           'color': _selectedColor,
           'engineNumber': _engineNoController.text,
@@ -175,6 +204,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
           'purchasePrice': double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ?? 0.0,
           'sellingPrice': double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ?? 0.0,
           'imageFile': _selectedImage, // null if no new image selected
+          'purchaserName': _purchaserNameController.text.trim(),
+          'purchaserPhone': _purchaserPhoneController.text.trim(),
+          'purchaserCnic': _purchaserCnicController.text.trim(),
         });
         Navigator.pop(context);
       }
@@ -241,13 +273,13 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
 
                           _buildAutocompleteGroup(
                             label: 'Maker:',
-                            controller: _brandController,
+                            controller: _makerController,
                             hint: 'e.g. Honda',
                             isDark: isDark,
                             bg: inputBg,
                             border: inputBorder,
                             labelColor: labelColor,
-                            focusNode: _brandFocus,
+                            focusNode: _makerFocus,
                             autofocus: true,
                             getOptions: () => Get.isRegistered<SettingsController>()
                                 ? Get.find<SettingsController>().getBikeBrandsList()
@@ -256,13 +288,13 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           const SizedBox(height: 16),
                           _buildAutocompleteGroup(
                             label: 'Horse Power:',
-                            controller: _modelController,
+                            controller: _hpController,
                             hint: 'e.g. CG125',
                             isDark: isDark,
                             bg: inputBg,
                             border: inputBorder,
                             labelColor: labelColor,
-                            focusNode: _modelFocus,
+                            focusNode: _hpFocus,
                             getOptions: () => Get.isRegistered<SettingsController>()
                                 ? Get.find<SettingsController>().getBikeModelsList()
                                 : [],
@@ -301,6 +333,39 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, _purchaseFocus, isNumber: true),
                           const SizedBox(height: 16),
                           _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, _sellingFocus, isNumber: true),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        title: 'Purchaser Details (Optional)',
+                        color: sectionHeaderBg,
+                        textColor: sectionHeaderText,
+                        children: [
+                          _buildInputGroup('Name:', _purchaserNameController, 'Enter name', isDark, inputBg, inputBorder, labelColor, _purchaserNameFocus),
+                          const SizedBox(height: 16),
+                          _buildInputGroup(
+                            'Phone:', 
+                            _purchaserPhoneController, 
+                            '03xx-xxxxxxx', 
+                            isDark, 
+                            inputBg, 
+                            inputBorder, 
+                            labelColor, 
+                            _purchaserPhoneFocus,
+                            inputFormatters: [PhoneNumberInputFormatter()],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInputGroup(
+                            'CNIC:', 
+                            _purchaserCnicController, 
+                            'xxxxx-xxxxxxx-x', 
+                            isDark, 
+                            inputBg, 
+                            inputBorder, 
+                            labelColor, 
+                            _purchaserCnicFocus,
+                            inputFormatters: [CnicInputFormatter()],
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -419,7 +484,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false, int? maxLength}
+    {bool isNumber = false, bool autofocus = false, int? maxLength, List<TextInputFormatter>? inputFormatters}
   ) {
     return Row(
       children: [
@@ -449,6 +514,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                 if (isNumber) FilteringTextInputFormatter.digitsOnly,
                 if (isNumber) ThousandsSeparatorInputFormatter(),
                 if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+                if (inputFormatters != null) ...inputFormatters,
               ],
               style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
               decoration: InputDecoration(

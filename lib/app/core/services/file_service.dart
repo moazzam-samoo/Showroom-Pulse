@@ -94,6 +94,17 @@ class FileService extends GetxService {
     return filename;
   }
 
+  /// Save a bike purchaser's CNIC image (front or back)
+  Future<String> saveBikePurchaserCnic(File sourceFile, String engineNumber, String side) async {
+    final extension = p.extension(sourceFile.path);
+    final filename = 'purchaser_cnic_${side}_$engineNumber$extension';
+    final destPath = p.join(bikesMediaPath, filename);
+    
+    await sourceFile.copy(destPath);
+    
+    return filename;
+  }
+
   /// Save a customer image (profile, cnic_front, cnic_back)
   Future<String> saveCustomerImage(
     File sourceFile,

@@ -67,6 +67,13 @@ class Bike {
 
   /// Additional notes
   String? notes;
+
+  // -- Purchaser Details (V2 - Optional) --
+  String? purchaserName;
+  String? purchaserPhone;
+  String? purchaserCnic;
+  String? purchaserCnicFrontFilename;
+  String? purchaserCnicBackFilename;
 }
 
 // Authored by: Moazzam Samoo
