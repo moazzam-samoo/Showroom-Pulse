@@ -614,7 +614,7 @@ class _InstallmentsViewState extends State<InstallmentsView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildInfoChip('Model: ${data.bike.model}', isDark),
+              _buildInfoChip('Horse Power: ${data.bike.model}', isDark),
               const SizedBox(height: 4),
               _buildInfoChip('Chassis: ${data.bike.chassisNumber ?? 'N/A'}', isDark),
             ],

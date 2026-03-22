@@ -528,11 +528,11 @@ class AddStockView extends GetView<SupplierController> {
               children: [
                 Expanded(flex: 2, child: Text('Engine #')),
                 Expanded(flex: 2, child: Text('Chassis #')),
-                Expanded(flex: 2, child: Text('Brand')),
-                Expanded(flex: 2, child: Text('Model')),
+                Expanded(flex: 2, child: Text('Maker')),
+                Expanded(flex: 2, child: Text('Horse Power')),
                 Expanded(flex: 2, child: Text('Condition')),
                 Expanded(flex: 2, child: Text('Color')),
-                Expanded(flex: 1, child: Text('Year')),
+                Expanded(flex: 1, child: Text('Model')),
                 Expanded(flex: 2, child: Text('Purchase Price')),
                 Expanded(flex: 1, child: Text('Image')),
                 SizedBox(width: 40), // Delete Action
@@ -606,7 +606,7 @@ class AddStockView extends GetView<SupplierController> {
                            initialValue: entry.brand,
                            focusNode: entry.brandFocus,
                            isDark: isDark,
-                           hint: 'Brand',
+                           hint: 'Maker',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeBrandsList()
                                : [],
@@ -624,7 +624,7 @@ class AddStockView extends GetView<SupplierController> {
                            initialValue: entry.model,
                            focusNode: entry.modelFocus,
                            isDark: isDark,
-                           hint: 'Model',
+                           hint: 'Horse Power',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeModelsList()
                                : [],
@@ -691,7 +691,7 @@ class AddStockView extends GetView<SupplierController> {
                           focusNode: entry.yearFocus,
                           textInputAction: TextInputAction.next,
                           onChanged: (v) => entry.modelYear = int.tryParse(v) ?? DateTime.now().year,
-                           decoration: _inputDecoration('Year', isDark),
+                           decoration: _inputDecoration('Model', isDark),
                           style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
                           keyboardType: TextInputType.number,
                         ),

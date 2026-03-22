@@ -35,7 +35,7 @@ class KpiDetailDialogs {
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTableHeader(['Model', 'Count', 'Unit Price', 'Total Value']),
+              _buildTableHeader(['Horse Power', 'Count', 'Unit Price', 'Total Value']),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
@@ -102,7 +102,7 @@ class KpiDetailDialogs {
               const SizedBox(height: 16),
               const Text('Model-wise Split', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              _buildTableHeader(['Model', 'Avail', 'Inst.', 'Sold']),
+              _buildTableHeader(['Horse Power', 'Avail', 'Inst.', 'Sold']),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(

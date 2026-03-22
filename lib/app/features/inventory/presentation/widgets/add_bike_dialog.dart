@@ -138,8 +138,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
       final List<String> missingFields = [];
-      if (_brandController.text.trim().isEmpty) missingFields.add('Brand');
-      if (_modelController.text.trim().isEmpty) missingFields.add('Model');
+      if (_brandController.text.trim().isEmpty) missingFields.add('Maker');
+      if (_modelController.text.trim().isEmpty) missingFields.add('Horse Power');
       if (_selectedColor == null) missingFields.add('Color');
 
       final purchase =
@@ -244,7 +244,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                           textColor: sectionHeaderText,
                           children: [
                             _buildAutocompleteGroup(
-                              label: 'Brand:',
+                              label: 'Maker:',
                               controller: _brandController,
                               hint: 'e.g. Honda',
                               isDark: isDark,
@@ -261,7 +261,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                             ),
                             const SizedBox(height: 16),
                             _buildAutocompleteGroup(
-                              label: 'Model:',
+                              label: 'Horse Power:',
                               controller: _modelController,
                               hint: 'e.g. CG125',
                               isDark: isDark,

@@ -208,7 +208,7 @@ class BikeFilterBar extends StatelessWidget {
             children: [
               _buildDropdown(
                 value: selectedBrand,
-                hint: 'Brand',
+                hint: 'Maker',
                 items: brands,
                 onChanged: onBrandChanged,
                 isDark: isDark,

@@ -7,7 +7,10 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/features/procurement/domain/supplier_service.dart';
 import 'package:isar/isar.dart';
+import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 
 class BikeEntry {
   String engineNumber = '';
@@ -56,15 +59,17 @@ class SupplierController extends GetxController {
   // Search State
   final searchQuery = ''.obs;
   final searchController = TextEditingController();
+  final ReportPdfService _pdfService = ReportPdfService();
 
   List<Supplier> get filteredSuppliers {
     if (searchQuery.value.isEmpty) return suppliers;
-    final query = searchQuery.value.toLowerCase();
-    return suppliers.where((s) => 
-      s.name.toLowerCase().contains(query) || 
-      s.phone.contains(query) || 
-      s.cnic.contains(query)
-    ).toList();
+    final query = searchQuery.value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    return suppliers.where((s) {
+      final name = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final phone = s.phone.replaceAll(RegExp(r'[^0-9]'), '');
+      final cnic = s.cnic.replaceAll(RegExp(r'[^0-9]'), '');
+      return name.contains(query) || phone.contains(query) || cnic.contains(query);
+    }).toList();
   }
 
   // New Supplier State
@@ -527,6 +532,73 @@ class SupplierController extends GetxController {
     if (selectedSupplier.value != null) {
       final fresh = suppliers.firstWhereOrNull((s) => s.id == selectedSupplier.value!.id);
       selectedSupplier.value = fresh; 
+    }
+  }
+  // --- PDF Export ---
+  Future<void> exportAllSuppliersPdf() async {
+    try {
+      final List<Map<String, dynamic>> supplierData = [];
+      for (final s in suppliers) {
+        final batches = await _supplierService.getSupplierBatches(s.id);
+        double totalAmount = 0;
+        for (final b in batches) {
+          final bikes = await _supplierService.getBatchBikes(b.id);
+          totalAmount += bikes.fold(0.0, (sum, bike) => sum + bike.purchasePrice);
+        }
+        supplierData.add({
+          'name': s.name,
+          'phone': s.phone,
+          'cnic': s.cnic,
+          'batchCount': batches.length,
+          'totalAmount': totalAmount,
+        });
+      }
+
+      final path =
+          await _pdfService.generateAllSuppliersReport(supplierData: supplierData);
+      if (path != null) {
+        AppToast.showSuccess(
+            title: 'PDF Exported', message: 'Report saved to Downloads');
+      } else {
+        AppToast.showError(
+            title: 'Export Failed', message: 'Could not generate PDF');
+      }
+    } catch (e) {
+      debugPrint('Error exporting all suppliers PDF: $e');
+      AppToast.showError(title: 'Export Error', message: e.toString());
+    }
+  }
+
+  Future<void> exportSupplierDetailPdf(Supplier supplier) async {
+    try {
+      final batches = await _supplierService.getSupplierBatches(supplier.id);
+      final List<Map<String, dynamic>> batchData = [];
+
+      for (final b in batches) {
+        final bikes = await _supplierService.getBatchBikes(b.id);
+        batchData.add({
+          'date': b.purchaseDate,
+          'bikes': bikes,
+          'totalAmount':
+              bikes.fold(0.0, (sum, bike) => sum + bike.purchasePrice),
+        });
+      }
+
+      final path = await _pdfService.generateSupplierDetailReport(
+        supplier: supplier,
+        batches: batchData,
+      );
+
+      if (path != null) {
+        AppToast.showSuccess(
+            title: 'PDF Exported', message: 'History saved to Downloads');
+      } else {
+        AppToast.showError(
+            title: 'Export Failed', message: 'Could not generate PDF');
+      }
+    } catch (e) {
+      debugPrint('Error exporting supplier history PDF: $e');
+      AppToast.showError(title: 'Export Error', message: e.toString());
     }
   }
 }

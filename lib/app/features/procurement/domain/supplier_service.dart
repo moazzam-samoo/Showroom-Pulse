@@ -127,6 +127,20 @@ class SupplierService extends GetxService {
 
   // --- Procurement (Batches) ---
 
+  Future<List<PurchaseBatch>> getSupplierBatches(int supplierId) async {
+    final supplier = await _isar.suppliers.get(supplierId);
+    if (supplier == null) return [];
+    await supplier.batches.load();
+    return supplier.batches.toList();
+  }
+
+  Future<List<Bike>> getBatchBikes(int batchId) async {
+    final batch = await _isar.purchaseBatchs.get(batchId);
+    if (batch == null) return [];
+    await batch.bikes.load();
+    return batch.bikes.toList();
+  }
+
   /// Saves a complete purchase batch with multiple bikes in a single transaction
   Future<void> savePurchaseBatch({
     required Supplier supplier,

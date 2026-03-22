@@ -265,7 +265,9 @@ class StatementService {
         children: [
           pw.Text('Bike Details', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
-          _pdfInfoRow('Model', '${bike.brand} ${bike.model}'),
+          _pdfInfoRow('Maker', bike.brand),
+          _pdfInfoRow('Horse Power', bike.model),
+          _pdfInfoRow('Model', bike.modelYear.toString()),
           _pdfInfoRow('Color', bike.color),
           _pdfInfoRow('Engine #', bike.engineNumber),
           _pdfInfoRow('Chassis #', bike.chassisNumber),

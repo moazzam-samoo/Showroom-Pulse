@@ -316,6 +316,9 @@ class FileService extends GetxService {
     return p.join(bikesMediaPath, filename);
   }
 
+  /// Alias for consistency in the UI
+  String getBikeImagePathSync(String filename) => getBikeImagePath(filename);
+
   /// Get full path to a customer profile image from filename and CNIC
   String getCustomerProfileImagePath(String filename, String cnic) {
     final sanitizedCnic = cnic.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
@@ -332,6 +335,12 @@ class FileService extends GetxService {
   String getSupplierProfileImagePathSync(String filename, String supplierName) {
     final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
     return p.join(suppliersMediaPath, sanitized, 'Profile', filename);
+  }
+
+  /// Get full path to a supplier CNIC image synchronously
+  String getSupplierCnicImagePathSync(String filename, String supplierName) {
+    final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
+    return p.join(suppliersMediaPath, sanitized, 'CNIC', filename);
   }
 
   /// Pick an image from gallery/filesystem

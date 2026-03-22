@@ -14,6 +14,8 @@ import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
+import 'package:tahir_showroom/app/data/models/supplier.dart';
+import 'package:tahir_showroom/app/data/models/bike.dart';
 
 /// PDF generation service for Reports & Revenue tabs
 class ReportPdfService {
@@ -306,7 +308,7 @@ class ReportPdfService {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Profit By Brand'),
+        _sectionTitle('Profit By Maker'),
         pw.SizedBox(height: 8),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
@@ -322,7 +324,7 @@ class ReportPdfService {
             pw.TableRow(
               decoration: const pw.BoxDecoration(color: _headerBg),
               children: [
-                _tableHeader('Category'),
+                _tableHeader('Maker'),
                 _tableHeader('Base Profit'),
                 _tableHeader('Inst. Markup'),
                 _tableHeader('Total Profit'),
@@ -424,7 +426,7 @@ class ReportPdfService {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Stock Distribution'),
+        _sectionTitle('Stock Distribution (by Maker)'),
         pw.SizedBox(height: 8),
         pw.Container(
           padding: const pw.EdgeInsets.all(12),
@@ -1055,7 +1057,9 @@ class ReportPdfService {
               children: [
                 _sectionTitle('VEHICLE DETAILS'),
                 pw.SizedBox(height: 8),
-                _infoRow('Model:', saleData['bikeModel']),
+                _infoRow('Maker:', saleData['bikeMaker'] ?? 'N/A'),
+                _infoRow('Horse Power:', saleData['bikeModel']),
+                _infoRow('Model:', saleData['bikeYear'] ?? 'N/A'),
                 _infoRow('Color:', saleData['bikeColor'] ?? 'N/A'),
                 _infoRow('Chassis No:', saleData['bikeChassisNumber']),
                 _infoRow('Engine No:', saleData['bikeEngineNumber']),
@@ -1563,6 +1567,214 @@ class ReportPdfService {
       return await _savePdf(pdf, fileName);
     } catch (e) {
       debugPrint('Error generating customer profile PDF: $e');
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  SUPPLIER REPORTS
+  // ═══════════════════════════════════════════════════════════
+
+  Future<String?> generateAllSuppliersReport({
+    required List<Map<String, dynamic>> supplierData,
+  }) async {
+    try {
+      final isar = Get.find<IsarService>().isar;
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
+      final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(
+              context, 'ALL SUPPLIERS REPORT', 'Summary of all dealers', settings, logo),
+          footer: _buildFooter,
+          build: (context) => [
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+              columnWidths: {
+                0: const pw.FixedColumnWidth(30),
+                1: const pw.FlexColumnWidth(3),
+                2: const pw.FlexColumnWidth(2),
+                3: const pw.FlexColumnWidth(2.2),
+                4: const pw.FlexColumnWidth(1.5),
+                5: const pw.FlexColumnWidth(2.5),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: _headerBg),
+                  children: [
+                    _tableHeader('#'),
+                    _tableHeader('Name'),
+                    _tableHeader('Phone'),
+                    _tableHeader('CNIC'),
+                    _tableHeader('Batches'),
+                    _tableHeader('Total Amount'),
+                  ],
+                ),
+                ...supplierData.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final d = e.value;
+                  final isAlt = idx.isOdd;
+                  return pw.TableRow(
+                    decoration:
+                        isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                    children: [
+                      _tableCell('${idx + 1}'),
+                      _tableCell(d['name'], bold: true),
+                      _tableCell(d['phone']),
+                      _tableCell(d['cnic']),
+                      _tableCell(d['batchCount'].toString()),
+                      _tableCell(_currencyFormat.format(d['totalAmount']),
+                          bold: true, color: _primaryColor),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      return await _savePdf(pdf, 'All_Suppliers_Report');
+    } catch (e) {
+      debugPrint('Error generating all suppliers report: $e');
+      return null;
+    }
+  }
+
+  Future<String?> generateSupplierDetailReport({
+    required Supplier supplier,
+    required List<Map<String, dynamic>> batches,
+  }) async {
+    try {
+      final isar = Get.find<IsarService>().isar;
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
+      final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(
+              context, 'SUPPLIER PURCHASE HISTORY', supplier.name, settings, logo),
+          footer: _buildFooter,
+          build: (context) => [
+            // Supplier Info Card
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+                borderRadius: pw.BorderRadius.circular(6),
+                color: PdfColors.grey50,
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('Dealer Contact Information',
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.grey600)),
+                      pw.SizedBox(height: 4),
+                      pw.Text('Phone: ${supplier.phone}',
+                          style: const pw.TextStyle(fontSize: 11)),
+                      pw.Text('CNIC: ${supplier.cnic}',
+                          style: const pw.TextStyle(fontSize: 11)),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('Total Batches',
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.grey600)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(batches.length.toString(),
+                          style: pw.TextStyle(
+                              fontSize: 16,
+                              fontWeight: pw.FontWeight.bold,
+                              color: _primaryColor)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            _sectionTitle('Purchase History'),
+            pw.SizedBox(height: 8),
+
+            ...batches.map((batch) {
+              final List<Bike> bikes = batch['bikes'];
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(
+                    padding:
+                        const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    color: PdfColors.grey200,
+                    child: pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                            'Batch Date: ${DateFormat('dd MMM yyyy').format(batch['date'] as DateTime)}',
+                            style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Text(
+                            'Total: ${_currencyFormat.format(batch['totalAmount'])}',
+                            style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 10,
+                                color: _successColor)),
+                      ],
+                    ),
+                  ),
+                  pw.Table(
+                    border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+                    children: [
+                      pw.TableRow(
+                        decoration:
+                            const pw.BoxDecoration(color: PdfColors.grey100),
+                        children: [
+                          _tableHeader('Engine No.'),
+                          _tableHeader('Maker/Horse Power'),
+                          _tableHeader('Color/Model'),
+                          _tableHeader('Price'),
+                        ],
+                      ),
+                      ...bikes.map((bike) => pw.TableRow(
+                            children: [
+                              _tableCell(bike.engineNumber),
+                              _tableCell('${bike.brand} ${bike.model}'),
+                              _tableCell('${bike.color} (${bike.modelYear})'),
+                              _tableCell(_currencyFormat.format(bike.purchasePrice)),
+                            ],
+                          )),
+                    ],
+                  ),
+                  pw.SizedBox(height: 16),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+      );
+
+      return await _savePdf(pdf,
+          'Supplier_History_${supplier.name.replaceAll(' ', '_')}');
+    } catch (e) {
+      debugPrint('Error generating supplier detail report: $e');
       return null;
     }
   }

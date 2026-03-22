@@ -240,7 +240,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                         children: [
 
                           _buildAutocompleteGroup(
-                            label: 'Brand:',
+                            label: 'Maker:',
                             controller: _brandController,
                             hint: 'e.g. Honda',
                             isDark: isDark,
@@ -255,7 +255,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           ),
                           const SizedBox(height: 16),
                           _buildAutocompleteGroup(
-                            label: 'Model:',
+                            label: 'Horse Power:',
                             controller: _modelController,
                             hint: 'e.g. CG125',
                             isDark: isDark,
