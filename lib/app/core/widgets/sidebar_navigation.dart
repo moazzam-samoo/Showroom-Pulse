@@ -29,7 +29,7 @@ class SidebarNavigation extends StatefulWidget {
 }
 
 class _SidebarNavigationState extends State<SidebarNavigation> {
-  final List<FocusNode> _focusNodes = List.generate(9, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(10, (_) => FocusNode());
   final FocusScopeNode _scopeNode = FocusScopeNode();
 
   @override
@@ -85,7 +85,7 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
               const SizedBox(height: AppSpacing.base),
               // Logo
               _buildLogo(isDark),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.md),
               // Navigation Items
               Expanded(
                 child: Column(
@@ -97,14 +97,15 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
                     _buildNavItem(4, LucideIcons.wallet, 'Installments', isDark),
                     _buildNavItem(5, LucideIcons.users, 'Customers', isDark),
                     _buildNavItem(6, LucideIcons.barChart3, 'Reports', isDark),
+                    _buildNavItem(7, LucideIcons.piggyBank, 'Investment', isDark),
                   ],
                 ),
               ),
               // Bottom Items
-              _buildNavItem(7, LucideIcons.settings, 'Settings', isDark),
-              const SizedBox(height: AppSpacing.base),
-              _buildNavItem(8, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
-              const SizedBox(height: AppSpacing.base),
+              _buildNavItem(8, LucideIcons.settings, 'Settings', isDark),
+              const SizedBox(height: AppSpacing.sm),
+              _buildNavItem(9, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
+              const SizedBox(height: AppSpacing.sm),
             ],
           ),
         ),
@@ -178,9 +179,9 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
         hoverColor: primaryColor.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 48,
-          height: 48,
-          margin: const EdgeInsets.symmetric(vertical: 4),
+          width: 44,
+          height: 44,
+          margin: const EdgeInsets.symmetric(vertical: 2),
           decoration: BoxDecoration(
             color: showIndicator
                 ? (isDark
@@ -265,6 +266,9 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
         Get.offNamed('/reports');
         break;
       case 7:
+        Get.offNamed('/investment');
+        break;
+      case 8:
         Get.offNamed('/settings');
         break;
     }
