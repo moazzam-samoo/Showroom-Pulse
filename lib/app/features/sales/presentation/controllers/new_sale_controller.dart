@@ -12,6 +12,8 @@ import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
@@ -605,6 +607,36 @@ class NewSaleController extends GetxController {
       if (witness2AddressController.text.trim().isEmpty) missingFields.add('Witness 2 Address');
     }
 
+    // === LOSS WARNING: Check if selling below purchase price ===
+    if (saleType.value == SaleType.cash && selectedBike.value != null) {
+      final saleAmount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+      final purchasePrice = selectedBike.value!.purchasePrice;
+      if (saleAmount > 0 && saleAmount < purchasePrice) {
+        final loss = purchasePrice - saleAmount;
+        final currFmt = NumberFormat.currency(locale: 'en_PK', symbol: 'Rs ', decimalDigits: 0);
+        AppNotificationDialog.showConfirmation(
+          title: '⚠️ Selling Below Purchase Price',
+          message: 'You are selling this bike at ${currFmt.format(loss)} LOSS.\n\n'
+                   'Purchase Price: ${currFmt.format(purchasePrice)}\n'
+                   'Sale Price: ${currFmt.format(saleAmount)}\n\n'
+                   'This loss will be deducted from your profit.',
+          confirmText: 'Proceed with Loss',
+          cancelText: 'Cancel Sale',
+          onConfirm: () {
+            if (missingFields.isNotEmpty) {
+              AppNotificationDialog.showOptionalFieldsWarning(
+                missingFields: missingFields,
+                onProceed: _executeSale,
+              );
+            } else {
+              _executeSale();
+            }
+          },
+        );
+        return;
+      }
+    }
+
     if (missingFields.isNotEmpty) {
       AppNotificationDialog.showOptionalFieldsWarning(
         missingFields: missingFields,
@@ -832,6 +864,42 @@ class NewSaleController extends GetxController {
       });
 
       // If we reach here, transaction was successful
+
+      // === INVESTMENT TRACKING: Record revenue from this sale ===
+      if (Get.isRegistered<InvestmentService>()) {
+        try {
+          final investmentService = Get.find<InvestmentService>();
+          final bike = selectedBike.value!;
+
+          if (saleType.value == SaleType.cash) {
+            // Cash sale: record full sale revenue + profit/loss
+            final saleAmount = double.tryParse(
+                    cashAmountController.text.replaceAll(',', '')) ?? 0;
+            await investmentService.recordBikeSaleRevenue(
+              bikeId: bike.id,
+              saleAmount: saleAmount,
+              purchasePrice: bike.purchasePrice,
+              saleId: 0, // Sale ID from transaction
+              bikeName: '${bike.brand} ${bike.model}',
+            );
+          } else if (saleType.value == SaleType.installment) {
+            // Installment sale: record down payment as revenue
+            final dpAmount = double.tryParse(
+                    downPaymentController.text.replaceAll(',', '')) ?? 0;
+            if (dpAmount > 0) {
+              await investmentService.recordInstallmentPaymentRevenue(
+                contractId: 0, // Will be set after contract creation
+                amount: dpAmount,
+                bikeId: bike.id,
+                description: 'Down Payment — ${bike.brand} ${bike.model}',
+              );
+            }
+          }
+        } catch (e) {
+          debugPrint('InvestmentService recording warning: $e');
+        }
+      }
+
       // Refresh sales data and dashboard stats (non-critical, errors won't affect success message)
       try {
         final salesController = Get.find<SalesController>();
@@ -847,6 +915,16 @@ class NewSaleController extends GetxController {
           await dashboardController.refreshStats();
         } catch (e) {
           debugPrint('DashboardController refresh warning: $e');
+        }
+      }
+
+      // Refresh investment KPIs if controller is registered
+      if (Get.isRegistered<InvestmentController>()) {
+        try {
+          final investmentController = Get.find<InvestmentController>();
+          await investmentController.loadInvestmentData();
+        } catch (e) {
+          debugPrint('InvestmentController refresh warning: $e');
         }
       }
 

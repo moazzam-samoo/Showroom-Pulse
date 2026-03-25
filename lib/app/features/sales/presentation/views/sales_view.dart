@@ -104,7 +104,15 @@ class _SalesViewState extends State<SalesView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
+
+                        Get.offNamed('/investment');
+
+                        break;
+
+                      case 8:
+
                         Get.offNamed('/settings');
+
                         break;
                     }
                   },
