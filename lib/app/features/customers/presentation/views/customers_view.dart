@@ -101,7 +101,15 @@ class _CustomersViewState extends State<CustomersView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
+
+                        Get.offNamed('/investment');
+
+                        break;
+
+                      case 8:
+
                         Get.offNamed('/settings');
+
                         break;
                     }
                   },

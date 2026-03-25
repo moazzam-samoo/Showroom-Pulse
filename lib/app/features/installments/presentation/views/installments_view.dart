@@ -105,7 +105,15 @@ class _InstallmentsViewState extends State<InstallmentsView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
+
+                        Get.offNamed('/investment');
+
+                        break;
+
+                      case 8:
+
                         Get.offNamed('/settings');
+
                         break;
                     }
                   },
@@ -720,7 +728,15 @@ class _InstallmentsViewState extends State<InstallmentsView> {
         Get.offNamed('/reports');
         break;
       case 7:
+
+        Get.offNamed('/investment');
+
+        break;
+
+      case 8:
+
         Get.offNamed('/settings');
+
         break;
     }
   }

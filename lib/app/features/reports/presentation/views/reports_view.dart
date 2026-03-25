@@ -88,7 +88,17 @@ class _ReportsViewState extends State<ReportsView> {
                     case 4: Get.offNamed('/installments'); break;
                     case 5: Get.offNamed('/customers'); break;
                     case 6: break; // Already on Reports
-                    case 7: Get.offNamed('/settings'); break;
+                    case 7:
+
+                      Get.offNamed('/investment');
+
+                      break;
+
+                    case 8:
+
+                      Get.offNamed('/settings');
+
+                      break;
                   }
                 },
               ),

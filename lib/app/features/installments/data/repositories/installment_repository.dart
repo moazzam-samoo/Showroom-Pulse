@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 
 /// Repository for managing installment contracts and payments
@@ -152,6 +155,36 @@ class InstallmentRepository {
         }
 
         await _isar.installmentContracts.put(contract);
+
+        // === INVESTMENT TRACKING: Record installment payment revenue ===
+        if (Get.isRegistered<InvestmentService>()) {
+          try {
+            final investmentService = Get.find<InvestmentService>();
+            final bike = await _isar.bikes.get(contract.bikeId);
+            await investmentService.recordInstallmentPaymentRevenue(
+              contractId: contractId,
+              amount: amount,
+              bikeId: contract.bikeId,
+              description: bike != null
+                  ? 'Monthly Payment \u2014 ${bike.brand} ${bike.model}'
+                  : 'Monthly Payment \u2014 Contract #$contractId',
+            );
+
+            // If completed, finalize profit
+            if (contract.status == ContractStatusEnum.completed && bike != null) {
+              await investmentService.finalizeInstallmentProfit(
+                contractId: contractId,
+                totalPaid: contract.totalPaid,
+                purchasePrice: bike.purchasePrice,
+              );
+            }
+          } catch (e) {
+            debugPrint('InvestmentService payment recording warning: $e');
+          }
+        }
+
+        // Refresh investment KPIs
+        _refreshInvestmentKPIs();
       }
     });
   }
@@ -190,6 +223,31 @@ class InstallmentRepository {
       contract.lastPaymentDate = DateTime.now();
 
       await _isar.installmentContracts.put(contract);
+
+      // === INVESTMENT TRACKING: Finalize installment profit ===
+      if (Get.isRegistered<InvestmentService>()) {
+        try {
+          final investmentService = Get.find<InvestmentService>();
+          final bike = await _isar.bikes.get(contract.bikeId);
+          if (bike != null) {
+            // If admin completed with full payment, record the remaining payment
+            if (allPaymentReceived) {
+              final remaining = contract.totalAmount - (contract.totalPaid - (contract.totalAmount - contract.totalPaid).abs());
+              // Revenue already recorded via payment above
+            }
+            await investmentService.finalizeInstallmentProfit(
+              contractId: contractId,
+              totalPaid: contract.totalPaid,
+              purchasePrice: bike.purchasePrice,
+            );
+          }
+        } catch (e) {
+          debugPrint('InvestmentService finalize warning: $e');
+        }
+      }
+
+      // Refresh investment KPIs
+      _refreshInvestmentKPIs();
     });
   }
 
@@ -390,6 +448,15 @@ class InstallmentRepository {
       
     } catch (e) {
       debugPrint('Error in Rounding/Overpayment fix: $e');
+    }
+  }
+
+  /// Refresh investment controller KPIs if registered
+  void _refreshInvestmentKPIs() {
+    if (Get.isRegistered<InvestmentController>()) {
+      try {
+        Get.find<InvestmentController>().loadInvestmentData();
+      } catch (_) {}
     }
   }
 }
