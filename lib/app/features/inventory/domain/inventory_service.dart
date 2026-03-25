@@ -24,7 +24,7 @@ class InventoryService {
   }
 
   /// Add a new bike to inventory
-  Future<void> addBike(Bike bike) async {
+  Future<int> addBike(Bike bike) async {
     final isar = _isarService.isar;
     
     // Check if engine or chassis number already exists
@@ -49,6 +49,8 @@ class InventoryService {
     await isar.writeTxn(() async {
       await isar.bikes.put(bike);
     });
+
+    return bike.id;
   }
 
   /// Update an existing bike

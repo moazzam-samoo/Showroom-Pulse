@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
@@ -126,7 +127,25 @@ class InventoryController extends GetxController {
       bike.purchaserPhone = data['purchaserPhone'];
       bike.purchaserCnic = data['purchaserCnic'];
 
-      await _inventoryService.addBike(bike);
+      // Assign investment amount if provided
+      final investmentAmount = double.tryParse(data['investmentAmount']?.toString() ?? '0') ?? 0.0;
+      bike.investmentAmount = investmentAmount;
+
+      final addedId = await _inventoryService.addBike(bike);
+      
+      // Record investment if capital was injected
+      if (investmentAmount > 0 && addedId != null) {
+        try {
+          final invService = Get.find<InvestmentService>();
+          await invService.recordBikePurchaseInvestment(
+            amount: investmentAmount,
+            date: DateTime.now(),
+            bikeId: addedId,
+          );
+        } catch (e) {
+          debugPrint('Failed to record investment: $e');
+        }
+      }
       
       await loadBikes(); // Refresh list
       
