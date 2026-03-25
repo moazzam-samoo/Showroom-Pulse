@@ -142,7 +142,7 @@ class SupplierService extends GetxService {
   }
 
   /// Saves a complete purchase batch with multiple bikes in a single transaction
-  Future<void> savePurchaseBatch({
+  Future<PurchaseBatch> savePurchaseBatch({
     required Supplier supplier,
     required DateTime date,
     required File? billImage,
@@ -170,22 +170,14 @@ class SupplierService extends GetxService {
       
       // 3. Save Bikes and Link to Batch
       for (var bike in bikes) {
-        // Save image if file exists (logic handled before creating bike object or here?)
-        // Assuming bike object passed here has imageFilename set or we handle it in controller.
-        // If the bike object has a temporary image path, we need to move it to final location?
-        // Let's assume the controller handles saving individual bike images via FileService 
-        // AND sets the filenames on the Bike objects BEFORE passing them here.
-        
         // Link to batch
         bike.batch.value = batch;
         await _isar.bikes.put(bike);
         await bike.batch.save();
       }
-      
-      // PurchaseBatch has: `final supplier = IsarLink<Supplier>();`
-      // Supplier has: `@Backlink(to: 'supplier') final batches = IsarLinks<PurchaseBatch>();`
-      // So setting `batch.supplier.value = supplier` is sufficient.
     });
+
+    return batch;
   }
 
   Future<void> updatePurchaseBatch(PurchaseBatch batch, DateTime newDate) async {

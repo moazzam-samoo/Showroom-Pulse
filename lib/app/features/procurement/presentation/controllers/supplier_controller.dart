@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 
 class BikeEntry {
   String engineNumber = '';
@@ -445,12 +446,27 @@ class SupplierController extends GetxController {
         bikes.add(bike);
       }
 
-      await _supplierService.savePurchaseBatch(
+      final batch = await _supplierService.savePurchaseBatch(
         supplier: supplier,
         date: purchaseDate.value,
         billImage: billImage.value,
         bikes: bikes,
       );
+
+      // Record investment for this batch
+      if (batch != null) {
+        try {
+          final investmentService = Get.find<InvestmentService>();
+          final totalBatchInvestment = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
+          await investmentService.recordBatchPurchaseInvestment(
+            amount: totalBatchInvestment,
+            batchId: batch.id,
+            date: purchaseDate.value,
+          );
+        } catch (e) {
+          debugPrint('Failed to record batch investment: $e');
+        }
+      }
   }
 
   Future<void> _handleUpdateBatch(PurchaseBatch batch, Supplier supplier) async {

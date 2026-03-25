@@ -870,7 +870,7 @@ class AddStockView extends GetView<SupplierController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Batch Cost',
+                'Total Investment Required',
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   fontSize: 14,
@@ -885,6 +885,15 @@ class AddStockView extends GetView<SupplierController> {
                   fontWeight: FontWeight.bold,
                 ),
               )),
+              const SizedBox(height: 4),
+              Text(
+                'This amount will be allocated from capital',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
           BlinkingFocusBuilder(
