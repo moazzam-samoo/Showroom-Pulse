@@ -16,6 +16,7 @@ import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
 
 /// PDF generation service for Reports & Revenue tabs
 class ReportPdfService {
@@ -1775,6 +1776,171 @@ class ReportPdfService {
           'Supplier_History_${supplier.name.replaceAll(' ', '_')}');
     } catch (e) {
       debugPrint('Error generating supplier detail report: $e');
+      return null;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  INVESTMENT REPORT
+  // ═══════════════════════════════════════════════════════════
+
+  Future<String?> generateInvestmentReport({
+    required List<Investment> investments,
+  }) async {
+    try {
+      final isar = Get.find<IsarService>().isar;
+      final settings =
+          await isar.appSettings.where().findFirst() ?? AppSettings();
+      final pdf = pw.Document();
+      final logo = await _loadLogo(settings);
+
+      double capital = 0.0;
+      double allocated = 0.0;
+      double profits = 0.0;
+      
+      for (final inv in investments) {
+        if (inv.type == InvestmentTypeEnum.capitalInjection) {
+          capital += inv.amount;
+        } else if (inv.type == InvestmentTypeEnum.bikePurchase || inv.type == InvestmentTypeEnum.withdrawal) {
+          allocated += inv.amount;
+        }
+        profits += inv.profitAmount;
+      }
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          header: (context) => _buildHeader(
+              context, 'CAPITAL & INVESTMENT REPORT', 'Complete investment history', settings, logo),
+          footer: _buildFooter,
+          build: (context) => [
+            // Summary KPI Cards
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+                borderRadius: pw.BorderRadius.circular(6),
+                color: PdfColors.grey50,
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text('Total Capital',
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.grey600)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(_currencyFormat.format(capital),
+                          style: pw.TextStyle(
+                              fontSize: 14,
+                              fontWeight: pw.FontWeight.bold,
+                              color: _primaryColor)),
+                    ],
+                  ),
+                  pw.Container(height: 24, width: 1, color: PdfColors.grey300),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text('Allocated Used',
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.grey600)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(_currencyFormat.format(allocated),
+                          style: pw.TextStyle(
+                              fontSize: 14,
+                              fontWeight: pw.FontWeight.bold,
+                              color: _warningColor)),
+                    ],
+                  ),
+                  pw.Container(height: 24, width: 1, color: PdfColors.grey300),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text('Total Profit',
+                          style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.grey600)),
+                      pw.SizedBox(height: 4),
+                      pw.Text(_currencyFormat.format(profits),
+                          style: pw.TextStyle(
+                              fontSize: 14,
+                              fontWeight: pw.FontWeight.bold,
+                              color: _successColor)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            _sectionTitle('Transaction History'),
+            pw.SizedBox(height: 8),
+
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+              columnWidths: {
+                0: const pw.FixedColumnWidth(30),
+                1: const pw.FlexColumnWidth(2),
+                2: const pw.FlexColumnWidth(2),
+                3: const pw.FlexColumnWidth(3),
+                4: const pw.FlexColumnWidth(2),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: _headerBg),
+                  children: [
+                    _tableHeader('#'),
+                    _tableHeader('Date'),
+                    _tableHeader('Type'),
+                    _tableHeader('Description'),
+                    _tableHeader('Amount'),
+                  ],
+                ),
+                ...investments.asMap().entries.map((e) {
+                  final idx = e.key;
+                  final inv = e.value;
+                  final isAlt = idx.isOdd;
+                  
+                  String typeLabel = 'Capital';
+                  PdfColor typeColor = _primaryColor;
+                  if (inv.type == InvestmentTypeEnum.bikePurchase) {
+                    typeLabel = 'Purchase';
+                    typeColor = _warningColor;
+                  } else if (inv.type == InvestmentTypeEnum.withdrawal) {
+                    typeLabel = 'Withdrawal';
+                    typeColor = PdfColors.red700;
+                  }
+
+                  return pw.TableRow(
+                    decoration:
+                        isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
+                    children: [
+                      _tableCell('${idx + 1}'),
+                      _tableCell(DateFormat('dd MMM yyyy').format(inv.date)),
+                      _tableCell(typeLabel, color: typeColor, bold: true),
+                      _tableCell(inv.description ?? '-'),
+                      _tableCell(_currencyFormat.format(inv.amount), bold: true),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      return await _savePdf(pdf,
+          'Investment_Report_${DateFormat('yyyyMMdd').format(DateTime.now())}');
+    } catch (e) {
+      debugPrint('Error generating investment report: $e');
       return null;
     }
   }
