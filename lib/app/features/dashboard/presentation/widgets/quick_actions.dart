@@ -38,7 +38,7 @@ class QuickActionsRow extends StatelessWidget {
         label: 'Add Bike',
         icon: LucideIcons.plusCircle,
         color: primaryColor,
-        onTap: () => Get.offNamed('/procurement'),
+        onTap: () => Get.toNamed('/inventory/add'),
       ),
       QuickActionButton(
         label: 'Record Payment',

@@ -13,6 +13,8 @@ import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcoming_installments.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -51,6 +53,9 @@ class DashboardController extends GetxController {
   // KPI Data
   final totalAssetValue = 0.0.obs;
   final totalAssetGrowth = 0.0.obs;
+  final totalInvestment = 0.0.obs;
+  final allocatedInvestment = 0.0.obs;
+  final availableInvestment = 0.0.obs;
   final unitsInStock = 0.obs;
   final lowStockAlert = 0.obs;
   final totalInstallmentValue = 0.0.obs;
@@ -136,6 +141,15 @@ class DashboardController extends GetxController {
       final assetValue = await _salesService.calculateTotalAssetValue();
       totalAssetValue.value = assetValue;
       
+      try {
+        final investmentService = Get.find<InvestmentService>();
+        totalInvestment.value = await investmentService.getTotalCapital();
+        allocatedInvestment.value = await investmentService.getTotalAllocated();
+        availableInvestment.value = await investmentService.getAvailableBalance();
+      } catch (e) {
+        debugPrint('Investment service not initialized: $e');
+      }
+
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
         b.status == BikeStatusEnum.available
