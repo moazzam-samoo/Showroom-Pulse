@@ -29,9 +29,13 @@ import 'app/features/reports/presentation/views/reports_view.dart';
 import 'app/features/reports/presentation/bindings/reports_binding.dart';
 import 'app/features/settings/presentation/views/settings_view.dart';
 import 'app/features/settings/presentation/bindings/settings_binding.dart';
+import 'app/features/investment/presentation/views/investment_view.dart';
+import 'app/features/investment/presentation/bindings/investment_binding.dart';
 
 import 'package:tahir_showroom/app/features/sales/presentation/views/new_sale_view.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/bindings/new_sale_binding.dart';
+import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
+
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -187,6 +191,11 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         binding: InventoryBinding(),
       ),
       GetPage(
+        name: '/inventory/add',
+        page: () => const AddStockView(),
+        binding: ProcurementBinding(),
+      ),
+      GetPage(
         name: '/sales/new',
         page: () => const NewSaleView(),
         binding: NewSaleBinding(),
@@ -212,8 +221,13 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         binding: ReportsBinding(),
       ),
       GetPage(
+        name: '/investment',
+        page: () => const InvestmentView(),
+        binding: InvestmentBinding(),
+      ),
+      GetPage(
         name: '/settings',
-        page: () => const SettingsView(),
+        page: () => SettingsView(),
         binding: SettingsBinding(),
       ),
       GetPage(
