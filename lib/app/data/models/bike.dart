@@ -68,6 +68,9 @@ class Bike {
   /// Additional notes
   String? notes;
 
+  /// Investment amount allocated to this bike (from user's capital)
+  double investmentAmount = 0.0;
+
   // -- Purchaser Details (V2 - Optional) --
   String? purchaserName;
   String? purchaserPhone;

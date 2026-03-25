@@ -63,53 +63,58 @@ const BikeSchema = CollectionSchema(
       name: r'imageFilename',
       type: IsarType.string,
     ),
-    r'model': PropertySchema(
+    r'investmentAmount': PropertySchema(
       id: 9,
+      name: r'investmentAmount',
+      type: IsarType.double,
+    ),
+    r'model': PropertySchema(
+      id: 10,
       name: r'model',
       type: IsarType.string,
     ),
     r'modelYear': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'modelYear',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'notes',
       type: IsarType.string,
     ),
     r'purchasePrice': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'purchasePrice',
       type: IsarType.double,
     ),
     r'purchaserCnic': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'purchaserCnic',
       type: IsarType.string,
     ),
     r'purchaserCnicBackFilename': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'purchaserCnicBackFilename',
       type: IsarType.string,
     ),
     r'purchaserCnicFrontFilename': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'purchaserCnicFrontFilename',
       type: IsarType.string,
     ),
     r'purchaserName': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'purchaserName',
       type: IsarType.string,
     ),
     r'purchaserPhone': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'purchaserPhone',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'status',
       type: IsarType.byte,
       enumMap: _BikestatusEnumValueMap,
@@ -247,16 +252,17 @@ void _bikeSerialize(
   writer.writeDateTime(offsets[6], object.dateSold);
   writer.writeString(offsets[7], object.engineNumber);
   writer.writeString(offsets[8], object.imageFilename);
-  writer.writeString(offsets[9], object.model);
-  writer.writeLong(offsets[10], object.modelYear);
-  writer.writeString(offsets[11], object.notes);
-  writer.writeDouble(offsets[12], object.purchasePrice);
-  writer.writeString(offsets[13], object.purchaserCnic);
-  writer.writeString(offsets[14], object.purchaserCnicBackFilename);
-  writer.writeString(offsets[15], object.purchaserCnicFrontFilename);
-  writer.writeString(offsets[16], object.purchaserName);
-  writer.writeString(offsets[17], object.purchaserPhone);
-  writer.writeByte(offsets[18], object.status.index);
+  writer.writeDouble(offsets[9], object.investmentAmount);
+  writer.writeString(offsets[10], object.model);
+  writer.writeLong(offsets[11], object.modelYear);
+  writer.writeString(offsets[12], object.notes);
+  writer.writeDouble(offsets[13], object.purchasePrice);
+  writer.writeString(offsets[14], object.purchaserCnic);
+  writer.writeString(offsets[15], object.purchaserCnicBackFilename);
+  writer.writeString(offsets[16], object.purchaserCnicFrontFilename);
+  writer.writeString(offsets[17], object.purchaserName);
+  writer.writeString(offsets[18], object.purchaserPhone);
+  writer.writeByte(offsets[19], object.status.index);
 }
 
 Bike _bikeDeserialize(
@@ -278,16 +284,17 @@ Bike _bikeDeserialize(
   object.engineNumber = reader.readString(offsets[7]);
   object.id = id;
   object.imageFilename = reader.readStringOrNull(offsets[8]);
-  object.model = reader.readString(offsets[9]);
-  object.modelYear = reader.readLong(offsets[10]);
-  object.notes = reader.readStringOrNull(offsets[11]);
-  object.purchasePrice = reader.readDouble(offsets[12]);
-  object.purchaserCnic = reader.readStringOrNull(offsets[13]);
-  object.purchaserCnicBackFilename = reader.readStringOrNull(offsets[14]);
-  object.purchaserCnicFrontFilename = reader.readStringOrNull(offsets[15]);
-  object.purchaserName = reader.readStringOrNull(offsets[16]);
-  object.purchaserPhone = reader.readStringOrNull(offsets[17]);
-  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[18])] ??
+  object.investmentAmount = reader.readDouble(offsets[9]);
+  object.model = reader.readString(offsets[10]);
+  object.modelYear = reader.readLong(offsets[11]);
+  object.notes = reader.readStringOrNull(offsets[12]);
+  object.purchasePrice = reader.readDouble(offsets[13]);
+  object.purchaserCnic = reader.readStringOrNull(offsets[14]);
+  object.purchaserCnicBackFilename = reader.readStringOrNull(offsets[15]);
+  object.purchaserCnicFrontFilename = reader.readStringOrNull(offsets[16]);
+  object.purchaserName = reader.readStringOrNull(offsets[17]);
+  object.purchaserPhone = reader.readStringOrNull(offsets[18]);
+  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[19])] ??
       BikeStatusEnum.available;
   return object;
 }
@@ -319,15 +326,15 @@ P _bikeDeserializeProp<P>(
     case 8:
       return (reader.readStringOrNull(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
-    case 10:
-      return (reader.readLong(offset)) as P;
-    case 11:
-      return (reader.readStringOrNull(offset)) as P;
-    case 12:
       return (reader.readDouble(offset)) as P;
-    case 13:
+    case 10:
+      return (reader.readString(offset)) as P;
+    case 11:
+      return (reader.readLong(offset)) as P;
+    case 12:
       return (reader.readStringOrNull(offset)) as P;
+    case 13:
+      return (reader.readDouble(offset)) as P;
     case 14:
       return (reader.readStringOrNull(offset)) as P;
     case 15:
@@ -337,6 +344,8 @@ P _bikeDeserializeProp<P>(
     case 17:
       return (reader.readStringOrNull(offset)) as P;
     case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
       return (_BikestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           BikeStatusEnum.available) as P;
     default:
@@ -1699,6 +1708,68 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'investmentAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterFilterCondition> modelEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -3015,6 +3086,18 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByInvestmentAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByModel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'model', Sort.asc);
@@ -3258,6 +3341,18 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByInvestmentAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByModel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'model', Sort.asc);
@@ -3442,6 +3537,12 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QDistinct> distinctByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'investmentAmount');
+    });
+  }
+
   QueryBuilder<Bike, Bike, QDistinct> distinctByModel(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -3573,6 +3674,12 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
   QueryBuilder<Bike, String?, QQueryOperations> imageFilenameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageFilename');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> investmentAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'investmentAmount');
     });
   }
 
