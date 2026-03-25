@@ -1,57 +1,33 @@
-# Plan: Hybrid UX Pattern for NotifVications
+# PLAN.md: UI Enhancement & Bug Fixes
 
-This document outlines the implementation plan for replacing the 50+ existing `Get.snackbar` notifications with a Hybrid UX Pattern (Toasts for info/success, Pop-ups for errors/critical alerts), serving as Phase 1 of the orchestration process.
+## Context
+The user has requested to address three specific UI/UX issues related to the newly minted `Investment Management` system:
+1. **Missing Sidebar Navigation:** The `InvestmentView` lacks the global `SidebarNavigation` component, making it impossible to navigate out of the view.
+2. **Sidebar Pixel Overflow Error:** The addition of the "Investment" tab to `SidebarNavigation` caused a bottom overflow constraint failure ("pixels render issue occurred") on screens with lower height since it uses `Expanded` with a non-scrollable `Column`.
+3. **Amount Formatting:** The "Add Capital" input field does not place automatic comma formatting grouping (e.g., 500,000 instead of 500000).
 
-## User Review Required
->
-> [!IMPORTANT]
-> Please review this plan. This will apply a significant UI overhaul across 18 files.
-> Once approved, the Orchestration mode will proceed to Phase 2 (Implementation).
+## Execution Plan (Phase 2 Orchestration)
 
-## Proposed Changes
+### Target Domains & Agents
+- UI/UX Structural (Navigation Layout) → `frontend-specialist`
+- Interaction & Fields (Text Formats) → `frontend-specialist`
+- QA/Testing → `test-engineer`
 
-### Core UI Components
+### Task Breakdown
 
-#### [NEW] `lib/app/core/widgets/app_toast.dart`
+#### Part 1: Fix Sidebar Missing in InvestmentView
+- **Target:** `lib/app/features/investment/presentation/views/investment_view.dart`
+- **Action:** Refactor the top-level `Scaffold` return into a `Row` containing the `SidebarNavigation` on the left and an `Expanded(child: Scaffold(...))` on the right, matching the architecture of other main views like `DashboardView`.
 
-- Create an elegant, top-right floating toast component for Success/Info messages.
-- Non-blocking and self-dismissible (3-4 seconds).
-- Supports closing on `Esc`.
+#### Part 2: Fix Sidebar Overflow on Smaller Screens
+- **Target:** `lib/app/core/widgets/sidebar_navigation.dart`
+- **Action:** Convert the strict `Expanded(child: Column(...))` covering the navigation items into a `Expanded(child: SingleChildScrollView(child: Column(...)))` configuration. This resolves bottom bounds overflows when screen height shrinks. 
+- Ensure visual padding and focus/hover indicator sizes remain intact.
 
-#### [NEW] `lib/app/core/widgets/app_notification_dialog.dart`
+#### Part 3: Add Auto-Formatting to Input Field
+- **Target:** `lib/app/features/investment/presentation/widgets/add_investment_dialog.dart` (or wherever the specific text field lives).
+- **Action:** Implement a `TextInputFormatter` that parses incoming characters on-the-fly, strips old commas, and re-inserts fresh thousands separators. Update `amountController.text` cleanly upon user input without losing caret focus.
+- Validate that the existing controller `double.tryParse` logic in `investment_controller.dart` handles inputs containing commas properly. (Pre-verified: the controller does an `.replaceAll(',', '')` strip).
 
-- Create a dedicated dialog component specifically for Errors and Critical alerts.
-- Uses `Get.dialog` with `barrierDismissible: true` (closes on click outside).
-- Built-in `RawKeyboardListener` for `Enter` and `Esc` to dismiss.
-- Highly visible, preventing the user from missing critical failures or validation issues.
-
-### Implementation Areas (Agents: `frontend-specialist`, `backend-specialist`)
-
-The 50+ snackbars across these areas will be categorized and refactored:
-
-#### Sales & Transactions
-
-- **Invoices/Success**: Replace with `AppToast.showSuccess(...)`
-- **Missing selections/Failed saves**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Inventory & Procurement
-
-- **Supplier added/updated**: Replace with `AppToast.showSuccess(...)`
-- **Validation errors (e.g. Please add a bike)**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Settings & Configuration
-
-- **Profile saved**: Replace with `AppToast.showSuccess(...)`
-- **Database backup failed / Logo failed**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Core, Auth & Dashboard
-
-- **Installment warnings**: Replace with `AppNotificationDialog.showWarning(...)` or `showError(...)` depending on severity.
-- **Login fails/Data fetch fails**: Replace with `AppNotificationDialog.showError(...)`
-
-## Verification Plan
-
-### Manual Verification
-
-- Execute actions that trigger success messages to verify Toasts appear and vanish without screen blocking.
-- Execute actions that trigger error messages to verify Pop-ups dim the screen, and disappear when clicking outside, or pressing `Esc` / `Enter`.
+---
+*Created by `@project-planner`. Awaiting user approval to commence Phase 2 parallel implementation.*
