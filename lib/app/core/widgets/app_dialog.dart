@@ -119,8 +119,14 @@ class AppDialog extends StatelessWidget {
               
               // Content
               Flexible(
-                child: SingleChildScrollView(
-                  child: child,
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  thickness: 6,
+                  radius: const Radius.circular(3),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: child,
+                  ),
                 ),
               ),
 

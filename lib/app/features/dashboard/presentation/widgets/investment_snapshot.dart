@@ -132,12 +132,12 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 16, color: color),
+                child: Icon(icon, size: 14, color: color),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -154,7 +154,7 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 12),
           Text(
             PriceFormatter.formatPKR(amount),
             style: TextStyle(

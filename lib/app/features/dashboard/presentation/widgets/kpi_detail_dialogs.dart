@@ -65,60 +65,47 @@ class KpiDetailDialogs {
 
   // --- 2. Units In Stock Dialog ---
   static Future<void> showStockDialog(BuildContext context) async {
-    final bikes = await _isar.bikes.where().findAll();
+    final bikes = await _isar.bikes.filter().statusEqualTo(BikeStatusEnum.available).findAll();
     
-    final int available = bikes.where((b) => b.status == BikeStatusEnum.available).length;
-    final int installment = bikes.where((b) => b.status == BikeStatusEnum.installment).length;
-    final int sold = bikes.where((b) => b.status == BikeStatusEnum.sold).length;
-
     // Group by model
-    final Map<String, Map<String, int>> modelStats = {};
+    final Map<String, List<Bike>> groupedBikes = {};
     for (var bike in bikes) {
-      if (!modelStats.containsKey(bike.model)) {
-        modelStats[bike.model] = {'Available': 0, 'Installment': 0, 'Sold': 0};
-      }
-      if (bike.status == BikeStatusEnum.available) modelStats[bike.model]!['Available'] = modelStats[bike.model]!['Available']! + 1;
-      if (bike.status == BikeStatusEnum.installment) modelStats[bike.model]!['Installment'] = modelStats[bike.model]!['Installment']! + 1;
-      if (bike.status == BikeStatusEnum.sold) modelStats[bike.model]!['Sold'] = modelStats[bike.model]!['Sold']! + 1;
+      if (!groupedBikes.containsKey(bike.model)) groupedBikes[bike.model] = [];
+      groupedBikes[bike.model]!.add(bike);
     }
+
+    final totalValue = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
 
     _showDialog(
       context: context,
-      title: 'Inventory Breakdown',
+      title: 'Available Stock Breakdown',
       content: bikes.isEmpty
-        ? _buildEmptyState('No database records found.')
+        ? _buildEmptyState('No available bikes in stock.')
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Summary Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildSummaryItem('Available', '$available', Colors.green),
-                  _buildSummaryItem('Installment', '$installment', Colors.amber),
-                  _buildSummaryItem('Sold', '$sold', Colors.blue),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text('Model-wise Split', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              _buildTableHeader(['Horse Power', 'Avail', 'Inst.', 'Sold']),
+              _buildTableHeader(['Horse Power', 'Units', 'Unit Price', 'Total Value']),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: modelStats.entries.map((entry) {
+                    children: groupedBikes.entries.map((entry) {
+                      final model = entry.key;
+                      final count = entry.value.length;
+                      final unitPrice = entry.value.first.purchasePrice;
+                      final totalModelValue = count * unitPrice;
+
                       return _buildTableRow([
-                        entry.key,
-                        '${entry.value['Available']}',
-                        '${entry.value['Installment']}',
-                        '${entry.value['Sold']}',
+                        model,
+                        '$count',
+                        PriceFormatter.formatPKR(unitPrice),
+                        PriceFormatter.formatPKR(totalModelValue),
                       ]);
                     }).toList(),
                   ),
                 ),
               ),
               const Divider(),
-              _buildTableFooter('Total System Bikes', '${bikes.length} Units'),
+              _buildTableFooter('Grand Total', PriceFormatter.formatPKR(totalValue)),
             ],
           ),
     );
@@ -260,14 +247,6 @@ class KpiDetailDialogs {
     );
   }
 
-  static Widget _buildSummaryItem(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(value, style: TextStyle(color: color, fontSize: 24, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-      ],
-    );
-  }
 
   static Widget _buildTableHeader(List<String> headers) {
     return Container(
