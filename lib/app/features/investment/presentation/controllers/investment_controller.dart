@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
 enum InvestmentFilter { all, weekly, monthly, yearly }
@@ -10,7 +11,17 @@ enum CategoryFilter { all, withdrawals, investments, bikeInvestments, revenue }
 
 class InvestmentController extends GetxController {
   final InvestmentService _investmentService = Get.find<InvestmentService>();
+  final WalkthroughService _walkthroughService = Get.find<WalkthroughService>();
   final ReportPdfService _pdfService = ReportPdfService();
+  final scrollController = ScrollController();
+
+  // === Coaching / Walkthrough Keys ===
+  final investedCardKey = GlobalKey();
+  final availableCardKey = GlobalKey();
+  final profitCardKey = GlobalKey();
+  final historyTitleKey = GlobalKey();
+  final filterRowKey = GlobalKey();
+  final addCapitalFabKey = GlobalKey();
 
   // === KPIs — Core ===
   final totalCapital = 0.0.obs;
@@ -55,6 +66,27 @@ class InvestmentController extends GetxController {
     debounce(searchQuery, (_) => _applyFilters(), time: const Duration(milliseconds: 300));
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    _checkAndShowTour();
+  }
+
+  Future<void> _checkAndShowTour() async {
+    if (!_walkthroughService.hasCompletedTab('investment')) {
+      // Small delay to ensure layout is ready
+      await Future.delayed(const Duration(milliseconds: 500));
+      showTourRequested.value = true;
+    }
+  }
+
+  final showTourRequested = false.obs;
+
+  void markTourAsComplete() {
+    _walkthroughService.markTabComplete('investment');
+    showTourRequested.value = false;
+  }
+
   Future<void> _initAndLoadData() async {
     // Run one-time migration if needed
     await _investmentService.migrateExistingSalesData();
@@ -66,6 +98,7 @@ class InvestmentController extends GetxController {
     amountController.dispose();
     notesController.dispose();
     searchController.dispose();
+    scrollController.dispose();
     super.onClose();
   }
 

@@ -5,7 +5,7 @@ class WalkthroughController extends GetxController {
   final WalkthroughService _walkthroughService = Get.find<WalkthroughService>();
   
   final currentPage = 0.obs;
-  final totalPages = 6;
+  final totalPages = 7;
 
   void onPageChanged(int index) {
     currentPage.value = index;

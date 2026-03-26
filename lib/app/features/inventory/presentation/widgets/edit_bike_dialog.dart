@@ -326,25 +326,14 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                   child: Column(
                     children: [
                       _buildSection(
-                        title: 'Financials',
+                        title: 'Purchase Details',
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, _purchaseFocus, isNumber: true),
-                          const SizedBox(height: 16),
-                          _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, _sellingFocus, isNumber: true),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSection(
-                        title: 'Purchaser Details (Optional)',
-                        color: sectionHeaderBg,
-                        textColor: sectionHeaderText,
-                        children: [
-                          _buildInputGroup('Name:', _purchaserNameController, 'Enter name', isDark, inputBg, inputBorder, labelColor, _purchaserNameFocus),
+                          _buildInputGroup('Dealer/Seller Name:', _purchaserNameController, 'Enter name', isDark, inputBg, inputBorder, labelColor, _purchaserNameFocus),
                           const SizedBox(height: 16),
                           _buildInputGroup(
-                            'Phone:', 
+                            'Dealer/Seller Phone:', 
                             _purchaserPhoneController, 
                             '03xx-xxxxxxx', 
                             isDark, 
@@ -356,7 +345,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           ),
                           const SizedBox(height: 16),
                           _buildInputGroup(
-                            'CNIC:', 
+                            'Dealer/Seller CNIC:', 
                             _purchaserCnicController, 
                             'xxxxx-xxxxxxx-x', 
                             isDark, 
@@ -366,9 +355,15 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                             _purchaserCnicFocus,
                             inputFormatters: [CnicInputFormatter()],
                           ),
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          const SizedBox(height: 16),
+                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, _purchaseFocus, isNumber: true),
+                          const SizedBox(height: 16),
+                          _buildInputGroup('Expected Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, _sellingFocus, isNumber: true),
                         ],
                       ),
-                      const SizedBox(height: 24),
+ const SizedBox(height: 24),
                       // Image Upload
                       BlinkingFocusBuilder(
                         focusNode: _imageFocus,

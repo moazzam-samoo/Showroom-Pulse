@@ -120,10 +120,10 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.1 : 0.05),
+        color: color.withValues(alpha: isDark ? 0.1 : 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -135,7 +135,7 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 14, color: color),
@@ -155,7 +155,6 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               ),
             ],
           ),
-<<<<<<< HEAD
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -167,15 +166,6 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
               ),
-=======
-          const SizedBox(height: 12),
-          Text(
-            PriceFormatter.formatPKR(amount),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
->>>>>>> 7639930a71fa19c737cb0c845bed4be8af67c859
             ),
           ),
           if (subtitle != null) ...[
@@ -184,7 +174,7 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               subtitle,
               style: TextStyle(
                 fontSize: 11,
-                color: color.withOpacity(0.8),
+                color: color.withValues(alpha: 0.8),
               ),
             ),
           ],
