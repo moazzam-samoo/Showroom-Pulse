@@ -175,7 +175,10 @@ class _DashboardViewState extends State<DashboardView> {
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         // Investment Snapshot
-                        const InvestmentSnapshotWidget(),
+                        const SizedBox(
+                          height: 210,
+                          child: InvestmentSnapshotWidget(),
+                        ),
                       ],
                     ),
                   ),

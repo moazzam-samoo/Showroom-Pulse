@@ -295,16 +295,28 @@ class ReportPdfService {
   // ─── Profit By Brand Table (5 columns) ───────────────────
 
   pw.Widget _buildProfitTable(Map<String, Map<String, double>> data) {
-    double totalCash = 0,
+    double totalAsset = 0,
+        totalCash = 0,
         totalInstallment = 0,
-        totalProfit = 0,
         totalEarned = 0;
     for (final v in data.values) {
+      totalAsset += v['assetValue'] ?? 0;
       totalCash += v['cash'] ?? 0;
       totalInstallment += v['installment'] ?? 0;
-      totalProfit += v['total'] ?? 0;
       totalEarned += v['earned'] ?? 0;
     }
+
+    final isMultiMonth = data.keys.any((k) => k.contains(' | '));
+    final headers = isMultiMonth
+        ? [
+            'Maker',
+            'Total Val.',
+            'Base Profit',
+            'Markup',
+            'Total Profit',
+            'Month',
+          ]
+        : ['Maker', 'Total Val.', 'Base Profit', 'Markup', 'Total Profit'];
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -313,24 +325,27 @@ class ReportPdfService {
         pw.SizedBox(height: 8),
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-          columnWidths: {
-            0: const pw.FlexColumnWidth(2),
-            1: const pw.FlexColumnWidth(2),
-            2: const pw.FlexColumnWidth(2),
-            3: const pw.FlexColumnWidth(2),
-            4: const pw.FlexColumnWidth(2),
-          },
+          columnWidths: isMultiMonth
+              ? {
+                  0: const pw.FlexColumnWidth(1.5), // Maker
+                  1: const pw.FlexColumnWidth(1.2), // Total Val
+                  2: const pw.FlexColumnWidth(1.2), // Base Profit
+                  3: const pw.FlexColumnWidth(1.2), // Markup
+                  4: const pw.FlexColumnWidth(1.2), // Earned
+                  5: const pw.FlexColumnWidth(1.2), // Month
+                }
+              : {
+                  0: const pw.FlexColumnWidth(2), // Maker
+                  1: const pw.FlexColumnWidth(1.5), // Total Val
+                  2: const pw.FlexColumnWidth(1.5), // Base Profit
+                  3: const pw.FlexColumnWidth(1.5), // Markup
+                  4: const pw.FlexColumnWidth(1.5), // Earned
+                },
           children: [
             // Header
             pw.TableRow(
               decoration: const pw.BoxDecoration(color: _headerBg),
-              children: [
-                _tableHeader('Maker'),
-                _tableHeader('Base Profit'),
-                _tableHeader('Inst. Markup'),
-                _tableHeader('Total Profit'),
-                _tableHeader('Earned'),
-              ],
+              children: headers.map((h) => _tableHeader(h)).toList(),
             ),
             // Data rows
             ...data.entries.toList().asMap().entries.map((e) {
@@ -338,38 +353,44 @@ class ReportPdfService {
               final isAlt = e.key.isOdd;
               final installment = brand.value['installment'] ?? 0;
 
+              final displayKey = brand.key.split(' | ');
+              final month = displayKey.length > 1 ? displayKey[0] : '';
+              final brandName =
+                  displayKey.length > 1 ? displayKey[1] : displayKey[0];
+
               return pw.TableRow(
                 decoration:
                     isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
                 children: [
-                  _tableCell(brand.key, bold: true),
+                  _tableCell(brandName, bold: true),
+                  _tableCell(
+                      _currencyFormat.format(brand.value['assetValue'] ?? 0)),
                   _tableCell(_currencyFormat.format(brand.value['cash'] ?? 0)),
                   _tableCell(installment == 0
-                      ? 'Sold on Cash'
+                      ? 'N/A'
                       : _currencyFormat.format(installment)),
                   _tableCell(_currencyFormat.format(brand.value['total'] ?? 0),
                       color: _successColor, bold: true),
-                  _tableCell(_currencyFormat.format(brand.value['earned'] ?? 0),
-                      color: _primaryColor, bold: true),
+                  if (isMultiMonth) _tableCell(month),
                 ],
               );
             }),
             // Total row
             pw.TableRow(
               decoration: const pw.BoxDecoration(
-                color: PdfColors.grey100,
+                color: PdfColors.grey200,
                 border: pw.Border(
-                    top: pw.BorderSide(color: PdfColors.grey400, width: 1)),
+                    top: pw.BorderSide(color: PdfColors.grey500, width: 1.5)),
               ),
               children: [
-                _tableCell('TOTAL', bold: true),
-                _tableCell(_currencyFormat.format(totalCash), bold: true),
+                _tableCell('TOTAL', bold: true, padding: 8),
+                _tableCell(_currencyFormat.format(totalAsset), bold: true, padding: 8),
+                _tableCell(_currencyFormat.format(totalCash), bold: true, padding: 8),
                 _tableCell(_currencyFormat.format(totalInstallment),
-                    bold: true),
-                _tableCell(_currencyFormat.format(totalProfit),
-                    color: _successColor, bold: true),
+                    bold: true, padding: 8),
                 _tableCell(_currencyFormat.format(totalEarned),
-                    color: _primaryColor, bold: true),
+                    color: _successColor, bold: true, padding: 8),
+                if (isMultiMonth) _tableCell('', padding: 8),
               ],
             ),
           ],
@@ -661,9 +682,9 @@ class ReportPdfService {
         style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold));
   }
 
-  pw.Widget _tableHeader(String text) {
+  pw.Widget _tableHeader(String text, {double padding = 8}) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: pw.EdgeInsets.symmetric(vertical: padding, horizontal: 6),
       child: pw.Text(text,
           style: pw.TextStyle(
             fontSize: 10,
@@ -673,9 +694,10 @@ class ReportPdfService {
     );
   }
 
-  pw.Widget _tableCell(String text, {bool bold = false, PdfColor? color}) {
+  pw.Widget _tableCell(String text,
+      {bool bold = false, PdfColor? color, double padding = 6}) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+      padding: pw.EdgeInsets.symmetric(vertical: padding, horizontal: 6),
       child: pw.Text(text,
           style: pw.TextStyle(
             fontSize: 10,

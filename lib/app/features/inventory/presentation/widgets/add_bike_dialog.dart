@@ -284,7 +284,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
     return AppDialog(
       title: 'Add New Motorcycle',
-      subtitle: 'AL-TAHIR Showroom Inventory Management',
+      subtitle: 'AL-AL-TAHIR Showroom Inventory Management',
       onSubmit: _handleSave, // Binds ENTER key to this
       actions: [
         Expanded(
@@ -372,7 +372,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                 inputBorder,
                                 labelColor,
                                 _modelYearFocus,
-                                isNumber: true),
+                                isNumber: true,
+                                useGrouping: false),
                             const SizedBox(height: 10),
                             _buildConditionGroup('Condition:', isDark, inputBg,
                                 inputBorder, labelColor, _conditionFocus),
@@ -685,6 +686,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       Color? labelColor,
       FocusNode focusNode,
       {bool isNumber = false,
+      bool useGrouping = true,
       bool autofocus = false,
       int? maxLength,
       bool isRequired = false,
@@ -716,7 +718,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               keyboardType:
                   isNumber ? TextInputType.number : TextInputType.text,
               inputFormatters: [
-                if (isNumber && !label.contains('Year')) ThousandsSeparatorInputFormatter(),
+                if (isNumber && useGrouping) ThousandsSeparatorInputFormatter(),
                 if (maxLength != null)
                   LengthLimitingTextInputFormatter(maxLength),
                 if (inputFormatters != null) ...inputFormatters,
