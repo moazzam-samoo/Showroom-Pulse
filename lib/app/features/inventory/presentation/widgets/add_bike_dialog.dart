@@ -284,7 +284,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
     return AppDialog(
       title: 'Add New Motorcycle',
-      subtitle: 'AL-AL-TAHIR Showroom Inventory Management',
+      subtitle: 'AL-TAHIR Showroom Inventory Management',
       onSubmit: _handleSave, // Binds ENTER key to this
       actions: [
         Expanded(
@@ -716,7 +716,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               keyboardType:
                   isNumber ? TextInputType.number : TextInputType.text,
               inputFormatters: [
-                if (isNumber) ThousandsSeparatorInputFormatter(),
+                if (isNumber && !label.contains('Year')) ThousandsSeparatorInputFormatter(),
                 if (maxLength != null)
                   LengthLimitingTextInputFormatter(maxLength),
                 if (inputFormatters != null) ...inputFormatters,

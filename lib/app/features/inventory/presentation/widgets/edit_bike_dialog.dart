@@ -512,7 +512,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
               keyboardType: isNumber ? TextInputType.number : TextInputType.text,
               inputFormatters: [
                 if (isNumber) FilteringTextInputFormatter.digitsOnly,
-                if (isNumber) ThousandsSeparatorInputFormatter(),
+                if (isNumber && !label.contains('Year')) ThousandsSeparatorInputFormatter(),
                 if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
                 if (inputFormatters != null) ...inputFormatters,
               ],
