@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
+import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
 import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:intl/intl.dart';
 
@@ -90,8 +91,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                 style: TextStyle(color: textCol),
                 keyboardType: TextInputType.number,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9,]')),
-                  ThousandsFormatter(),
+                  ThousandsSeparatorInputFormatter(),
                 ],
                 decoration: InputDecoration(
                   hintText: 'e.g. 500000',
