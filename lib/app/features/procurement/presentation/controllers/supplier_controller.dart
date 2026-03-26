@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
@@ -128,6 +129,13 @@ class SupplierController extends GetxController {
     }
 
     super.onClose();
+  }
+
+  InvestmentService _getInvestmentService() {
+    if (!Get.isRegistered<InvestmentService>()) {
+      Get.put(InvestmentService());
+    }
+    return Get.find<InvestmentService>();
   }
 
   Future<void> loadSuppliers() async {
@@ -337,6 +345,22 @@ class SupplierController extends GetxController {
 
         if (finalSupplier == null) return;
 
+        final int batchSize = bikeEntries.length;
+        final double batchTotal = totalBatchCost.value;
+        final String supplierName = finalSupplier.name;
+
+        // Capital Guard
+        final invService = _getInvestmentService();
+        final availableBalance = await invService.getAvailableBalance();
+        if (batchTotal > availableBalance) {
+          final format = NumberFormat('#,##0', 'en_US');
+          AppNotificationDialog.showError(
+            title: 'Not Enough Capital',
+            message: 'You cannot use Rs ${format.format(batchTotal)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and add capital first.',
+          );
+          return;
+        }
+
         if (editingBatch.value != null) {
           await _handleUpdateBatch(editingBatch.value!, finalSupplier);
         } else {
@@ -346,6 +370,21 @@ class SupplierController extends GetxController {
         clearBatchForm();
         await loadSuppliers();
         _refreshSelectedSupplier();
+
+        // Show Financial Toast
+        try {
+          final investmentService = _getInvestmentService();
+          final remainingBalance = await investmentService.getAvailableBalance();
+          final deficitWarning = remainingBalance < 0 ? ' (⚠️ Deficit)' : '';
+          
+          AppToast.showFinancial(
+            title: 'Stock Saved',
+            line1: '📦 Saved $batchSize bikes from $supplierName',
+            line2: 'Capital Used: Rs ${batchTotal.toStringAsFixed(0)} | Remaining: Rs ${remainingBalance.toStringAsFixed(0)}$deficitWarning',
+          );
+        } catch (e) {
+          debugPrint('Failed to show financial toast: $e');
+        }
 
         Get.dialog(
           Dialog(
@@ -456,7 +495,7 @@ class SupplierController extends GetxController {
       // Record investment for this batch
       if (batch != null) {
         try {
-          final investmentService = Get.find<InvestmentService>();
+          final investmentService = _getInvestmentService();
           final totalBatchInvestment = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
           await investmentService.recordBatchPurchaseInvestment(
             amount: totalBatchInvestment,

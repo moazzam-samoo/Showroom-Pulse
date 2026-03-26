@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:tahir_showroom/app/core/services/file_service.dart';
+import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
@@ -43,6 +44,13 @@ class InventoryController extends GetxController {
   void onClose() {
     searchController.dispose();
     super.onClose();
+  }
+
+  InvestmentService _getInvestmentService() {
+    if (!Get.isRegistered<InvestmentService>()) {
+      Get.put(InvestmentService());
+    }
+    return Get.find<InvestmentService>();
   }
 
   /// Load all bikes from database
@@ -131,12 +139,27 @@ class InventoryController extends GetxController {
       final investmentAmount = double.tryParse(data['investmentAmount']?.toString() ?? '0') ?? 0.0;
       bike.investmentAmount = investmentAmount;
 
+      if (investmentAmount > 0) {
+        final invService = _getInvestmentService();
+        final availableBalance = await invService.getAvailableBalance();
+        if (investmentAmount > availableBalance) {
+          final format = NumberFormat('#,##0', 'en_US');
+          AppNotificationDialog.showError(
+            title: 'Not Enough Capital',
+            message: 'You cannot use Rs ${format.format(investmentAmount)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and add capital first.',
+          );
+          return false;
+        }
+      }
+
+
+
       final addedId = await _inventoryService.addBike(bike);
       
       // Record investment if capital was injected
       if (investmentAmount > 0 && addedId != null) {
         try {
-          final invService = Get.find<InvestmentService>();
+          final invService = _getInvestmentService();
           await invService.recordBikePurchaseInvestment(
             amount: investmentAmount,
             date: DateTime.now(),
@@ -149,10 +172,21 @@ class InventoryController extends GetxController {
       
       await loadBikes(); // Refresh list
       
-      AppToast.showSuccess(
-        title: 'Success',
-        message: 'Bike added to inventory',
-      );
+      if (investmentAmount > 0) {
+        final invService = _getInvestmentService();
+        final remainingBalance = await invService.getAvailableBalance();
+        final deficitWarning = remainingBalance < 0 ? ' (⚠️ Deficit)' : '';
+        AppToast.showFinancial(
+          title: 'Success',
+          line1: '🏍️ ${bike.model} ${bike.brand} added to Inventory',
+          line2: 'Capital Used: Rs ${investmentAmount.toStringAsFixed(0)} | Remaining: Rs ${remainingBalance.toStringAsFixed(0)}$deficitWarning',
+        );
+      } else {
+        AppToast.showSuccess(
+          title: 'Success',
+          message: 'Bike added to inventory',
+        );
+      }
       return true;
     } catch (e) {
       AppNotificationDialog.showError(
