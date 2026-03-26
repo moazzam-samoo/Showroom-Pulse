@@ -90,6 +90,10 @@ class InvestmentController extends GetxController {
   Future<void> _initAndLoadData() async {
     // Run one-time migration if needed
     await _investmentService.migrateExistingSalesData();
+    
+    // Retroactive cleanup for orphaned investments (bikes deleted before sync fix)
+    await _investmentService.cleanupOrphanedInvestments();
+    
     await loadInvestmentData();
   }
 

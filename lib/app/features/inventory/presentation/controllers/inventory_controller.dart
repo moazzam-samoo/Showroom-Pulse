@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
@@ -157,7 +158,7 @@ class InventoryController extends GetxController {
       final addedId = await _inventoryService.addBike(bike);
       
       // Record investment if capital was injected
-      if (investmentAmount > 0 && addedId != null) {
+      if (investmentAmount > 0) {
         try {
           final invService = _getInvestmentService();
           await invService.recordBikePurchaseInvestment(
@@ -310,26 +311,44 @@ class InventoryController extends GetxController {
   /// Delete a bike
   Future<void> deleteBike(Bike bike) async {
     try {
-      // 1. Delete image if exists
-      if (bike.imageFilename != null) {
-        // Note: bike.imageFilename currently holds the full path due to loadBikes processing
-        // We need to extract just the filename if we were deleting by ID, 
-        // but here we can just pass the path if fileService supports it, 
-        // OR construct path. 
-        // Actually InventoryService deleteBike only needs ID.
-        // File deletion:
-        // await _fileService.deleteFile(bike.imageFilename!); // careful if path is full or relative
-      }
+      // 1. Handle Investment Refund
+      double refundedAmount = 0;
+      final invService = _getInvestmentService();
       
+      // We always try to remove investment - the service handles 
+      // check for existence (individual or batch)
+      await invService.removeBikePurchaseInvestment(bike);
+      
+      // If the bike had a stored investment amount, we use it for the toast
+      if (bike.investmentAmount > 0) {
+        refundedAmount = bike.investmentAmount;
+      } else {
+        // Fallback to purchase price if investment field was't synced yet
+        refundedAmount = bike.purchasePrice;
+      }
+
+      // 2. Trigger Investment UI Refresh (Direct GetX signal)
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
+
       // 2. Delete from DB
       await _inventoryService.deleteBike(bike.id);
       
       await loadBikes();
       
-      AppToast.showSuccess(
-        title: 'Success',
-        message: 'Bike deleted successfully',
-      );
+      if (refundedAmount > 0) {
+        AppToast.showFinancial(
+          title: 'Deleted Successfully',
+          line1: '🏍️ ${bike.model} removed from inventory',
+          line2: 'Capital Refunded: Rs ${refundedAmount.toStringAsFixed(0)} back to Available Cash',
+        );
+      } else {
+        AppToast.showSuccess(
+          title: 'Success',
+          message: 'Bike deleted successfully',
+        );
+      }
     } catch (e) {
       AppNotificationDialog.showError(
         title: 'Error',
