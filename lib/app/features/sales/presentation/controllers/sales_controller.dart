@@ -120,6 +120,7 @@ class SalesController extends GetxController {
       // 3. Search Query
       if (searchQuery.value.isNotEmpty) {
         final query = searchQuery.value.toLowerCase();
+        final queryNoCommas = query.replaceAll(',', '');
         
         // Status Keywords (Sold, Installment)
         if (query == 'sold' && !sale.isCash) return false;
@@ -135,9 +136,9 @@ class SalesController extends GetxController {
           (sale.bikeBrand?.toLowerCase().contains(query) ?? false) ||
           sale.customerCnic.contains(query) ||
           sale.customerContact.contains(query) ||
-          (sale.sellingPrice?.toInt().toString().contains(query) ?? false) ||
-          (sale.bikePrice?.toInt().toString().contains(query) ?? false) ||
-          sale.amountPaid.toInt().toString().contains(query);
+          (sale.sellingPrice?.toInt().toString().contains(queryNoCommas) ?? false) ||
+          (sale.bikePrice?.toInt().toString().contains(queryNoCommas) ?? false) ||
+          sale.amountPaid.toInt().toString().contains(queryNoCommas);
 
         if (!matches && query != 'sold' && query != 'installment') return false;
       }

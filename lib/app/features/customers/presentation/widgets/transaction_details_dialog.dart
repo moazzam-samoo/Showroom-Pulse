@@ -113,9 +113,9 @@ class TransactionDetailsDialog extends StatelessWidget {
                            child: Column(
                              crossAxisAlignment: CrossAxisAlignment.start,
                              children: [
-                               _buildInfoRow('Maker', transaction.bike.brand, isDark),
-                               _buildInfoRow('Horse Power', transaction.bike.model, isDark, isBold: true),
-                               _buildInfoRow('Model', transaction.bike.modelYear.toString(), isDark),
+                               _buildInfoRow('Maker', transaction.bike.model, isDark),
+                               _buildInfoRow('Model', transaction.bike.model, isDark, isBold: true),
+                               _buildInfoRow('Year', transaction.bike.modelYear.toString(), isDark),
                                _buildInfoRow('Chassis', transaction.bike.chassisNumber, isDark),
                                _buildInfoRow('Engine', transaction.bike.engineNumber, isDark),
                              ],

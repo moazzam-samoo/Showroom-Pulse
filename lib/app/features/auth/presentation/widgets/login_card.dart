@@ -62,7 +62,7 @@ class LoginCard extends GetView<LoginController> {
             
             // Title
             Text(
-              'AL-AL-TAHIR Showroom',
+              'AL-TAHIR Showroom',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

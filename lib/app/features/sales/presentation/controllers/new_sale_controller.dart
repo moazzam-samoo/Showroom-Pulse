@@ -163,7 +163,7 @@ class NewSaleController extends GetxController {
 
   // Installment Controllers
   final discountController = TextEditingController(text: '0'); // Shared or Installment specific
-  final downPaymentController = TextEditingController();
+  final downPaymentController = TextEditingController(text: '0');
   final monthsController = TextEditingController(text: '12');
   final markupType = MarkupType.fixed.obs;
   final markupValueController = TextEditingController(text: '0');
@@ -549,6 +549,16 @@ class NewSaleController extends GetxController {
         );
         return;
       }
+      
+      final discount = double.tryParse(discountController.text.replaceAll(',', '')) ?? 0;
+      final basePriceAfterDiscount = bike!.cashSalePrice - discount;
+      if (downPayment >= basePriceAfterDiscount && basePriceAfterDiscount > 0) {
+        AppNotificationDialog.showError(
+          title: 'Invalid Down Payment',
+          message: 'Down payment cannot be equal to or exceed the discounted price of the bike.',
+        );
+        return;
+      }
     }
 
     // Customer Validation
@@ -880,7 +890,7 @@ class NewSaleController extends GetxController {
               saleAmount: saleAmount,
               purchasePrice: bike.purchasePrice,
               saleId: 0, // Sale ID from transaction
-              bikeName: '${bike.brand} ${bike.model}',
+              bikeName: '${bike.model} ${bike.brand}',
             );
           } else if (saleType.value == SaleType.installment) {
             // Installment sale: record down payment as revenue
@@ -891,7 +901,7 @@ class NewSaleController extends GetxController {
                 contractId: 0, // Will be set after contract creation
                 amount: dpAmount,
                 bikeId: bike.id,
-                description: 'Down Payment — ${bike.brand} ${bike.model}',
+                description: 'Down Payment — ${bike.model} ${bike.brand}',
               );
             }
           }
@@ -930,6 +940,25 @@ class NewSaleController extends GetxController {
 
       // IMPORTANT: Close the dialog FIRST, then show success message
       Get.back(); // Close the new sale dialog
+
+      // Show Financial Toast
+      String toastLine1 = '✅ Sale Recorded — ${selectedBike.value!.model}';
+      String toastLine2 = '';
+      
+      if (saleType.value == SaleType.cash) {
+        final saleAmount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+        final profit = saleAmount - selectedBike.value!.purchasePrice;
+        toastLine2 = 'Revenue: Rs ${saleAmount.toStringAsFixed(0)} | Profit: Rs ${profit.toStringAsFixed(0)}';
+      } else {
+        final dpAmount = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+        toastLine2 = 'Down Payment Received: Rs ${dpAmount.toStringAsFixed(0)}';
+      }
+      
+      AppToast.showFinancial(
+        title: 'Sale Successful',
+        line1: toastLine1,
+        line2: toastLine2,
+      );
 
       // Get theme info
       final context = Get.context!;

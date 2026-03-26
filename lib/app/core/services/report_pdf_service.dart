@@ -157,7 +157,7 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName
-                          : 'AL-AL-TAHIR Showroom',
+                          : 'AL-TAHIR Showroom',
                       style: pw.TextStyle(
                           fontSize: 20,
                           fontWeight: pw.FontWeight.bold,
@@ -228,7 +228,7 @@ class ReportPdfService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'AL-AL-TAHIR Showroom - Confidential',
+              'AL-TAHIR Showroom - Confidential',
               style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
             pw.Text(
@@ -983,7 +983,7 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName.toUpperCase()
-                          : 'AL-AL-TAHIR Showroom',
+                          : 'AL-TAHIR Showroom',
                       style: pw.TextStyle(
                           fontSize: 24,
                           fontWeight: pw.FontWeight.bold,
@@ -1757,7 +1757,7 @@ class ReportPdfService {
                       ...bikes.map((bike) => pw.TableRow(
                             children: [
                               _tableCell(bike.engineNumber),
-                              _tableCell('${bike.brand} ${bike.model}'),
+                              _tableCell('${bike.model} ${bike.brand}'),
                               _tableCell('${bike.color} (${bike.modelYear})'),
                               _tableCell(_currencyFormat.format(bike.purchasePrice)),
                             ],

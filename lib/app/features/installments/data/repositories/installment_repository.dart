@@ -166,7 +166,7 @@ class InstallmentRepository {
               amount: amount,
               bikeId: contract.bikeId,
               description: bike != null
-                  ? 'Monthly Payment \u2014 ${bike.brand} ${bike.model}'
+                  ? 'Monthly Payment \u2014 ${bike.model} ${bike.brand}'
                   : 'Monthly Payment \u2014 Contract #$contractId',
             );
 

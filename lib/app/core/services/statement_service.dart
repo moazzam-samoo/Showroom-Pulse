@@ -382,7 +382,7 @@ class StatementService {
           pw.Text('Witness Information', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Witnesses are on file at AL-AL-TAHIR Showroom.',
+            'Witnesses are on file at AL-TAHIR Showroom.',
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],

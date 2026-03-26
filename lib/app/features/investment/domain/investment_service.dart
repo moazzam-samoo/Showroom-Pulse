@@ -447,7 +447,7 @@ class InvestmentService extends GetxService {
             ..bikeId = bike.id
             ..saleId = sale.id
             ..profitAmount = profit
-            ..description = 'Cash Sale Revenue — ${bike.brand} ${bike.model} [Migrated]';
+            ..description = 'Cash Sale Revenue — ${bike.model} ${bike.brand} [Migrated]';
 
           await _isar.investments.put(inv);
           saleRecordsCreated++;
@@ -484,8 +484,8 @@ class InvestmentService extends GetxService {
               ..bikeId = bike.id
               ..installmentContractId = contract.id
               ..description = payment.isDownPayment
-                  ? 'Down Payment — ${bike.brand} ${bike.model} [Migrated]'
-                  : 'Installment Payment — ${bike.brand} ${bike.model} [Migrated]';
+                  ? 'Down Payment — ${bike.model} ${bike.brand} [Migrated]'
+                  : 'Installment Payment — ${bike.model} ${bike.brand} [Migrated]';
 
             await _isar.investments.put(inv);
             paymentRecordsCreated++;

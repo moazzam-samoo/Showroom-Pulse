@@ -746,7 +746,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
               ),
               const SizedBox(height: 20),
               Text(
-                '${bike.brand} ${bike.model}',
+                '${bike.model} ${bike.brand}',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
                 textAlign: TextAlign.center,
               ),

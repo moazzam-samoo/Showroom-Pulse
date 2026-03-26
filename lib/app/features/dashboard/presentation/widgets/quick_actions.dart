@@ -4,6 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
 
 class QuickActionButton {
   final String label;
@@ -38,7 +40,20 @@ class QuickActionsRow extends StatelessWidget {
         label: 'Add Bike',
         icon: LucideIcons.plusCircle,
         color: primaryColor,
-        onTap: () => Get.toNamed('/inventory/add'),
+        onTap: () {
+          if (!Get.isRegistered<InventoryController>()) {
+            Get.lazyPut(() => InventoryController());
+          }
+          final controller = Get.find<InventoryController>();
+          showDialog(
+            context: Get.context!,
+            builder: (context) => AddBikeDialog(
+              onSave: (data) {
+                controller.addBike(data);
+              },
+            ),
+          );
+        },
       ),
       QuickActionButton(
         label: 'Record Payment',

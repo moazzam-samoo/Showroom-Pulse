@@ -1,33 +1,21 @@
-# PLAN.md: UI Enhancement & Bug Fixes
+## 🎼 Orchestration Plan: Auto-Comma Formatting
 
-## Context
-The user has requested to address three specific UI/UX issues related to the newly minted `Investment Management` system:
-1. **Missing Sidebar Navigation:** The `InvestmentView` lacks the global `SidebarNavigation` component, making it impossible to navigate out of the view.
-2. **Sidebar Pixel Overflow Error:** The addition of the "Investment" tab to `SidebarNavigation` caused a bottom overflow constraint failure ("pixels render issue occurred") on screens with lower height since it uses `Expanded` with a non-scrollable `Column`.
-3. **Amount Formatting:** The "Add Capital" input field does not place automatic comma formatting grouping (e.g., 500,000 instead of 500000).
+### Context
+The user requested an audit of text inputs that accept numbers, intending to add automatic comma formatting (e.g., `1,000,000`) where currency is expected, and to remove it from non-currency numeric inputs where it is inappropriate.
 
-## Execution Plan (Phase 2 Orchestration)
+### ➕ ADD Auto-Comma Formatting To:
+These fields handle monetary values but currently lack the `ThousandsSeparatorInputFormatter`:
+1. `d:\Tahir-Showroom\lib\app\features\investment\presentation\widgets\add_investment_dialog.dart` -> **Add Capital / Withdraw Capital Amount** input.
+2. `d:\Tahir-Showroom\lib\app\features\reports\presentation\widgets\expense_tracker.dart` -> **Add Expense Amount** input.
+3. `d:\Tahir-Showroom\lib\app\features\procurement\presentation\views\supplier_history_view.dart` -> **Record Payment Amount** to supplier.
+4. `d:\Tahir-Showroom\lib\app\features\installments\presentation\widgets\record_payment_dialog.dart` -> **Delay Fine Amount** input.
 
-### Target Domains & Agents
-- UI/UX Structural (Navigation Layout) → `frontend-specialist`
-- Interaction & Fields (Text Formats) → `frontend-specialist`
-- QA/Testing → `test-engineer`
+### ➖ REMOVE Auto-Comma Formatting From:
+These fields currently have the `ThousandsSeparatorInputFormatter` blindly applied via `if (isNumber)` flag, resulting in inappropriate formatting for years/durations (e.g., "Year 2,024"):
+1. `d:\Tahir-Showroom\lib\app\features\inventory\presentation\widgets\add_bike_dialog.dart` -> **Model Year** input.
+2. `d:\Tahir-Showroom\lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart` -> **Model Year** input.
+3. `d:\Tahir-Showroom\lib\app\features\sales\presentation\widgets\payment_plan_step.dart` -> **Duration (Months)** and **Advance Installments (Count)** inputs.
 
-### Task Breakdown
-
-#### Part 1: Fix Sidebar Missing in InvestmentView
-- **Target:** `lib/app/features/investment/presentation/views/investment_view.dart`
-- **Action:** Refactor the top-level `Scaffold` return into a `Row` containing the `SidebarNavigation` on the left and an `Expanded(child: Scaffold(...))` on the right, matching the architecture of other main views like `DashboardView`.
-
-#### Part 2: Fix Sidebar Overflow on Smaller Screens
-- **Target:** `lib/app/core/widgets/sidebar_navigation.dart`
-- **Action:** Convert the strict `Expanded(child: Column(...))` covering the navigation items into a `Expanded(child: SingleChildScrollView(child: Column(...)))` configuration. This resolves bottom bounds overflows when screen height shrinks. 
-- Ensure visual padding and focus/hover indicator sizes remain intact.
-
-#### Part 3: Add Auto-Formatting to Input Field
-- **Target:** `lib/app/features/investment/presentation/widgets/add_investment_dialog.dart` (or wherever the specific text field lives).
-- **Action:** Implement a `TextInputFormatter` that parses incoming characters on-the-fly, strips old commas, and re-inserts fresh thousands separators. Update `amountController.text` cleanly upon user input without losing caret focus.
-- Validate that the existing controller `double.tryParse` logic in `investment_controller.dart` handles inputs containing commas properly. (Pre-verified: the controller does an `.replaceAll(',', '')` strip).
-
----
-*Created by `@project-planner`. Awaiting user approval to commence Phase 2 parallel implementation.*
+### Next Steps
+1. The `frontend-specialist` agent will update the inputs in the designated files, either injecting the `ThousandsSeparatorInputFormatter` or stripping it conditionally.
+2. The `test-engineer` agent will verify integer parsing (`.replaceAll(',', '')`) does not break state persistence on save for these dynamically changed fields.

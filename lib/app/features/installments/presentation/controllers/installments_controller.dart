@@ -148,10 +148,13 @@ class InstallmentsController extends GetxController {
       // Apply search filter
       if (searchQuery.value.isNotEmpty) {
         final query = searchQuery.value.toLowerCase();
+        final queryNoCommas = query.replaceAll(',', '');
         displayData.retainWhere((data) {
+          final totalAmountStr = data.contract.totalAmount.toInt().toString();
           return data.customer.fullName.toLowerCase().contains(query) ||
               data.customer.cnicNumber.contains(query) ||
-              data.bike.model.toLowerCase().contains(query);
+              data.bike.model.toLowerCase().contains(query) ||
+              totalAmountStr.contains(queryNoCommas);
         });
       }
 

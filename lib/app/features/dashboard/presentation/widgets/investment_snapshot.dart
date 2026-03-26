@@ -62,8 +62,9 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
           ),
           const SizedBox(height: AppSpacing.md),
           
-          Expanded(
+          IntrinsicHeight(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   child: Obx(() => _buildSnapshotItem(
@@ -155,12 +156,16 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            PriceFormatter.formatPKR(amount),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              PriceFormatter.formatPKR(amount),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              ),
             ),
           ),
           if (subtitle != null) ...[

@@ -25,7 +25,7 @@ class _CustomersViewState extends State<CustomersView> {
   final GlobalKey _customerListKey = GlobalKey();
   final GlobalKey _customerHistoryKey = GlobalKey();
   final GlobalKey _globalDownloadBtnKey = GlobalKey();
-  
+
   bool _showCoachMarks = false;
 
   @override
@@ -101,47 +101,63 @@ class _CustomersViewState extends State<CustomersView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
-
                         Get.offNamed('/investment');
-
                         break;
-
                       case 8:
-
                         Get.offNamed('/settings');
-
                         break;
                     }
                   },
                 ),
-                
+
                 // Main Content Area
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                          // Inner Sidebar: Customer List
-                          Container(
-                            key: _customerListKey,
-                            child: CustomerListSidebar(
-                              downloadBtnKey: _globalDownloadBtnKey,
-                            ),
+                        // Screen Title
+                        Text(
+                          'Customer Management',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                            letterSpacing: -0.5,
                           ),
-                          const SizedBox(width: AppSpacing.lg),
-                          // Main Panel: Customer History & Details
-                          Container(
-                            key: _customerHistoryKey,
-                            child: const CustomerHistoryPanel(),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        // Content Row
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Inner Sidebar: Customer List
+                              Container(
+                                key: _customerListKey,
+                                child: CustomerListSidebar(
+                                  downloadBtnKey: _globalDownloadBtnKey,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.lg),
+                              // Main Panel: Customer History & Details
+                              Expanded(
+                                child: Container(
+                                  key: _customerHistoryKey,
+                                  child: const CustomerHistoryPanel(),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-            
+
             // Coach Marks Overlay
             if (_showCoachMarks)
               Positioned.fill(

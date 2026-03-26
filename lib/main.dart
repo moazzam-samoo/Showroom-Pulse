@@ -59,7 +59,7 @@ void main(List<String> args) async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
-    title: 'AL-AL-TAHIR Showroom',
+    title: 'AL-TAHIR Showroom',
   );
   
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -101,7 +101,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
     );
     
     // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
-    await trayManager.setToolTip('AL-AL-TAHIR Showroom');
+    await trayManager.setToolTip('AL-TAHIR Showroom');
     
     // Create tray context menu
     Menu menu = Menu(
@@ -242,7 +242,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       init: Get.rootController,
       builder: (ctrl) => MaterialApp(
         navigatorKey: Get.key,
-        title: 'AL-AL-TAHIR Showroom',
+        title: 'AL-TAHIR Showroom',
         debugShowCheckedModeBanner: false,
         
         // Theme

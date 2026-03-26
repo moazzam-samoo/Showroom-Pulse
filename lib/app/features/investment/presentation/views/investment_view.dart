@@ -163,57 +163,87 @@ class InvestmentView extends GetView<InvestmentController> {
                   const SizedBox(height: 32),
                   
                   // Filter Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Investment History',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: textCol,
-                        ),
-                      ),
-                      
-                      // Search & Filters
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Search Box
-                            Container(
-                              width: 250,
-                              height: 40,
-                              margin: const EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                              ),
-                              child: TextField(
-                                controller: controller.searchController,
-                                onChanged: (val) => controller.searchQuery.value = val,
-                                style: TextStyle(color: textCol, fontSize: 14),
-                                decoration: InputDecoration(
-                                  hintText: 'Search by notes or category...',
-                                  hintStyle: TextStyle(color: textCol.withOpacity(0.4), fontSize: 14),
-                                  border: InputBorder.none,
-                                  prefixIcon: Icon(Icons.search, size: 20, color: textCol.withOpacity(0.5)),
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                                ),
-                              ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Investment History',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: textCol,
                             ),
-                            
-                            // Chip Filters
-                            Obx(() => _buildFilterChip(context, 'All', InvestmentFilter.all, textCol)),
-                            const SizedBox(width: 8),
-                            Obx(() => _buildFilterChip(context, 'Week', InvestmentFilter.weekly, textCol)),
-                            const SizedBox(width: 8),
-                            Obx(() => _buildFilterChip(context, 'Month', InvestmentFilter.monthly, textCol)),
-                            const SizedBox(width: 8),
-                            Obx(() => _buildFilterChip(context, 'Year', InvestmentFilter.yearly, textCol)),
-                          ],
-                        ),
+                          ),
+                          
+                          // Search Box
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Container(
+                                  width: 280,
+                                  height: 40,
+                                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                  ),
+                                  child: TextField(
+                                    controller: controller.searchController,
+                                    onChanged: (val) => controller.searchQuery.value = val,
+                                    style: TextStyle(color: textCol, fontSize: 14),
+                                    decoration: InputDecoration(
+                                      hintText: 'Search by type, category...',
+                                      hintStyle: TextStyle(color: textCol.withOpacity(0.4), fontSize: 14),
+                                      border: InputBorder.none,
+                                      prefixIcon: Icon(Icons.search, size: 20, color: textCol.withOpacity(0.5)),
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Double row of chips (Type & Date)
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        runSpacing: 12,
+                        children: [
+                          // Type Filters (Left Side)
+                          Wrap(
+                            spacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text("Type:", style: TextStyle(color: textCol.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+                              Obx(() => _buildCategoryChip(context, 'All', CategoryFilter.all, textCol)),
+                              Obx(() => _buildCategoryChip(context, 'Investments', CategoryFilter.investments, textCol)),
+                              Obx(() => _buildCategoryChip(context, 'Withdrawals', CategoryFilter.withdrawals, textCol)),
+                              Obx(() => _buildCategoryChip(context, 'Bike Purchases', CategoryFilter.bikeInvestments, textCol)),
+                              Obx(() => _buildCategoryChip(context, 'Revenue & Others', CategoryFilter.revenue, textCol)),
+                            ],
+                          ),
+                          
+                          // Time Filters (Right Side)
+                          Wrap(
+                            spacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text("Time:", style: TextStyle(color: textCol.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.bold)),
+                              Obx(() => _buildDateChip(context, 'All Time', InvestmentFilter.all, textCol)),
+                              Obx(() => _buildDateChip(context, 'This Week', InvestmentFilter.weekly, textCol)),
+                              Obx(() => _buildDateChip(context, 'This Month', InvestmentFilter.monthly, textCol)),
+                              Obx(() => _buildDateChip(context, 'This Year', InvestmentFilter.yearly, textCol)),
+                            ],
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -268,7 +298,28 @@ class InvestmentView extends GetView<InvestmentController> {
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, String label, InvestmentFilter filter, Color textCol) {
+  Widget _buildCategoryChip(BuildContext context, String label, CategoryFilter filter, Color textCol) {
+    final isSelected = controller.selectedCategoryFilter.value == filter;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => controller.setCategoryFilter(filter),
+      selectedColor: Colors.orange.withOpacity(0.2), // Differentiation color
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.orange : textCol.withOpacity(0.7),
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
+      ),
+      side: BorderSide(
+        color: isSelected ? Colors.orange.withOpacity(0.5) : Colors.transparent,
+      ),
+    );
+  }
+
+  Widget _buildDateChip(BuildContext context, String label, InvestmentFilter filter, Color textCol) {
     final isSelected = controller.selectedFilter.value == filter;
     return ChoiceChip(
       label: Text(label),
@@ -276,9 +327,12 @@ class InvestmentView extends GetView<InvestmentController> {
       onSelected: (_) => controller.setFilter(filter),
       selectedColor: Colors.blue.withOpacity(0.2),
       backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       labelStyle: TextStyle(
         color: isSelected ? Colors.blue : textCol.withOpacity(0.7),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
       ),
       side: BorderSide(
         color: isSelected ? Colors.blue.withOpacity(0.5) : Colors.transparent,

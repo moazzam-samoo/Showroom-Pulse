@@ -147,6 +147,16 @@ class _InventoryViewState extends State<InventoryView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          'Inventory Management',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
                         // Filter Bar
                         Container(
                           key: _filterBarKey,

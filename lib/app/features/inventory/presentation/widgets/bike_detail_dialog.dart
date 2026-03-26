@@ -170,8 +170,8 @@ class BikeDetailDialog extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildDetailRow('Maker:', bike.model, isDark),
-        _buildDetailRow('Horse Power:', bike.brand, isDark),
+        _buildDetailRow('Maker:', bike.brand, isDark),
+        _buildDetailRow('Model:', bike.model, isDark),
         _buildDetailRow('Model (Year):', bike.modelYear.toString(), isDark),
         _buildDetailRow('Engine No:', bike.engineNumber, isDark, isBold: true),
         _buildDetailRow('Chassis No:', bike.chassisNumber, isDark,

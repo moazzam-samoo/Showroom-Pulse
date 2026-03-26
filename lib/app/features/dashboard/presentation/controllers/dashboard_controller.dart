@@ -23,7 +23,7 @@ class DashboardController extends GetxController {
   // Profile Settings
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
-  final showroomName = RxString('AL-AL-TAHIR Showroom');
+  final showroomName = RxString('AL-TAHIR Showroom');
   final showroomAddress = RxnString();
   final showroomPhone = RxnString();
 

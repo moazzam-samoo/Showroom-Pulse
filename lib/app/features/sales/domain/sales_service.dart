@@ -156,7 +156,7 @@ class SalesService {
     )).toList();
 
     return SaleCardData(
-      bikeModel: '${bike.brand} ${bike.model}',
+      bikeModel: '${bike.model} ${bike.brand}',
       bikeBrand: bike.brand,
       bikeColor: bike.color,
       bikeCondition: bike.condition,

@@ -6,6 +6,7 @@ import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
 enum InvestmentFilter { all, weekly, monthly, yearly }
+enum CategoryFilter { all, withdrawals, investments, bikeInvestments, revenue }
 
 class InvestmentController extends GetxController {
   final InvestmentService _investmentService = Get.find<InvestmentService>();
@@ -34,6 +35,7 @@ class InvestmentController extends GetxController {
   final investmentHistory = <Investment>[].obs;
   final filteredHistory = <Investment>[].obs;
   final selectedFilter = InvestmentFilter.all.obs;
+  final selectedCategoryFilter = CategoryFilter.all.obs;
 
   // Search
   final searchQuery = ''.obs;
@@ -50,7 +52,7 @@ class InvestmentController extends GetxController {
   void onInit() {
     super.onInit();
     _initAndLoadData();
-    ever(searchQuery, (_) => _applyFilters(selectedFilter.value));
+    debounce(searchQuery, (_) => _applyFilters(), time: const Duration(milliseconds: 300));
   }
 
   Future<void> _initAndLoadData() async {
@@ -94,20 +96,25 @@ class InvestmentController extends GetxController {
     // History
     final history = await _investmentService.getInvestmentHistory();
     investmentHistory.assignAll(history);
-    _applyFilters(selectedFilter.value);
+    _applyFilters();
   }
 
   void setFilter(InvestmentFilter filter) {
     selectedFilter.value = filter;
-    _applyFilters(filter);
+    _applyFilters();
   }
 
-  void _applyFilters(InvestmentFilter filter) {
+  void setCategoryFilter(CategoryFilter filter) {
+    selectedCategoryFilter.value = filter;
+    _applyFilters();
+  }
+
+  void _applyFilters() {
     List<Investment> temp = investmentHistory.toList();
 
     // 1. Apply Date Filter
     final now = DateTime.now();
-    switch (filter) {
+    switch (selectedFilter.value) {
       case InvestmentFilter.weekly:
         final lastWeek = now.subtract(const Duration(days: 7));
         temp = temp.where((inv) => inv.date.isAfter(lastWeek)).toList();
@@ -124,13 +131,41 @@ class InvestmentController extends GetxController {
         break;
     }
 
-    // 2. Apply Search Filter
+    // 2. Apply Category Filter
+    switch (selectedCategoryFilter.value) {
+      case CategoryFilter.withdrawals:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal).toList();
+        break;
+      case CategoryFilter.investments:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.capitalInjection).toList();
+        break;
+      case CategoryFilter.bikeInvestments:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
+        break;
+      case CategoryFilter.revenue:
+        temp = temp.where((inv) =>
+            inv.type == InvestmentTypeEnum.bikeSale ||
+            inv.type == InvestmentTypeEnum.installmentPayment).toList();
+        break;
+      case CategoryFilter.all:
+        break;
+    }
+
+    // 3. Apply Search Filter
     if (searchQuery.value.isNotEmpty) {
       final query = searchQuery.value.toLowerCase();
+      final queryNoCommas = query.replaceAll(',', '');
+      
       temp = temp.where((inv) {
-        final categoryStr = inv.category.name.toLowerCase();
+        final typeStr = inv.type.name.replaceAllMapped(RegExp(r'(?<=[a-z])[A-Z]'), (Match m) => ' ${m.group(0)}').toLowerCase();
+        final categoryStr = inv.category.name.replaceAllMapped(RegExp(r'(?<=[a-z])[A-Z]'), (Match m) => ' ${m.group(0)}').toLowerCase();
         final notesStr = (inv.description ?? '').toLowerCase();
-        return categoryStr.contains(query) || notesStr.contains(query);
+        final amountStr = inv.amount.toInt().toString();
+        
+        return typeStr.contains(query) ||
+               categoryStr.contains(query) || 
+               notesStr.contains(query) || 
+               amountStr.contains(queryNoCommas);
       }).toList();
     }
 
@@ -159,10 +194,15 @@ class InvestmentController extends GetxController {
       );
 
       Get.back(); // Close Dialog immediately for snappy feel
-      AppToast.showSuccess(title: 'Success', message: 'Capital investment added successfully');
       
       clearDialogForm();
       await loadInvestmentData(); // Refresh UI observables
+      
+      AppToast.showFinancial(
+        title: 'Investment Added',
+        line1: '💰 Capital Added: Rs ${amount.toStringAsFixed(0)}',
+        line2: 'New Available Balance: Rs ${availableBalance.value.toStringAsFixed(0)}',
+      );
     } catch (e) {
       AppToast.showError(title: 'Error', message: 'Failed to add investment: $e');
     }
@@ -193,10 +233,15 @@ class InvestmentController extends GetxController {
       );
 
       Get.back(); // Close Dialog immediately
-      AppToast.showSuccess(title: 'Success', message: 'Withdrawal recorded successfully');
       
       clearDialogForm();
       await loadInvestmentData(); // Refresh UI
+      
+      AppToast.showFinancial(
+        title: 'Withdrawal Recorded',
+        line1: '🏦 Withdrawal: Rs ${amount.toStringAsFixed(0)}',
+        line2: 'Remaining Balance: Rs ${availableBalance.value.toStringAsFixed(0)}',
+      );
     } catch (e) {
       AppToast.showError(title: 'Error', message: 'Failed to record withdrawal: $e');
     }
