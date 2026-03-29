@@ -19,6 +19,7 @@ class InvestmentController extends GetxController {
   final availableBalance = 0.0.obs;
   final totalBalance = 0.0.obs; // Includes locked
   final totalProfit = 0.0.obs;
+  final totalWithdrawals = 0.0.obs;
   final roiPercentage = 0.0.obs;
 
   // === KPIs — New (Bikes + Installments) ===
@@ -30,12 +31,17 @@ class InvestmentController extends GetxController {
   final unsoldBikesCount = 0.obs;
   final cashFromSales = 0.0.obs;
   final cashFromInstallments = 0.0.obs;
+  final cashOnMaintenance = 0.0.obs;
+  final totalAssets = 0.0.obs;
+  final soldAndCompletedPriceValuation = 0.0.obs;
+  final activeInventoryPriceValuation = 0.0.obs;
 
   // History & Filters
   final investmentHistory = <Investment>[].obs;
   final filteredHistory = <Investment>[].obs;
   final selectedFilter = InvestmentFilter.all.obs;
   final selectedCategoryFilter = CategoryFilter.all.obs;
+  final kpiFilter = ''.obs;
 
   // Search
   final searchQuery = ''.obs;
@@ -74,6 +80,7 @@ class InvestmentController extends GetxController {
     totalCapital.value = await _investmentService.getTotalCapital();
     totalAllocated.value = await _investmentService.getTotalAllocated();
     lockedCapital.value = await _investmentService.getLockedCapital();
+    totalWithdrawals.value = await _investmentService.getTotalWithdrawals();
     availableBalance.value = await _investmentService.getAvailableBalance();
     totalBalance.value = await _investmentService.getTotalRemainingBalance();
     totalProfit.value = await _investmentService.getTotalProfit();
@@ -83,7 +90,11 @@ class InvestmentController extends GetxController {
     cashOnBikes.value = await _investmentService.getCashOnBikes();
     cashFromSales.value = await _investmentService.getCashFromSales();
     cashFromInstallments.value = await _investmentService.getCashFromInstallments();
-    unsoldBikesCount.value = await _investmentService.getUnsoldBikesCount();
+    unsoldBikesCount.value = await _investmentService.getTotalBikesPurchasedCount();
+    cashOnMaintenance.value = await _investmentService.getMaintenanceCash();
+    totalAssets.value = await _investmentService.getAssetsValue();
+    soldAndCompletedPriceValuation.value = await _investmentService.getSoldAndCompletedBikesValue();
+    activeInventoryPriceValuation.value = await _investmentService.getActiveInventoryValue();
 
     // New KPIs — Installment Predictions
     futurePayments.value = await _investmentService.getFutureInstallmentPayments();
@@ -106,6 +117,21 @@ class InvestmentController extends GetxController {
 
   void setCategoryFilter(CategoryFilter filter) {
     selectedCategoryFilter.value = filter;
+    kpiFilter.value = ''; // Reset KPI filter when changing category
+    _applyFilters();
+  }
+
+  void setKpiFilter(String kpiName) {
+    if (kpiFilter.value == kpiName) {
+      kpiFilter.value = ''; // Toggle off if clicked again
+    } else {
+      kpiFilter.value = kpiName;
+      // Reset other broad filters so the user sees all relevant history for the KPI
+      selectedFilter.value = InvestmentFilter.all;
+      selectedCategoryFilter.value = CategoryFilter.all;
+      searchQuery.value = '';
+      searchController.clear();
+    }
     _applyFilters();
   }
 
@@ -169,6 +195,31 @@ class InvestmentController extends GetxController {
       }).toList();
     }
 
+    // 4. Apply KPI Filter
+    if (kpiFilter.value.isNotEmpty) {
+      final kpi = kpiFilter.value;
+      if (kpi == 'Total Invested') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.capitalInjection).toList();
+      } else if (kpi == 'Available Cash') {
+        // Available Cash is derived from many entries. Showing all is the most logical, 
+        // but we can filter out non-cash impacting things if any exist
+      } else if (kpi == 'Net Profit') {
+        temp = temp.where((inv) => inv.profitAmount != 0).toList();
+      } else if (kpi == 'Total Withdrawals') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal).toList();
+      } else if (kpi == 'Sold & Completed') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
+      } else if (kpi == 'Active Inventory') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
+      } else if (kpi == 'Maintenance Spent') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal && inv.category == InvestmentCategoryEnum.maintenance).toList();
+      } else if (kpi == 'Future Payments') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.installmentPayment || (inv.type == InvestmentTypeEnum.bikeSale && (inv.description?.contains('Installment') ?? false))).toList();
+      } else if (kpi == 'Future Profit') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikeSale && (inv.description?.contains('Installment') ?? false)).toList();
+      }
+    }
+
     filteredHistory.assignAll(temp);
   }
 
@@ -229,6 +280,7 @@ class InvestmentController extends GetxController {
       await _investmentService.recordWithdrawal(
         amount: amount,
         date: selectedDate.value,
+        category: selectedCategory.value,
         description: notesController.text.trim().isEmpty ? 'Capital withdrawal' : notesController.text.trim(),
       );
 

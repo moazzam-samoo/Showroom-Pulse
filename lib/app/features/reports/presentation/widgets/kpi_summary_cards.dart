@@ -27,9 +27,9 @@ class KpiSummaryCards extends StatelessWidget {
         Expanded(
           child: _buildKpiCard(
             context: context,
-            title: 'Total Revenue',
+            title: 'Available Cash',
             value: 'Rs ${currencyFormat.format(totalRevenue)}',
-            icon: LucideIcons.trendingUp,
+            icon: LucideIcons.wallet,
             color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
             isDark: isDark,
           ),

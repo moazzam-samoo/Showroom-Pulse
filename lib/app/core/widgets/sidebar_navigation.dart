@@ -48,21 +48,48 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
       node: _scopeNode,
       child: Focus(
         onKeyEvent: (FocusNode node, KeyEvent event) {
-          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.tab) {
-            final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+          if (event is KeyDownEvent) {
             final currentFocus = _scopeNode.focusedChild;
-            
             if (currentFocus != null) {
               final currentIndex = _focusNodes.indexOf(currentFocus);
-              
-              if (currentIndex == _focusNodes.length - 1 && !isShiftPressed) {
-                // Loop to first from last
-                _focusNodes[0].requestFocus();
-                return KeyEventResult.handled;
-              } else if (currentIndex == 0 && isShiftPressed) {
-                // Loop to last from first
-                _focusNodes[_focusNodes.length - 1].requestFocus();
-                return KeyEventResult.handled;
+              if (currentIndex != -1) {
+                // Handling Enter Key
+                if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+                  // Simulate click depending on index
+                  if (currentIndex == 9) { // 9 is logout based on current list
+                    _handleLogout();
+                  } else if (widget.onItemSelected != null) {
+                    widget.onItemSelected!(currentIndex);
+                  } else {
+                    _handleNavigation(currentIndex);
+                  }
+                  return KeyEventResult.handled;
+                }
+
+                // Handling Arrow Keys
+                if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                   final nextIndex = (currentIndex + 1) % _focusNodes.length;
+                   _focusNodes[nextIndex].requestFocus();
+                   return KeyEventResult.handled;
+                }
+                
+                if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                   final prevIndex = currentIndex == 0 ? _focusNodes.length - 1 : currentIndex - 1;
+                   _focusNodes[prevIndex].requestFocus();
+                   return KeyEventResult.handled;
+                }
+
+                // Handling Tab Key Logic
+                if (event.logicalKey == LogicalKeyboardKey.tab) {
+                  final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+                  if (currentIndex == _focusNodes.length - 1 && !isShiftPressed) {
+                    _focusNodes[0].requestFocus();
+                    return KeyEventResult.handled;
+                  } else if (currentIndex == 0 && isShiftPressed) {
+                    _focusNodes[_focusNodes.length - 1].requestFocus();
+                    return KeyEventResult.handled;
+                  }
+                }
               }
             }
           }
@@ -130,6 +157,8 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
       case 6:
         return LucideIcons.barChart3;
       case 7:
+        return LucideIcons.piggyBank;
+      case 8:
         return LucideIcons.settings;
       default:
         return LucideIcons.bike;

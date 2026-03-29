@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
 import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
@@ -18,7 +18,6 @@ class ReportsController extends GetxController {
 
   // ─── Observable State ──────────────────────────────────────
   final isLoading = true.obs;
-  final selectedTab = 0.obs; // 0 = Reports, 1 = Revenue
 
   // Filter state
   final filterMode = ReportFilterMode.monthly.obs;
@@ -38,9 +37,7 @@ class ReportsController extends GetxController {
   final revenueChartFilter = 'Monthly'.obs; // 'Monthly' or 'Annual'
   final yearlyBreakdownData = <MapEntry<String, double>>[].obs; // For yearly PDF
 
-  // Expenses
-  final expenses = <Expense>[].obs;
-  final expenseCategories = <String>[].obs;
+  // Removed legacy expenses lists
 
   @override
   void onInit() {
@@ -58,72 +55,32 @@ class ReportsController extends GetxController {
       final month = mode == ReportFilterMode.monthly ? selectedMonth.value : null;
       final year = mode == ReportFilterMode.allTime ? null : selectedYear.value;
 
+      final invService = Get.find<InvestmentService>();
+
       // Load data in parallel
       final results = await Future.wait([
-        _repository.getTotalRevenue(month: month, year: year),
-        _repository.getTotalExpenses(month: month, year: year),
+        invService.getAvailableBalance(),
+        invService.getTotalWithdrawals(),
+        invService.getTotalProfit(),
         _repository.getMonthlyProfitTrend(6),
         _repository.getStockDistribution(),
         _repository.getProfitByBrand(month: month, year: year),
-        _repository.getExpensesInPeriod(month: month, year: year),
-        _repository.getExpenseCategories(),
         (mode == ReportFilterMode.monthly && revenueChartFilter.value == 'Monthly')
             ? _repository.getDailyRevenueTrend(selectedMonth.value, selectedYear.value)
             : _repository.getAnnualRevenueTrend(selectedYear.value),
         mode == ReportFilterMode.yearly ? _repository.getYearlyRevenueBreakdown(selectedYear.value) : Future.value(<MapEntry<String, double>>[]),
       ]);
 
-      totalRevenue.value = results[0] as double;
-      totalExpenses.value = results[1] as double;
-      netProfit.value = totalRevenue.value - totalExpenses.value;
+      totalRevenue.value = results[0] as double; // Represents Available Cash
+      totalExpenses.value = results[1] as double; // Represents Total Withdrawals
+      netProfit.value = results[2] as double;
 
-      monthlyProfitData.assignAll(results[2] as List<MapEntry<String, double>>);
-      stockDistribution.assignAll(results[3] as Map<String, int>);
-      profitByBrand.assignAll(results[4] as Map<String, Map<String, double>>);
-      expenses.assignAll(results[5] as List<Expense>);
-      // 7. Expense Categories
-      expenseCategories.assignAll(results[6] as List<String>);
-      revenueTrend.assignAll(results[7] as List<MapEntry<String, double>>);
-      yearlyBreakdownData.assignAll(results[8] as List<MapEntry<String, double>>);
+      monthlyProfitData.assignAll(results[3] as List<MapEntry<String, double>>);
+      stockDistribution.assignAll(results[4] as Map<String, int>);
+      profitByBrand.assignAll(results[5] as Map<String, Map<String, double>>);
       
-      // Merge default categories from settings
-      try {
-        final settingsRepo = SettingsRepository(Get.find<IsarService>());
-        final settings = await settingsRepo.getSettings();
-        if (settings.defaultExpenseCategories.isNotEmpty) {
-          final defaults = settings.defaultExpenseCategories
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList();
-          
-          bool addedNew = false;
-          for (final cat in defaults) {
-            if (!expenseCategories.contains(cat)) {
-              expenseCategories.add(cat);
-              addedNew = true;
-            }
-          }
-          if (addedNew) {
-            expenseCategories.sort();
-          }
-        }
-      } catch (e) {
-        debugPrint('Error merging default expense categories: $e');
-      }
-
-      // If still empty, provide basic defaults
-      if (expenseCategories.isEmpty) {
-        expenseCategories.assignAll([
-          'Rent',
-          'Salaries',
-          'Utilities',
-          'Marketing',
-          'Maintenance',
-          'Supplies',
-          'Other',
-        ]);
-      }
+      revenueTrend.assignAll(results[6] as List<MapEntry<String, double>>);
+      yearlyBreakdownData.assignAll(results[7] as List<MapEntry<String, double>>);
     } catch (e) {
       debugPrint('Error loading reports data: $e');
     } finally {
@@ -163,22 +120,7 @@ class ReportsController extends GetxController {
     loadData();
   }
 
-  // ─── Expense CRUD ──────────────────────────────────────────
-
-  Future<void> addExpense(Expense expense) async {
-    await _repository.addExpense(expense);
-    await loadData();
-  }
-
-  Future<void> updateExpense(Expense expense) async {
-    await _repository.updateExpense(expense);
-    await loadData();
-  }
-
-  Future<void> deleteExpense(int id) async {
-    await _repository.deleteExpense(id);
-    await loadData();
-  }
+  // Removed legacy expense CRUD methods
 
   // ─── PDF Download ──────────────────────────────────────────
 
@@ -195,27 +137,16 @@ class ReportsController extends GetxController {
       dateRangeLabel = 'All Time';
     }
 
-    if (selectedTab.value == 0) {
-      // Reports Tab → Profit Report
-      path = await _pdfService.generateProfitReport(
-        dateRangeLabel: dateRangeLabel,
-        totalRevenue: totalRevenue.value,
-        totalExpenses: totalExpenses.value,
-        netProfit: netProfit.value,
-        profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
-        stockDistribution: Map<String, int>.from(stockDistribution),
-        yearlyBreakdown: mode == ReportFilterMode.yearly ? List<MapEntry<String, double>>.from(yearlyBreakdownData) : null,
-      );
-    } else {
-      // Revenue Tab → Revenue & Expense Statement
-      path = await _pdfService.generateRevenueStatement(
-        dateRangeLabel: dateRangeLabel,
-        totalRevenue: totalRevenue.value,
-        totalExpenses: totalExpenses.value,
-        netProfit: netProfit.value,
-        expenses: List<Expense>.from(expenses),
-      );
-    }
+    // Generate Profit Report for Dashboard
+    path = await _pdfService.generateProfitReport(
+      dateRangeLabel: dateRangeLabel,
+      totalRevenue: totalRevenue.value,
+      totalExpenses: totalExpenses.value,
+      netProfit: netProfit.value,
+      profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
+      stockDistribution: Map<String, int>.from(stockDistribution),
+      yearlyBreakdown: mode == ReportFilterMode.yearly ? List<MapEntry<String, double>>.from(yearlyBreakdownData) : null,
+    );
 
     if (path != null) {
       AppToast.showSuccess(title: 'PDF Saved', message: 'Report saved to: $path');

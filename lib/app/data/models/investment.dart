@@ -11,12 +11,13 @@ enum InvestmentTypeEnum {
   installmentPayment, // Monthly/down payment received from installment customer
 }
 
-/// Category of the investment
 enum InvestmentCategoryEnum {
   personalCapital,
   loan,
   partnership,
   other,
+  maintenance,
+  personalUse,
 }
 
 /// Investment Collection - Tracks all capital flowing into and out of the business

@@ -155,7 +155,6 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               ),
             ],
           ),
-<<<<<<< HEAD
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
             fit: BoxFit.scaleDown,
@@ -167,15 +166,6 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
               ),
-=======
-          const SizedBox(height: 12),
-          Text(
-            PriceFormatter.formatPKR(amount),
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
->>>>>>> 7639930a71fa19c737cb0c845bed4be8af67c859
             ),
           ),
           if (subtitle != null) ...[

@@ -12,7 +12,6 @@ import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
-import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
@@ -83,51 +82,7 @@ class ReportPdfService {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════
-  //  REVENUE TAB — Revenue & Expense Statement
-  // ═══════════════════════════════════════════════════════════
-
-  Future<String?> generateRevenueStatement({
-    required String dateRangeLabel,
-    required double totalRevenue,
-    required double totalExpenses,
-    required double netProfit,
-    required List<Expense> expenses,
-  }) async {
-    try {
-      final isar = Get.find<IsarService>().isar;
-      final settings =
-          await isar.appSettings.where().findFirst() ?? AppSettings();
-
-      final pdf = pw.Document();
-      final logo = await _loadLogo(settings);
-
-      pdf.addPage(
-        pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(32),
-          header: (context) => _buildHeader(context,
-              'Revenue & Expense Statement', dateRangeLabel, settings, logo),
-          footer: _buildFooter,
-          build: (context) => [
-            _buildKpiSummary(totalRevenue, totalExpenses, netProfit,
-                isRevenue: true),
-            pw.SizedBox(height: 20),
-            _buildExpenseCategoryBreakdown(expenses),
-            pw.SizedBox(height: 20),
-            _buildExpenseDetailsTable(expenses),
-            pw.SizedBox(height: 24),
-            _buildBottomLine(totalRevenue, totalExpenses, netProfit),
-          ],
-        ),
-      );
-
-      return await _savePdf(pdf, 'Revenue_Statement');
-    } catch (e) {
-      debugPrint('Error generating revenue statement: $e');
-      return null;
-    }
-  }
+  // Removed legacy generateRevenueStatement method
 
   // ═══════════════════════════════════════════════════════════
   //  SHARED COMPONENTS
@@ -257,7 +212,7 @@ class ReportPdfService {
           _kpiBox(
               'Total Revenue', _currencyFormat.format(revenue), _primaryColor),
           _kpiDivider(),
-          _kpiBox('Total Expenses', _currencyFormat.format(expenses),
+          _kpiBox('Total Withdrawals', _currencyFormat.format(expenses),
               _warningColor),
           _kpiDivider(),
           _kpiBox(
@@ -485,193 +440,7 @@ class ReportPdfService {
     );
   }
 
-  // ─── Expense Category Breakdown ──────────────────────────
-
-  pw.Widget _buildExpenseCategoryBreakdown(List<Expense> expenses) {
-    if (expenses.isEmpty) {
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          _sectionTitle('Expense Breakdown by Category'),
-          pw.SizedBox(height: 8),
-          pw.Text('No expenses recorded this month.',
-              style:
-                  const pw.TextStyle(fontSize: 11, color: PdfColors.grey500)),
-        ],
-      );
-    }
-
-    // Group by category
-    final Map<String, double> categoryTotals = {};
-    for (final e in expenses) {
-      categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount;
-    }
-    final totalExpenses = categoryTotals.values.fold(0.0, (a, b) => a + b);
-
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Expense Breakdown by Category'),
-        pw.SizedBox(height: 8),
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-          columnWidths: {
-            0: const pw.FlexColumnWidth(3),
-            1: const pw.FlexColumnWidth(2),
-          },
-          children: [
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: _headerBg),
-              children: [
-                _tableHeader('Category'),
-                _tableHeader('Amount'),
-              ],
-            ),
-            ...categoryTotals.entries.toList().asMap().entries.map((e) {
-              final isAlt = e.key.isOdd;
-              return pw.TableRow(
-                decoration:
-                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
-                children: [
-                  _tableCell(e.value.key),
-                  _tableCell(_currencyFormat.format(e.value.value),
-                      color: _warningColor),
-                ],
-              );
-            }),
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: PdfColors.grey100),
-              children: [
-                _tableCell('TOTAL EXPENSES', bold: true),
-                _tableCell(_currencyFormat.format(totalExpenses),
-                    bold: true, color: _warningColor),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ─── Expense Details Table ───────────────────────────────
-
-  pw.Widget _buildExpenseDetailsTable(List<Expense> expenses) {
-    if (expenses.isEmpty) return pw.SizedBox();
-
-    final total = expenses.fold(0.0, (sum, e) => sum + e.amount);
-
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        _sectionTitle('Expense Details'),
-        pw.SizedBox(height: 8),
-        pw.Table(
-          border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-          columnWidths: {
-            0: const pw.FixedColumnWidth(30),
-            1: const pw.FlexColumnWidth(2),
-            2: const pw.FlexColumnWidth(2),
-            3: const pw.FlexColumnWidth(2),
-            4: const pw.FlexColumnWidth(2),
-          },
-          children: [
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: _headerBg),
-              children: [
-                _tableHeader('#'),
-                _tableHeader('Category'),
-                _tableHeader('Amount'),
-                _tableHeader('Date'),
-                _tableHeader('Note'),
-              ],
-            ),
-            ...expenses.asMap().entries.map((e) {
-              final idx = e.key;
-              final expense = e.value;
-              final isAlt = idx.isOdd;
-              return pw.TableRow(
-                decoration:
-                    isAlt ? const pw.BoxDecoration(color: _rowAltBg) : null,
-                children: [
-                  _tableCell('${idx + 1}'),
-                  _tableCell(expense.category),
-                  _tableCell(_currencyFormat.format(expense.amount),
-                      color: _warningColor),
-                  _tableCell(_dateFormat.format(expense.date)),
-                  _tableCell(expense.description ?? '—',
-                      color: PdfColors.grey500),
-                ],
-              );
-            }),
-            // Total row
-            pw.TableRow(
-              decoration: const pw.BoxDecoration(color: PdfColors.grey100),
-              children: [
-                _tableCell(''),
-                _tableCell(''),
-                _tableCell(_currencyFormat.format(total),
-                    bold: true, color: _warningColor),
-                _tableCell(''),
-                _tableCell(''),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ─── Bottom Line ─────────────────────────────────────────
-
-  pw.Widget _buildBottomLine(double revenue, double expenses, double net) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(16),
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey400),
-        borderRadius: pw.BorderRadius.circular(6),
-        color: PdfColors.grey50,
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text('Bottom Line',
-              style:
-                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-          pw.Divider(thickness: 0.5, color: PdfColors.grey400),
-          pw.SizedBox(height: 8),
-          _bottomLineRow(
-              'Revenue', _currencyFormat.format(revenue), _primaryColor),
-          pw.SizedBox(height: 4),
-          _bottomLineRow('Expenses', '- ${_currencyFormat.format(expenses)}',
-              _warningColor),
-          pw.SizedBox(height: 4),
-          pw.Divider(thickness: 1, color: PdfColors.grey600),
-          pw.SizedBox(height: 6),
-          _bottomLineRow(
-              'Hands-On Amount', _currencyFormat.format(net), _successColor,
-              bold: true, fontSize: 16),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _bottomLineRow(String label, String value, PdfColor color,
-      {bool bold = false, double fontSize = 12}) {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: [
-        pw.Text(label,
-            style: pw.TextStyle(
-                fontSize: fontSize,
-                fontWeight: bold ? pw.FontWeight.bold : null)),
-        pw.Text(value,
-            style: pw.TextStyle(
-                fontSize: fontSize,
-                fontWeight: pw.FontWeight.bold,
-                color: color)),
-      ],
-    );
-  }
+  // Removed legacy expense table methods
 
   // ═══════════════════════════════════════════════════════════
   //  HELPERS

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
@@ -89,12 +90,13 @@ class InvestmentService extends GetxService {
     required double amount,
     required DateTime date,
     String? description,
+    InvestmentCategoryEnum category = InvestmentCategoryEnum.other,
   }) async {
     final inv = Investment()
       ..amount = amount
       ..date = date
       ..type = InvestmentTypeEnum.withdrawal
-      ..category = InvestmentCategoryEnum.other
+      ..category = category
       ..description = description ?? 'Capital withdrawal';
 
     await _isar.writeTxn(() async {
@@ -135,12 +137,30 @@ class InvestmentService extends GetxService {
   }
 
   /// Record an installment payment received (down payment or monthly EMI)
+  /// Calculates profit dynamically using Cost-Recovery logic.
   Future<Investment> recordInstallmentPaymentRevenue({
     required int contractId,
     required double amount,
     required int bikeId,
+    required double previousTotalPaid,
+    required double purchasePrice,
     String? description,
+    bool inTransaction = false,
   }) async {
+    final currentTotalPaid = previousTotalPaid + amount;
+    double profitRealizedNow = 0.0;
+
+    // Cost-Recovery logic: Profit is realized only when TotalPaid exceeds PurchasePrice.
+    if (currentTotalPaid > purchasePrice) {
+      if (previousTotalPaid >= purchasePrice) {
+        // Unrecovered cost is already 0. The entire payment is profit.
+        profitRealizedNow = amount;
+      } else {
+        // We just crossed the threshold!
+        profitRealizedNow = currentTotalPaid - purchasePrice;
+      }
+    }
+
     final inv = Investment()
       ..amount = amount
       ..date = DateTime.now()
@@ -148,40 +168,29 @@ class InvestmentService extends GetxService {
       ..category = InvestmentCategoryEnum.other
       ..bikeId = bikeId
       ..installmentContractId = contractId
+      ..profitAmount = profitRealizedNow
       ..description = description ?? 'Installment Payment — Contract #$contractId';
 
-    await _isar.writeTxn(() async {
+    if (inTransaction) {
       await _isar.investments.put(inv);
-    });
+    } else {
+      await _isar.writeTxn(() async {
+        await _isar.investments.put(inv);
+      });
+    }
     return inv;
   }
 
   /// Finalize profit on a completed installment contract
-  /// Sets profitAmount on the FIRST installmentPayment record for this contract
+  /// [OBSOLETE] Profit is now realized continuously per-payment via Cost-Recovery matching in recordInstallmentPaymentRevenue.
   Future<void> finalizeInstallmentProfit({
     required int contractId,
     required double totalPaid,
     required double purchasePrice,
   }) async {
-    final profit = totalPaid - purchasePrice;
-
-    await _isar.writeTxn(() async {
-      // Find the first installmentPayment record for this contract
-      final records = await _isar.investments
-          .filter()
-          .typeEqualTo(InvestmentTypeEnum.installmentPayment)
-          .installmentContractIdEqualTo(contractId)
-          .sortByDate()
-          .findAll();
-
-      if (records.isNotEmpty) {
-        // Set profit on the first record (typically the down payment)
-        records.first.profitAmount = profit;
-        records.first.description =
-            '${records.first.description} [Completed — Profit: Rs ${profit.toStringAsFixed(0)}]';
-        await _isar.investments.put(records.first);
-      }
-    });
+    // Kept empty to avoid breaking older codebase calls before they are removed, 
+    // but we no longer need to finalize profit at the end.
+    debugPrint('finalizeInstallmentProfit called for $contractId. Ignored because logic is now continuous.');
   }
 
   /// Add profit to an existing investment (legacy method, kept for compatibility)
@@ -251,12 +260,15 @@ class InvestmentService extends GetxService {
     final totalCapital = await getTotalCapital();
     final allocated = await getTotalAllocated();
     final locked = await getLockedCapital();
-    final salesRevenue = await getCashFromSales();
-    final installmentRevenue = await getCashFromInstallments();
-    return totalCapital - allocated - locked + salesRevenue + installmentRevenue;
+    final sales = await getCashFromSales();
+    final installments = await getCashFromInstallments();
+
+    // Available = Capital injected - Amount allocated to bikes + Cash from sales + Installments - Locked
+    return (totalCapital - allocated) + sales + installments - locked;
   }
 
-  /// Returns current TOTAL balance (including locked capital)
+
+  /// Returns current TOTAL balance (including locked capital and profit)
   Future<double> getTotalRemainingBalance() async {
     final totalCapital = await getTotalCapital();
     final allocated = await getTotalAllocated();
@@ -277,24 +289,58 @@ class InvestmentService extends GetxService {
     final saleProfit =
         saleRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
 
-    // Profit from completed installments
+    // Profit from installments (continuous cost-recovery logic)
     final installmentRecords = await _isar.investments
         .filter()
         .typeEqualTo(InvestmentTypeEnum.installmentPayment)
-        .profitAmountGreaterThan(0)
         .findAll();
-    // Only count unique contracts (first record per contract has the profit)
-    final seenContracts = <int>{};
-    double installmentProfit = 0.0;
-    for (final record in installmentRecords) {
-      if (record.installmentContractId != null &&
-          !seenContracts.contains(record.installmentContractId)) {
-        seenContracts.add(record.installmentContractId!);
-        installmentProfit += record.profitAmount;
-      }
-    }
+    final installmentProfit = 
+        installmentRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
 
     return saleProfit + installmentProfit;
+  }
+
+  /// Returns total expenses 
+  Future<double> getTotalExpenses() async {
+    final expenses = await _isar.expenses.where().findAll();
+    return expenses.fold<double>(0.0, (sum, exp) => sum + exp.amount);
+  }
+
+  /// Returns total withdrawals 
+  Future<double> getTotalWithdrawals() async {
+    final records = await _isar.investments
+        .filter()
+        .typeEqualTo(InvestmentTypeEnum.withdrawal)
+        .findAll();
+    return records.fold<double>(0.0, (sum, i) => sum + i.amount);
+  }
+
+  /// Returns total cash spent specifically on maintenance
+  Future<double> getMaintenanceCash() async {
+    final records = await _isar.investments
+        .filter()
+        .typeEqualTo(InvestmentTypeEnum.withdrawal)
+        .and()
+        .categoryEqualTo(InvestmentCategoryEnum.maintenance)
+        .findAll();
+    return records.fold<double>(0.0, (sum, i) => sum + i.amount);
+  }
+
+  /// Returns total asset value (Unsold bikes purchase price + Future expected installments)
+  Future<double> getAssetsValue() async {
+    // 1. Unsold Bikes Value
+    final unsoldBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.available)
+        .or()
+        .statusEqualTo(BikeStatusEnum.installment)
+        .findAll();
+    final unsoldValue = unsoldBikes.fold<double>(0.0, (sum, b) => sum + b.purchasePrice);
+
+    // 2. Future Installment Receivables
+    final futurePayments = await getFutureInstallmentPayments();
+
+    return unsoldValue + futurePayments;
   }
 
   /// Returns total accumulated losses (negative profits from sales below purchase price)
@@ -334,8 +380,8 @@ class InvestmentService extends GetxService {
         0.0, (sum, c) => sum + c.remainingBalance);
   }
 
-  /// Predicted profit from active installments
-  /// For each active contract: totalAmount - purchasePrice of bike
+  /// Predicted profit from active installments (Remaining profit to be realized)
+  /// For each active contract: (Remaining Balance - Remaining Cost to cover)
   Future<double> getFutureInstallmentProfit() async {
     final activeContracts = await _isar.installmentContracts
         .filter()
@@ -350,8 +396,26 @@ class InvestmentService extends GetxService {
     for (final contract in activeContracts) {
       final bike = await _isar.bikes.get(contract.bikeId);
       if (bike != null) {
-        final predictedProfit = contract.totalAmount - bike.purchasePrice;
-        totalFutureProfit += predictedProfit;
+        final totalAmount = contract.totalAmount;
+        final totalPaid = contract.totalPaid;
+        final purchasePrice = bike.purchasePrice;
+        
+        // Total Profit the contract COULD ever make
+        final totalProfitPotential = (totalAmount - purchasePrice).clamp(0.0, double.infinity);
+        
+        // Remaining Balance (What we will receive in future)
+        final futurePayment = (totalAmount - totalPaid).clamp(0.0, double.infinity);
+        
+        // Future Profit is the portion of the futurePayment that is profit.
+        // If futurePayment is 100k and totalProfitPotential is 50k, 
+        // it means we still have 50k of cost to recover before we touch the profit.
+        // So Future Profit stays at 50k.
+        // If futurePayment drops to 30k, then everything left is profit, so Future Profit = 30k.
+        final futureProfit = (futurePayment < totalProfitPotential) 
+            ? futurePayment 
+            : totalProfitPotential;
+        
+        totalFutureProfit += futureProfit;
       }
     }
     return totalFutureProfit;
@@ -371,23 +435,73 @@ class InvestmentService extends GetxService {
 
   // ==================== BIKE INVENTORY VALUE ====================
 
-  /// Total purchase price of all unsold bikes (available + installment status)
+  /// Returns total historical purchase price of ALL bikes ever bought
   Future<double> getCashOnBikes() async {
-    final bikes = await _isar.bikes
-        .filter()
-        .statusEqualTo(BikeStatusEnum.available)
-        .or()
-        .statusEqualTo(BikeStatusEnum.installment)
-        .findAll();
+    final bikes = await _isar.bikes.where().findAll();
     return bikes.fold<double>(0.0, (sum, b) => sum + b.purchasePrice);
   }
 
-  /// Count of unsold bikes
-  Future<int> getUnsoldBikesCount() async {
-    return await _isar.bikes
+  /// Returns purchase price of bikes that are either Sold (Cash) or Completed (Installment)
+  Future<double> getSoldAndCompletedBikesValue() async {
+    // 1. Sold (Cash) bikes
+    final soldBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.sold)
+        .findAll();
+    final soldValue = soldBikes.fold<double>(0.0, (sum, b) => sum + b.purchasePrice);
+
+    // 2. Completed Installment bikes
+    final installmentBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.installment)
+        .findAll();
+    
+    double completedValue = 0.0;
+    for (final bike in installmentBikes) {
+      final contract = await _isar.installmentContracts
+          .filter()
+          .bikeIdEqualTo(bike.id)
+          .findFirst();
+      if (contract?.status == ContractStatusEnum.completed) {
+        completedValue += bike.purchasePrice;
+      }
+    }
+
+    return soldValue + completedValue;
+  }
+
+  /// Returns purchase price of bikes that are either Available or Pending Installment
+  Future<double> getActiveInventoryValue() async {
+    // 1. Available bikes
+    final availableBikes = await _isar.bikes
         .filter()
         .statusEqualTo(BikeStatusEnum.available)
-        .count();
+        .findAll();
+    final availableValue = availableBikes.fold<double>(0.0, (sum, b) => sum + b.purchasePrice);
+
+    // 2. Pending Installment bikes
+    final installmentBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.installment)
+        .findAll();
+    
+    double pendingValue = 0.0;
+    for (final bike in installmentBikes) {
+      final contract = await _isar.installmentContracts
+          .filter()
+          .bikeIdEqualTo(bike.id)
+          .findFirst();
+      if (contract != null && contract.status != ContractStatusEnum.completed) {
+        pendingValue += bike.purchasePrice;
+      }
+    }
+
+    return availableValue + pendingValue;
+  }
+
+  /// Count of all bikes ever bought
+  Future<int> getTotalBikesPurchasedCount() async {
+    return await _isar.bikes.where().count();
   }
 
   // ==================== HISTORY ====================
@@ -404,6 +518,21 @@ class InvestmentService extends GetxService {
   Future<void> migrateExistingSalesData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // Run repair once for everyone
+      final repairDone = prefs.getBool('investment_repair_v1_done') ?? false;
+      if (!repairDone) {
+        await repairMismatchedInstallmentRecords();
+        await prefs.setBool('investment_repair_v1_done', true);
+      }
+
+      // Run new profit recalculation
+      final profitRecalcDone = prefs.getBool('investment_profit_recalc_v1_done') ?? false;
+      if (!profitRecalcDone) {
+        await recalculateHistoricalInstallmentProfits();
+        await prefs.setBool('investment_profit_recalc_v1_done', true);
+      }
+
       final migrationDone = prefs.getBool('investment_migration_v2_done') ?? false;
       if (migrationDone) return;
 
@@ -514,6 +643,122 @@ class InvestmentService extends GetxService {
           'Migration Complete: $saleRecordsCreated sale records, $paymentRecordsCreated payment records created.');
     } catch (e) {
       debugPrint('Investment Migration Error: $e');
+    }
+  }
+
+  /// Repairs records where installmentContractId was incorrectly set to 0.
+  /// Uses bikeId to find the corresponding InstallmentContract.
+  Future<void> repairMismatchedInstallmentRecords() async {
+    debugPrint('Starting Investment Record Repair (Contract ID 0)...');
+    try {
+      await _isar.writeTxn(() async {
+        final recordsToFix = await _isar.investments
+            .filter()
+            .typeEqualTo(InvestmentTypeEnum.installmentPayment)
+            .installmentContractIdEqualTo(0)
+            .findAll();
+
+        if (recordsToFix.isEmpty) {
+          debugPrint('No records with Contract ID 0 found.');
+          return;
+        }
+
+        debugPrint('Found ${recordsToFix.length} investment records to repair.');
+        int fixedCount = 0;
+
+        for (final record in recordsToFix) {
+          if (record.bikeId == null) continue;
+
+          // Find the contract for this bike
+          final contract = await _isar.installmentContracts
+              .filter()
+              .bikeIdEqualTo(record.bikeId!)
+              .findFirst();
+
+          if (contract != null) {
+            record.installmentContractId = contract.id;
+            await _isar.investments.put(record);
+            fixedCount++;
+            
+            // If the contract is completed, also check if profit needs re-calculation
+            if (contract.status == ContractStatusEnum.completed) {
+              final profit = contract.totalPaid - (await _isar.bikes.get(contract.bikeId))!.purchasePrice;
+              // Re-run finalize profit just in case it was missed due to ID 0
+              final contractRecords = await _isar.investments
+                  .filter()
+                  .typeEqualTo(InvestmentTypeEnum.installmentPayment)
+                  .installmentContractIdEqualTo(contract.id)
+                  .sortByDate()
+                  .findAll();
+              
+              if (contractRecords.isNotEmpty && contractRecords.first.profitAmount == 0) {
+                 contractRecords.first.profitAmount = profit;
+                 await _isar.investments.put(contractRecords.first);
+                 debugPrint('  - Also finalized profit for Contract #${contract.id}');
+              }
+            }
+          }
+        }
+        debugPrint('Repair Complete. Linked $fixedCount records to correct contracts.');
+      });
+    } catch (e) {
+      debugPrint('Error repairing investment records: $e');
+    }
+  }
+
+  /// Recalculates historical profits for all installment contracts 
+  /// based on the new Cost-Recovery (Threshold) realization logic.
+  Future<void> recalculateHistoricalInstallmentProfits() async {
+    debugPrint('Starting Historical Profit Recalculation (Cost-Recovery)...');
+    try {
+      int updatedCount = 0;
+      await _isar.writeTxn(() async {
+        final contracts = await _isar.installmentContracts.where().findAll();
+        for (final contract in contracts) {
+          final bike = await _isar.bikes.get(contract.bikeId);
+          if (bike == null) continue;
+
+          final purchasePrice = bike.purchasePrice;
+          
+          final payments = await _isar.investments
+              .filter()
+              .installmentContractIdEqualTo(contract.id)
+              .typeEqualTo(InvestmentTypeEnum.installmentPayment)
+              .sortByDate()
+              .findAll();
+              
+          double runningTotal = 0.0;
+          
+          for (final payment in payments) {
+             final amount = payment.amount;
+             final currentTotal = runningTotal + amount;
+             double profit = 0.0;
+             
+             if (currentTotal > purchasePrice) {
+                if (runningTotal >= purchasePrice) {
+                   profit = amount;
+                } else {
+                   profit = currentTotal - purchasePrice;
+                }
+             }
+             
+             if (payment.profitAmount != profit) {
+                payment.profitAmount = profit;
+                // Remove any old "Completed" text if present
+                if (payment.description != null && payment.description!.contains(' [Completed')) {
+                  payment.description = payment.description!.split(' [Completed')[0];
+                }
+                await _isar.investments.put(payment);
+                updatedCount++;
+             }
+             
+             runningTotal = currentTotal;
+          }
+        }
+      });
+      debugPrint('Historical Profit Recalculation complete. Updated $updatedCount records.');
+    } catch (e) {
+      debugPrint('Error recalculating historical profits: $e');
     }
   }
 }

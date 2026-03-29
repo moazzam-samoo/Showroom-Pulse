@@ -23,7 +23,7 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  final int _selectedNavIndex = 7; // Settings is index 7 in main sidebar
+  final int _selectedNavIndex = 8; // Settings is index 8 in main sidebar
 
   // Coach mark keys
   final GlobalKey _categorySidebarKey = GlobalKey();
@@ -89,7 +89,8 @@ class _SettingsViewState extends State<SettingsView> {
                     case 4: Get.offNamed('/installments'); break;
                     case 5: Get.offNamed('/customers'); break;
                     case 6: Get.offNamed('/reports'); break;
-                    case 7: break; // Already on Settings
+                    case 7: Get.offNamed('/investment'); break; 
+                    case 8: break; // Already on Settings
                   }
                 },
               ),

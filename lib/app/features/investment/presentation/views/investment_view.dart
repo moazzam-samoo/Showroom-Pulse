@@ -100,64 +100,107 @@ class InvestmentView extends GetView<InvestmentController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Obx(() => GridView.count(
-                        crossAxisCount: MediaQuery.of(context).size.width > 1100 ? 3 : 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
+                  Obx(() => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          InvestmentSummaryCard(
-                            title: 'Total Invested',
-                            amount: currencyFormat.format(controller.totalCapital.value),
-                            icon: Icons.account_balance_wallet,
-                            color: const Color(0xFF3B82F6), // Blue
-                            subtitle: 'Lifetime capital',
-                          ),
-                          InvestmentSummaryCard(
-                            title: 'Available Cash',
-                            amount: currencyFormat.format(controller.availableBalance.value),
-                            icon: Icons.savings,
-                            color: const Color(0xFF22C55E), // Green
-                            subtitle: controller.lockedCapital.value > 0
-                                ? '${currencyFormat.format(controller.lockedCapital.value)} Locked'
-                                : 'Ready to invest',
-                          ),
-                          InvestmentSummaryCard(
-                            title: 'Cash on Bikes',
-                            amount: currencyFormat.format(controller.cashOnBikes.value),
-                            icon: Icons.motorcycle,
-                            color: const Color(0xFFF59E0B), // Amber
-                            subtitle: '${controller.unsoldBikesCount.value} bikes in inventory',
-                          ),
-                          InvestmentSummaryCard(
-                            title: 'Net Profit',
-                            amount: currencyFormat.format(controller.totalProfit.value),
-                            icon: controller.totalProfit.value >= 0
-                                ? Icons.trending_up
-                                : Icons.trending_down,
-                            color: controller.totalProfit.value >= 0
-                                ? const Color(0xFF10B981) // Emerald
-                                : const Color(0xFFEF4444), // Red
-                            subtitle: controller.accumulatedLoss.value > 0
-                                ? '${currencyFormat.format(controller.accumulatedLoss.value)} loss pending • ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%'
-                                : 'ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%',
-                          ),
-                          InvestmentSummaryCard(
-                            title: 'Future Payments',
-                            amount: currencyFormat.format(controller.futurePayments.value),
-                            icon: Icons.schedule,
-                            color: const Color(0xFF06B6D4), // Cyan
-                            subtitle: '${controller.activeContractsCount.value} active contracts',
-                          ),
-                          InvestmentSummaryCard(
-                            title: 'Future Profit',
-                            amount: currencyFormat.format(controller.futureProfit.value),
-                            icon: Icons.auto_graph,
-                            color: const Color(0xFF8B5CF6), // Violet
-                            subtitle: 'Expected on installment completion',
-                          ),
+                          _buildSectionTitle('Core Financials', textCol),
+                          _buildGrid(context, [
+                            InvestmentSummaryCard(
+                              title: 'Total Invested',
+                              amount: currencyFormat.format(controller.totalCapital.value),
+                              icon: Icons.account_balance_wallet,
+                              color: const Color(0xFF3B82F6), // Blue
+                              subtitle: 'Lifetime capital',
+                              onTap: () => controller.setKpiFilter('Total Invested'),
+                            ),
+                            InvestmentSummaryCard(
+                              title: 'Available Cash',
+                              amount: currencyFormat.format(controller.availableBalance.value),
+                              icon: Icons.savings,
+                              color: const Color(0xFF22C55E), // Green
+                              subtitle: controller.lockedCapital.value > 0
+                                  ? '${currencyFormat.format(controller.lockedCapital.value)} Locked'
+                                  : 'Ready to invest',
+                              onTap: () => controller.setKpiFilter('Available Cash'),
+                            ),
+                            InvestmentSummaryCard(
+                              title: 'Net Profit',
+                              amount: currencyFormat.format(controller.totalProfit.value),
+                              icon: controller.totalProfit.value >= 0
+                                  ? Icons.trending_up
+                                  : Icons.trending_down,
+                              color: controller.totalProfit.value >= 0
+                                  ? const Color(0xFF10B981) // Emerald
+                                  : const Color(0xFFEF4444), // Red
+                              subtitle: controller.accumulatedLoss.value > 0
+                                  ? '${currencyFormat.format(controller.accumulatedLoss.value)} loss pending • ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%'
+                                  : 'ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%',
+                              onTap: () => controller.setKpiFilter('Net Profit'),
+                            ),
+                          ]),
+                          const SizedBox(height: 24),
+
+                          _buildSectionTitle('Asset Valuation', textCol),
+                          _buildGrid(context, [
+                            InvestmentSummaryCard(
+                              title: 'Sold & Completed Bikes Purchasing Value',
+                              amount: currencyFormat.format(controller.soldAndCompletedPriceValuation.value),
+                              icon: Icons.assignment_turned_in,
+                              color: const Color(0xFF10B981), // Green
+                              subtitle: 'Purchase cost of sold items',
+                              onTap: () => controller.setKpiFilter('Sold & Completed'),
+                            ),
+                            InvestmentSummaryCard(
+                              title: 'Active Inventory Bikes Purchasing Value',
+                              amount: currencyFormat.format(controller.activeInventoryPriceValuation.value),
+                              icon: Icons.inventory_2,
+                              color: const Color(0xFF6366F1), // Indigo
+                              subtitle: 'Value currently in showroom/pending',
+                              onTap: () => controller.setKpiFilter('Active Inventory'),
+                            ),
+                            InvestmentSummaryCard(
+                              title: 'Maintenance Spent',
+                              amount: currencyFormat.format(controller.cashOnMaintenance.value),
+                              icon: Icons.build,
+                              color: const Color(0xFFEAB308), // Amber
+                              subtitle: 'Lifetime maintenance expenses',
+                              onTap: () => controller.setKpiFilter('Maintenance Spent'),
+                            ),
+                          ]),
+                          const SizedBox(height: 24),
+
+                          _buildSectionTitle('Installment Predictions', textCol),
+                          _buildGrid(context, [
+                            InvestmentSummaryCard(
+                              title: 'Future Payments',
+                              amount: currencyFormat.format(controller.futurePayments.value),
+                              icon: Icons.update,
+                              color: const Color(0xFFF59E0B), // Orange-Amber
+                              subtitle: '${controller.activeContractsCount.value} Active contracts',
+                              onTap: () => controller.setKpiFilter('Future Payments'),
+                            ),
+                            InvestmentSummaryCard(
+                              title: 'Future Profit',
+                              amount: currencyFormat.format(controller.futureProfit.value),
+                              icon: Icons.auto_graph,
+                              color: const Color(0xFF8B5CF6), // Purple
+                              subtitle: 'Expected from active contracts',
+                              onTap: () => controller.setKpiFilter('Future Profit'),
+                            ),
+                          ]),
+                          const SizedBox(height: 24),
+
+                          _buildSectionTitle('Outflows', textCol),
+                          _buildGrid(context, [
+                            InvestmentSummaryCard(
+                              title: 'Total Withdrawals',
+                              amount: currencyFormat.format(controller.totalWithdrawals.value),
+                              icon: Icons.arrow_outward,
+                              color: const Color(0xFFEF4444), // Red
+                              subtitle: 'All outflows minus bikes',
+                              onTap: () => controller.setKpiFilter('Total Withdrawals'),
+                            ),
+                          ]),
                         ],
                       )),
                   const SizedBox(height: 32),
@@ -169,13 +212,38 @@ class InvestmentView extends GetView<InvestmentController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Investment History',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: textCol,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Investment History',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textCol,
+                                ),
+                              ),
+                              Obx(() {
+                                if (controller.kpiFilter.value.isNotEmpty) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Chip(
+                                      label: Text(
+                                        'Filtered by: ${controller.kpiFilter.value}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      deleteIcon: const Icon(Icons.close, size: 16),
+                                      onDeleted: () => controller.setKpiFilter(controller.kpiFilter.value),
+                                      backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
+                                      labelStyle: const TextStyle(color: Color(0xFF3B82F6)),
+                                      side: const BorderSide(color: Color(0xFF3B82F6), width: 1),
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              }),
+                            ],
                           ),
                           
                           // Search Box
@@ -337,6 +405,32 @@ class InvestmentView extends GetView<InvestmentController> {
       side: BorderSide(
         color: isSelected ? Colors.blue.withOpacity(0.5) : Colors.transparent,
       ),
+    );
+  }
+  Widget _buildSectionTitle(String title, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, List<Widget> children) {
+    return GridView.count(
+      crossAxisCount: MediaQuery.of(context).size.width > 1100 ? 3 : 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
+      children: children,
     );
   }
 }

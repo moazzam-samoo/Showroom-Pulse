@@ -104,15 +104,10 @@ class _SalesViewState extends State<SalesView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
-
                         Get.offNamed('/investment');
-
                         break;
-
                       case 8:
-
                         Get.offNamed('/settings');
-
                         break;
                     }
                   },
@@ -122,30 +117,25 @@ class _SalesViewState extends State<SalesView> {
                 Expanded(
                   child: Column(
                     children: [
-                       Expanded(
-                         child: Scrollbar(
-                           child: SingleChildScrollView(
-                           padding: const EdgeInsets.all(AppSpacing.lg),
-                           child: Column(
-                             children: [
-                               // Header
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            children: [
+                              // Header
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            'Sales Management',
-                                            style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                                            ),
-                                          ),
-                                        ],
+                                      Text(
+                                        'Sales Management',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                        ),
                                       ),
                                       Text(
                                         'Manage invoices, payments, and installment contracts',
@@ -192,8 +182,7 @@ class _SalesViewState extends State<SalesView> {
                                 height: MediaQuery.of(context).size.height - 250, // Approximate remaining height
                                 child: const SalesCardGrid(),
                               ),
-                             ],
-                            ),
+                            ],
                           ),
                         ),
                       ),

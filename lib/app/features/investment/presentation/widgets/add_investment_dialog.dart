@@ -167,7 +167,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                       ),
                       if (!isNarrow && !isWithdrawal) const SizedBox(width: 16),
                       if (isNarrow && !isWithdrawal) const SizedBox(height: 16),
-                      if (!isWithdrawal) Expanded(
+                      Expanded(
                         flex: isNarrow ? 0 : 1,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +178,20 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                                     fontWeight: FontWeight.w500,
                                     color: textCol.withOpacity(0.8))),
                             const SizedBox(height: 8),
-                            Obx(() => Container(
+                            Obx(() {
+                                  // Setup allowed categories
+                                  final allowedCategories = isWithdrawal 
+                                    ? [InvestmentCategoryEnum.personalUse, InvestmentCategoryEnum.maintenance, InvestmentCategoryEnum.other]
+                                    : [InvestmentCategoryEnum.personalCapital, InvestmentCategoryEnum.loan, InvestmentCategoryEnum.partnership, InvestmentCategoryEnum.other];
+                                  
+                                  // Ensure selection is valid
+                                  if (!allowedCategories.contains(controller.selectedCategory.value)) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      controller.selectedCategory.value = allowedCategories.first;
+                                    });
+                                  }
+
+                                  return Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12),
                                   decoration: BoxDecoration(
                                     color: inputBg,
@@ -187,7 +200,9 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<InvestmentCategoryEnum>(
-                                      value: controller.selectedCategory.value,
+                                      value: allowedCategories.contains(controller.selectedCategory.value) 
+                                          ? controller.selectedCategory.value 
+                                          : allowedCategories.first,
                                       isExpanded: true,
                                       dropdownColor: bgCol,
                                       style: TextStyle(color: textCol),
@@ -196,7 +211,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                                           controller.selectedCategory.value = val;
                                         }
                                       },
-                                      items: InvestmentCategoryEnum.values
+                                      items: allowedCategories
                                           .map((e) => DropdownMenuItem(
                                                 value: e,
                                                 child: Text(_formatEnumName(e.name)),
@@ -204,7 +219,8 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                                           .toList(),
                                     ),
                                   ),
-                                )),
+                                );
+                            }),
                           ],
                         ),
                       ),

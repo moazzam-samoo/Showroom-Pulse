@@ -190,12 +190,16 @@ const _InvestmentcategoryEnumValueMap = {
   'loan': 1,
   'partnership': 2,
   'other': 3,
+  'maintenance': 4,
+  'personalUse': 5,
 };
 const _InvestmentcategoryValueEnumMap = {
   0: InvestmentCategoryEnum.personalCapital,
   1: InvestmentCategoryEnum.loan,
   2: InvestmentCategoryEnum.partnership,
   3: InvestmentCategoryEnum.other,
+  4: InvestmentCategoryEnum.maintenance,
+  5: InvestmentCategoryEnum.personalUse,
 };
 const _InvestmenttypeEnumValueMap = {
   'capitalInjection': 0,

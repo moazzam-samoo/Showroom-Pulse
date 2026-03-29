@@ -2,12 +2,14 @@
 import '../../data/models/installment_contract.dart';
 
 class InstallmentCalculationResult {
+  final double originalPrice;
   final double cashPrice;
   final double totalMarkup;
   final double grandTotal;
   final double monthlyEMI;
 
   InstallmentCalculationResult({
+    required this.originalPrice,
     required this.cashPrice,
     required this.totalMarkup,
     required this.grandTotal,
@@ -26,6 +28,7 @@ class InstallmentCalculator {
   /// [downPayment]: Amount paid upfront
   /// [months]: Duration in months
   static InstallmentCalculationResult calculate({
+    required double originalPrice,
     required double cashPrice,
     required MarkupType markupType,
     required double markupValue,
@@ -60,6 +63,7 @@ class InstallmentCalculator {
     double monthlyEMI = (rawEMI / 100).round() * 100.0;
 
     return InstallmentCalculationResult(
+      originalPrice: originalPrice,
       cashPrice: cashPrice,
       totalMarkup: totalMarkup,
       grandTotal: grandTotal,

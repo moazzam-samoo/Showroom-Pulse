@@ -293,6 +293,11 @@ class NewSaleController extends GetxController {
     
     _loadDefaultSettings();
 
+    // Clear on Focus logic for numeric fields with default "0"
+    _setupClearOnFocus(downPaymentFocus, downPaymentController);
+    _setupClearOnFocus(discountFocus, discountController);
+    _setupClearOnFocus(markupValueFocus, markupValueController);
+
     downPaymentController.addListener(_calculateInstallment);
     discountController.addListener(_calculateInstallment);
     monthsController.addListener(_calculateInstallment);
@@ -433,6 +438,20 @@ class NewSaleController extends GetxController {
     }
   }
 
+  void _setupClearOnFocus(FocusNode focusNode, TextEditingController controller) {
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        if (controller.text == '0') {
+          controller.clear();
+        }
+      } else {
+        if (controller.text.trim().isEmpty) {
+          controller.text = '0';
+        }
+      }
+    });
+  }
+
   Future<void> loadAvailableBikes() async {
     final service = Get.find<IsarService>();
     final fileService = Get.find<FileService>();
@@ -475,6 +494,7 @@ class NewSaleController extends GetxController {
     try {
       final basePrice = ((bike.cashSalePrice as num?)?.toDouble() ?? 0.0) - discount;
       final result = InstallmentCalculator.calculate(
+        originalPrice: bike.cashSalePrice,
         cashPrice: basePrice > 0 ? basePrice : 0.0,
         markupType: markupType.value,
         markupValue: markupVal,
@@ -666,6 +686,9 @@ class NewSaleController extends GetxController {
 
     try {
       // Execute the database transaction
+      int? installmentContractId;
+      int? saleId;
+
       await _isarService.isar.writeTxn(() async {
         // A. Create/Get Customer
         Customer? customer;
@@ -806,8 +829,11 @@ class NewSaleController extends GetxController {
 
           // Link Contract to Sale
           sale.installmentContractId = contract.id;
+          installmentContractId = contract.id;
           await _isarService.isar.sales.put(sale);
         }
+
+        saleId = sale.id;
 
         // D2. Create and Save Witness Records (for both cash and installment sales)
         // For installment sales, use contract ID. For cash sales, use sale ID (as negative to distinguish)
@@ -889,7 +915,7 @@ class NewSaleController extends GetxController {
               bikeId: bike.id,
               saleAmount: saleAmount,
               purchasePrice: bike.purchasePrice,
-              saleId: 0, // Sale ID from transaction
+              saleId: saleId ?? 0, // Sale ID from transaction
               bikeName: '${bike.model} ${bike.brand}',
             );
           } else if (saleType.value == SaleType.installment) {
@@ -898,9 +924,11 @@ class NewSaleController extends GetxController {
                     downPaymentController.text.replaceAll(',', '')) ?? 0;
             if (dpAmount > 0) {
               await investmentService.recordInstallmentPaymentRevenue(
-                contractId: 0, // Will be set after contract creation
+                contractId: installmentContractId ?? 0,
                 amount: dpAmount,
                 bikeId: bike.id,
+                previousTotalPaid: 0.0,
+                purchasePrice: bike.purchasePrice,
                 description: 'Down Payment — ${bike.model} ${bike.brand}',
               );
             }

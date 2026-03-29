@@ -6,6 +6,7 @@ class InvestmentSummaryCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String? subtitle;
+  final VoidCallback? onTap;
 
   const InvestmentSummaryCard({
     super.key,
@@ -14,6 +15,7 @@ class InvestmentSummaryCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -25,28 +27,38 @@ class InvestmentSummaryCard extends StatelessWidget {
     final textCol = isDark ? Colors.white : const Color(0xFF0F172A);
     final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: bgCol,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderCol),
-      ),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: bgCol,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderCol),
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: textCol.withOpacity(0.6),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: textCol.withOpacity(0.6),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -78,6 +90,8 @@ class InvestmentSummaryCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
+    ),
     );
   }
 }

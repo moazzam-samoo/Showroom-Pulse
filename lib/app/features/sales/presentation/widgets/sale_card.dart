@@ -136,7 +136,7 @@ class _SaleCardState extends State<SaleCard> {
           }
         },
         child: AnimatedScale(
-          scale: isHovered ? 1.02 : 1.0,
+          scale: isHovered ? 1.015 : 1.0,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           child: AnimatedContainer(

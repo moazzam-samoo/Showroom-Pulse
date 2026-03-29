@@ -136,6 +136,7 @@ class InstallmentRepository {
       // Update contract
       final contract = await _isar.installmentContracts.get(contractId);
       if (contract != null) {
+        final previousTotalPaid = contract.totalPaid;
         contract.totalPaid += amount;
         contract.paymentsMade += 1;
         contract.lastPaymentDate = payment.paymentDate;
@@ -165,19 +166,14 @@ class InstallmentRepository {
               contractId: contractId,
               amount: amount,
               bikeId: contract.bikeId,
+              previousTotalPaid: previousTotalPaid,
+              purchasePrice: bike?.purchasePrice ?? 0.0,
               description: bike != null
                   ? 'Monthly Payment \u2014 ${bike.model} ${bike.brand}'
                   : 'Monthly Payment \u2014 Contract #$contractId',
+              inTransaction: true,
             );
-
-            // If completed, finalize profit
-            if (contract.status == ContractStatusEnum.completed && bike != null) {
-              await investmentService.finalizeInstallmentProfit(
-                contractId: contractId,
-                totalPaid: contract.totalPaid,
-                purchasePrice: bike.purchasePrice,
-              );
-            }
+            // Profit is now finalized continuously inside recordInstallmentPaymentRevenue
           } catch (e) {
             debugPrint('InvestmentService payment recording warning: $e');
           }
@@ -197,6 +193,8 @@ class InstallmentRepository {
     await _isar.writeTxn(() async {
       final contract = await _isar.installmentContracts.get(contractId);
       if (contract == null) return;
+      
+      final previousTotalPaid = contract.totalPaid;
 
       if (allPaymentReceived) {
         // Record remaining as a final payment
@@ -211,6 +209,27 @@ class InstallmentRepository {
           await _isar.payments.put(payment);
           contract.totalPaid = contract.totalAmount;
           contract.paymentsMade += 1;
+
+          // === INVESTMENT TRACKING: Record final payment as revenue ===
+          if (Get.isRegistered<InvestmentService>()) {
+            try {
+              final investmentService = Get.find<InvestmentService>();
+              final bike = await _isar.bikes.get(contract.bikeId);
+              await investmentService.recordInstallmentPaymentRevenue(
+                contractId: contractId,
+                amount: remaining,
+                bikeId: contract.bikeId,
+                previousTotalPaid: previousTotalPaid,
+                purchasePrice: bike?.purchasePrice ?? 0.0,
+                description: bike != null
+                    ? 'Final Payment (Admin) \u2014 ${bike.model} ${bike.brand}'
+                    : 'Final Payment (Admin) \u2014 Contract #$contractId',
+                inTransaction: true,
+              );
+            } catch (e) {
+              debugPrint('InvestmentService admin-complete revenue recording warning: $e');
+            }
+          }
         }
       } else {
         // Waive remaining → don't add to revenue
@@ -223,29 +242,8 @@ class InstallmentRepository {
       contract.lastPaymentDate = DateTime.now();
 
       await _isar.installmentContracts.put(contract);
-
-      // === INVESTMENT TRACKING: Finalize installment profit ===
-      if (Get.isRegistered<InvestmentService>()) {
-        try {
-          final investmentService = Get.find<InvestmentService>();
-          final bike = await _isar.bikes.get(contract.bikeId);
-          if (bike != null) {
-            // If admin completed with full payment, record the remaining payment
-            if (allPaymentReceived) {
-              final remaining = contract.totalAmount - (contract.totalPaid - (contract.totalAmount - contract.totalPaid).abs());
-              // Revenue already recorded via payment above
-            }
-            await investmentService.finalizeInstallmentProfit(
-              contractId: contractId,
-              totalPaid: contract.totalPaid,
-              purchasePrice: bike.purchasePrice,
-            );
-          }
-        } catch (e) {
-          debugPrint('InvestmentService finalize warning: $e');
-        }
-      }
-
+      // Profit is now finalized continuously inside recordInstallmentPaymentRevenue
+      
       // Refresh investment KPIs
       _refreshInvestmentKPIs();
     });

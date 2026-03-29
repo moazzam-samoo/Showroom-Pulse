@@ -85,7 +85,7 @@ class PriceSummaryCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildMetricItem(context, 'Gross Price', result.cashPrice, isDark),
+                    _buildMetricItem(context, 'Gross Price', result.originalPrice, isDark),
                     _buildMetricItem(context, 'Net Price', result.cashPrice, isDark),
                   ],
                 ),
