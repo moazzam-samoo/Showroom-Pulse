@@ -32,9 +32,12 @@ class InvestmentController extends GetxController {
   final cashFromSales = 0.0.obs;
   final cashFromInstallments = 0.0.obs;
   final cashOnMaintenance = 0.0.obs;
+  final cashOnExpenses = 0.0.obs;
   final totalAssets = 0.0.obs;
   final soldAndCompletedPriceValuation = 0.0.obs;
   final activeInventoryPriceValuation = 0.0.obs;
+  final categoryFinancials = <CategoryFinancials>[].obs;
+  final lockedBreakdown = <InvestmentCategoryEnum, double>{}.obs;
 
   // History & Filters
   final investmentHistory = <Investment>[].obs;
@@ -53,6 +56,7 @@ class InvestmentController extends GetxController {
   final selectedDate = DateTime.now().obs;
   final selectedCategory = InvestmentCategoryEnum.personalCapital.obs;
   final isLockedToggle = false.obs;
+  final selectedWithdrawalSources = <InvestmentCategoryEnum>[].obs;
 
   @override
   void onInit() {
@@ -92,6 +96,7 @@ class InvestmentController extends GetxController {
     cashFromInstallments.value = await _investmentService.getCashFromInstallments();
     unsoldBikesCount.value = await _investmentService.getTotalBikesPurchasedCount();
     cashOnMaintenance.value = await _investmentService.getMaintenanceCash();
+    cashOnExpenses.value = await _investmentService.getExpensesCash();
     totalAssets.value = await _investmentService.getAssetsValue();
     soldAndCompletedPriceValuation.value = await _investmentService.getSoldAndCompletedBikesValue();
     activeInventoryPriceValuation.value = await _investmentService.getActiveInventoryValue();
@@ -100,6 +105,10 @@ class InvestmentController extends GetxController {
     futurePayments.value = await _investmentService.getFutureInstallmentPayments();
     futureProfit.value = await _investmentService.getFutureInstallmentProfit();
     activeContractsCount.value = await _investmentService.getActiveContractsCount();
+
+    // Breakdown
+    categoryFinancials.assignAll(await _investmentService.getCategoryFinancials());
+    lockedBreakdown.assignAll(await _investmentService.getLockedBreakdown());
 
     // Loss tracking
     accumulatedLoss.value = await _investmentService.getAccumulatedLoss();
@@ -213,6 +222,11 @@ class InvestmentController extends GetxController {
         temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
       } else if (kpi == 'Maintenance Spent') {
         temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal && inv.category == InvestmentCategoryEnum.maintenance).toList();
+      } else if (kpi == 'Total Expenses') {
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal && 
+          (inv.category == InvestmentCategoryEnum.maintenance || 
+           inv.category == InvestmentCategoryEnum.personalUse || 
+           inv.category == InvestmentCategoryEnum.expense)).toList();
       } else if (kpi == 'Future Payments') {
         temp = temp.where((inv) => inv.type == InvestmentTypeEnum.installmentPayment || (inv.type == InvestmentTypeEnum.bikeSale && (inv.description?.contains('Installment') ?? false))).toList();
       } else if (kpi == 'Future Profit') {
@@ -271,17 +285,62 @@ class InvestmentController extends GetxController {
       return;
     }
 
-    if (amount > availableBalance.value) {
-      AppToast.showError(title: 'Error', message: 'Insufficient available balance');
+    if (selectedWithdrawalSources.isEmpty) {
+      AppToast.showError(title: 'Error', message: 'Please select at least one source pool');
       return;
+    }
+
+    // Determine available balance of the selected sources only
+    double selectedAvailable = 0.0;
+    final financials = categoryFinancials.toList();
+    
+    for (final source in selectedWithdrawalSources) {
+       final catFin = financials.firstWhereOrNull((c) => c.category == source);
+       if (catFin != null) {
+          selectedAvailable += catFin.available;
+       }
+    }
+
+    if (amount > selectedAvailable) {
+       final sourceNames = selectedWithdrawalSources.map((e) => _formatEnumName(e.name)).join(' + ');
+       AppToast.showError(title: 'Insufficient Balance', 
+          message: 'Your selected pools ($sourceNames) only have Rs ${selectedAvailable.toStringAsFixed(0)} available. You are trying to withdraw Rs ${amount.toStringAsFixed(0)}. Please select additional options.');
+       return;
+    }
+
+    // Calculate exact proportional deductions
+    double deductPersonal = 0.0;
+    double deductPartnership = 0.0;
+    double deductLoan = 0.0;
+    double deductOther = 0.0;
+
+    for (final source in selectedWithdrawalSources) {
+       final catFin = financials.firstWhereOrNull((c) => c.category == source);
+       if (catFin != null && catFin.available > 0) {
+          final ratio = catFin.available / selectedAvailable;
+          final deduction = amount * ratio;
+          
+          switch (source) {
+             case InvestmentCategoryEnum.personalCapital: deductPersonal = deduction; break;
+             case InvestmentCategoryEnum.partnership: deductPartnership = deduction; break;
+             case InvestmentCategoryEnum.loan: deductLoan = deduction; break;
+             case InvestmentCategoryEnum.other: deductOther = deduction; break;
+             default: break;
+          }
+       }
     }
 
     try {
       await _investmentService.recordWithdrawal(
         amount: amount,
         date: selectedDate.value,
-        category: selectedCategory.value,
-        description: notesController.text.trim().isEmpty ? 'Capital withdrawal' : notesController.text.trim(),
+        category: selectedCategory.value, // Acts as Reason here (maintenance, expense, etc)
+        deductPersonal: deductPersonal,
+        deductPartnership: deductPartnership,
+        deductLoan: deductLoan,
+        deductOther: deductOther,
+        description: notesController.text.trim().isEmpty ? 'Capital outflow' : notesController.text.trim(),
+        isLocked: false,
       );
 
       Get.back(); // Close Dialog immediately
@@ -290,12 +349,12 @@ class InvestmentController extends GetxController {
       await loadInvestmentData(); // Refresh UI
       
       AppToast.showFinancial(
-        title: 'Withdrawal Recorded',
-        line1: '🏦 Withdrawal: Rs ${amount.toStringAsFixed(0)}',
-        line2: 'Remaining Balance: Rs ${availableBalance.value.toStringAsFixed(0)}',
+        title: 'Outflow Recorded',
+        line1: '💸 Amount: Rs ${amount.toStringAsFixed(0)}',
+        line2: 'Calculated successfully across ${selectedWithdrawalSources.length} pools.',
       );
     } catch (e) {
-      AppToast.showError(title: 'Error', message: 'Failed to record withdrawal: $e');
+      AppToast.showError(title: 'Error', message: 'Failed to record outflow: $e');
     }
   }
 
@@ -305,6 +364,13 @@ class InvestmentController extends GetxController {
     selectedDate.value = DateTime.now();
     selectedCategory.value = InvestmentCategoryEnum.personalCapital;
     isLockedToggle.value = false;
+    selectedWithdrawalSources.clear();
+  }
+
+  String _formatEnumName(String name) {
+    if (name.isEmpty) return name;
+    final RegExp exp = RegExp(r'(?<=[a-z])(?=[A-Z])');
+    return name.replaceAllMapped(exp, (m) => ' ').capitalizeFirst ?? name;
   }
 
   Future<void> exportToPdf() async {

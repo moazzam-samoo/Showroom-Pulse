@@ -5,7 +5,8 @@ class InvestmentSummaryCard extends StatelessWidget {
   final String amount;
   final IconData icon;
   final Color color;
-  final String? subtitle;
+   final String? subtitle;
+  final Widget? extraContent;
   final VoidCallback? onTap;
 
   const InvestmentSummaryCard({
@@ -15,6 +16,7 @@ class InvestmentSummaryCard extends StatelessWidget {
     required this.icon,
     required this.color,
     this.subtitle,
+    this.extraContent,
     this.onTap,
   });
 
@@ -33,7 +35,7 @@ class InvestmentSummaryCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16), // Reduced from 20
           decoration: BoxDecoration(
             color: bgCol,
             borderRadius: BorderRadius.circular(16),
@@ -50,7 +52,7 @@ class InvestmentSummaryCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     color: textCol.withOpacity(0.6),
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
@@ -69,7 +71,7 @@ class InvestmentSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12), // Reduced from 16
           Text(
             amount,
             style: TextStyle(
@@ -79,7 +81,7 @@ class InvestmentSummaryCard extends StatelessWidget {
             ),
           ),
           if (subtitle != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6), // Reduced from 8
             Text(
               subtitle!,
               style: TextStyle(
@@ -87,6 +89,10 @@ class InvestmentSummaryCard extends StatelessWidget {
                 fontSize: 12,
               ),
             ),
+          ],
+          if (extraContent != null) ...[
+            const SizedBox(height: 12),
+            extraContent!,
           ],
         ],
       ),

@@ -63,13 +63,33 @@ const InvestmentSchema = CollectionSchema(
       name: r'purchaseBatchId',
       type: IsarType.long,
     ),
-    r'saleId': PropertySchema(
+    r'returnLoan': PropertySchema(
       id: 9,
+      name: r'returnLoan',
+      type: IsarType.double,
+    ),
+    r'returnOther': PropertySchema(
+      id: 10,
+      name: r'returnOther',
+      type: IsarType.double,
+    ),
+    r'returnPartnership': PropertySchema(
+      id: 11,
+      name: r'returnPartnership',
+      type: IsarType.double,
+    ),
+    r'returnPersonal': PropertySchema(
+      id: 12,
+      name: r'returnPersonal',
+      type: IsarType.double,
+    ),
+    r'saleId': PropertySchema(
+      id: 13,
       name: r'saleId',
       type: IsarType.long,
     ),
     r'type': PropertySchema(
-      id: 10,
+      id: 14,
       name: r'type',
       type: IsarType.byte,
       enumMap: _InvestmenttypeEnumValueMap,
@@ -119,8 +139,12 @@ void _investmentSerialize(
   writer.writeBool(offsets[6], object.isLocked);
   writer.writeDouble(offsets[7], object.profitAmount);
   writer.writeLong(offsets[8], object.purchaseBatchId);
-  writer.writeLong(offsets[9], object.saleId);
-  writer.writeByte(offsets[10], object.type.index);
+  writer.writeDouble(offsets[9], object.returnLoan);
+  writer.writeDouble(offsets[10], object.returnOther);
+  writer.writeDouble(offsets[11], object.returnPartnership);
+  writer.writeDouble(offsets[12], object.returnPersonal);
+  writer.writeLong(offsets[13], object.saleId);
+  writer.writeByte(offsets[14], object.type.index);
 }
 
 Investment _investmentDeserialize(
@@ -142,9 +166,13 @@ Investment _investmentDeserialize(
   object.isLocked = reader.readBool(offsets[6]);
   object.profitAmount = reader.readDouble(offsets[7]);
   object.purchaseBatchId = reader.readLongOrNull(offsets[8]);
-  object.saleId = reader.readLongOrNull(offsets[9]);
+  object.returnLoan = reader.readDouble(offsets[9]);
+  object.returnOther = reader.readDouble(offsets[10]);
+  object.returnPartnership = reader.readDouble(offsets[11]);
+  object.returnPersonal = reader.readDouble(offsets[12]);
+  object.saleId = reader.readLongOrNull(offsets[13]);
   object.type =
-      _InvestmenttypeValueEnumMap[reader.readByteOrNull(offsets[10])] ??
+      _InvestmenttypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
           InvestmentTypeEnum.capitalInjection;
   return object;
 }
@@ -176,8 +204,16 @@ P _investmentDeserializeProp<P>(
     case 8:
       return (reader.readLongOrNull(offset)) as P;
     case 9:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 10:
+      return (reader.readDouble(offset)) as P;
+    case 11:
+      return (reader.readDouble(offset)) as P;
+    case 12:
+      return (reader.readDouble(offset)) as P;
+    case 13:
+      return (reader.readLongOrNull(offset)) as P;
+    case 14:
       return (_InvestmenttypeValueEnumMap[reader.readByteOrNull(offset)] ??
           InvestmentTypeEnum.capitalInjection) as P;
     default:
@@ -192,6 +228,7 @@ const _InvestmentcategoryEnumValueMap = {
   'other': 3,
   'maintenance': 4,
   'personalUse': 5,
+  'expense': 6,
 };
 const _InvestmentcategoryValueEnumMap = {
   0: InvestmentCategoryEnum.personalCapital,
@@ -200,6 +237,7 @@ const _InvestmentcategoryValueEnumMap = {
   3: InvestmentCategoryEnum.other,
   4: InvestmentCategoryEnum.maintenance,
   5: InvestmentCategoryEnum.personalUse,
+  6: InvestmentCategoryEnum.expense,
 };
 const _InvestmenttypeEnumValueMap = {
   'capitalInjection': 0,
@@ -977,6 +1015,268 @@ extension InvestmentQueryFilter
     });
   }
 
+  QueryBuilder<Investment, Investment, QAfterFilterCondition> returnLoanEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'returnLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnLoanGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'returnLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnLoanLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'returnLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition> returnLoanBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'returnLoan',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnOtherEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'returnOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnOtherGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'returnOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnOtherLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'returnOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnOtherBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'returnOther',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPartnershipEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'returnPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPartnershipGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'returnPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPartnershipLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'returnPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPartnershipBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'returnPartnership',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPersonalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'returnPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPersonalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'returnPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPersonalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'returnPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterFilterCondition>
+      returnPersonalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'returnPersonal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Investment, Investment, QAfterFilterCondition> saleIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1220,6 +1520,56 @@ extension InvestmentQuerySortBy
     });
   }
 
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnLoan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnLoanDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnLoan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnOther', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnOtherDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnOther', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPartnership', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy>
+      sortByReturnPartnershipDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPartnership', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> sortByReturnPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPersonal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy>
+      sortByReturnPersonalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPersonal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Investment, Investment, QAfterSortBy> sortBySaleId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saleId', Sort.asc);
@@ -1370,6 +1720,56 @@ extension InvestmentQuerySortThenBy
     });
   }
 
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnLoan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnLoanDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnLoan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnOther', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnOtherDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnOther', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPartnership', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy>
+      thenByReturnPartnershipDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPartnership', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy> thenByReturnPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPersonal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QAfterSortBy>
+      thenByReturnPersonalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'returnPersonal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Investment, Investment, QAfterSortBy> thenBySaleId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saleId', Sort.asc);
@@ -1453,6 +1853,31 @@ extension InvestmentQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Investment, Investment, QDistinct> distinctByReturnLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'returnLoan');
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QDistinct> distinctByReturnOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'returnOther');
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QDistinct>
+      distinctByReturnPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'returnPartnership');
+    });
+  }
+
+  QueryBuilder<Investment, Investment, QDistinct> distinctByReturnPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'returnPersonal');
+    });
+  }
+
   QueryBuilder<Investment, Investment, QDistinct> distinctBySaleId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'saleId');
@@ -1527,6 +1952,31 @@ extension InvestmentQueryProperty
   QueryBuilder<Investment, int?, QQueryOperations> purchaseBatchIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'purchaseBatchId');
+    });
+  }
+
+  QueryBuilder<Investment, double, QQueryOperations> returnLoanProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'returnLoan');
+    });
+  }
+
+  QueryBuilder<Investment, double, QQueryOperations> returnOtherProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'returnOther');
+    });
+  }
+
+  QueryBuilder<Investment, double, QQueryOperations>
+      returnPartnershipProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'returnPartnership');
+    });
+  }
+
+  QueryBuilder<Investment, double, QQueryOperations> returnPersonalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'returnPersonal');
     });
   }
 

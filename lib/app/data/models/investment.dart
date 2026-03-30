@@ -18,6 +18,7 @@ enum InvestmentCategoryEnum {
   other,
   maintenance,
   personalUse,
+  expense,
 }
 
 /// Investment Collection - Tracks all capital flowing into and out of the business
@@ -62,6 +63,19 @@ class Investment {
 
   /// For installmentPayment type, links to the InstallmentContract
   int? installmentContractId;
+
+  // -- Return Ratios (V2) --
+  /// The exact mathematical amount of Cash Revenue returned to Personal Capital
+  double returnPersonal = 0.0;
+  
+  /// The exact mathematical amount of Cash Revenue returned to Partnership Capital
+  double returnPartnership = 0.0;
+  
+  /// The exact mathematical amount of Cash Revenue returned to Other Capital
+  double returnOther = 0.0;
+  
+  /// The exact mathematical amount of Cash Revenue returned to Loan Capital
+  double returnLoan = 0.0;
 }
 
 // Authored by: Moazzam Samoo

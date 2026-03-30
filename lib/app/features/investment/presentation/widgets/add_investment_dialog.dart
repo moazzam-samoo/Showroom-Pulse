@@ -63,7 +63,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Flexible(
-                    child: Text(isWithdrawal ? 'Withdraw Capital' : 'Add Capital Investment',
+                    child: Text(isWithdrawal ? 'Record Outflow' : 'Add Capital Investment',
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -172,7 +172,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Category',
+                            Text(isWithdrawal ? 'Reason' : 'Category',
                                 style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -181,7 +181,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                             Obx(() {
                                   // Setup allowed categories
                                   final allowedCategories = isWithdrawal 
-                                    ? [InvestmentCategoryEnum.personalUse, InvestmentCategoryEnum.maintenance, InvestmentCategoryEnum.other]
+                                    ? [InvestmentCategoryEnum.personalUse, InvestmentCategoryEnum.maintenance, InvestmentCategoryEnum.expense]
                                     : [InvestmentCategoryEnum.personalCapital, InvestmentCategoryEnum.loan, InvestmentCategoryEnum.partnership, InvestmentCategoryEnum.other];
                                   
                                   // Ensure selection is valid
@@ -242,7 +242,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                 style: TextStyle(color: textCol),
                 maxLines: 2,
                 decoration: InputDecoration(
-                  hintText: isWithdrawal ? 'Why are you withdrawing?' : 'Why was this money invested?',
+                  hintText: isWithdrawal ? 'Why is this money being outflowed?' : 'Why was this money invested?',
                   hintStyle: TextStyle(color: textCol.withOpacity(0.4)),
                   filled: true,
                   fillColor: inputBg,
@@ -258,7 +258,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
               ),
               const SizedBox(height: 16),
 
-              // Lock Toggle (Only for Add Capital)
+              // Lock / Source Toggle
               if (!isWithdrawal) ...[
                 Obx(() => CheckboxListTile(
                       value: controller.isLockedToggle.value,
@@ -270,6 +270,63 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                       contentPadding: EdgeInsets.zero,
                       controlAffinity: ListTileControlAffinity.leading,
                     )),
+                const SizedBox(height: 24),
+              ] else ...[
+                Text('Capital Sources (Deduction Pools)',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: textCol.withOpacity(0.8))),
+                const SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: inputBg,
+                    border: Border.all(color: borderCol),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Obx(() {
+                    final allSources = [
+                      InvestmentCategoryEnum.personalCapital,
+                      InvestmentCategoryEnum.partnership,
+                      InvestmentCategoryEnum.loan,
+                      InvestmentCategoryEnum.other
+                    ];
+                    final selected = controller.selectedWithdrawalSources;
+                    final isDistributed = selected.length == allSources.length;
+                    
+                    return Column(
+                      children: [
+                         CheckboxListTile(
+                           value: isDistributed,
+                           activeColor: Colors.orange,
+                           title: Text('Distributedly (All Pools Proportionally)', style: TextStyle(color: textCol, fontWeight: FontWeight.bold)),
+                           onChanged: (val) {
+                              if (val == true) {
+                                 selected.assignAll(allSources);
+                              } else {
+                                 selected.clear();
+                              }
+                           },
+                         ),
+                         Divider(color: borderCol, height: 1),
+                         ...allSources.map((source) {
+                            return CheckboxListTile(
+                               value: selected.contains(source),
+                               activeColor: Colors.orange,
+                               title: Text(_formatEnumName(source.name), style: TextStyle(color: textCol)),
+                               onChanged: (val) {
+                                  if (val == true) {
+                                     selected.add(source);
+                                  } else {
+                                     selected.remove(source);
+                                  }
+                               },
+                            );
+                         }).toList(),
+                      ],
+                    );
+                  }),
+                ),
                 const SizedBox(height: 24),
               ],
 
@@ -286,7 +343,7 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(isWithdrawal ? 'Confirm Withdrawal' : 'Save Investment',
+                  child: Text(isWithdrawal ? 'Confirm Outflow' : 'Save Investment',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),

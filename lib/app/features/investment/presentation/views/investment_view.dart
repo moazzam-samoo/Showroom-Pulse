@@ -112,6 +112,14 @@ class InvestmentView extends GetView<InvestmentController> {
                               color: const Color(0xFF3B82F6), // Blue
                               subtitle: 'Lifetime capital',
                               onTap: () => controller.setKpiFilter('Total Invested'),
+                              extraContent: _buildBreakdownList(
+                                context,
+                                controller.categoryFinancials.map((c) => 
+                                  MapEntry(_formatEnum(c.category.name), c.injected)
+                                ).toList(),
+                                textCol,
+                                currencyFormat,
+                              ),
                             ),
                             InvestmentSummaryCard(
                               title: 'Available Cash',
@@ -122,6 +130,16 @@ class InvestmentView extends GetView<InvestmentController> {
                                   ? '${currencyFormat.format(controller.lockedCapital.value)} Locked'
                                   : 'Ready to invest',
                               onTap: () => controller.setKpiFilter('Available Cash'),
+                              extraContent: _buildBreakdownList(
+                                context,
+                                [
+                                  ...controller.categoryFinancials.map((c) => 
+                                    MapEntry(_formatEnum(c.category.name), c.available)
+                                  ),
+                                ],
+                                textCol,
+                                currencyFormat,
+                              ),
                             ),
                             InvestmentSummaryCard(
                               title: 'Net Profit',
@@ -136,71 +154,87 @@ class InvestmentView extends GetView<InvestmentController> {
                                   ? '${currencyFormat.format(controller.accumulatedLoss.value)} loss pending • ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%'
                                   : 'ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%',
                               onTap: () => controller.setKpiFilter('Net Profit'),
+                              extraContent: _buildBreakdownList(
+                                context,
+                                [
+                                  ...controller.categoryFinancials.map((c) => 
+                                    MapEntry(_formatEnum(c.category.name), c.earnedProfit)
+                                  ),
+                                ],
+                                textCol,
+                                currencyFormat,
+                              ),
                             ),
                           ]),
                           const SizedBox(height: 24),
 
                           _buildSectionTitle('Asset Valuation', textCol),
-                          _buildGrid(context, [
-                            InvestmentSummaryCard(
-                              title: 'Sold & Completed Bikes Purchasing Value',
-                              amount: currencyFormat.format(controller.soldAndCompletedPriceValuation.value),
-                              icon: Icons.assignment_turned_in,
-                              color: const Color(0xFF10B981), // Green
-                              subtitle: 'Purchase cost of sold items',
-                              onTap: () => controller.setKpiFilter('Sold & Completed'),
+                          _buildGrid(
+                            context,
+                            [
+                              InvestmentSummaryCard(
+                                title: 'Sold & Completed Bikes Purchasing Value',
+                                amount: currencyFormat.format(controller.soldAndCompletedPriceValuation.value),
+                                icon: Icons.assignment_turned_in,
+                                color: const Color(0xFF10B981), // Green
+                                subtitle: 'Purchase cost of sold items',
+                                onTap: () => controller.setKpiFilter('Sold & Completed'),
+                              ),
+                              InvestmentSummaryCard(
+                                title: 'Active Inventory Bikes Purchasing Value',
+                                amount: currencyFormat.format(controller.activeInventoryPriceValuation.value),
+                                icon: Icons.inventory_2,
+                                color: const Color(0xFF6366F1), // Indigo
+                                subtitle: 'Value currently in showroom/pending',
+                                onTap: () => controller.setKpiFilter('Active Inventory'),
+                              ),
+                                InvestmentSummaryCard(
+                                  title: 'Maintenance Spent',
+                                  amount: currencyFormat.format(controller.cashOnMaintenance.value),
+                                  icon: Icons.build,
+                                  color: const Color(0xFFEAB308), // Amber
+                                  subtitle: 'Lifetime maintenance expenses',
+                                  onTap: () => controller.setKpiFilter('Maintenance Spent'),
+                                ),
+                                InvestmentSummaryCard(
+                                  title: 'Total Expenses',
+                                  amount: currencyFormat.format(controller.cashOnExpenses.value),
+                                  icon: Icons.receipt_long,
+                                  color: const Color(0xFFF97316), // Orange
+                                  subtitle: 'All operating expenses & maintenance',
+                                  onTap: () => controller.setKpiFilter('Total Expenses'),
+                                ),
+                              ],
+                              aspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
                             ),
-                            InvestmentSummaryCard(
-                              title: 'Active Inventory Bikes Purchasing Value',
-                              amount: currencyFormat.format(controller.activeInventoryPriceValuation.value),
-                              icon: Icons.inventory_2,
-                              color: const Color(0xFF6366F1), // Indigo
-                              subtitle: 'Value currently in showroom/pending',
-                              onTap: () => controller.setKpiFilter('Active Inventory'),
-                            ),
-                            InvestmentSummaryCard(
-                              title: 'Maintenance Spent',
-                              amount: currencyFormat.format(controller.cashOnMaintenance.value),
-                              icon: Icons.build,
-                              color: const Color(0xFFEAB308), // Amber
-                              subtitle: 'Lifetime maintenance expenses',
-                              onTap: () => controller.setKpiFilter('Maintenance Spent'),
-                            ),
-                          ]),
                           const SizedBox(height: 24),
 
                           _buildSectionTitle('Installment Predictions', textCol),
-                          _buildGrid(context, [
-                            InvestmentSummaryCard(
-                              title: 'Future Payments',
-                              amount: currencyFormat.format(controller.futurePayments.value),
-                              icon: Icons.update,
-                              color: const Color(0xFFF59E0B), // Orange-Amber
-                              subtitle: '${controller.activeContractsCount.value} Active contracts',
-                              onTap: () => controller.setKpiFilter('Future Payments'),
-                            ),
-                            InvestmentSummaryCard(
-                              title: 'Future Profit',
-                              amount: currencyFormat.format(controller.futureProfit.value),
-                              icon: Icons.auto_graph,
-                              color: const Color(0xFF8B5CF6), // Purple
-                              subtitle: 'Expected from active contracts',
-                              onTap: () => controller.setKpiFilter('Future Profit'),
-                            ),
-                          ]),
+                          _buildGrid(
+                            context,
+                            [
+                              InvestmentSummaryCard(
+                                title: 'Future Payments',
+                                amount: currencyFormat.format(controller.futurePayments.value),
+                                icon: Icons.update,
+                                color: const Color(0xFFF59E0B), // Orange-Amber
+                                subtitle: '${controller.activeContractsCount.value} Active contracts',
+                                onTap: () => controller.setKpiFilter('Future Payments'),
+                              ),
+                              InvestmentSummaryCard(
+                                title: 'Future Profit',
+                                amount: currencyFormat.format(controller.futureProfit.value),
+                                icon: Icons.auto_graph,
+                                color: const Color(0xFF8B5CF6), // Purple
+                                subtitle: 'Expected from active contracts',
+                                onTap: () => controller.setKpiFilter('Future Profit'),
+                              ),
+                            ],
+                            aspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
+                          ),
                           const SizedBox(height: 24),
 
-                          _buildSectionTitle('Outflows', textCol),
-                          _buildGrid(context, [
-                            InvestmentSummaryCard(
-                              title: 'Total Withdrawals',
-                              amount: currencyFormat.format(controller.totalWithdrawals.value),
-                              icon: Icons.arrow_outward,
-                              color: const Color(0xFFEF4444), // Red
-                              subtitle: 'All outflows minus bikes',
-                              onTap: () => controller.setKpiFilter('Total Withdrawals'),
-                            ),
-                          ]),
+
                         ],
                       )),
                   const SizedBox(height: 32),
@@ -422,16 +456,53 @@ class InvestmentView extends GetView<InvestmentController> {
     );
   }
 
-  Widget _buildGrid(BuildContext context, List<Widget> children) {
+  Widget _buildGrid(BuildContext context, List<Widget> children, {double? aspectRatio}) {
     return GridView.count(
       crossAxisCount: MediaQuery.of(context).size.width > 1100 ? 3 : 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
+      childAspectRatio: aspectRatio ?? (MediaQuery.of(context).size.width > 1100 ? 1.1 : 0.85),
       children: children,
     );
+  }
+
+  Widget _buildBreakdownList(BuildContext context, List<MapEntry<String, double>> data, Color textCol, NumberFormat format) {
+    return Column(
+      mainAxisSize: MainAxisSize.min, // Ensure it only takes needed space
+      children: [
+        const Divider(height: 12),
+        ...data.map((e) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 1.5), // Reduced from 2
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                e.key,
+                style: TextStyle(
+                  color: textCol.withOpacity(0.5),
+                  fontSize: 11,
+                ),
+              ),
+              Text(
+                format.format(e.value),
+                style: TextStyle(
+                  color: textCol.withOpacity(0.8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        )),
+      ],
+    );
+  }
+
+  String _formatEnum(String name) {
+    final RegExp exp = RegExp(r'(?<=[a-z])(?=[A-Z])');
+    return name.replaceAllMapped(exp, (m) => ' ').capitalizeFirst ?? name;
   }
 }
 

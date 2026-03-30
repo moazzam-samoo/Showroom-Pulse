@@ -10,6 +10,20 @@ import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 
+class CategoryFinancials {
+  final InvestmentCategoryEnum category;
+  final double injected;
+  final double available;
+  final double earnedProfit;
+
+  CategoryFinancials({
+    required this.category,
+    required this.injected,
+    required this.available,
+    this.earnedProfit = 0.0,
+  });
+}
+
 class InvestmentService extends GetxService {
   late Isar _isar;
 
@@ -85,19 +99,29 @@ class InvestmentService extends GetxService {
     return inv;
   }
 
-  /// Record a withdrawal
+  /// Record a withdrawal or expense
   Future<Investment> recordWithdrawal({
     required double amount,
     required DateTime date,
+    required InvestmentCategoryEnum category,
+    double deductPersonal = 0.0,
+    double deductPartnership = 0.0,
+    double deductOther = 0.0,
+    double deductLoan = 0.0,
     String? description,
-    InvestmentCategoryEnum category = InvestmentCategoryEnum.other,
+    bool isLocked = false,
   }) async {
     final inv = Investment()
       ..amount = amount
       ..date = date
       ..type = InvestmentTypeEnum.withdrawal
       ..category = category
-      ..description = description ?? 'Capital withdrawal';
+      ..description = description ?? 'Capital outflow'
+      ..isLocked = isLocked
+      ..returnPersonal = deductPersonal
+      ..returnPartnership = deductPartnership
+      ..returnOther = deductOther
+      ..returnLoan = deductLoan;
 
     await _isar.writeTxn(() async {
       await _isar.investments.put(inv);
@@ -117,6 +141,8 @@ class InvestmentService extends GetxService {
     String? bikeName,
   }) async {
     final profit = saleAmount - purchasePrice;
+    
+    final distribution = await _calculateReturnDistribution(bikeId, saleAmount);
 
     final inv = Investment()
       ..amount = saleAmount
@@ -126,6 +152,10 @@ class InvestmentService extends GetxService {
       ..bikeId = bikeId
       ..saleId = saleId
       ..profitAmount = profit
+      ..returnPersonal = distribution.personal
+      ..returnPartnership = distribution.partnership
+      ..returnOther = distribution.other
+      ..returnLoan = distribution.loan
       ..description = bikeName != null
           ? 'Cash Sale Revenue — $bikeName'
           : 'Cash Sale Revenue — Bike #$bikeId';
@@ -161,6 +191,8 @@ class InvestmentService extends GetxService {
       }
     }
 
+    final distribution = await _calculateReturnDistribution(bikeId, amount);
+
     final inv = Investment()
       ..amount = amount
       ..date = DateTime.now()
@@ -169,6 +201,10 @@ class InvestmentService extends GetxService {
       ..bikeId = bikeId
       ..installmentContractId = contractId
       ..profitAmount = profitRealizedNow
+      ..returnPersonal = distribution.personal
+      ..returnPartnership = distribution.partnership
+      ..returnOther = distribution.other
+      ..returnLoan = distribution.loan
       ..description = description ?? 'Installment Payment — Contract #$contractId';
 
     if (inTransaction) {
@@ -179,6 +215,29 @@ class InvestmentService extends GetxService {
       });
     }
     return inv;
+  }
+
+  /// Helper to calculate mathematically perfect return distribution
+  Future<({double personal, double partnership, double other, double loan})> _calculateReturnDistribution(int bikeId, double incomingAmount) async {
+    final bike = await _isar.bikes.get(bikeId);
+    
+    if (bike == null) {
+      return (personal: incomingAmount, partnership: 0.0, other: 0.0, loan: 0.0);
+    }
+    
+    final double totalFunded = bike.fundedByPersonal + bike.fundedByPartnership + bike.fundedByOther + bike.fundedByLoan;
+    
+    if (totalFunded <= 0) {
+      // Fallback for legacy bikes or bikes bought with zero capital layout
+      return (personal: incomingAmount, partnership: 0.0, other: 0.0, loan: 0.0);
+    }
+    
+    return (
+      personal: (bike.fundedByPersonal / totalFunded) * incomingAmount,
+      partnership: (bike.fundedByPartnership / totalFunded) * incomingAmount,
+      other: (bike.fundedByOther / totalFunded) * incomingAmount,
+      loan: (bike.fundedByLoan / totalFunded) * incomingAmount,
+    );
   }
 
   /// Finalize profit on a completed installment contract
@@ -257,16 +316,12 @@ class InvestmentService extends GetxService {
 
   /// Returns current available balance (capital - allocated + sales + installments - locked)
   Future<double> getAvailableBalance() async {
-    final totalCapital = await getTotalCapital();
-    final allocated = await getTotalAllocated();
-    final locked = await getLockedCapital();
-    final sales = await getCashFromSales();
-    final installments = await getCashFromInstallments();
-
-    // Available = Capital injected - Amount allocated to bikes + Cash from sales + Installments - Locked
-    return (totalCapital - allocated) + sales + installments - locked;
+    final List<CategoryFinancials> breakdown = await getCategoryFinancials();
+    final unlockedAvailable = breakdown.fold<double>(0.0, (sum, c) => sum + c.available);
+    
+    // Total Available now natively includes exactly distributed profit from the category breakdown
+    return unlockedAvailable;
   }
-
 
   /// Returns current TOTAL balance (including locked capital and profit)
   Future<double> getTotalRemainingBalance() async {
@@ -275,6 +330,139 @@ class InvestmentService extends GetxService {
     final salesRevenue = await getCashFromSales();
     final installmentRevenue = await getCashFromInstallments();
     return totalCapital - allocated + salesRevenue + installmentRevenue;
+  }
+
+  /// Calculates the breakdown of capital across categories based on priority spending.
+  /// Priority: Personal > Partnership > Other > Loan
+  Future<List<CategoryFinancials>> getCategoryFinancials() async {
+    final allInvestments = await _isar.investments.where().findAll();
+    final allBikes = await _isar.bikes.where().findAll();
+
+    final categories = [
+      InvestmentCategoryEnum.personalCapital,
+      InvestmentCategoryEnum.partnership,
+      InvestmentCategoryEnum.other,
+      InvestmentCategoryEnum.loan,
+    ];
+
+    List<CategoryFinancials> result = [];
+
+    for (final cat in categories) {
+      double injected = 0.0;
+      double withdrawn = 0.0;
+      double bikePurchases = 0.0;
+      double returns = 0.0;
+      double earnedProfit = 0.0;
+
+      // 1. Injected & Withdrawn
+      for (final inv in allInvestments) {
+        if (!inv.isLocked) {
+          if (inv.type == InvestmentTypeEnum.capitalInjection && inv.category == cat) {
+            injected += inv.amount;
+          } else if (inv.type == InvestmentTypeEnum.withdrawal) {
+            double exactDeducted = 0.0;
+            switch (cat) {
+              case InvestmentCategoryEnum.personalCapital: exactDeducted = inv.returnPersonal; break;
+              case InvestmentCategoryEnum.partnership: exactDeducted = inv.returnPartnership; break;
+              case InvestmentCategoryEnum.other: exactDeducted = inv.returnOther; break;
+              case InvestmentCategoryEnum.loan: exactDeducted = inv.returnLoan; break;
+              default: break;
+            }
+            // Add precisely deducted value across multiple pools
+            if (exactDeducted > 0) {
+              withdrawn += exactDeducted;
+            } else if (inv.category == cat && inv.returnPersonal == 0 && inv.returnPartnership == 0 && inv.returnOther == 0 && inv.returnLoan == 0) {
+              // Legacy fallback if perfectly mapped V2 withdrawals did not exist
+              withdrawn += inv.amount;
+            }
+          }
+        }
+
+        // 2. Returns & Profit (Sales & Installment Revenues)
+        if (inv.type == InvestmentTypeEnum.bikeSale || inv.type == InvestmentTypeEnum.installmentPayment) {
+          // Add raw Cash Return
+          switch (cat) {
+            case InvestmentCategoryEnum.personalCapital: returns += inv.returnPersonal; break;
+            case InvestmentCategoryEnum.partnership: returns += inv.returnPartnership; break;
+            case InvestmentCategoryEnum.other: returns += inv.returnOther; break;
+            case InvestmentCategoryEnum.loan: returns += inv.returnLoan; break;
+            default: break;
+          }
+          
+          // Add strict mathematical Earned Profit (Amount proportion x ProfitAmount)
+          if (inv.amount > 0 && inv.profitAmount > 0) {
+            double categoryReturnedAmt = 0;
+            switch (cat) {
+              case InvestmentCategoryEnum.personalCapital: categoryReturnedAmt = inv.returnPersonal; break;
+              case InvestmentCategoryEnum.partnership: categoryReturnedAmt = inv.returnPartnership; break;
+              case InvestmentCategoryEnum.other: categoryReturnedAmt = inv.returnOther; break;
+              case InvestmentCategoryEnum.loan: categoryReturnedAmt = inv.returnLoan; break;
+              default: break;
+            }
+            final ratio = categoryReturnedAmt / inv.amount;
+            earnedProfit += (inv.profitAmount * ratio);
+          } else if (inv.amount > 0 && inv.profitAmount < 0) {
+            // Handle explicitly negative profit (Loss mapping to categories inversely)
+            double categoryReturnedAmt = 0;
+            switch (cat) {
+              case InvestmentCategoryEnum.personalCapital: categoryReturnedAmt = inv.returnPersonal; break;
+              case InvestmentCategoryEnum.partnership: categoryReturnedAmt = inv.returnPartnership; break;
+              case InvestmentCategoryEnum.other: categoryReturnedAmt = inv.returnOther; break;
+              case InvestmentCategoryEnum.loan: categoryReturnedAmt = inv.returnLoan; break;
+              default: break;
+            }
+            final ratio = categoryReturnedAmt / inv.amount;
+            earnedProfit += (inv.profitAmount * ratio); // Adds a negative
+          }
+        }
+      }
+
+      // 3. Bike Purchases (Outflows derived from exact snapshots)
+      for (final bike in allBikes) {
+        switch (cat) {
+          case InvestmentCategoryEnum.personalCapital: bikePurchases += bike.fundedByPersonal; break;
+          case InvestmentCategoryEnum.partnership: bikePurchases += bike.fundedByPartnership; break;
+          case InvestmentCategoryEnum.other: bikePurchases += bike.fundedByOther; break;
+          case InvestmentCategoryEnum.loan: bikePurchases += bike.fundedByLoan; break;
+          default: break;
+        }
+      }
+
+      final available = injected - withdrawn - bikePurchases + returns;
+
+      result.add(CategoryFinancials(
+        category: cat,
+        injected: injected, // Represents raw cash initially put into business
+        available: available, // Represents perfectly tracked balance at this exact second
+        earnedProfit: earnedProfit,
+      ));
+    }
+
+    return result;
+  }
+
+  /// Returns breakdown of locked capital
+  Future<Map<InvestmentCategoryEnum, double>> getLockedBreakdown() async {
+    final allInvestments = await _isar.investments.where().findAll();
+    final Map<InvestmentCategoryEnum, double> locked = {
+      InvestmentCategoryEnum.personalCapital: 0,
+      InvestmentCategoryEnum.partnership: 0,
+      InvestmentCategoryEnum.other: 0,
+      InvestmentCategoryEnum.loan: 0,
+    };
+
+    for (final inv in allInvestments) {
+      if (inv.isLocked) {
+        if (inv.type == InvestmentTypeEnum.capitalInjection) {
+          locked[inv.category] = (locked[inv.category] ?? 0) + inv.amount;
+        } else if (inv.type == InvestmentTypeEnum.withdrawal) {
+          // Precisely deduct from locked capital if we ever support multi-pool locked withdrawals
+          // Currently, locked is a pool per-category, but the feature is minimally used
+          locked[inv.category] = (locked[inv.category] ?? 0) - inv.amount;
+        }
+      }
+    }
+    return locked;
   }
 
   // ==================== PROFIT CALCULATIONS ====================
@@ -322,6 +510,22 @@ class InvestmentService extends GetxService {
         .typeEqualTo(InvestmentTypeEnum.withdrawal)
         .and()
         .categoryEqualTo(InvestmentCategoryEnum.maintenance)
+        .findAll();
+    return records.fold<double>(0.0, (sum, i) => sum + i.amount);
+  }
+
+  /// Returns total cash spent on Expenses, Maintenance, and Personal Use
+  Future<double> getExpensesCash() async {
+    final records = await _isar.investments
+        .filter()
+        .typeEqualTo(InvestmentTypeEnum.withdrawal)
+        .and()
+        .group((q) => q
+            .categoryEqualTo(InvestmentCategoryEnum.maintenance)
+            .or()
+            .categoryEqualTo(InvestmentCategoryEnum.expense)
+            .or()
+            .categoryEqualTo(InvestmentCategoryEnum.personalUse))
         .findAll();
     return records.fold<double>(0.0, (sum, i) => sum + i.amount);
   }
@@ -534,113 +738,137 @@ class InvestmentService extends GetxService {
       }
 
       final migrationDone = prefs.getBool('investment_migration_v2_done') ?? false;
-      if (migrationDone) return;
+      if (!migrationDone) {
+        debugPrint('Starting Investment Migration v2 (Sales & Installments)...');
+        int saleRecordsCreated = 0;
+        int paymentRecordsCreated = 0;
 
-      debugPrint('Starting Investment Migration v2...');
-      int saleRecordsCreated = 0;
-      int paymentRecordsCreated = 0;
-
-      await _isar.writeTxn(() async {
-        // 1. Migrate cash sales — create bikeSale records for sold bikes
-        final soldBikes = await _isar.bikes
-            .filter()
-            .statusEqualTo(BikeStatusEnum.sold)
-            .findAll();
-
-        for (final bike in soldBikes) {
-          // Check if a bikeSale record already exists for this bike
-          final existing = await _isar.investments
+        await _isar.writeTxn(() async {
+          // 1. Migrate cash sales — create bikeSale records for sold bikes
+          final soldBikes = await _isar.bikes
               .filter()
-              .typeEqualTo(InvestmentTypeEnum.bikeSale)
-              .bikeIdEqualTo(bike.id)
-              .findFirst();
-          if (existing != null) continue;
-
-          // Find the sale record for this bike
-          final sale = await _isar.sales
-              .filter()
-              .bikeIdEqualTo(bike.id)
-              .findFirst();
-          if (sale == null) continue;
-
-          final saleAmount = sale.saleType == SaleType.cash
-              ? sale.totalAmount
-              : sale.receivedAmount; // For old installment sales, use received
-          final profit = saleAmount - bike.purchasePrice;
-
-          final inv = Investment()
-            ..amount = saleAmount
-            ..date = sale.saleDate
-            ..type = InvestmentTypeEnum.bikeSale
-            ..category = InvestmentCategoryEnum.other
-            ..bikeId = bike.id
-            ..saleId = sale.id
-            ..profitAmount = profit
-            ..description = 'Cash Sale Revenue — ${bike.model} ${bike.brand} [Migrated]';
-
-          await _isar.investments.put(inv);
-          saleRecordsCreated++;
-        }
-
-        // 2. Migrate installment payments
-        final allContracts = await _isar.installmentContracts.where().findAll();
-
-        for (final contract in allContracts) {
-          // Check if installmentPayment records exist for this contract
-          final existing = await _isar.investments
-              .filter()
-              .typeEqualTo(InvestmentTypeEnum.installmentPayment)
-              .installmentContractIdEqualTo(contract.id)
-              .findFirst();
-          if (existing != null) continue;
-
-          final bike = await _isar.bikes.get(contract.bikeId);
-          if (bike == null) continue;
-
-          // Get all payments for this contract
-          final payments = await _isar.payments
-              .filter()
-              .contractIdEqualTo(contract.id)
-              .sortByPaymentDate()
+              .statusEqualTo(BikeStatusEnum.sold)
               .findAll();
 
-          for (final payment in payments) {
+          for (final bike in soldBikes) {
+            // Check if a bikeSale record already exists for this bike
+            final existing = await _isar.investments
+                .filter()
+                .typeEqualTo(InvestmentTypeEnum.bikeSale)
+                .bikeIdEqualTo(bike.id)
+                .findFirst();
+            if (existing != null) continue;
+
+            // Find the sale record for this bike
+            final sale = await _isar.sales
+                .filter()
+                .bikeIdEqualTo(bike.id)
+                .findFirst();
+            if (sale == null) continue;
+
+            final saleAmount = sale.saleType == SaleType.cash
+                ? sale.totalAmount
+                : sale.receivedAmount; // For old installment sales, use received
+            final profit = saleAmount - bike.purchasePrice;
+
             final inv = Investment()
-              ..amount = payment.amount
-              ..date = payment.paymentDate
-              ..type = InvestmentTypeEnum.installmentPayment
+              ..amount = saleAmount
+              ..date = sale.saleDate
+              ..type = InvestmentTypeEnum.bikeSale
               ..category = InvestmentCategoryEnum.other
               ..bikeId = bike.id
-              ..installmentContractId = contract.id
-              ..description = payment.isDownPayment
-                  ? 'Down Payment — ${bike.model} ${bike.brand} [Migrated]'
-                  : 'Installment Payment — ${bike.model} ${bike.brand} [Migrated]';
+              ..saleId = sale.id
+              ..profitAmount = profit
+              ..description = 'Cash Sale Revenue — ${bike.model} ${bike.brand} [Migrated]';
 
             await _isar.investments.put(inv);
-            paymentRecordsCreated++;
+            saleRecordsCreated++;
           }
 
-          // If contract is completed, finalize profit on first record
-          if (contract.status == ContractStatusEnum.completed) {
-            final firstRecord = await _isar.investments
+          // 2. Migrate installment payments
+          final allContracts = await _isar.installmentContracts.where().findAll();
+
+          for (final contract in allContracts) {
+            // Check if installmentPayment records exist for this contract
+            final existing = await _isar.investments
                 .filter()
                 .typeEqualTo(InvestmentTypeEnum.installmentPayment)
                 .installmentContractIdEqualTo(contract.id)
-                .sortByDate()
                 .findFirst();
+            if (existing != null) continue;
 
-            if (firstRecord != null) {
-              final profit = contract.totalPaid - bike.purchasePrice;
-              firstRecord.profitAmount = profit;
-              await _isar.investments.put(firstRecord);
+            final bike = await _isar.bikes.get(contract.bikeId);
+            if (bike == null) continue;
+
+            // Get all payments for this contract
+            final payments = await _isar.payments
+                .filter()
+                .contractIdEqualTo(contract.id)
+                .sortByPaymentDate()
+                .findAll();
+
+            for (final payment in payments) {
+              final inv = Investment()
+                ..amount = payment.amount
+                ..date = payment.paymentDate
+                ..type = InvestmentTypeEnum.installmentPayment
+                ..category = InvestmentCategoryEnum.other
+                ..bikeId = bike.id
+                ..installmentContractId = contract.id
+                ..description = payment.isDownPayment
+                    ? 'Down Payment — ${bike.model} ${bike.brand} [Migrated]'
+                    : 'Installment Payment — ${bike.model} ${bike.brand} [Migrated]';
+
+              await _isar.investments.put(inv);
+              paymentRecordsCreated++;
+            }
+
+            // If contract is completed, finalize profit on first record
+            if (contract.status == ContractStatusEnum.completed) {
+              final firstRecord = await _isar.investments
+                  .filter()
+                  .typeEqualTo(InvestmentTypeEnum.installmentPayment)
+                  .installmentContractIdEqualTo(contract.id)
+                  .sortByDate()
+                  .findFirst();
+
+              if (firstRecord != null) {
+                final profit = contract.totalPaid - bike.purchasePrice;
+                firstRecord.profitAmount = profit;
+                await _isar.investments.put(firstRecord);
+              }
             }
           }
-        }
-      });
+        });
 
-      await prefs.setBool('investment_migration_v2_done', true);
-      debugPrint(
-          'Migration Complete: $saleRecordsCreated sale records, $paymentRecordsCreated payment records created.');
+        await prefs.setBool('investment_migration_v2_done', true);
+        debugPrint(
+            'Migration Complete: $saleRecordsCreated sale records, $paymentRecordsCreated payment records created.');
+      }
+      
+      // Migrate Expenses to Investment Outflows
+      final expenseMigrationDone = prefs.getBool('expense_to_investment_migration_v1_done') ?? false;
+      if (!expenseMigrationDone) {
+        debugPrint('Starting Expense Migration to Unified Ledger...');
+        int expenseRecordsMigrated = 0;
+        await _isar.writeTxn(() async {
+          final oldExpenses = await _isar.expenses.where().findAll();
+          for (final exp in oldExpenses) {
+             final inv = Investment()
+               ..amount = exp.amount
+               ..date = exp.date
+               ..type = InvestmentTypeEnum.withdrawal
+               ..category = InvestmentCategoryEnum.expense
+               ..description = 'Expense — ${exp.category}'
+               ..isLocked = false
+               ..returnOther = exp.amount; // Safest fallback: deduct from 'Other' dynamically
+             await _isar.investments.put(inv);
+             expenseRecordsMigrated++;
+          }
+        });
+        await prefs.setBool('expense_to_investment_migration_v1_done', true);
+        debugPrint('Expense Migration Complete: $expenseRecordsMigrated records unified.');
+      }
     } catch (e) {
       debugPrint('Investment Migration Error: $e');
     }
