@@ -60,8 +60,13 @@ class ReportsRepository {
           continue; // Skip active installments entirely
         }
         
-        // If completed installment, add base profit and markup
-        total += baseProfit.isNaN ? 0.0 : baseProfit;
+        // Use contract's cash price for base profit calculation
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final installmentBaseProfit = basePrice - pPrice - disc;
+        
+        // Total Profit = Base Profit + Markup
+        total += installmentBaseProfit.isNaN ? 0.0 : installmentBaseProfit;
         total += contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount;
       } else if (sale.saleType == SaleType.cash) {
         total += baseProfit.isNaN ? 0.0 : baseProfit;
@@ -120,6 +125,7 @@ class ReportsRepository {
 
       if (sale.saleType == SaleType.cash) {
         final profit = baseProfit.isNaN ? 0.0 : baseProfit;
+        // For cash sales, Base Profit is the total profit
         result[groupKey]!['cash'] = result[groupKey]!['cash']! + profit;
         result[groupKey]!['earned'] = result[groupKey]!['earned']! + profit;
         result[groupKey]!['assetValue'] = result[groupKey]!['assetValue']! + sPrice;
@@ -128,8 +134,14 @@ class ReportsRepository {
         // Must be completed installment due to early skip
         final contract = (await _isar.installmentContracts.get(sale.installmentContractId!))!;
         final markup = contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount;
-        final profitPart = baseProfit.isNaN ? 0.0 : baseProfit;
+        
+        // Recalculate Base Profit using contract's snapshot price
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final profitPart = (basePrice - pPrice - disc).isNaN ? 0.0 : (basePrice - pPrice - disc);
 
+        // Assigning Base Profit to 'cash' key for UI compatibility
+        result[groupKey]!['cash'] = result[groupKey]!['cash']! + profitPart;
         result[groupKey]!['installment'] = result[groupKey]!['installment']! + markup;
         result[groupKey]!['earned'] = result[groupKey]!['earned']! + profitPart + markup;
         result[groupKey]!['assetValue'] = result[groupKey]!['assetValue']! + contract.totalAmount;
@@ -218,8 +230,13 @@ class ReportsRepository {
           continue; // Skip active installments entirely
         }
         
+        // Recalculate Profit Part using contract snapshot
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final installmentBaseProfit = (basePrice - pPrice - disc).isNaN ? 0.0 : (basePrice - pPrice - disc);
+
         // Full base profit and markup only if completed
-        dailyRevenue[day] = dailyRevenue[day]! + (baseProfit.isNaN ? 0.0 : baseProfit);
+        dailyRevenue[day] = dailyRevenue[day]! + installmentBaseProfit;
         dailyRevenue[day] = dailyRevenue[day]! + (contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount);
       } else if (sale.saleType == SaleType.cash) {
         final profit = baseProfit.isNaN ? 0.0 : baseProfit;

@@ -21,8 +21,9 @@ class BikeEntry {
   String brand = ''; // Default
   BikeConditionEnum condition = BikeConditionEnum.newBike;
   String color = '';
-  int modelYear = DateTime.now().year;
+  int? modelYear;
   double purchasePrice = 0.0;
+  String registrationNumber = '';
   File? imageFile;
   Bike? existingBike; // For Edit Mode
 
@@ -32,6 +33,7 @@ class BikeEntry {
   final FocusNode brandFocus = FocusNode();
   final FocusNode modelFocus = FocusNode();
   final FocusNode conditionFocus = FocusNode();
+  final FocusNode regNumberFocus = FocusNode();
   final FocusNode colorFocus = FocusNode();
   final FocusNode yearFocus = FocusNode();
   final FocusNode priceFocus = FocusNode();
@@ -43,6 +45,7 @@ class BikeEntry {
     brandFocus.dispose();
     modelFocus.dispose();
     conditionFocus.dispose();
+    regNumberFocus.dispose();
     colorFocus.dispose();
     yearFocus.dispose();
     priceFocus.dispose();
@@ -174,6 +177,7 @@ class SupplierController extends GetxController {
         ..model = bike.model
         ..brand = bike.brand
         ..condition = bike.condition
+        ..registrationNumber = bike.registrationNumber ?? ''
         ..color = bike.color
         ..modelYear = bike.modelYear
         ..purchasePrice = bike.purchasePrice
@@ -291,6 +295,13 @@ class SupplierController extends GetxController {
         AppNotificationDialog.showError(
           title: 'Missing Required Details',
           message: 'Row ${i + 1} is missing Engine Number or Chassis Number. These are strictly required.',
+        );
+        return;
+      }
+      if (e.condition == BikeConditionEnum.usedBike && e.registrationNumber.trim().isEmpty) {
+        AppNotificationDialog.showError(
+          title: 'Missing Required Details',
+          message: 'Row ${i + 1} is missing Registration Number. It is required for "Used" condition.',
         );
         return;
       }
@@ -474,8 +485,9 @@ class SupplierController extends GetxController {
           ..brand = entry.brand
           ..condition = entry.condition
           ..color = entry.color
-          ..modelYear = entry.modelYear
+          ..modelYear = entry.modelYear ?? DateTime.now().year
           ..purchasePrice = entry.purchasePrice
+          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null
           ..cashSalePrice = 0 
           ..status = BikeStatusEnum.available;
 
@@ -541,8 +553,9 @@ class SupplierController extends GetxController {
           ..brand = entry.brand
           ..condition = entry.condition
           ..color = entry.color
-          ..modelYear = entry.modelYear
-          ..purchasePrice = entry.purchasePrice;
+          ..modelYear = entry.modelYear ?? entry.existingBike?.modelYear ?? DateTime.now().year
+          ..purchasePrice = entry.purchasePrice
+          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null;
           
         // Handle Image Update
         if (entry.imageFile != null) {
