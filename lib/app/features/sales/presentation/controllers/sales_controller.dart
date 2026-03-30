@@ -206,9 +206,13 @@ class SalesController extends GetxController {
         'customerContact': data.customerContact,
         'customerAddress': data.customerAddress,
         'bikeModel': data.bikeModel,
+        'bikeMaker': data.bikeMaker,
+        'bikeYear': data.bikeYear,
         'bikeColor': data.bikeColor,
         'bikeChassisNumber': data.bikeChassisNumber,
         'bikeEngineNumber': data.bikeEngineNumber,
+        'bikeCondition': data.bikeCondition?.name, // 'newBike' or 'usedBike'
+        'bikeRegistrationNumber': data.bikeRegistrationNumber,
         'isCash': data.isCash,
         'amountPaid': data.amountPaid,
         'sellingPrice': data.sellingPrice,

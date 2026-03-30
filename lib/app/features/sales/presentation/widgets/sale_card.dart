@@ -39,6 +39,9 @@ class SaleCardData {
   final String bikeImage; 
   final String bikeChassisNumber;
   final String bikeEngineNumber;
+  final String? bikeYear;
+  final String? bikeMaker;
+  final String? bikeRegistrationNumber; // Only for used bikes
   final String customerName;
   final String customerCnic;
   final String customerContact;
@@ -77,6 +80,9 @@ class SaleCardData {
     required this.bikeImage,
     required this.bikeChassisNumber,
     required this.bikeEngineNumber,
+    this.bikeYear,
+    this.bikeMaker,
+    this.bikeRegistrationNumber,
     required this.customerName,
     required this.customerCnic,
     required this.customerContact,

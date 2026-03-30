@@ -271,6 +271,8 @@ class StatementService {
           _pdfInfoRow('Color', bike.color),
           _pdfInfoRow('Engine #', bike.engineNumber),
           _pdfInfoRow('Chassis #', bike.chassisNumber),
+          if (bike.condition == BikeConditionEnum.usedBike && bike.registrationNumber != null)
+            _pdfInfoRow('Reg #', bike.registrationNumber!),
         ],
       ),
     );
