@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
 import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
 import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
 class EditBikeDialog extends StatefulWidget {
   final Bike bike;
@@ -43,6 +44,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   late final TextEditingController _purchaserNameController;
   late final TextEditingController _purchaserPhoneController;
   late final TextEditingController _purchaserCnicController;
+  late final TextEditingController _modelYearController;
+  late final TextEditingController _regNumberController;
 
   String? _selectedColor;
   BikeConditionEnum _selectedCondition = BikeConditionEnum.newBike;
@@ -62,6 +65,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   final _purchaserPhoneFocus = FocusNode();
   final _purchaserCnicFocus = FocusNode();
   final _imageFocus = FocusNode();
+  final _modelYearFocus = FocusNode();
+  final _regNumberFocus = FocusNode();
   final _submitFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
@@ -70,8 +75,16 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
         if (_makerFocus.hasFocus) {
           _hpFocus.requestFocus();
         } else if (_hpFocus.hasFocus) {
+          _modelYearFocus.requestFocus();
+        } else if (_modelYearFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
+          if (_selectedCondition == BikeConditionEnum.usedBike) {
+            _regNumberFocus.requestFocus();
+          } else {
+            _colorFocus.requestFocus();
+          }
+        } else if (_regNumberFocus.hasFocus) {
           _colorFocus.requestFocus();
         } else if (_colorFocus.hasFocus) {
           _engineFocus.requestFocus();
@@ -118,9 +131,19 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
         } else if (_colorFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
+          _modelYearFocus.requestFocus();
+        } else if (_modelYearFocus.hasFocus) {
           _hpFocus.requestFocus();
         } else if (_hpFocus.hasFocus) {
           _makerFocus.requestFocus();
+        } else if (_colorFocus.hasFocus) {
+          if (_selectedCondition == BikeConditionEnum.usedBike) {
+            _regNumberFocus.requestFocus();
+          } else {
+            _conditionFocus.requestFocus();
+          }
+        } else if (_regNumberFocus.hasFocus) {
+          _conditionFocus.requestFocus();
         }
       }
     }
@@ -146,6 +169,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _purchaserNameController = TextEditingController(text: widget.bike.purchaserName ?? '');
     _purchaserPhoneController = TextEditingController(text: widget.bike.purchaserPhone ?? '');
     _purchaserCnicController = TextEditingController(text: widget.bike.purchaserCnic ?? '');
+    _modelYearController = TextEditingController(text: widget.bike.modelYear.toString());
+    _regNumberController = TextEditingController(text: widget.bike.registrationNumber ?? '');
     
     _selectedColor = widget.bike.color;
     _selectedCondition = widget.bike.condition;
@@ -163,6 +188,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _purchaserNameController.dispose();
     _purchaserPhoneController.dispose();
     _purchaserCnicController.dispose();
+    _modelYearController.dispose();
+    _regNumberController.dispose();
     _makerFocus.dispose();
     _hpFocus.dispose();
     _conditionFocus.dispose();
@@ -175,6 +202,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _purchaserPhoneFocus.dispose();
     _purchaserCnicFocus.dispose();
     _imageFocus.dispose();
+    _modelYearFocus.dispose();
+    _regNumberFocus.dispose();
     _submitFocus.dispose();
     super.dispose();
   }
@@ -193,6 +222,16 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
 
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
+      bool missingPurchaserDetails = _purchaserNameController.text.trim().isEmpty || 
+                                     _purchaserPhoneController.text.trim().isEmpty || 
+                                     _purchaserCnicController.text.trim().isEmpty;
+      if (missingPurchaserDetails) {
+        AppToast.showInfo(
+          title: 'Purchaser Details Missing',
+          message: 'Bike information saved, but some purchaser details were omitted.',
+        );
+      }
+
       if (widget.onSave != null) {
         widget.onSave!({
           'maker': _makerController.text,
@@ -207,6 +246,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
           'purchaserName': _purchaserNameController.text.trim(),
           'purchaserPhone': _purchaserPhoneController.text.trim(),
           'purchaserCnic': _purchaserCnicController.text.trim(),
+          'modelYear': int.tryParse(_modelYearController.text) ?? widget.bike.modelYear,
+          'registrationNumber': _selectedCondition == BikeConditionEnum.usedBike ? _regNumberController.text.trim() : null,
         });
         Navigator.pop(context);
       }
@@ -300,7 +341,37 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                                 : [],
                           ),
                           const SizedBox(height: 16),
-                          _buildConditionGroup('Condition:', labelColor, inputBg, inputBorder, _conditionFocus, isDark),
+                          _buildAutocompleteGroup(
+                            label: 'Model (Year):',
+                            controller: _modelYearController,
+                            hint: 'e.g. 2024',
+                            isDark: isDark,
+                            bg: inputBg,
+                            border: inputBorder,
+                            labelColor: labelColor,
+                            focusNode: _modelYearFocus,
+                            getOptions: () => Get.isRegistered<SettingsController>()
+                                ? Get.find<SettingsController>().getBikeYearsList()
+                                : [],
+                          ),
+                          const SizedBox(height: 16),
+                          _buildConditionGroup(
+                              'Condition:', 
+                              labelColor, 
+                              inputBg, 
+                              inputBorder, 
+                              _conditionFocus, 
+                              isDark,
+                              onChanged: (val) {
+                                setState(() {
+                                  _selectedCondition = val;
+                                });
+                              },
+                          ),
+                          if (_selectedCondition == BikeConditionEnum.usedBike) ...[
+                            const SizedBox(height: 16),
+                            _buildInputGroup('Reg #:', _regNumberController, 'Enter registration number', isDark, inputBg, inputBorder, labelColor, _regNumberFocus),
+                          ],
                           const SizedBox(height: 16),
                           _buildColorSkinGroup('Color:', labelColor, _colorFocus),
                         ],
@@ -341,7 +412,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
-                          _buildInputGroup('Name:', _purchaserNameController, 'Enter name', isDark, inputBg, inputBorder, labelColor, _purchaserNameFocus),
+                          _buildInputGroup('Name:', _purchaserNameController, 'Enter name', isDark, inputBg, inputBorder, labelColor, _purchaserNameFocus, isOptional: true),
                           const SizedBox(height: 16),
                           _buildInputGroup(
                             'Phone:', 
@@ -353,6 +424,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                             labelColor, 
                             _purchaserPhoneFocus,
                             inputFormatters: [PhoneNumberInputFormatter()],
+                            isOptional: true,
                           ),
                           const SizedBox(height: 16),
                           _buildInputGroup(
@@ -365,6 +437,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                             labelColor, 
                             _purchaserCnicFocus,
                             inputFormatters: [CnicInputFormatter()],
+                            isOptional: true,
                           ),
                         ],
                       ),
@@ -484,7 +557,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     Color border,
     Color? labelColor,
     FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false, int? maxLength, List<TextInputFormatter>? inputFormatters}
+    {bool isNumber = false, bool autofocus = false, int? maxLength, List<TextInputFormatter>? inputFormatters, bool isOptional = false}
   ) {
     return Row(
       children: [
@@ -538,7 +611,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
               ),
             ),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Required';
+                if (!isOptional && (value == null || value.isEmpty)) return 'Required';
                 return null;
               },
             ),
@@ -729,8 +802,9 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     Color bg,
     Color border,
     FocusNode focusNode,
-    bool isDark,
-  ) {
+    bool isDark, {
+    Function(BikeConditionEnum)? onChanged,
+  }) {
     return Row(
       children: [
         SizedBox(
@@ -751,7 +825,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
             child: Focus(
               focusNode: focusNode,
               child: DropdownButtonFormField<BikeConditionEnum>(
-                initialValue: _selectedCondition,
+                value: _selectedCondition,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   filled: true,
@@ -772,7 +846,10 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                   DropdownMenuItem(value: BikeConditionEnum.usedBike, child: Text('Used')),
                 ],
                 onChanged: (val) {
-                  if (val != null) setState(() => _selectedCondition = val);
+                  if (val != null) {
+                    setState(() => _selectedCondition = val);
+                    if (onChanged != null) onChanged(val);
+                  }
                 },
               ),
             ),

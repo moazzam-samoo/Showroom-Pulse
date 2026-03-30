@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
@@ -146,9 +147,49 @@ class InventoryController extends GetxController {
           final format = NumberFormat('#,##0', 'en_US');
           AppNotificationDialog.showError(
             title: 'Not Enough Capital',
-            message: 'You cannot use Rs ${format.format(investmentAmount)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and add capital first.',
+            message: 'You cannot use Rs ${format.format(investmentAmount)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and invest more cash first.',
           );
           return false;
+        }
+
+        // --- Priority Distribution (Funding Snapshot) ---
+        final financials = await invService.getCategoryFinancials();
+        double remainingToFund = investmentAmount;
+
+        final priorityOrder = [
+          InvestmentCategoryEnum.personalCapital,
+          InvestmentCategoryEnum.partnership,
+          InvestmentCategoryEnum.other,
+          InvestmentCategoryEnum.loan,
+        ];
+
+        for (final cat in priorityOrder) {
+          if (remainingToFund <= 0) break;
+          
+          final catData = financials.firstWhere(
+            (e) => e.category == cat, 
+            orElse: () => CategoryFinancials(category: cat, injected: 0, available: 0)
+          );
+          
+          final availableForCat = catData.available;
+          if (availableForCat > 0) {
+            double assigned = 0.0;
+            if (availableForCat >= remainingToFund) {
+              assigned = remainingToFund;
+              remainingToFund = 0;
+            } else {
+              assigned = availableForCat;
+              remainingToFund -= availableForCat;
+            }
+
+            switch(cat) {
+               case InvestmentCategoryEnum.personalCapital: bike.fundedByPersonal = assigned; break;
+               case InvestmentCategoryEnum.partnership: bike.fundedByPartnership = assigned; break;
+               case InvestmentCategoryEnum.other: bike.fundedByOther = assigned; break;
+               case InvestmentCategoryEnum.loan: bike.fundedByLoan = assigned; break;
+               default: break;
+            }
+          }
         }
       }
 

@@ -38,10 +38,10 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _chassisNoController = TextEditingController();
   final _purchasePriceController = TextEditingController();
   final _sellingPriceController = TextEditingController();
-  final _investmentPriceController = TextEditingController();
   final _purchaserNameController = TextEditingController();
   final _purchaserPhoneController = TextEditingController();
   final _purchaserCnicController = TextEditingController();
+  final _regNumberController = TextEditingController();
 
   String? _selectedColor;
   String _selectedCondition = 'New';
@@ -49,19 +49,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   File? _purchaserCnicFrontImage;
   File? _purchaserCnicBackImage;
 
-  // Auto-fill: mirrors Purchase Price into Investment field
-  bool _useFullInvestment = false;
-
   @override
   void initState() {
     super.initState();
-    _purchasePriceController.addListener(_syncInvestmentIfChecked);
-  }
-
-  void _syncInvestmentIfChecked() {
-    if (_useFullInvestment) {
-      _investmentPriceController.text = _purchasePriceController.text;
-    }
   }
 
   final _makerFocus = FocusNode();
@@ -73,13 +63,13 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _chassisFocus = FocusNode();
   final _purchaseFocus = FocusNode();
   final _sellingFocus = FocusNode();
-  final _investmentFocus = FocusNode();
   final _imageFocus = FocusNode();
   final _purchaserNameFocus = FocusNode();
   final _purchaserPhoneFocus = FocusNode();
   final _purchaserCnicFocus = FocusNode();
   final _cnicFrontFocus = FocusNode();
   final _cnicBackFocus = FocusNode();
+  final _regNumberFocus = FocusNode();
   final _submitFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
@@ -103,8 +93,6 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_purchaseFocus.hasFocus) {
           _sellingFocus.requestFocus();
         } else if (_sellingFocus.hasFocus) {
-          _investmentFocus.requestFocus();
-        } else if (_investmentFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
           _purchaserNameFocus.requestFocus();
@@ -117,10 +105,22 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_cnicFrontFocus.hasFocus) {
           _cnicBackFocus.requestFocus();
         } else if (_cnicBackFocus.hasFocus) {
+          if (_selectedCondition == 'Used') {
+            _regNumberFocus.requestFocus();
+          } else {
+            _submitFocus.requestFocus();
+          }
+        } else if (_regNumberFocus.hasFocus) {
           _submitFocus.requestFocus();
         }
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         if (_submitFocus.hasFocus) {
+          if (_selectedCondition == 'Used') {
+            _regNumberFocus.requestFocus();
+          } else {
+            _cnicBackFocus.requestFocus();
+          }
+        } else if (_regNumberFocus.hasFocus) {
           _cnicBackFocus.requestFocus();
         } else if (_cnicBackFocus.hasFocus) {
           _cnicFrontFocus.requestFocus();
@@ -133,8 +133,6 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_purchaserNameFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
-          _investmentFocus.requestFocus();
-        } else if (_investmentFocus.hasFocus) {
           _sellingFocus.requestFocus();
         } else if (_sellingFocus.hasFocus) {
           _purchaseFocus.requestFocus();
@@ -166,10 +164,10 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _chassisNoController.dispose();
     _purchasePriceController.dispose();
     _sellingPriceController.dispose();
-    _investmentPriceController.dispose();
     _purchaserNameController.dispose();
     _purchaserPhoneController.dispose();
     _purchaserCnicController.dispose();
+    _regNumberController.dispose();
     _makerFocus.dispose();
     _hpFocus.dispose();
     _modelYearFocus.dispose();
@@ -179,13 +177,13 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _chassisFocus.dispose();
     _purchaseFocus.dispose();
     _sellingFocus.dispose();
-    _investmentFocus.dispose();
     _imageFocus.dispose();
     _purchaserNameFocus.dispose();
     _purchaserPhoneFocus.dispose();
     _purchaserCnicFocus.dispose();
     _cnicFrontFocus.dispose();
     _cnicBackFocus.dispose();
+    _regNumberFocus.dispose();
     _submitFocus.dispose();
     super.dispose();
   }
@@ -216,6 +214,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       if (_hpController.text.trim().isEmpty) missingFields.add('Horse Power');
       if (_modelYearController.text.trim().isEmpty)
         missingFields.add('Model (Year)');
+      if (_selectedCondition == 'Used' && _regNumberController.text.trim().isEmpty)
+        missingFields.add('Registered Number');
       if (_selectedColor == null) missingFields.add('Color');
 
       final purchase =
@@ -224,9 +224,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       final selling =
           double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ??
               0.0;
-      final investment =
-          double.tryParse(_investmentPriceController.text.replaceAll(',', '')) ??
-              0.0;
+      // Investment is permanently locked to 100% of the Purchase Price
+      final investment = purchase;
 
       if (purchase <= 0) missingFields.add('Purchase Price');
       if (selling <= 0) missingFields.add('Selling Price');
@@ -239,6 +238,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             'horsePower': _hpController.text,
             'modelYear':
                 int.tryParse(_modelYearController.text) ?? DateTime.now().year,
+            'registrationNumber': _selectedCondition == 'Used' ? _regNumberController.text.trim() : null,
             'condition': _selectedCondition,
             'color': _selectedColor,
             'engineNumber': _engineNoController.text,
@@ -363,20 +363,42 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                       : [],
                             ),
                             const SizedBox(height: 16),
-                            _buildInputGroup(
-                                'Model (Year):',
-                                _modelYearController,
-                                'e.g. 2024',
-                                isDark,
-                                inputBg,
-                                inputBorder,
-                                labelColor,
-                                _modelYearFocus,
-                                isNumber: true,
-                                useGrouping: false),
+                            _buildAutocompleteGroup(
+                                label: 'Model (Year):',
+                                controller: _modelYearController,
+                                hint: 'e.g. 2024',
+                                isDark: isDark,
+                                bg: inputBg,
+                                border: inputBorder,
+                                labelColor: labelColor,
+                                focusNode: _modelYearFocus,
+                                getOptions: () =>
+                                    Get.isRegistered<SettingsController>()
+                                        ? Get.find<SettingsController>()
+                                            .getBikeYearsList()
+                                        : [],
+                            ),
                             const SizedBox(height: 10),
                             _buildConditionGroup('Condition:', isDark, inputBg,
-                                inputBorder, labelColor, _conditionFocus),
+                                inputBorder, labelColor, _conditionFocus,
+                                onChanged: (val) {
+                              setState(() {
+                                _selectedCondition = val;
+                              });
+                            }),
+                            if (_selectedCondition == 'Used') ...[
+                              const SizedBox(height: 10),
+                              _buildInputGroup(
+                                  'Reg #:',
+                                  _regNumberController,
+                                  'Enter registration number',
+                                  isDark,
+                                  inputBg,
+                                  inputBorder,
+                                  labelColor,
+                                  _regNumberFocus,
+                                  isRequired: true),
+                            ],
                             const SizedBox(height: 10),
                             _buildColorSkinGroup(
                                 'Color:', labelColor, _colorFocus),
@@ -449,8 +471,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                 _sellingFocus,
                                 isNumber: true),
                             const SizedBox(height: 10),
-                            // Investment field with auto-fill checkbox
-                            _buildInvestmentRow(isDark, inputBg, inputBorder, labelColor),
+                            // Investment tracking is automatically 100% of Purchase Price
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -981,8 +1002,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     Color bg,
     Color border,
     Color? labelColor,
-    FocusNode focusNode,
-  ) {
+    FocusNode focusNode, {
+    Function(String)? onChanged,
+  }) {
     return Row(
       children: [
         SizedBox(
@@ -1042,139 +1064,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               onChanged: (newValue) {
                 if (newValue != null) {
                   setState(() => _selectedCondition = newValue);
+                  if (onChanged != null) onChanged(newValue);
                 }
               },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInvestmentRow(
-    bool isDark,
-    Color inputBg,
-    Color inputBorder,
-    Color labelColor,
-  ) {
-    final primaryColor =
-        isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Label row with checkbox
-        Row(
-          children: [
-            Text(
-              'Investment:',
-              style: TextStyle(fontSize: 13, color: labelColor),
-            ),
-            const Spacer(),
-            // Checkbox
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _useFullInvestment = !_useFullInvestment;
-                  if (_useFullInvestment) {
-                    _investmentPriceController.text =
-                        _purchasePriceController.text;
-                  }
-                });
-              },
-              borderRadius: BorderRadius.circular(4),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: Checkbox(
-                      value: _useFullInvestment,
-                      activeColor: primaryColor,
-                      side: BorderSide(color: primaryColor.withOpacity(0.5)),
-                      onChanged: (val) {
-                        setState(() {
-                          _useFullInvestment = val ?? false;
-                          if (_useFullInvestment) {
-                            _investmentPriceController.text =
-                                _purchasePriceController.text;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Full from Capital',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: _useFullInvestment
-                          ? primaryColor
-                          : labelColor.withOpacity(0.7),
-                      fontWeight: _useFullInvestment
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        // Investment input (read-only when checkbox is checked)
-        BlinkingFocusBuilder(
-          focusNode: _investmentFocus,
-          child: TextFormField(
-            controller: _investmentPriceController,
-            focusNode: _investmentFocus,
-            readOnly: _useFullInvestment,
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [ThousandsSeparatorInputFormatter()],
-            decoration: InputDecoration(
-              hintText: '0',
-              hintStyle: TextStyle(
-                  color: isDark ? Colors.grey[500] : Colors.grey[400]),
-              filled: true,
-              fillColor: _useFullInvestment
-                  ? (isDark
-                      ? primaryColor.withOpacity(0.08)
-                      : primaryColor.withOpacity(0.05))
-                  : inputBg,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: inputBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: _useFullInvestment
-                      ? primaryColor.withOpacity(0.4)
-                      : inputBorder,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: primaryColor, width: 2),
-              ),
-              suffixIcon: _useFullInvestment
-                  ? Tooltip(
-                      message: 'Auto-filled from Purchase Price',
-                      child: Icon(Icons.link,
-                          size: 16, color: primaryColor.withOpacity(0.7)),
-                    )
-                  : null,
-            ),
-            style: TextStyle(
-              color: _useFullInvestment
-                  ? primaryColor
-                  : (isDark ? Colors.white : Colors.black),
-              fontSize: 13,
-              fontWeight: _useFullInvestment
-                  ? FontWeight.w600
-                  : FontWeight.normal,
             ),
           ),
         ),
