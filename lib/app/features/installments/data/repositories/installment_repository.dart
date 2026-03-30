@@ -311,8 +311,9 @@ class InstallmentRepository {
         int fixedCount = 0;
 
         for (final contract in allContracts) {
-          // Check if down payment is 0 or missing
-          if (contract.downPayment <= 0) {
+          // Check if down payment is 0 or missing (ONLY apply to legacy contracts created before a certain date)
+          // 0 down payment is a valid business case for new contracts!
+          if (contract.downPayment <= 0 && contract.contractDate.isBefore(DateTime(2025, 3, 1))) {
             // Find payments for this contract
             final payments = await _isar.payments
                 .filter()
@@ -349,6 +350,26 @@ class InstallmentRepository {
             }
           }
         }
+        // 1.5 Auto-fix accidentally hijacked first payments on 0-down plans
+        final accidentalRepairs = await _isar.payments
+            .filter()
+            .notesEqualTo('Down Payment (Repaired)')
+            .findAll();
+            
+        int restoredCount = 0;
+        for (final payment in accidentalRepairs) {
+           final contract = await _isar.installmentContracts.get(payment.contractId);
+           if (contract != null && contract.contractDate.isAfter(DateTime(2025, 3, 1))) {
+              payment.isDownPayment = false;
+              payment.notes = 'Restored Payment'; // Clear the buggy note
+              contract.downPayment = 0; // Reset it to valid 0 down payment
+              await _isar.payments.put(payment);
+              await _isar.installmentContracts.put(contract);
+              restoredCount++;
+           }
+        }
+        if (restoredCount > 0) debugPrint('Restored $restoredCount accidentally repaired down payments');
+
         debugPrint('Legacy Repair Complete. Fixed $fixedCount contracts.');
       });
       
