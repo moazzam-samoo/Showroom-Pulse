@@ -147,6 +147,37 @@ class SettingsController extends GetxController {
     saveSettings();
   }
 
+  List<String> getBikeYearsList() {
+    return settings.value?.bikeYears
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeYear(String year) {
+    if (settings.value == null || year.trim().isEmpty) return;
+    final y = year.trim();
+    final current = getBikeYearsList();
+    if (!current.any((x) => x.toLowerCase() == y.toLowerCase())) {
+      current.add(y);
+      // Sort years descending
+      current.sort((a, b) => (int.tryParse(b) ?? 0).compareTo(int.tryParse(a) ?? 0));
+      settings.value!.bikeYears = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeYear(String year) {
+    if (settings.value == null) return;
+    final current = getBikeYearsList();
+    current.removeWhere((x) => x == year);
+    settings.value!.bikeYears = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
   Future<bool> updateCredentials(String username, String password) async {
     final authService = Get.find<AuthService>();
     final success = await authService.updateCredentials(
