@@ -179,6 +179,13 @@ class BikeDetailDialog extends StatelessWidget {
         _buildDetailRow('Color:', bike.color, isDark),
         _buildDetailRow('Condition:',
             bike.condition.toString().split('.').last.capitalizeFirst!, isDark),
+        if (bike.condition == BikeConditionEnum.usedBike)
+          _buildDetailRow('Reg Number:',
+              (bike.registrationNumber != null && bike.registrationNumber!.isNotEmpty)
+                  ? bike.registrationNumber!
+                  : 'N/A',
+              isDark,
+              isBold: true),
         const SizedBox(height: AppSpacing.md),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

@@ -55,6 +55,9 @@ class ReportsController extends GetxController {
       final month = mode == ReportFilterMode.monthly ? selectedMonth.value : null;
       final year = mode == ReportFilterMode.allTime ? null : selectedYear.value;
 
+      if (!Get.isRegistered<InvestmentService>()) {
+        Get.put(InvestmentService());
+      }
       final invService = Get.find<InvestmentService>();
 
       // Load data in parallel

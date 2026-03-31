@@ -528,9 +528,9 @@ class _InstallmentsViewState extends State<InstallmentsView> {
                   ),
                 ),
 
-              // Payment Timeline (exclude initial Down Payment record)
+              // Payment Timeline (includes Down Payment record)
               PaymentTimeline(
-                payments: selected.payments.where((p) => !p.isDownPayment && p.notes != 'Down Payment').toList(),
+                payments: selected.payments,
                 onRecordPayment: () => _showRecordPaymentDialog(controller),
               ),
             ],

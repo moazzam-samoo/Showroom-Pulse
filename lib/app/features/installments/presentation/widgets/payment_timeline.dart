@@ -141,7 +141,7 @@ class PaymentTimeline extends StatelessWidget {
           SizedBox(width: 100, child: Text('Amount', style: headerStyle)),
           SizedBox(width: 110, child: Text('Method', style: headerStyle)),
           Expanded(child: Text('Collector', style: headerStyle)),
-          SizedBox(width: 70, child: Text('Status', style: headerStyle)),
+          SizedBox(width: 90, child: Text('Status', style: headerStyle)),
         ],
       ),
     );
@@ -206,18 +206,22 @@ class PaymentTimeline extends StatelessWidget {
           ),
           // Status Badge
           SizedBox(
-            width: 70,
+            width: 90,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: (isDark ? AppColors.darkSuccess : AppColors.lightSuccess).withOpacity(0.15),
+                color: payment.isDownPayment
+                    ? const Color(0xFF3b82f6).withOpacity(0.15)
+                    : (isDark ? AppColors.darkSuccess : AppColors.lightSuccess).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Text(
-                'Paid',
+                payment.isDownPayment ? 'Down Payment' : 'Paid',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
+                  color: payment.isDownPayment
+                      ? const Color(0xFF3b82f6)
+                      : (isDark ? AppColors.darkSuccess : AppColors.lightSuccess),
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),

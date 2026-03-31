@@ -760,8 +760,21 @@ class SupplierHistoryView extends GetView<SupplierController> {
               _buildDetailInfoRow(LucideIcons.hash, 'Engine No.', bike.engineNumber, textSecondary, textPrimary, isMono: true),
               const SizedBox(height: 10),
               _buildDetailInfoRow(LucideIcons.hash, 'Chassis No.', bike.chassisNumber, textSecondary, textPrimary, isMono: true),
+              if (bike.condition == BikeConditionEnum.usedBike) ...[
+                const SizedBox(height: 10),
+                _buildDetailInfoRow(
+                  LucideIcons.hash, 
+                  'Reg. No.', 
+                  (bike.registrationNumber != null && bike.registrationNumber!.isNotEmpty) 
+                      ? bike.registrationNumber! 
+                      : 'N/A', 
+                  textSecondary, 
+                  textPrimary, 
+                  isMono: true
+                ),
+              ],
               const SizedBox(height: 10),
-              _buildDetailInfoRow(LucideIcons.list, 'Condition', bike.condition.name.toUpperCase(), textSecondary, textPrimary),
+              _buildDetailInfoRow(LucideIcons.list, 'Condition', bike.condition.name == 'usedBike' ? 'USED' : 'NEW', textSecondary, textPrimary),
               const SizedBox(height: 10),
               _buildDetailInfoRow(LucideIcons.calendar, 'Purchase Date', DateFormat('dd MMM yyyy').format(purchaseDate), textSecondary, textPrimary),
               const SizedBox(height: 10),

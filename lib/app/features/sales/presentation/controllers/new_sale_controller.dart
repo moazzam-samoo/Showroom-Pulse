@@ -1350,6 +1350,8 @@ class NewSaleController extends GetxController {
         'bikeColor': selectedBike.value?.color ?? '',
         'bikeChassisNumber': selectedBike.value?.chassisNumber ?? '',
         'bikeEngineNumber': selectedBike.value?.engineNumber ?? '',
+        'bikeCondition': selectedBike.value?.condition.name,
+        'bikeRegistrationNumber': selectedBike.value?.registrationNumber,
         'isCash': isCash,
         'saleDate': today,
         'witnesses': witnesses,

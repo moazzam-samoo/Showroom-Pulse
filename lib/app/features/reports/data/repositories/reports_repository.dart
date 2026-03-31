@@ -186,7 +186,8 @@ class ReportsRepository {
 
     final Map<String, int> distribution = {};
     for (final bike in bikes) {
-      distribution[bike.brand] = (distribution[bike.brand] ?? 0) + 1;
+      final key = '${bike.model} ${bike.brand}';
+      distribution[key] = (distribution[key] ?? 0) + 1;
     }
     return distribution;
   }

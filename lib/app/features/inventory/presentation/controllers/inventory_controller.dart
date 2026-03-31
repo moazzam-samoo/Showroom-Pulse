@@ -102,6 +102,7 @@ class InventoryController extends GetxController {
         ..color = data['color'] ?? ''
         ..engineNumber = data['engineNumber']
         ..chassisNumber = data['chassisNumber']
+        ..registrationNumber = data['registrationNumber']
         ..purchasePrice = data['purchasePrice']
         ..cashSalePrice = data['sellingPrice']
         ..status = BikeStatusEnum.available;
@@ -267,6 +268,7 @@ class InventoryController extends GetxController {
       bike.color = data['color'] ?? '';
       bike.engineNumber = data['engineNumber'] ?? '';
       bike.chassisNumber = data['chassisNumber'] ?? '';
+      bike.registrationNumber = data['registrationNumber'];
       bike.purchasePrice = data['purchasePrice'] ?? 0.0;
       bike.cashSalePrice = data['sellingPrice'] ?? 0.0;
       bike.purchaserName = data['purchaserName'];
