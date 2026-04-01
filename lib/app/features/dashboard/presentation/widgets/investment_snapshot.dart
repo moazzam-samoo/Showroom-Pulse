@@ -120,10 +120,10 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.1 : 0.05),
+        color: color.withValues(alpha: isDark ? 0.1 : 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -135,7 +135,7 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 14, color: color),
@@ -174,7 +174,7 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               subtitle,
               style: TextStyle(
                 fontSize: 11,
-                color: color.withOpacity(0.8),
+                color: color.withValues(alpha: 0.8),
               ),
             ),
           ],

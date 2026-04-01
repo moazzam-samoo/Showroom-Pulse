@@ -68,14 +68,17 @@ class BikeDetailDialog extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xl),
 
                     // Purchase & Sale Info
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildPurchaseInfo(isDark)),
-                        const SizedBox(width: AppSpacing.xl),
-                        Expanded(child: _buildSaleInfo(isDark)),
-                      ],
-                    ),
+                    if (bike.status == BikeStatusEnum.available)
+                      _buildUnifiedPurchaseInfo(isDark)
+                    else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: _buildPurchaseInfo(isDark)),
+                          const SizedBox(width: AppSpacing.xl),
+                          Expanded(child: _buildSaleInfo(isDark)),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -224,31 +227,80 @@ class BikeDetailDialog extends StatelessWidget {
     );
   }
 
+  Widget _buildUnifiedPurchaseInfo(bool isDark) {
+    return _buildInfoSection(
+      title: 'Purchase Details',
+      icon: LucideIcons.shoppingBag,
+      isDark: isDark,
+      children: [
+        if (bike.purchaserName != null && bike.purchaserName!.isNotEmpty)
+          _buildDetailRow('Dealer Name:', bike.purchaserName!, isDark),
+        if (bike.purchaserPhone != null && bike.purchaserPhone!.isNotEmpty)
+          _buildDetailRow('Phone:', bike.purchaserPhone!, isDark),
+        if (bike.purchaserCnic != null && bike.purchaserCnic!.isNotEmpty)
+          _buildDetailRow('CNIC:', bike.purchaserCnic!, isDark),
+        if (supplier != null)
+          _buildDetailRow('Supplier:', supplier?.name ?? 'N/A', isDark),
+        
+        const Divider(height: 16),
+        _buildDetailRow('Purchase Date:',
+            DateFormat('dd MMM yyyy').format(bike.dateAdded), isDark),
+        _buildDetailRow('Purchase Price:',
+            'Rs. ${NumberFormat('#,###').format(bike.purchasePrice)}', isDark,
+            textColor: Colors.redAccent),
+        _buildDetailRow('Expected Price:',
+            'Rs. ${NumberFormat('#,###').format(bike.cashSalePrice)}', isDark),
+        
+        const SizedBox(height: AppSpacing.md),
+        if (bike.purchaserCnicFrontFilename != null ||
+            bike.purchaserCnicBackFilename != null)
+          _buildCnicThumbnails(isDark),
+      ],
+    );
+  }
+
   Widget _buildSaleInfo(bool isDark) {
-    // If we have manual purchaser details in Bike model, prioritize them
-    final String? pName = bike.purchaserName ?? customer?.fullName;
-    final String? pPhone = bike.purchaserPhone ?? customer?.phoneNumber;
-    final String? pCnic = bike.purchaserCnic ?? customer?.cnicNumber;
+    final bool isAvailable = bike.status == BikeStatusEnum.available;
+    final String title = isAvailable ? 'Dealer / Source Details' : 'Sale Details';
+    final IconData icon =
+        isAvailable ? LucideIcons.truck : LucideIcons.userCheck;
+    final String labelPrefix = isAvailable ? 'Dealer' : 'Purchaser';
+
+    // Logic for values:
+    // If available, show intake details (dealer); if sold/installment, prioritize customer record.
+    final String? pName = isAvailable
+        ? bike.purchaserName
+        : (customer?.fullName ?? bike.purchaserName);
+    final String? pPhone = isAvailable
+        ? bike.purchaserPhone
+        : (customer?.phoneNumber ?? bike.purchaserPhone);
+    final String? pCnic = isAvailable
+        ? bike.purchaserCnic
+        : (customer?.cnicNumber ?? bike.purchaserCnic);
 
     return _buildInfoSection(
-      title: 'Sale Details',
-      icon: LucideIcons.userCheck,
+      title: title,
+      icon: icon,
       isDark: isDark,
       children: [
         if (pName != null || pPhone != null || pCnic != null) ...[
-          _buildDetailRow('Purchaser Name:', pName ?? 'N/A', isDark),
+          _buildDetailRow('$labelPrefix Name:', pName ?? 'N/A', isDark),
           _buildDetailRow('Phone:', pPhone ?? 'N/A', isDark),
           _buildDetailRow('CNIC:', pCnic ?? 'N/A', isDark),
-          _buildDetailRow('Selling Price:',
-              'Rs. ${NumberFormat('#,###').format(bike.cashSalePrice)}', isDark,
-              textColor: Colors.green),
+          _buildDetailRow(
+              isAvailable ? 'Expected Price:' : 'Selling Price:',
+              'Rs. ${NumberFormat('#,###').format(bike.cashSalePrice)}',
+              isDark,
+              textColor: isAvailable ? null : Colors.green),
           const SizedBox(height: AppSpacing.md),
           if (bike.purchaserCnicFrontFilename != null ||
               bike.purchaserCnicBackFilename != null)
             _buildCnicThumbnails(isDark),
         ] else
           Text(
-            'Not sold yet or information missing.',
+            isAvailable
+                ? 'No dealer information provided.'
+                : 'Not sold yet or information missing.',
             style: TextStyle(
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
                 fontStyle: FontStyle.italic),

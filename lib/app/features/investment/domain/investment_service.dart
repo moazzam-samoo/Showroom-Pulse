@@ -9,6 +9,7 @@ import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
+import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 
 class CategoryFinancials {
   final InvestmentCategoryEnum category;
@@ -78,6 +79,45 @@ class InvestmentService extends GetxService {
     return inv;
   }
 
+  /// Remove investment record associated with a specific bike (Refund)
+  /// Handles both individual bike purchases and bikes belonging to a dealer batch.
+  Future<void> removeBikePurchaseInvestment(Bike bike) async {
+    await _isar.writeTxn(() async {
+      // 1. Try deleting individual bike record first
+      final deletedCount = await _isar.investments
+          .filter()
+          .typeEqualTo(InvestmentTypeEnum.bikePurchase)
+          .bikeIdEqualTo(bike.id)
+          .deleteAll();
+
+      // 2. If not found as individual, check if it belongs to a batch
+      if (deletedCount == 0) {
+        await bike.batch.load();
+        if (bike.batch.value != null) {
+          final batchId = bike.batch.value!.id;
+          // Find the investment record for this batch
+          final batchInv = await _isar.investments
+              .filter()
+              .typeEqualTo(InvestmentTypeEnum.bikePurchase)
+              .purchaseBatchIdEqualTo(batchId)
+              .findFirst();
+
+          if (batchInv != null) {
+            // Subtract this bike's price from the batch investment
+            batchInv.amount -= bike.purchasePrice;
+            
+            if (batchInv.amount <= 0) {
+              await _isar.investments.delete(batchInv.id);
+            } else {
+              // Update the batch investment record with remaining amount
+              await _isar.investments.put(batchInv);
+            }
+          }
+        }
+      }
+    });
+  }
+
   /// Record money spent on a dealer batch purchase
   Future<Investment> recordBatchPurchaseInvestment({
     required double amount,
@@ -127,6 +167,56 @@ class InvestmentService extends GetxService {
       await _isar.investments.put(inv);
     });
     return inv;
+  }
+
+  /// Finds and removes investment records linked to bikes or batches
+  /// that no longer exist in the database (retroactive cleanup).
+  Future<void> cleanupOrphanedInvestments() async {
+    await _isar.writeTxn(() async {
+      // Get all bike purchase records
+      final bikePurchases = await _isar.investments
+          .filter()
+          .typeEqualTo(InvestmentTypeEnum.bikePurchase)
+          .findAll();
+
+      for (final inv in bikePurchases) {
+        if (inv.bikeId != null) {
+          final bike = await _isar.bikes.get(inv.bikeId!);
+          if (bike == null) {
+            // Bike was deleted, record is orphaned - CLEANUP
+            debugPrint('Cleaning up orphaned investment (Bike ID: ${inv.bikeId}): ${inv.description}');
+            await _isar.investments.delete(inv.id);
+          }
+        } else if (inv.purchaseBatchId != null) {
+          final batch = await _isar.purchaseBatchs.get(inv.purchaseBatchId!);
+          if (batch == null) {
+            // Batch was deleted, record is orphaned - CLEANUP
+            debugPrint('Cleaning up orphaned investment (Batch ID: ${inv.purchaseBatchId}): ${inv.description}');
+            await _isar.investments.delete(inv.id);
+          } else {
+            // RECONCILE BATCH AMOUNT with actual inventory truth
+            // Load bikes currently in this batch
+            await batch.bikes.load();
+            final currentBikesPrice = batch.bikes.fold<double>(0.0, (sum, b) => sum + b.purchasePrice);
+            
+            if (currentBikesPrice == 0) {
+              // Batch exists but has 0 bikes in inventory - CLEANUP
+              debugPrint('Cleaning up emptied batch investment (Batch ID: ${inv.purchaseBatchId}): ${inv.description}');
+              await _isar.investments.delete(inv.id);
+            } else if (inv.amount != currentBikesPrice) {
+              // Batch amount is out of sync with current bikes (partial deletion) - RECONCILE
+              debugPrint('Reconciling Batch ${inv.purchaseBatchId}: ${inv.amount} -> $currentBikesPrice');
+              inv.amount = currentBikesPrice;
+              await _isar.investments.put(inv);
+            }
+          }
+        } else {
+          // Linkless bikePurchase record is invalid - CLEANUP
+          debugPrint('Cleaning up linkless bike purchase investment: ${inv.id} - ${inv.description}');
+          await _isar.investments.delete(inv.id);
+        }
+      }
+    });
   }
 
   // ==================== SALE REVENUE OPERATIONS ====================

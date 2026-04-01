@@ -397,7 +397,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                   child: Column(
                     children: [
                       _buildSection(
-                        title: 'Financials',
+                        title: 'Purchase Details',
                         color: sectionHeaderBg,
                         textColor: sectionHeaderText,
                         children: [
@@ -441,7 +441,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+ const SizedBox(height: 24),
                       // Image Upload
                       BlinkingFocusBuilder(
                         focusNode: _imageFocus,
