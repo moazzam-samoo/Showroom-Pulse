@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart'; // For debugPrint
+import 'package:flutter/foundation.dart';
+import 'package:image/image.dart' as img;
 
 /// FileService - Handles Windows file system operations
 /// 
@@ -83,24 +84,74 @@ class FileService extends GetxService {
     return witnessPath;
   }
 
-  /// Save a bike image to Media/Bikes/[engineNumber].ext
+  /// Compress and resize an image before storage
+  /// Returns the compressed file, or original on failure
+  Future<File> _compressImage(
+    File sourceFile, {
+    int maxWidth = 1200,
+    int quality = 75,
+  }) async {
+    try {
+      final bytes = await sourceFile.readAsBytes();
+      final decoded = img.decodeImage(bytes);
+      if (decoded == null) return sourceFile;
+
+      img.Image resized = decoded;
+      if (decoded.width > maxWidth) {
+        resized = img.copyResize(decoded, width: maxWidth);
+      }
+
+      final compressed = img.encodeJpg(resized, quality: quality);
+      final tempPath = '${sourceFile.path}_compressed.jpg';
+      final tempFile = File(tempPath);
+      await tempFile.writeAsBytes(compressed);
+
+      final originalSize = await sourceFile.length();
+      final compressedSize = await tempFile.length();
+      debugPrint(
+        'FileService: Compressed image '
+        '${(originalSize / 1024).toStringAsFixed(0)} KB → '
+        '${(compressedSize / 1024).toStringAsFixed(0)} KB '
+        '(${(100 - compressedSize * 100 / originalSize).toStringAsFixed(0)}% reduction)',
+      );
+
+      return tempFile;
+    } catch (e) {
+      debugPrint('FileService: Image compression failed, using original — $e');
+      return sourceFile;
+    }
+  }
+
+  /// Clean up temporary compressed files
+  Future<void> _cleanupTemp(File compressedFile, File originalFile) async {
+    if (compressedFile.path != originalFile.path) {
+      try {
+        await compressedFile.delete();
+      } catch (_) {}
+    }
+  }
+
+  /// Save a bike image to Media/Bikes/[engineNumber].jpg
   Future<String> saveBikeImage(File sourceFile, String engineNumber) async {
-    final extension = p.extension(sourceFile.path);
-    final filename = 'bike_$engineNumber$extension';
-    final destPath = p.join(bikesMediaPath, filename);
+    final compressed = await _compressImage(sourceFile);
+    const filename = '.jpg';
+    final destFilename = 'bike_$engineNumber$filename';
+    final destPath = p.join(bikesMediaPath, destFilename);
     
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     
-    return filename;
+    return destFilename;
   }
 
   /// Save a bike purchaser's CNIC image (front or back)
   Future<String> saveBikePurchaserCnic(File sourceFile, String engineNumber, String side) async {
-    final extension = p.extension(sourceFile.path);
-    final filename = 'purchaser_cnic_${side}_$engineNumber$extension';
+    final compressed = await _compressImage(sourceFile);
+    final filename = 'purchaser_cnic_${side}_$engineNumber.jpg';
     final destPath = p.join(bikesMediaPath, filename);
     
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     
     return filename;
   }
@@ -112,11 +163,12 @@ class FileService extends GetxService {
     String imageType,
   ) async {
     final customerPath = await getCustomerMediaPath(cnic);
-    final extension = p.extension(sourceFile.path);
-    final filename = '$imageType$extension';
+    final compressed = await _compressImage(sourceFile);
+    final filename = '$imageType.jpg';
     final destPath = p.join(customerPath, filename);
     
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     
     return filename;
   }
@@ -128,11 +180,12 @@ class FileService extends GetxService {
     int witnessIndex,
   ) async {
     final witnessPath = await getWitnessMediaPath(customerCnic);
-    final extension = p.extension(sourceFile.path);
-    final filename = 'witness${witnessIndex}_cnic$extension';
+    final compressed = await _compressImage(sourceFile);
+    final filename = 'witness${witnessIndex}_cnic.jpg';
     final destPath = p.join(witnessPath, filename);
     
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     
     return filename;
   }
@@ -211,12 +264,13 @@ class FileService extends GetxService {
       await Directory(profilePath).create(recursive: true);
     }
 
-    final extension = p.extension(sourceFile.path);
-    final filename = 'profile$extension';
+    final compressed = await _compressImage(sourceFile);
+    const filename = 'profile.jpg';
     final destPath = p.join(profilePath, filename);
     
-    await sourceFile.copy(destPath);
-    return filename; // We only store filename, logic knows it's in Profile/
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
+    return filename;
   }
 
   /// Save supplier CNIC picture
@@ -229,11 +283,12 @@ class FileService extends GetxService {
       await Directory(cnicPath).create(recursive: true);
     }
 
-    final extension = p.extension(sourceFile.path);
-    final filename = 'cnic$extension';
+    final compressed = await _compressImage(sourceFile);
+    const filename = 'cnic.jpg';
     final destPath = p.join(cnicPath, filename);
     
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     return filename;
   }
 
@@ -251,8 +306,8 @@ class FileService extends GetxService {
       await Directory(invoicePath).create(recursive: true);
     }
 
-    final extension = p.extension(sourceFile.path);
-    final filename = 'inv_$batchId$extension'; // Filename
+    final compressed = await _compressImage(sourceFile);
+    final filename = 'inv_$batchId.jpg';
     // Store relative path from Supplier Base for easier retrieval or just use logic?
     // User asked for "one dated folder of sales that have receipt".
     // We will return the relative path from the Supplier Base so we can find it later easily,
@@ -262,7 +317,8 @@ class FileService extends GetxService {
     // So we can reconstruct `Suppliers/{Name}/{Date}/Filename`.
     
     final destPath = p.join(invoicePath, filename);
-    await sourceFile.copy(destPath);
+    await compressed.copy(destPath);
+    await _cleanupTemp(compressed, sourceFile);
     return filename;
   }
 
@@ -352,6 +408,45 @@ class FileService extends GetxService {
   String getSupplierCnicImagePathSync(String filename, String supplierName) {
     final sanitized = supplierName.replaceAll(RegExp(r'[^a-zA-Z0-9-]'), '');
     return p.join(suppliersMediaPath, sanitized, 'CNIC', filename);
+  }
+
+  /// Batch compress all existing historical media files
+  Future<void> compressHistoricalMedia({
+    void Function(int total, int processed)? onProgress,
+  }) async {
+    final mediaDirectory = Directory(mediaPath);
+    if (!await mediaDirectory.exists()) return;
+
+    final files = mediaDirectory.listSync(recursive: true).whereType<File>().toList();
+    // Filter for common image extensions
+    final imageFiles = files.where((f) {
+      final ext = p.extension(f.path).toLowerCase();
+      // Skip already compressed temp files if any got orphaned
+      if (f.path.endsWith('_compressed.jpg')) return false;
+      return ext == '.jpg' || ext == '.jpeg' || ext == '.png' || ext == '.webp';
+    }).toList();
+
+    int processed = 0;
+    // Call progress immediately with 0 processed if there are files
+    if (onProgress != null && imageFiles.isNotEmpty) {
+      onProgress(imageFiles.length, 0);
+    }
+
+    for (final file in imageFiles) {
+      final compressedFile = await _compressImage(file);
+      
+      if (compressedFile.path != file.path) {
+        try {
+          await file.delete();
+          await compressedFile.rename(file.path);
+        } catch (e) {
+          debugPrint('FileService: Failed to replace original image: $e');
+        }
+      }
+      
+      processed++;
+      if (onProgress != null) onProgress(imageFiles.length, processed);
+    }
   }
 
   /// Pick an image from gallery/filesystem

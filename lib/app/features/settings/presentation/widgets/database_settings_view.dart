@@ -139,6 +139,42 @@ class DatabaseSettingsView extends GetView<SettingsController> {
 
         _divider(isDark),
 
+        // Compress Historical Media
+        _buildActionRow(
+          title: 'Compress Historical Media',
+          subtitle: 'One-time optimization to shrink old image sizes',
+          buttonLabel: controller.isCompressingMedia.value ? 'Compressing...' : 'Compress Media',
+          icon: LucideIcons.imageMinus,
+          isDark: isDark,
+          isDanger: true,
+          isLoading: controller.isCompressingMedia.value,
+          onPressed: controller.isCompressingMedia.value ? null : () => controller.compressHistoricalMedia(),
+        ),
+
+        // Compression progress indicator
+        if (controller.isCompressingMedia.value && controller.compressMediaProgress.value.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 32, top: 4, bottom: 4),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 14, height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  controller.compressMediaProgress.value,
+                  style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                ),
+              ],
+            ),
+          ),
+
+        _divider(isDark),
+
         // Reset App
         _buildActionRow(
           title: 'Reset App',

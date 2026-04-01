@@ -25,6 +25,8 @@ class SettingsController extends GetxController {
   final isImporting = false.obs;
   final exportProgress = ''.obs;
   final importProgress = ''.obs;
+  final isCompressingMedia = false.obs;
+  final compressMediaProgress = ''.obs;
   
   final ownerNameController = TextEditingController();
 
@@ -393,6 +395,71 @@ class SettingsController extends GetxController {
     } finally {
       isImporting.value = false;
       importProgress.value = '';
+    }
+  }
+
+  Future<void> compressHistoricalMedia() async {
+    if (isCompressingMedia.value) return;
+    
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: Get.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        title: Row(
+          children: [
+            Icon(Icons.compress, color: Get.isDarkMode ? Colors.cyanAccent : Colors.blue, size: 22),
+            const SizedBox(width: 8),
+            Text('Compress Historical Media?', style: TextStyle(fontSize: 16, color: Get.isDarkMode ? Colors.white : Colors.black)),
+          ],
+        ),
+        content: Text(
+          'This will apply modern compression to all existing images, reducing their size permanently. This is a one-time operation.',
+          style: TextStyle(fontSize: 13, color: Get.isDarkMode ? Colors.white70 : Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Cancel', style: TextStyle(color: Get.isDarkMode ? Colors.white70 : Colors.black87)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Get.isDarkMode ? Colors.cyanAccent : Colors.blue,
+              foregroundColor: Get.isDarkMode ? Colors.black : Colors.white,
+            ),
+            onPressed: () => Get.back(result: true),
+            child: const Text('Start Compression', style: TextStyle(fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    isCompressingMedia.value = true;
+    compressMediaProgress.value = 'Finding files to compress...';
+
+    // Small delay to allow UI to show loading state
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    try {
+      final fileService = Get.find<FileService>();
+      await fileService.compressHistoricalMedia(
+        onProgress: (total, processed) {
+          compressMediaProgress.value = 'Processed $processed of $total files...';
+        },
+      );
+
+      AppToast.showSuccess(
+        title: 'Compression Complete',
+        message: 'All historical media files have been optimized.',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Compression Failed',
+        message: 'An error occurred during compression: $e',
+      );
+    } finally {
+      isCompressingMedia.value = false;
+      compressMediaProgress.value = '';
     }
   }
 }
