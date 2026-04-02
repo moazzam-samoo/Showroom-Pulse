@@ -30,7 +30,15 @@ class InvestmentHistoryCard extends StatelessWidget {
       case InvestmentTypeEnum.capitalInjection:
         typeColor = Colors.green;
         typeIcon = Icons.arrow_downward;
-        typeLabel = 'Capital Added';
+        if (investment.category == InvestmentCategoryEnum.personalCapital) {
+          typeLabel = 'Personal Investment';
+        } else if (investment.category == InvestmentCategoryEnum.loan) {
+          typeLabel = 'Loan Investment';
+        } else if (investment.category == InvestmentCategoryEnum.partnership) {
+          typeLabel = 'Partnership Investment';
+        } else {
+          typeLabel = 'Others Investment';
+        }
         break;
       case InvestmentTypeEnum.bikePurchase:
         typeColor = Colors.red;
@@ -40,7 +48,15 @@ class InvestmentHistoryCard extends StatelessWidget {
       case InvestmentTypeEnum.withdrawal:
         typeColor = Colors.orange;
         typeIcon = Icons.arrow_upward;
-        typeLabel = 'Withdrawal';
+        if (investment.category == InvestmentCategoryEnum.personalUse) {
+          typeLabel = 'Personal Use Withdraw';
+        } else if (investment.category == InvestmentCategoryEnum.maintenance) {
+          typeLabel = 'Maintenance Withdraw';
+        } else if (investment.category == InvestmentCategoryEnum.expense) {
+          typeLabel = 'Expenses Withdraw';
+        } else {
+          typeLabel = 'Withdrawal';
+        }
         break;
       case InvestmentTypeEnum.bikeSale:
         typeColor = const Color(0xFF3B82F6); // Blue
@@ -54,9 +70,8 @@ class InvestmentHistoryCard extends StatelessWidget {
         break;
     }
 
-    if (investment.isLocked) {
-      typeIcon = Icons.lock;
-    }
+
+    final displayDescription = investment.description?.replaceAll('\u2014', '-');
 
     return Card(
       elevation: 0,
@@ -133,10 +148,10 @@ class InvestmentHistoryCard extends StatelessWidget {
                           ),
                       ],
                     ),
-                    if (investment.description != null && investment.description!.isNotEmpty) ...[
+                    if (displayDescription != null && displayDescription.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        investment.description!,
+                        displayDescription,
                         style: TextStyle(
                           color: textCol.withOpacity(0.8),
                           fontSize: 13,

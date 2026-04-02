@@ -258,20 +258,8 @@ class AddInvestmentDialog extends GetView<InvestmentController> {
               ),
               const SizedBox(height: 16),
 
-              // Lock / Source Toggle
-              if (!isWithdrawal) ...[
-                Obx(() => CheckboxListTile(
-                      value: controller.isLockedToggle.value,
-                      onChanged: (val) => controller.isLockedToggle.value = val ?? false,
-                      title: Text('Lock this investment', style: TextStyle(color: textCol, fontSize: 14)),
-                      subtitle: Text('Prevent this capital from being spent on bikes',
-                          style: TextStyle(color: textCol.withOpacity(0.6), fontSize: 12)),
-                      activeColor: Colors.blue,
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                    )),
-                const SizedBox(height: 24),
-              ] else ...[
+              // Source Toggle
+              if (isWithdrawal) ...[
                 Text('Capital Sources (Deduction Pools)',
                     style: TextStyle(
                         fontSize: 14,

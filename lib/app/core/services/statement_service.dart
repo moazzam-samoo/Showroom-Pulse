@@ -306,7 +306,7 @@ class StatementService {
           pw.Row(
             children: [
               pw.Expanded(child: _pdfInfoRow('Total Paid', _currencyFormat.format(contract.totalPaid))),
-              pw.Expanded(child: _pdfInfoRow('Remaining', _currencyFormat.format(contract.remainingBalance))),
+              pw.Expanded(child: _pdfInfoRow('Remaining', contract.status == ContractStatusEnum.completed ? 'Rs 0' : _currencyFormat.format(contract.remainingBalance))),
             ],
           ),
           pw.Row(

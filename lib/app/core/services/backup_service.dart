@@ -503,7 +503,6 @@ class BackupService {
         'type': i.type.index,
         'category': i.category.index,
         'description': i.description,
-        'isLocked': i.isLocked,
         'bikeId': i.bikeId,
         'purchaseBatchId': i.purchaseBatchId,
         'profitAmount': i.profitAmount,
@@ -843,7 +842,6 @@ class BackupService {
         ..type = InvestmentTypeEnum.values[m['type'] as int]
         ..category = InvestmentCategoryEnum.values[m['category'] as int]
         ..description = m['description'] as String?
-        ..isLocked = m['isLocked'] as bool? ?? false
         ..bikeId = m['bikeId'] as int?
         ..purchaseBatchId = m['purchaseBatchId'] as int?
         ..profitAmount = (m['profitAmount'] as num?)?.toDouble() ?? 0.0

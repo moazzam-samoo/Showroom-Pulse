@@ -8,11 +8,13 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/features/procurement/domain/supplier_service.dart';
 import 'package:isar/isar.dart';
-import 'package:intl/intl.dart';
+
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 
 class BikeEntry {
   String engineNumber = '';
@@ -382,6 +384,11 @@ class SupplierController extends GetxController {
         await loadSuppliers();
         _refreshSelectedSupplier();
 
+        // Trigger Investment UI Refresh
+        if (Get.isRegistered<InvestmentController>()) {
+          Get.find<InvestmentController>().loadInvestmentData();
+        }
+
         // Show Financial Toast
         try {
           final investmentService = _getInvestmentService();
@@ -489,13 +496,19 @@ class SupplierController extends GetxController {
           ..purchasePrice = entry.purchasePrice
           ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null
           ..cashSalePrice = 0 
-          ..status = BikeStatusEnum.available;
+          ..status = BikeStatusEnum.available
+          ..investmentAmount = entry.purchasePrice;
 
         if (entry.imageFile != null) {
           bike.imageFilename = await _fileService.saveBikeImage(entry.imageFile!, entry.engineNumber);
         }
         bikes.add(bike);
       }
+
+      // Automatically allocate capital priorities for all bikes in batch
+      final invService = _getInvestmentService();
+      final financials = await invService.getCategoryFinancials();
+      _allocateFundingForBikes(bikes, financials);
 
       final batch = await _supplierService.savePurchaseBatch(
         supplier: supplier,
@@ -505,18 +518,16 @@ class SupplierController extends GetxController {
       );
 
       // Record investment for this batch
-      if (batch != null) {
-        try {
-          final investmentService = _getInvestmentService();
-          final totalBatchInvestment = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
-          await investmentService.recordBatchPurchaseInvestment(
-            amount: totalBatchInvestment,
-            batchId: batch.id,
-            date: purchaseDate.value,
-          );
-        } catch (e) {
-          debugPrint('Failed to record batch investment: $e');
-        }
+      try {
+        final investmentService = _getInvestmentService();
+        final totalBatchInvestment = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
+        await investmentService.recordBatchPurchaseInvestment(
+          amount: totalBatchInvestment,
+          batchId: batch.id,
+          date: purchaseDate.value,
+        );
+      } catch (e) {
+        debugPrint('Failed to record batch investment: $e');
       }
   }
 
@@ -565,6 +576,11 @@ class SupplierController extends GetxController {
         bikesToSave.add(bike);
       }
 
+      // Re-allocate capital priorities (Handles New Bikes + Price Changes in existing bikes)
+      final invService = _getInvestmentService();
+      final financials = await invService.getCategoryFinancials();
+      _allocateFundingForBikes(bikesToSave, financials);
+
       await _supplierService.updateFullPurchaseBatch(
         batch: batch,
         newSupplier: supplier,
@@ -573,6 +589,70 @@ class SupplierController extends GetxController {
         bikesToSave: bikesToSave,
         deletedBikeIds: bikesToDeleteIds,
       );
+  }
+
+  void _allocateFundingForBikes(List<Bike> bikes, List<CategoryFinancials> financials) {
+    final priorityOrder = [
+      InvestmentCategoryEnum.personalCapital,
+      InvestmentCategoryEnum.partnership,
+      InvestmentCategoryEnum.other,
+      InvestmentCategoryEnum.loan,
+    ];
+
+    Map<InvestmentCategoryEnum, double> availableFunds = {};
+    for (final cat in priorityOrder) {
+      availableFunds[cat] = financials.firstWhere(
+        (e) => e.category == cat,
+        orElse: () => CategoryFinancials(category: cat, injected: 0, available: 0)
+      ).available;
+    }
+
+    // Recover funds from existing bikes in THIS batch so we can perfectly re-distribute them
+    for (var bike in bikes) {
+      if (bike.id != Isar.autoIncrement && bike.id > 0) {
+         availableFunds[InvestmentCategoryEnum.personalCapital] = (availableFunds[InvestmentCategoryEnum.personalCapital] ?? 0) + bike.fundedByPersonal;
+         availableFunds[InvestmentCategoryEnum.partnership] = (availableFunds[InvestmentCategoryEnum.partnership] ?? 0) + bike.fundedByPartnership;
+         availableFunds[InvestmentCategoryEnum.other] = (availableFunds[InvestmentCategoryEnum.other] ?? 0) + bike.fundedByOther;
+         availableFunds[InvestmentCategoryEnum.loan] = (availableFunds[InvestmentCategoryEnum.loan] ?? 0) + bike.fundedByLoan;
+      }
+    }
+
+    for (var bike in bikes) {
+      double remainingToFund = bike.purchasePrice;
+
+      // Reset existing funding before recalculating
+      bike.fundedByPersonal = 0;
+      bike.fundedByPartnership = 0;
+      bike.fundedByOther = 0;
+      bike.fundedByLoan = 0;
+      bike.investmentAmount = bike.purchasePrice;
+
+      for (final cat in priorityOrder) {
+        if (remainingToFund <= 0) break;
+        
+        final availableForCat = availableFunds[cat] ?? 0.0;
+        if (availableForCat > 0) {
+          double assigned = 0.0;
+          if (availableForCat >= remainingToFund) {
+            assigned = remainingToFund;
+            remainingToFund = 0;
+          } else {
+            assigned = availableForCat;
+            remainingToFund -= availableForCat;
+          }
+
+          availableFunds[cat] = availableFunds[cat]! - assigned;
+
+          switch(cat) {
+             case InvestmentCategoryEnum.personalCapital: bike.fundedByPersonal = assigned; break;
+             case InvestmentCategoryEnum.partnership: bike.fundedByPartnership = assigned; break;
+             case InvestmentCategoryEnum.other: bike.fundedByOther = assigned; break;
+             case InvestmentCategoryEnum.loan: bike.fundedByLoan = assigned; break;
+             default: break;
+          }
+        }
+      }
+    }
   }
 
   void clearBatchForm() {

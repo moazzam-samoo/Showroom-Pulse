@@ -141,14 +141,13 @@ class DashboardController extends GetxController {
       final assetValue = await _salesService.calculateTotalAssetValue();
       totalAssetValue.value = assetValue;
       
-      try {
-        final investmentService = Get.find<InvestmentService>();
-        totalInvestment.value = await investmentService.getTotalCapital();
-        allocatedInvestment.value = await investmentService.getTotalAllocated();
-        availableInvestment.value = await investmentService.getAvailableBalance();
-      } catch (e) {
-        debugPrint('Investment service not initialized: $e');
+      if (!Get.isRegistered<InvestmentService>()) {
+        Get.put(InvestmentService());
       }
+      final investmentService = Get.find<InvestmentService>();
+      totalInvestment.value = await investmentService.getTotalCapital();
+      allocatedInvestment.value = await investmentService.getTotalAllocated();
+      availableInvestment.value = await investmentService.getAvailableBalance();
 
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 

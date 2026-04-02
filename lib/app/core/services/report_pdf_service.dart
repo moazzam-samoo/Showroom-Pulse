@@ -1706,13 +1706,40 @@ class ReportPdfService {
                   
                   String typeLabel = 'Capital';
                   PdfColor typeColor = _primaryColor;
-                  if (inv.type == InvestmentTypeEnum.bikePurchase) {
-                    typeLabel = 'Purchase';
-                    typeColor = _warningColor;
+
+                  if (inv.type == InvestmentTypeEnum.capitalInjection) {
+                    if (inv.category == InvestmentCategoryEnum.personalCapital) {
+                      typeLabel = 'Personal Investment';
+                    } else if (inv.category == InvestmentCategoryEnum.loan) {
+                      typeLabel = 'Loan Investment';
+                    } else if (inv.category == InvestmentCategoryEnum.partnership) {
+                      typeLabel = 'Partnership Investment';
+                    } else {
+                      typeLabel = 'Others Investment';
+                    }
                   } else if (inv.type == InvestmentTypeEnum.withdrawal) {
-                    typeLabel = 'Withdrawal';
                     typeColor = PdfColors.red700;
+                    if (inv.category == InvestmentCategoryEnum.personalUse) {
+                      typeLabel = 'Personal Use Withdraw';
+                    } else if (inv.category == InvestmentCategoryEnum.maintenance) {
+                      typeLabel = 'Maintenance Withdraw';
+                    } else if (inv.category == InvestmentCategoryEnum.expense) {
+                      typeLabel = 'Expenses Withdraw';
+                    } else {
+                      typeLabel = 'Withdrawal';
+                    }
+                  } else if (inv.type == InvestmentTypeEnum.bikePurchase) {
+                    typeLabel = 'Bike Purchase';
+                    typeColor = _warningColor;
+                  } else if (inv.type == InvestmentTypeEnum.bikeSale) {
+                    typeLabel = 'Cash Sale Revenue';
+                    typeColor = PdfColors.blue700;
+                  } else if (inv.type == InvestmentTypeEnum.installmentPayment) {
+                    typeLabel = 'Installment Payment';
+                    typeColor = PdfColors.teal700;
                   }
+
+                  final displayDescription = inv.description?.replaceAll('\u2014', '-') ?? '-';
 
                   return pw.TableRow(
                     decoration:
@@ -1721,7 +1748,7 @@ class ReportPdfService {
                       _tableCell('${idx + 1}'),
                       _tableCell(DateFormat('dd MMM yyyy').format(inv.date)),
                       _tableCell(typeLabel, color: typeColor, bold: true),
-                      _tableCell(inv.description ?? '-'),
+                      _tableCell(displayDescription),
                       _tableCell(_currencyFormat.format(inv.amount), bold: true),
                     ],
                   );

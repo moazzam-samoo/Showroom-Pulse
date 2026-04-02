@@ -42,15 +42,13 @@ class InvestmentService extends GetxService {
     required DateTime date,
     InvestmentCategoryEnum category = InvestmentCategoryEnum.personalCapital,
     String? description,
-    bool isLocked = false,
   }) async {
     final inv = Investment()
       ..amount = amount
       ..date = date
       ..type = InvestmentTypeEnum.capitalInjection
       ..category = category
-      ..description = description
-      ..isLocked = isLocked;
+      ..description = description;
 
     await _isar.writeTxn(() async {
       await _isar.investments.put(inv);
@@ -149,7 +147,6 @@ class InvestmentService extends GetxService {
     double deductOther = 0.0,
     double deductLoan = 0.0,
     String? description,
-    bool isLocked = false,
   }) async {
     final inv = Investment()
       ..amount = amount
@@ -157,7 +154,6 @@ class InvestmentService extends GetxService {
       ..type = InvestmentTypeEnum.withdrawal
       ..category = category
       ..description = description ?? 'Capital outflow'
-      ..isLocked = isLocked
       ..returnPersonal = deductPersonal
       ..returnPartnership = deductPartnership
       ..returnOther = deductOther
@@ -375,16 +371,7 @@ class InvestmentService extends GetxService {
     return allocatedRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
   }
 
-  /// Returns total locked capital
-  Future<double> getLockedCapital() async {
-    final lockedRecords = await _isar.investments
-        .filter()
-        .typeEqualTo(InvestmentTypeEnum.capitalInjection)
-        .and()
-        .isLockedEqualTo(true)
-        .findAll();
-    return lockedRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
-  }
+
 
   /// Sum of all revenue from cash bike sales
   Future<double> getCashFromSales() async {
@@ -446,25 +433,23 @@ class InvestmentService extends GetxService {
 
       // 1. Injected & Withdrawn
       for (final inv in allInvestments) {
-        if (!inv.isLocked) {
-          if (inv.type == InvestmentTypeEnum.capitalInjection && inv.category == cat) {
-            injected += inv.amount;
-          } else if (inv.type == InvestmentTypeEnum.withdrawal) {
-            double exactDeducted = 0.0;
-            switch (cat) {
-              case InvestmentCategoryEnum.personalCapital: exactDeducted = inv.returnPersonal; break;
-              case InvestmentCategoryEnum.partnership: exactDeducted = inv.returnPartnership; break;
-              case InvestmentCategoryEnum.other: exactDeducted = inv.returnOther; break;
-              case InvestmentCategoryEnum.loan: exactDeducted = inv.returnLoan; break;
-              default: break;
-            }
-            // Add precisely deducted value across multiple pools
-            if (exactDeducted > 0) {
-              withdrawn += exactDeducted;
-            } else if (inv.category == cat && inv.returnPersonal == 0 && inv.returnPartnership == 0 && inv.returnOther == 0 && inv.returnLoan == 0) {
-              // Legacy fallback if perfectly mapped V2 withdrawals did not exist
-              withdrawn += inv.amount;
-            }
+        if (inv.type == InvestmentTypeEnum.capitalInjection && inv.category == cat) {
+          injected += inv.amount;
+        } else if (inv.type == InvestmentTypeEnum.withdrawal) {
+          double exactDeducted = 0.0;
+          switch (cat) {
+            case InvestmentCategoryEnum.personalCapital: exactDeducted = inv.returnPersonal; break;
+            case InvestmentCategoryEnum.partnership: exactDeducted = inv.returnPartnership; break;
+            case InvestmentCategoryEnum.other: exactDeducted = inv.returnOther; break;
+            case InvestmentCategoryEnum.loan: exactDeducted = inv.returnLoan; break;
+            default: break;
+          }
+          // Add precisely deducted value across multiple pools
+          if (exactDeducted > 0) {
+            withdrawn += exactDeducted;
+          } else if (inv.category == cat && inv.returnPersonal == 0 && inv.returnPartnership == 0 && inv.returnOther == 0 && inv.returnLoan == 0) {
+            // Legacy fallback if perfectly mapped V2 withdrawals did not exist
+            withdrawn += inv.amount;
           }
         }
 
@@ -531,29 +516,7 @@ class InvestmentService extends GetxService {
     return result;
   }
 
-  /// Returns breakdown of locked capital
-  Future<Map<InvestmentCategoryEnum, double>> getLockedBreakdown() async {
-    final allInvestments = await _isar.investments.where().findAll();
-    final Map<InvestmentCategoryEnum, double> locked = {
-      InvestmentCategoryEnum.personalCapital: 0,
-      InvestmentCategoryEnum.partnership: 0,
-      InvestmentCategoryEnum.other: 0,
-      InvestmentCategoryEnum.loan: 0,
-    };
 
-    for (final inv in allInvestments) {
-      if (inv.isLocked) {
-        if (inv.type == InvestmentTypeEnum.capitalInjection) {
-          locked[inv.category] = (locked[inv.category] ?? 0) + inv.amount;
-        } else if (inv.type == InvestmentTypeEnum.withdrawal) {
-          // Precisely deduct from locked capital if we ever support multi-pool locked withdrawals
-          // Currently, locked is a pool per-category, but the feature is minimally used
-          locked[inv.category] = (locked[inv.category] ?? 0) - inv.amount;
-        }
-      }
-    }
-    return locked;
-  }
 
   // ==================== PROFIT CALCULATIONS ====================
 
@@ -798,6 +761,272 @@ class InvestmentService extends GetxService {
     return await _isar.bikes.where().count();
   }
 
+  // ==================== KPI DETAIL DATA ====================
+
+  /// Detail data for "Sold & Completed Bikes" KPI popup
+  Future<List<Map<String, dynamic>>> getSoldAndCompletedBikesDetail() async {
+    final List<Map<String, dynamic>> result = [];
+
+    // 1. Cash-sold bikes
+    final soldBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.sold)
+        .findAll();
+
+    for (final bike in soldBikes) {
+      final sale = await _isar.sales
+          .filter()
+          .bikeIdEqualTo(bike.id)
+          .findFirst();
+      
+      final saleAmount = sale?.totalAmount ?? 0.0;
+      final profit = saleAmount - bike.purchasePrice;
+
+      result.add({
+        'bikeName': '${bike.model} ${bike.brand}',
+        'color': bike.color,
+        'modelYear': bike.modelYear,
+        'purchasePrice': bike.purchasePrice,
+        'saleAmount': saleAmount,
+        'profit': profit,
+        'saleDate': sale?.saleDate ?? bike.dateAdded,
+        'saleType': 'Cash Sale',
+        'fundedByPersonal': bike.fundedByPersonal,
+        'fundedByPartnership': bike.fundedByPartnership,
+        'fundedByOther': bike.fundedByOther,
+        'fundedByLoan': bike.fundedByLoan,
+      });
+    }
+
+    // 2. Completed installment bikes
+    final installmentBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.installment)
+        .findAll();
+
+    for (final bike in installmentBikes) {
+      final contract = await _isar.installmentContracts
+          .filter()
+          .bikeIdEqualTo(bike.id)
+          .findFirst();
+      if (contract?.status != ContractStatusEnum.completed) continue;
+
+      final profit = contract!.totalPaid - bike.purchasePrice;
+      result.add({
+        'bikeName': '${bike.model} ${bike.brand}',
+        'color': bike.color,
+        'modelYear': bike.modelYear,
+        'purchasePrice': bike.purchasePrice,
+        'saleAmount': contract.totalPaid,
+        'profit': profit,
+        'saleDate': contract.contractDate,
+        'saleType': 'Installment (Completed)',
+        'fundedByPersonal': bike.fundedByPersonal,
+        'fundedByPartnership': bike.fundedByPartnership,
+        'fundedByOther': bike.fundedByOther,
+        'fundedByLoan': bike.fundedByLoan,
+      });
+    }
+
+    // Sort by date descending
+    result.sort((a, b) => (b['saleDate'] as DateTime).compareTo(a['saleDate'] as DateTime));
+    return result;
+  }
+
+  /// Detail data for "Active Inventory Bikes" KPI popup
+  Future<List<Map<String, dynamic>>> getActiveInventoryBikesDetail() async {
+    final List<Map<String, dynamic>> result = [];
+
+    // 1. Available bikes
+    final availableBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.available)
+        .findAll();
+
+    for (final bike in availableBikes) {
+      result.add({
+        'bikeName': '${bike.model} ${bike.brand}',
+        'color': bike.color,
+        'modelYear': bike.modelYear,
+        'purchasePrice': bike.purchasePrice,
+        'purchaseDate': bike.dateAdded,
+        'status': 'Available',
+        'fundedByPersonal': bike.fundedByPersonal,
+        'fundedByPartnership': bike.fundedByPartnership,
+        'fundedByOther': bike.fundedByOther,
+        'fundedByLoan': bike.fundedByLoan,
+      });
+    }
+
+    // 2. On-installment bikes (active contracts only)
+    final installmentBikes = await _isar.bikes
+        .filter()
+        .statusEqualTo(BikeStatusEnum.installment)
+        .findAll();
+
+    for (final bike in installmentBikes) {
+      final contract = await _isar.installmentContracts
+          .filter()
+          .bikeIdEqualTo(bike.id)
+          .findFirst();
+      if (contract != null && contract.status != ContractStatusEnum.completed) {
+        result.add({
+          'bikeName': '${bike.model} ${bike.brand}',
+          'color': bike.color,
+          'modelYear': bike.modelYear,
+          'purchasePrice': bike.purchasePrice,
+          'purchaseDate': bike.dateAdded,
+          'status': 'On Installment',
+          'fundedByPersonal': bike.fundedByPersonal,
+          'fundedByPartnership': bike.fundedByPartnership,
+          'fundedByOther': bike.fundedByOther,
+          'fundedByLoan': bike.fundedByLoan,
+        });
+      }
+    }
+
+    result.sort((a, b) => (b['purchaseDate'] as DateTime).compareTo(a['purchaseDate'] as DateTime));
+    return result;
+  }
+
+  /// Detail data for "Maintenance" KPI popup
+  Future<List<Map<String, dynamic>>> getMaintenanceDetail() async {
+    final records = await _isar.investments
+        .filter()
+        .typeEqualTo(InvestmentTypeEnum.withdrawal)
+        .and()
+        .categoryEqualTo(InvestmentCategoryEnum.maintenance)
+        .sortByDateDesc()
+        .findAll();
+
+    return records.map((inv) => {
+      'date': inv.date,
+      'description': inv.description?.replaceAll('\u2014', '-') ?? '-',
+      'amount': inv.amount,
+    }).toList();
+  }
+
+  /// Detail data for "Total Expenses" KPI popup (maintenance + expense + personal use)
+  Future<List<Map<String, dynamic>>> getExpensesDetail() async {
+    final records = await _isar.investments
+        .filter()
+        .typeEqualTo(InvestmentTypeEnum.withdrawal)
+        .and()
+        .group((q) => q
+            .categoryEqualTo(InvestmentCategoryEnum.maintenance)
+            .or()
+            .categoryEqualTo(InvestmentCategoryEnum.expense)
+            .or()
+            .categoryEqualTo(InvestmentCategoryEnum.personalUse))
+        .sortByDateDesc()
+        .findAll();
+
+    return records.map((inv) {
+      String typeLabel = 'Expense';
+      if (inv.category == InvestmentCategoryEnum.maintenance) {
+        typeLabel = 'Maintenance';
+      } else if (inv.category == InvestmentCategoryEnum.personalUse) {
+        typeLabel = 'Personal Use';
+      }
+      return {
+        'date': inv.date,
+        'type': typeLabel,
+        'description': inv.description?.replaceAll('\u2014', '-') ?? '-',
+        'amount': inv.amount,
+      };
+    }).toList();
+  }
+
+  /// Detail data for "Future Payments" KPI popup
+  Future<List<Map<String, dynamic>>> getFuturePaymentsDetail() async {
+    final activeContracts = await _isar.installmentContracts
+        .filter()
+        .statusEqualTo(ContractStatusEnum.active)
+        .or()
+        .statusEqualTo(ContractStatusEnum.partiallyPaid)
+        .or()
+        .statusEqualTo(ContractStatusEnum.overdue)
+        .findAll();
+
+    final List<Map<String, dynamic>> result = [];
+
+    for (final contract in activeContracts) {
+      final bike = await _isar.bikes.get(contract.bikeId);
+      if (bike == null) continue;
+
+      final remaining = contract.remainingBalance;
+      final totalFunded = bike.fundedByPersonal + bike.fundedByPartnership + bike.fundedByOther + bike.fundedByLoan;
+      
+      // Proportional distribution of remaining payment
+      double sharePersonal = 0, sharePartnership = 0, shareOther = 0, shareLoan = 0;
+      if (totalFunded > 0) {
+        sharePersonal = (bike.fundedByPersonal / totalFunded) * remaining;
+        sharePartnership = (bike.fundedByPartnership / totalFunded) * remaining;
+        shareOther = (bike.fundedByOther / totalFunded) * remaining;
+        shareLoan = (bike.fundedByLoan / totalFunded) * remaining;
+      }
+
+      result.add({
+        'bikeName': '${bike.model} ${bike.brand}',
+        'remainingBalance': remaining,
+        'monthlyEMI': contract.monthlyEMI,
+        'paymentsRemaining': contract.paymentsRemaining,
+        'sharePersonal': sharePersonal,
+        'sharePartnership': sharePartnership,
+        'shareOther': shareOther,
+        'shareLoan': shareLoan,
+      });
+    }
+    return result;
+  }
+
+  /// Detail data for "Future Profit" KPI popup
+  Future<List<Map<String, dynamic>>> getFutureProfitDetail() async {
+    final activeContracts = await _isar.installmentContracts
+        .filter()
+        .statusEqualTo(ContractStatusEnum.active)
+        .or()
+        .statusEqualTo(ContractStatusEnum.partiallyPaid)
+        .or()
+        .statusEqualTo(ContractStatusEnum.overdue)
+        .findAll();
+
+    final List<Map<String, dynamic>> result = [];
+
+    for (final contract in activeContracts) {
+      final bike = await _isar.bikes.get(contract.bikeId);
+      if (bike == null) continue;
+
+      final totalAmount = contract.totalAmount;
+      final totalPaid = contract.totalPaid;
+      final purchasePrice = bike.purchasePrice;
+
+      final totalProfitPotential = (totalAmount - purchasePrice).clamp(0.0, double.infinity);
+      final futurePayment = (totalAmount - totalPaid).clamp(0.0, double.infinity);
+      final futureProfit = (futurePayment < totalProfitPotential) ? futurePayment : totalProfitPotential;
+
+      final totalFunded = bike.fundedByPersonal + bike.fundedByPartnership + bike.fundedByOther + bike.fundedByLoan;
+      double sharePersonal = 0, sharePartnership = 0, shareOther = 0, shareLoan = 0;
+      if (totalFunded > 0) {
+        sharePersonal = (bike.fundedByPersonal / totalFunded) * futureProfit;
+        sharePartnership = (bike.fundedByPartnership / totalFunded) * futureProfit;
+        shareOther = (bike.fundedByOther / totalFunded) * futureProfit;
+        shareLoan = (bike.fundedByLoan / totalFunded) * futureProfit;
+      }
+
+      result.add({
+        'bikeName': '${bike.model} ${bike.brand}',
+        'futureProfit': futureProfit,
+        'totalProfitPotential': totalProfitPotential,
+        'sharePersonal': sharePersonal,
+        'sharePartnership': sharePartnership,
+        'shareOther': shareOther,
+        'shareLoan': shareLoan,
+      });
+    }
+    return result;
+  }
+
   // ==================== HISTORY ====================
 
   /// Returns investment history sorted by date descending
@@ -950,7 +1179,6 @@ class InvestmentService extends GetxService {
                ..type = InvestmentTypeEnum.withdrawal
                ..category = InvestmentCategoryEnum.expense
                ..description = 'Expense — ${exp.category}'
-               ..isLocked = false
                ..returnOther = exp.amount; // Safest fallback: deduct from 'Other' dynamically
              await _isar.investments.put(inv);
              expenseRecordsMigrated++;

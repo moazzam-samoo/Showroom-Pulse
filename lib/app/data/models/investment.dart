@@ -44,7 +44,6 @@ class Investment {
   String? description;
 
   /// If this investment is "locked", it cannot be spent on bikes
-  bool isLocked = false;
 
   /// For a bikePurchase type, the ID of the specific bike (if manually added)
   int? bikeId;

@@ -215,6 +215,11 @@ class InventoryController extends GetxController {
       
       await loadBikes(); // Refresh list
       
+      // Trigger Investment UI Refresh
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
+
       if (investmentAmount > 0) {
         final invService = _getInvestmentService();
         final remainingBalance = await invService.getAvailableBalance();
@@ -319,6 +324,11 @@ class InventoryController extends GetxController {
       await _inventoryService.updateBike(bike);
       
       await loadBikes(); // Refresh list
+      
+      // Trigger Investment UI Refresh
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
       
       AppToast.showSuccess(
         title: 'Success',

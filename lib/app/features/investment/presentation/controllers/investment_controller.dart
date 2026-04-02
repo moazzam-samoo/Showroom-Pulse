@@ -26,7 +26,6 @@ class InvestmentController extends GetxController {
   // === KPIs — Core ===
   final totalCapital = 0.0.obs;
   final totalAllocated = 0.0.obs;
-  final lockedCapital = 0.0.obs;
   final availableBalance = 0.0.obs;
   final totalBalance = 0.0.obs; // Includes locked
   final totalProfit = 0.0.obs;
@@ -48,7 +47,6 @@ class InvestmentController extends GetxController {
   final soldAndCompletedPriceValuation = 0.0.obs;
   final activeInventoryPriceValuation = 0.0.obs;
   final categoryFinancials = <CategoryFinancials>[].obs;
-  final lockedBreakdown = <InvestmentCategoryEnum, double>{}.obs;
 
   // History & Filters
   final investmentHistory = <Investment>[].obs;
@@ -66,7 +64,6 @@ class InvestmentController extends GetxController {
   final notesController = TextEditingController();
   final selectedDate = DateTime.now().obs;
   final selectedCategory = InvestmentCategoryEnum.personalCapital.obs;
-  final isLockedToggle = false.obs;
   final selectedWithdrawalSources = <InvestmentCategoryEnum>[].obs;
 
   @override
@@ -120,7 +117,6 @@ class InvestmentController extends GetxController {
     // Core KPIs
     totalCapital.value = await _investmentService.getTotalCapital();
     totalAllocated.value = await _investmentService.getTotalAllocated();
-    lockedCapital.value = await _investmentService.getLockedCapital();
     totalWithdrawals.value = await _investmentService.getTotalWithdrawals();
     availableBalance.value = await _investmentService.getAvailableBalance();
     totalBalance.value = await _investmentService.getTotalRemainingBalance();
@@ -145,7 +141,6 @@ class InvestmentController extends GetxController {
 
     // Breakdown
     categoryFinancials.assignAll(await _investmentService.getCategoryFinancials());
-    lockedBreakdown.assignAll(await _investmentService.getLockedBreakdown());
 
     // Loss tracking
     accumulatedLoss.value = await _investmentService.getAccumulatedLoss();
@@ -292,7 +287,6 @@ class InvestmentController extends GetxController {
         date: selectedDate.value,
         category: selectedCategory.value,
         description: notesController.text.trim().isEmpty ? null : notesController.text.trim(),
-        isLocked: isLockedToggle.value,
       );
 
       Get.back(); // Close Dialog immediately for snappy feel
@@ -377,7 +371,6 @@ class InvestmentController extends GetxController {
         deductLoan: deductLoan,
         deductOther: deductOther,
         description: notesController.text.trim().isEmpty ? 'Capital outflow' : notesController.text.trim(),
-        isLocked: false,
       );
 
       Get.back(); // Close Dialog immediately
@@ -400,7 +393,6 @@ class InvestmentController extends GetxController {
     notesController.clear();
     selectedDate.value = DateTime.now();
     selectedCategory.value = InvestmentCategoryEnum.personalCapital;
-    isLockedToggle.value = false;
     selectedWithdrawalSources.clear();
   }
 

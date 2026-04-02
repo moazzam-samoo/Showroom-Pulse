@@ -5,11 +5,9 @@ import 'package:tahir_showroom/app/features/investment/presentation/controllers/
 import 'package:tahir_showroom/app/features/investment/presentation/widgets/add_investment_dialog.dart';
 import 'package:tahir_showroom/app/features/investment/presentation/widgets/investment_history_card.dart';
 import 'package:tahir_showroom/app/features/investment/presentation/widgets/investment_summary_card.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/widgets/kpi_detail_popups.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
-import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
-import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/investment_intro_overlay.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 class InvestmentView extends GetView<InvestmentController> {
   const InvestmentView({super.key});
@@ -71,11 +69,6 @@ class InvestmentView extends GetView<InvestmentController> {
                     iconTheme: IconThemeData(color: textCol),
                     actions: [
                       IconButton(
-                        icon: Icon(LucideIcons.helpCircle, color: textCol),
-                        tooltip: 'Show Tour',
-                        onPressed: () => _startCoachingTour(context),
-                      ),
-                      IconButton(
                         icon: Icon(Icons.picture_as_pdf, color: textCol),
                         tooltip: 'Export Report',
                         onPressed: controller.exportToPdf,
@@ -124,7 +117,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                           icon: Icons.account_balance_wallet,
                                           color: const Color(0xFF3B82F6), // Blue
                                           subtitle: 'Lifetime capital',
-                                          onTap: () => controller.setKpiFilter('Total Invested'),
+                                          onTap: () => KpiDetailPopups.showTotalInvested(context),
                                           extraContent: _buildBreakdownList(
                                             context,
                                             controller.categoryFinancials.map((c) => 
@@ -139,10 +132,8 @@ class InvestmentView extends GetView<InvestmentController> {
                                           amount: currencyFormat.format(controller.availableBalance.value),
                                           icon: Icons.savings,
                                           color: const Color(0xFF22C55E), // Green
-                                          subtitle: controller.lockedCapital.value > 0
-                                              ? '${currencyFormat.format(controller.lockedCapital.value)} Locked'
-                                              : 'Ready to invest',
-                                          onTap: () => controller.setKpiFilter('Available Cash'),
+                                          subtitle: 'Ready to invest',
+                                          onTap: () => KpiDetailPopups.showAvailableCash(context),
                                           extraContent: _buildBreakdownList(
                                             context,
                                             [
@@ -166,7 +157,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                           subtitle: controller.accumulatedLoss.value > 0
                                               ? '${currencyFormat.format(controller.accumulatedLoss.value)} loss pending • ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%'
                                               : 'ROI: ${controller.roiPercentage.value.toStringAsFixed(1)}%',
-                                          onTap: () => controller.setKpiFilter('Net Profit'),
+                                          onTap: () => KpiDetailPopups.showNetProfit(context),
                                           extraContent: _buildBreakdownList(
                                             context,
                                             [
@@ -191,7 +182,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                             icon: Icons.assignment_turned_in,
                                             color: const Color(0xFF10B981), // Green
                                             subtitle: 'Purchase cost of sold items',
-                                            onTap: () => controller.setKpiFilter('Sold & Completed'),
+                                            onTap: () => KpiDetailPopups.showSoldAndCompleted(context),
                                           ),
                                           InvestmentSummaryCard(
                                             title: 'Active Inventory Bikes Purchasing Value',
@@ -199,7 +190,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                             icon: Icons.inventory_2,
                                             color: const Color(0xFF6366F1), // Indigo
                                             subtitle: 'Value currently in showroom/pending',
-                                            onTap: () => controller.setKpiFilter('Active Inventory'),
+                                            onTap: () => KpiDetailPopups.showActiveInventory(context),
                                           ),
                                             InvestmentSummaryCard(
                                               title: 'Maintenance Spent',
@@ -207,7 +198,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                               icon: Icons.build,
                                               color: const Color(0xFFEAB308), // Amber
                                               subtitle: 'Lifetime maintenance expenses',
-                                              onTap: () => controller.setKpiFilter('Maintenance Spent'),
+                                              onTap: () => KpiDetailPopups.showMaintenance(context),
                                             ),
                                             InvestmentSummaryCard(
                                               title: 'Total Expenses',
@@ -215,7 +206,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                               icon: Icons.receipt_long,
                                               color: const Color(0xFFF97316), // Orange
                                               subtitle: 'All operating expenses & maintenance',
-                                              onTap: () => controller.setKpiFilter('Total Expenses'),
+                                              onTap: () => KpiDetailPopups.showTotalExpenses(context),
                                             ),
                                           ],
                                           aspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
@@ -232,7 +223,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                             icon: Icons.update,
                                             color: const Color(0xFFF59E0B), // Orange-Amber
                                             subtitle: '${controller.activeContractsCount.value} Active contracts',
-                                            onTap: () => controller.setKpiFilter('Future Payments'),
+                                            onTap: () => KpiDetailPopups.showFuturePayments(context),
                                           ),
                                           InvestmentSummaryCard(
                                             title: 'Future Profit',
@@ -240,7 +231,7 @@ class InvestmentView extends GetView<InvestmentController> {
                                             icon: Icons.auto_graph,
                                             color: const Color(0xFF8B5CF6), // Purple
                                             subtitle: 'Expected from active contracts',
-                                            onTap: () => controller.setKpiFilter('Future Profit'),
+                                            onTap: () => KpiDetailPopups.showFutureProfit(context),
                                           ),
                                         ],
                                         aspectRatio: MediaQuery.of(context).size.width > 1100 ? 2.0 : 1.5,
@@ -413,12 +404,12 @@ class InvestmentView extends GetView<InvestmentController> {
           ),
         ),
         
-        // Intro Overlay
+        // Intro Overlay - keeping only dismiss functionality if it auto-shows
         if (controller.showTourRequested.value)
           InvestmentIntroOverlay(
             onStartTour: () {
               controller.showTourRequested.value = false;
-              _startCoachingTour(context);
+              controller.markTourAsComplete();
             },
             onDismiss: () => controller.markTourAsComplete(),
           ),
@@ -426,80 +417,7 @@ class InvestmentView extends GetView<InvestmentController> {
     ));
   }
 
-  void _startCoachingTour(BuildContext context) {
-    final List<CoachMarkTarget> targets = [
-      CoachMarkTarget(
-        targetKey: controller.investedCardKey,
-        title: 'Total Capital',
-        description: 'This shows the lifetime capital injected into the showroom since start. It represents your total ownership stake.',
-        position: CoachMarkPosition.bottom,
-        onBeforeTarget: () async {
-          // KPIs are usually at the top, scroll there just in case
-          await Scrollable.ensureVisible(
-            controller.investedCardKey.currentContext!,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-          );
-        },
-      ),
-      CoachMarkTarget(
-        targetKey: controller.availableCardKey,
-        title: 'Available Cash',
-        description: 'This is your liquid balance. Funds here are ready to be used for bike purchases or withdrawals.',
-        position: CoachMarkPosition.bottom,
-      ),
-      CoachMarkTarget(
-        targetKey: controller.profitCardKey,
-        title: 'Net Profit & ROI',
-        description: 'Track your real-time earnings. ROI (Return on Investment) helps you measure how efficiently your capital is working.',
-        position: CoachMarkPosition.bottom,
-      ),
-      CoachMarkTarget(
-        targetKey: controller.historyTitleKey,
-        title: 'Transaction History',
-        description: 'A complete audit log of every investment, withdrawal, and bike purchase associated with your capital.',
-        position: CoachMarkPosition.bottom,
-        onBeforeTarget: () async {
-          await Scrollable.ensureVisible(
-            controller.historyTitleKey.currentContext!,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-          );
-        },
-      ),
-      CoachMarkTarget(
-        targetKey: controller.filterRowKey,
-        title: 'Advanced Filters',
-        description: 'Easily slice your data by transaction types (Bikes, Revenue, Capital) or time periods (Weekly, Monthly).',
-        position: CoachMarkPosition.top,
-        onBeforeTarget: () async {
-          await Scrollable.ensureVisible(
-            controller.filterRowKey.currentContext!,
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-          );
-        },
-      ),
-      CoachMarkTarget(
-        targetKey: controller.addCapitalFabKey,
-        title: 'Quick Actions',
-        description: 'Inject fresh capital or record withdrawals instantly using these action buttons.',
-        position: CoachMarkPosition.top,
-      ),
-    ];
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => CoachMarkOverlay(
-        targets: targets,
-        onComplete: () {
-          Navigator.of(context).pop();
-          controller.markTourAsComplete();
-        },
-      ),
-    );
-  }
 
   Widget _buildCategoryChip(BuildContext context, String label, CategoryFilter filter, Color textCol) {
     final isSelected = controller.selectedCategoryFilter.value == filter;

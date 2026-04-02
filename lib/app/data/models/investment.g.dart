@@ -48,48 +48,43 @@ const InvestmentSchema = CollectionSchema(
       name: r'installmentContractId',
       type: IsarType.long,
     ),
-    r'isLocked': PropertySchema(
-      id: 6,
-      name: r'isLocked',
-      type: IsarType.bool,
-    ),
     r'profitAmount': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'profitAmount',
       type: IsarType.double,
     ),
     r'purchaseBatchId': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'purchaseBatchId',
       type: IsarType.long,
     ),
     r'returnLoan': PropertySchema(
-      id: 9,
+      id: 8,
       name: r'returnLoan',
       type: IsarType.double,
     ),
     r'returnOther': PropertySchema(
-      id: 10,
+      id: 9,
       name: r'returnOther',
       type: IsarType.double,
     ),
     r'returnPartnership': PropertySchema(
-      id: 11,
+      id: 10,
       name: r'returnPartnership',
       type: IsarType.double,
     ),
     r'returnPersonal': PropertySchema(
-      id: 12,
+      id: 11,
       name: r'returnPersonal',
       type: IsarType.double,
     ),
     r'saleId': PropertySchema(
-      id: 13,
+      id: 12,
       name: r'saleId',
       type: IsarType.long,
     ),
     r'type': PropertySchema(
-      id: 14,
+      id: 13,
       name: r'type',
       type: IsarType.byte,
       enumMap: _InvestmenttypeEnumValueMap,
@@ -136,15 +131,14 @@ void _investmentSerialize(
   writer.writeDateTime(offsets[3], object.date);
   writer.writeString(offsets[4], object.description);
   writer.writeLong(offsets[5], object.installmentContractId);
-  writer.writeBool(offsets[6], object.isLocked);
-  writer.writeDouble(offsets[7], object.profitAmount);
-  writer.writeLong(offsets[8], object.purchaseBatchId);
-  writer.writeDouble(offsets[9], object.returnLoan);
-  writer.writeDouble(offsets[10], object.returnOther);
-  writer.writeDouble(offsets[11], object.returnPartnership);
-  writer.writeDouble(offsets[12], object.returnPersonal);
-  writer.writeLong(offsets[13], object.saleId);
-  writer.writeByte(offsets[14], object.type.index);
+  writer.writeDouble(offsets[6], object.profitAmount);
+  writer.writeLong(offsets[7], object.purchaseBatchId);
+  writer.writeDouble(offsets[8], object.returnLoan);
+  writer.writeDouble(offsets[9], object.returnOther);
+  writer.writeDouble(offsets[10], object.returnPartnership);
+  writer.writeDouble(offsets[11], object.returnPersonal);
+  writer.writeLong(offsets[12], object.saleId);
+  writer.writeByte(offsets[13], object.type.index);
 }
 
 Investment _investmentDeserialize(
@@ -163,16 +157,15 @@ Investment _investmentDeserialize(
   object.description = reader.readStringOrNull(offsets[4]);
   object.id = id;
   object.installmentContractId = reader.readLongOrNull(offsets[5]);
-  object.isLocked = reader.readBool(offsets[6]);
-  object.profitAmount = reader.readDouble(offsets[7]);
-  object.purchaseBatchId = reader.readLongOrNull(offsets[8]);
-  object.returnLoan = reader.readDouble(offsets[9]);
-  object.returnOther = reader.readDouble(offsets[10]);
-  object.returnPartnership = reader.readDouble(offsets[11]);
-  object.returnPersonal = reader.readDouble(offsets[12]);
-  object.saleId = reader.readLongOrNull(offsets[13]);
+  object.profitAmount = reader.readDouble(offsets[6]);
+  object.purchaseBatchId = reader.readLongOrNull(offsets[7]);
+  object.returnLoan = reader.readDouble(offsets[8]);
+  object.returnOther = reader.readDouble(offsets[9]);
+  object.returnPartnership = reader.readDouble(offsets[10]);
+  object.returnPersonal = reader.readDouble(offsets[11]);
+  object.saleId = reader.readLongOrNull(offsets[12]);
   object.type =
-      _InvestmenttypeValueEnumMap[reader.readByteOrNull(offsets[14])] ??
+      _InvestmenttypeValueEnumMap[reader.readByteOrNull(offsets[13])] ??
           InvestmentTypeEnum.capitalInjection;
   return object;
 }
@@ -198,11 +191,11 @@ P _investmentDeserializeProp<P>(
     case 5:
       return (reader.readLongOrNull(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
-    case 7:
       return (reader.readDouble(offset)) as P;
-    case 8:
+    case 7:
       return (reader.readLongOrNull(offset)) as P;
+    case 8:
+      return (reader.readDouble(offset)) as P;
     case 9:
       return (reader.readDouble(offset)) as P;
     case 10:
@@ -210,10 +203,8 @@ P _investmentDeserializeProp<P>(
     case 11:
       return (reader.readDouble(offset)) as P;
     case 12:
-      return (reader.readDouble(offset)) as P;
-    case 13:
       return (reader.readLongOrNull(offset)) as P;
-    case 14:
+    case 13:
       return (_InvestmenttypeValueEnumMap[reader.readByteOrNull(offset)] ??
           InvestmentTypeEnum.capitalInjection) as P;
     default:
@@ -865,16 +856,6 @@ extension InvestmentQueryFilter
     });
   }
 
-  QueryBuilder<Investment, Investment, QAfterFilterCondition> isLockedEqualTo(
-      bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isLocked',
-        value: value,
-      ));
-    });
-  }
-
   QueryBuilder<Investment, Investment, QAfterFilterCondition>
       profitAmountEqualTo(
     double value, {
@@ -1483,18 +1464,6 @@ extension InvestmentQuerySortBy
     });
   }
 
-  QueryBuilder<Investment, Investment, QAfterSortBy> sortByIsLocked() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isLocked', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Investment, Investment, QAfterSortBy> sortByIsLockedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isLocked', Sort.desc);
-    });
-  }
-
   QueryBuilder<Investment, Investment, QAfterSortBy> sortByProfitAmount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'profitAmount', Sort.asc);
@@ -1683,18 +1652,6 @@ extension InvestmentQuerySortThenBy
     });
   }
 
-  QueryBuilder<Investment, Investment, QAfterSortBy> thenByIsLocked() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isLocked', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Investment, Investment, QAfterSortBy> thenByIsLockedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isLocked', Sort.desc);
-    });
-  }
-
   QueryBuilder<Investment, Investment, QAfterSortBy> thenByProfitAmount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'profitAmount', Sort.asc);
@@ -1835,12 +1792,6 @@ extension InvestmentQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Investment, Investment, QDistinct> distinctByIsLocked() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isLocked');
-    });
-  }
-
   QueryBuilder<Investment, Investment, QDistinct> distinctByProfitAmount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'profitAmount');
@@ -1934,12 +1885,6 @@ extension InvestmentQueryProperty
       installmentContractIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'installmentContractId');
-    });
-  }
-
-  QueryBuilder<Investment, bool, QQueryOperations> isLockedProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isLocked');
     });
   }
 
