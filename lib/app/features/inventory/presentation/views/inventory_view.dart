@@ -294,7 +294,7 @@ class _InventoryViewState extends State<InventoryView> {
         } else if (constraints.maxWidth < 1000) crossAxisCount = 3;
 
         return Scrollbar(
-          child: MasonryGridView.count(
+          child: AlignedGridView.count(
           padding: const EdgeInsets.only(right: AppSpacing.md, bottom: AppSpacing.xl),
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: AppSpacing.base,

@@ -321,9 +321,23 @@ class InvestmentController extends GetxController {
       return;
     }
 
+    final financials = categoryFinancials.toList();
+
+    // Verify all selected pools have a positive balance
+    for (final source in selectedWithdrawalSources) {
+       final catFin = financials.firstWhereOrNull((c) => c.category == source);
+       if (catFin != null && catFin.available <= 0) {
+          final poolName = _formatEnumName(source.name);
+          AppToast.showError(
+            title: 'Empty Pool Selected', 
+            message: 'The pool "$poolName" has zero balance and cannot be used for this expense. Please uncheck it.'
+          );
+          return;
+       }
+    }
+
     // Determine available balance of the selected sources only
     double selectedAvailable = 0.0;
-    final financials = categoryFinancials.toList();
     
     for (final source in selectedWithdrawalSources) {
        final catFin = financials.firstWhereOrNull((c) => c.category == source);
