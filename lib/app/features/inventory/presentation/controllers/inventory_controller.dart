@@ -61,7 +61,44 @@ class InventoryController extends GetxController {
     errorMessage.value = '';
     try {
       final loadedBikes = await _inventoryService.getAllBikes();
-      bikes.assignAll(loadedBikes);
+      
+      // MIGRATION SCRIPT to fix reversed brand/model fields globally
+      bool changed = false;
+      final makers = ['honda', 'yamaha', 'suzuki', 'united', 'road prince', 'super power', 'unique', 'ravi', 'hi-speed', 'zxmco', 'metro', 'crown', 'other'];
+      for (var bike in loadedBikes) {
+        String brandLower = bike.brand.toLowerCase();
+        bool hasReversed = false;
+        
+        for (var maker in makers) {
+          if (brandLower.contains(maker)) {
+            hasReversed = true;
+            break;
+          }
+        }
+        
+        if (!hasReversed) {
+          String modelLower = bike.model.toLowerCase();
+          if ((modelLower.contains('125') || modelLower.contains('70') || modelLower.contains('110') || modelLower.contains('150')) &&
+              !(brandLower.contains('125') || brandLower.contains('70') || brandLower.contains('110') || brandLower.contains('150'))) {
+            hasReversed = true;
+          }
+        }
+        
+        if (hasReversed) {
+          String temp = bike.model;
+          bike.model = bike.brand;
+          bike.brand = temp;
+          await _inventoryService.updateBike(bike);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        final fixedBikes = await _inventoryService.getAllBikes();
+        bikes.assignAll(fixedBikes);
+      } else {
+        bikes.assignAll(loadedBikes);
+      }
       
       // Update image paths to full paths
       for (var bike in bikes) {

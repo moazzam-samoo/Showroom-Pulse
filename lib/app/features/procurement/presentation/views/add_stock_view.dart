@@ -612,38 +612,38 @@ class AddStockView extends GetView<SupplierController> {
                       ),
                     ),
                      const SizedBox(width: 8),
-                    // Brand
+                    // Brand / Maker
                     Expanded(
                       flex: 2,
                       child: BlinkingFocusBuilder(
                         focusNode: entry.brandFocus,
                         child: _buildCompactAutocomplete(
-                           initialValue: entry.brand,
+                           initialValue: entry.model, // Maker maps to model in app convention
                            focusNode: entry.brandFocus,
                            isDark: isDark,
                            hint: 'Maker',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeBrandsList()
                                : [],
-                           onChanged: (v) => entry.brand = v,
+                           onChanged: (v) => entry.model = v,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Model
+                    // Model / Horse Power
                     Expanded(
                       flex: 2,
                       child: BlinkingFocusBuilder(
                         focusNode: entry.modelFocus,
                         child: _buildCompactAutocomplete(
-                           initialValue: entry.model,
+                           initialValue: entry.brand, // HP maps to brand in app convention
                            focusNode: entry.modelFocus,
                            isDark: isDark,
                            hint: 'Horse Power',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeModelsList()
                                : [],
-                           onChanged: (v) => entry.model = v,
+                           onChanged: (v) => entry.brand = v,
                         ),
                       ),
                     ),
