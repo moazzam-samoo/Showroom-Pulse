@@ -1,12 +1,12 @@
 ; ============================================================
 ;  AL-TAHIR Showroom ERP - Inno Setup Script
-;  Version: 1.0.0
+;  Version: 1.0.1
 ;  Developed by: Creative District
 ;  Developers: Moazam Samoo & Tameer Ahmed Khyber
 ; ============================================================
 
 #define AppName      "AL-TAHIR Showroom"
-#define AppVersion   "1.0.0"
+#define AppVersion   "1.0.1"
 #define AppPublisher "Creative District"
 #define AppExeName   "tahir_showroom.exe"
 #define AppURL       "https://github.com/your-repo/tahir_showroom"
@@ -14,7 +14,7 @@
 ; ============================================================
 [Setup]
 ; ---- Basic Info ----
-AppId={{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+AppId=A1B2C3D4-E5F6-7890-ABCD-EF1234567890
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} v{#AppVersion}
@@ -24,13 +24,13 @@ AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
 
 ; ---- Install Location ----
-DefaultDirName={autopf}\ALTAHIRShowroom
+DefaultDirName={pf}\ALTAHIRShowroom
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 
 ; ---- Output ----
 OutputDir=C:\InnoSetup\Output
-OutputBaseFilename=ALTahirShowroom_Setup_v1.0.0
+OutputBaseFilename=ALTahirShowroom_Setup_v1.0.1
 
 ; ---- Compression ----
 Compression=lzma2/ultra
@@ -40,14 +40,23 @@ SolidCompression=yes
 WizardStyle=modern
 ShowLanguageDialog=no
 
+; ---- Version Info (helps reduce SmartScreen warnings) ----
+VersionInfoVersion=1.0.1.0
+VersionInfoCompany={#AppPublisher}
+VersionInfoDescription=AL-TAHIR Showroom ERP Installer
+VersionInfoCopyright=Copyright (C) 2026 Creative District
+VersionInfoProductName={#AppName}
+VersionInfoProductVersion={#AppVersion}
+AppCopyright=Copyright (C) 2026 Creative District
+
 ; ---- Privileges ----
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 
 ; ---- Windows Version Check ----
 MinVersion=10.0
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
 
 ; ---- Uninstall ----
 UninstallDisplayName={#AppName}
@@ -65,6 +74,9 @@ Name: "startupicon";    Description: "Launch app on Windows Startup"; GroupDescr
 
 ; ============================================================
 [Files]
+; -- VC++ Redistributable (bundled) --
+Source: "C:\Users\Moazzam Samoo\Desktop\Tahir Showroom\installer\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+
 ; -- Main App & all DLLs --
 Source: "C:\Users\Moazzam Samoo\Desktop\Tahir Showroom\build\windows\x64\runner\Release\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\Moazzam Samoo\Desktop\Tahir Showroom\build\windows\x64\runner\Release\*.dll";          DestDir: "{app}"; Flags: ignoreversion recursesubdirs
@@ -84,6 +96,9 @@ Name: "{autostartup}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startu
 
 ; ============================================================
 [Run]
+; -- Install VC++ Redistributable silently (only if not already installed) --
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Runtime..."; Check: not VCRedistInstalled; Flags: waituntilterminated
+
 ; -- Launch app after install --
 Filename: "{app}\{#AppExeName}"; Description: "Launch AL-TAHIR Showroom ERP"; Flags: nowait postinstall skipifsilent
 
@@ -98,17 +113,6 @@ Type: dirifempty; Name: "{app}"
 function VCRedistInstalled: Boolean;
 begin
   Result := RegKeyExists(HKLM, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64');
-end;
-
-procedure InitializeWizard;
-begin
-  if not VCRedistInstalled then
-    MsgBox(
-      'Note: Visual C++ Runtime may be required.' + #13#10 +
-      'If the app does not start, please install:' + #13#10 +
-      'Microsoft Visual C++ Redistributable (x64)',
-      mbInformation, MB_OK
-    );
 end;
 
 // Recursively delete a directory

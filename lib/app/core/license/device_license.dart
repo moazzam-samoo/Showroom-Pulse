@@ -5,8 +5,7 @@ import 'dart:io';
 const Set<String> _allowedMacs = {
   'BC:03:58:FE:C3:4C', //Moazam's Device
   'AA:09:10:D9:55:BD', //Shumail's Device
-
-  '38-BA-F8-C2-88-7D', // Tahir's Device (Client)
+  '38:BA:F8:C2:88:7D', // Tahir's Device (Client)
 };
 
 /// Normalizes any MAC format (dash or colon) to uppercase colon-delimited.
