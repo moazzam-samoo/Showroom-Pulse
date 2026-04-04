@@ -6,6 +6,8 @@ import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_bin
 import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'app/core/license/device_license.dart';
+import 'app/core/license/unauthorized_screen.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'app/core/bindings/initial_binding.dart';
@@ -39,7 +41,10 @@ import 'package:tahir_showroom/app/features/procurement/presentation/views/add_s
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // ── Device License Check (runs before anything else) ──
+  final license = await DeviceLicense.isDeviceAuthorized();
+
   await WindowsSingleInstance.ensureSingleInstance(
     args,
     "ALTAHIRShowroomInstance",
@@ -65,15 +70,16 @@ void main(List<String> args) async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    // Set taskbar icon explicitly for Windows
     if (Platform.isWindows) {
       await windowManager.setIcon('assets/app_icon.ico');
     }
-    // Prevent default close so we can handle it
     await windowManager.setPreventClose(true);
   });
-  
-  runApp(const TahirShowroomApp());
+
+  // Gate: authorized → normal app, unauthorized → lock screen
+  runApp(license.authorized
+      ? const TahirShowroomApp()
+      : UnauthorizedApp(macAddress: license.macAddress));
 }
 
 class TahirShowroomApp extends StatefulWidget {
