@@ -1,14 +1,17 @@
+import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
-import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 
-/// Repository for revenue calculations and expense management
-class ReportsRepository {
-  final Isar _isar;
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
 
-  ReportsRepository(this._isar);
+/// Repository for revenue calculations
+class ReportsRepository {
+  Isar get _isar => Get.find<IsarService>().isar;
+
+  ReportsRepository();
 
   // ─── Revenue Queries ───────────────────────────────────────
 
@@ -53,23 +56,23 @@ class ReportsRepository {
       
       final baseProfit = sPrice - pPrice - dAmt;
 
-      if (sale.saleType == SaleType.cash) {
-        total += baseProfit.isNaN ? 0.0 : baseProfit;
-      } else if (sale.installmentContractId != null) {
+      if (sale.saleType == SaleType.installment) {
+        if (sale.installmentContractId == null) continue;
         final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
-        if (contract != null) {
-          double progress = contract.totalAmount > 0
-              ? (contract.totalPaid / contract.totalAmount)
-              : 0.0;
-          if (progress.isNaN || progress.isInfinite) progress = 0.0;
-          progress = progress.clamp(0.0, 1.0);
-          
-          final profitPart = baseProfit * progress;
-          final markupPart = contract.totalMarkupAmount * progress;
-          
-          total += profitPart.isNaN ? 0.0 : profitPart;
-          total += markupPart.isNaN ? 0.0 : markupPart;
+        if (contract == null || contract.status != ContractStatusEnum.completed) {
+          continue; // Skip active installments entirely
         }
+        
+        // Use contract's cash price for base profit calculation
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final installmentBaseProfit = basePrice - pPrice - disc;
+        
+        // Total Profit = Base Profit + Markup
+        total += installmentBaseProfit.isNaN ? 0.0 : installmentBaseProfit;
+        total += contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount;
+      } else if (sale.saleType == SaleType.cash) {
+        total += baseProfit.isNaN ? 0.0 : baseProfit;
       }
     }
     return total;
@@ -84,14 +87,36 @@ class ReportsRepository {
       final bike = await _isar.bikes.get(sale.bikeId);
       if (bike == null) continue;
 
-      final brand = bike.brand;
-      result.putIfAbsent(brand, () => {'cash': 0, 'installment': 0, 'total': 0, 'earned': 0});
+      // 1. Early Skip for Incomplete Installments
+      if (sale.saleType == SaleType.installment) {
+        if (sale.installmentContractId == null) continue;
+        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
+        if (contract == null || contract.status != ContractStatusEnum.completed) {
+          continue; // Skip active installments entirely
+        }
+      }
+
+      // 2. Consistent Naming (BRAND MODEL YEAR)
+      final brandUpper = bike.brand.trim().toUpperCase();
+      final modelUpper = bike.model.trim().toUpperCase();
+      final detailName = "$brandUpper $modelUpper MODEL ${bike.modelYear}";
+
+      // If no month is specified, group by Month-Year | Details
+      final String groupKey;
+      if (month == null) {
+        final monthStr = DateFormat('MMM yyyy').format(sale.saleDate);
+        groupKey = "$monthStr | $detailName";
+      } else {
+        groupKey = detailName;
+      }
+
+      result.putIfAbsent(groupKey,
+          () => {'cash': 0, 'installment': 0, 'total': 0, 'earned': 0, 'assetValue': 0});
 
       final pPrice = bike.purchasePrice.isNaN ? 0.0 : bike.purchasePrice;
       final sPrice = bike.cashSalePrice.isNaN ? 0.0 : bike.cashSalePrice;
       
       double dAmt = sale.discountAmount.isNaN ? 0.0 : sale.discountAmount;
-      // Fallback for legacy cash sales
       if (sale.saleType == SaleType.cash && dAmt == 0.0) {
         final double received = sale.receivedAmount.isNaN ? 0.0 : sale.receivedAmount;
         if (received > 0 && received < sPrice) {
@@ -103,31 +128,28 @@ class ReportsRepository {
 
       if (sale.saleType == SaleType.cash) {
         final profit = baseProfit.isNaN ? 0.0 : baseProfit;
-        result[brand]!['cash'] = result[brand]!['cash']! + profit;
-        result[brand]!['earned'] = result[brand]!['earned']! + profit;
-      } else if (sale.installmentContractId != null) {
-        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
-        if (contract != null) {
-          final markup = contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount;
-          final totalProfit = baseProfit + markup;
-          
-          double progress = contract.totalAmount > 0
-              ? (contract.totalPaid / contract.totalAmount)
-              : 0.0;
-          if (progress.isNaN || progress.isInfinite) progress = 0.0;
-          progress = progress.clamp(0.0, 1.0);
+        // For cash sales, Base Profit is the total profit
+        result[groupKey]!['cash'] = result[groupKey]!['cash']! + profit;
+        result[groupKey]!['earned'] = result[groupKey]!['earned']! + profit;
+        result[groupKey]!['assetValue'] = result[groupKey]!['assetValue']! + sPrice;
+        result[groupKey]!['total'] = result[groupKey]!['total']! + profit;
+      } else {
+        // Must be completed installment due to early skip
+        final contract = (await _isar.installmentContracts.get(sale.installmentContractId!))!;
+        final markup = contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount;
+        
+        // Recalculate Base Profit using contract's snapshot price
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final profitPart = (basePrice - pPrice - disc).isNaN ? 0.0 : (basePrice - pPrice - disc);
 
-          final profitPart = baseProfit.isNaN ? 0.0 : baseProfit;
-          
-          result[brand]!['cash'] = result[brand]!['cash']! + profitPart;
-          result[brand]!['installment'] = result[brand]!['installment']! + markup;
-          
-          final earnedPart = totalProfit * progress;
-          result[brand]!['earned'] = result[brand]!['earned']! + (earnedPart.isNaN ? 0.0 : earnedPart);
-        }
+        // Assigning Base Profit to 'cash' key for UI compatibility
+        result[groupKey]!['cash'] = result[groupKey]!['cash']! + profitPart;
+        result[groupKey]!['installment'] = result[groupKey]!['installment']! + markup;
+        result[groupKey]!['earned'] = result[groupKey]!['earned']! + profitPart + markup;
+        result[groupKey]!['assetValue'] = result[groupKey]!['assetValue']! + contract.totalAmount;
+        result[groupKey]!['total'] = result[groupKey]!['total']! + profitPart + markup;
       }
-
-      result[brand]!['total'] = result[brand]!['cash']! + result[brand]!['installment']!;
     }
     return result;
   }
@@ -167,7 +189,8 @@ class ReportsRepository {
 
     final Map<String, int> distribution = {};
     for (final bike in bikes) {
-      distribution[bike.brand] = (distribution[bike.brand] ?? 0) + 1;
+      final key = '${bike.model} ${bike.brand}';
+      distribution[key] = (distribution[key] ?? 0) + 1;
     }
     return distribution;
   }
@@ -204,26 +227,24 @@ class ReportsRepository {
       
       final baseProfit = sPrice - pPrice - dAmt;
 
-      if (sale.saleType == SaleType.cash) {
+      if (sale.saleType == SaleType.installment) {
+        if (sale.installmentContractId == null) continue;
+        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
+        if (contract == null || contract.status != ContractStatusEnum.completed) {
+          continue; // Skip active installments entirely
+        }
+        
+        // Recalculate Profit Part using contract snapshot
+        final double basePrice = contract.cashPrice.isNaN ? 0.0 : contract.cashPrice;
+        final double disc = contract.discountAmount.isNaN ? 0.0 : contract.discountAmount;
+        final installmentBaseProfit = (basePrice - pPrice - disc).isNaN ? 0.0 : (basePrice - pPrice - disc);
+
+        // Full base profit and markup only if completed
+        dailyRevenue[day] = dailyRevenue[day]! + installmentBaseProfit;
+        dailyRevenue[day] = dailyRevenue[day]! + (contract.totalMarkupAmount.isNaN ? 0.0 : contract.totalMarkupAmount);
+      } else if (sale.saleType == SaleType.cash) {
         final profit = baseProfit.isNaN ? 0.0 : baseProfit;
         dailyRevenue[day] = dailyRevenue[day]! + profit;
-      } else if (sale.installmentContractId != null) {
-        final contract = await _isar.installmentContracts.get(sale.installmentContractId!);
-        if (contract != null) {
-          double progress = contract.totalAmount > 0
-              ? (contract.totalPaid / contract.totalAmount)
-              : 0.0;
-          if (progress.isNaN || progress.isInfinite) progress = 0.0;
-          progress = progress.clamp(0.0, 1.0);
-              
-          final profitPart = baseProfit * progress;
-          final markupPart = contract.totalMarkupAmount * progress;
-          
-          final safeProfit = profitPart.isNaN ? 0.0 : profitPart;
-          final safeMarkup = markupPart.isNaN ? 0.0 : markupPart;
-          
-          dailyRevenue[day] = dailyRevenue[day]! + safeProfit + safeMarkup;
-        }
       }
     }
 
@@ -242,60 +263,5 @@ class ReportsRepository {
       trend.add(MapEntry(monthNames[i - 1], revenue));
     }
     return trend;
-  }
-
-  // ─── Expense CRUD ──────────────────────────────────────────
-
-  /// Get all expenses for a given period (optional month/year)
-  Future<List<Expense>> getExpensesInPeriod({int? month, int? year}) async {
-    if (month == null && year == null) {
-      return await _isar.expenses.where().sortByDateDesc().findAll();
-    }
-
-    final start = DateTime(year!, month ?? 1, 1);
-    final end = month != null 
-        ? DateTime(year, month + 1, 0, 23, 59, 59)
-        : DateTime(year, 12, 31, 23, 59, 59);
-
-    return await _isar.expenses
-        .filter()
-        .dateBetween(start, end)
-        .sortByDateDesc()
-        .findAll();
-  }
-
-  /// Get total expenses for a period
-  Future<double> getTotalExpenses({int? month, int? year}) async {
-    final expenses = await getExpensesInPeriod(month: month, year: year);
-    return expenses.fold<double>(0.0, (double sum, e) => sum + e.amount);
-  }
-
-  /// Get all unique category names (for dropdown)
-  Future<List<String>> getExpenseCategories() async {
-    final expenses = await _isar.expenses.where().findAll();
-    final categories = expenses.map((e) => e.category).toSet().toList();
-    categories.sort();
-    return categories;
-  }
-
-  /// Add a new expense
-  Future<void> addExpense(Expense expense) async {
-    await _isar.writeTxn(() async {
-      await _isar.expenses.put(expense);
-    });
-  }
-
-  /// Update an existing expense
-  Future<void> updateExpense(Expense expense) async {
-    await _isar.writeTxn(() async {
-      await _isar.expenses.put(expense);
-    });
-  }
-
-  /// Delete an expense by ID
-  Future<void> deleteExpense(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.expenses.delete(id);
-    });
   }
 }

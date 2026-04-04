@@ -6,6 +6,8 @@ import 'package:tahir_showroom/app/features/walkthrough/bindings/walkthrough_bin
 import 'package:tahir_showroom/app/features/walkthrough/presentation/views/walkthrough_view.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'app/core/license/device_license.dart';
+import 'app/core/license/unauthorized_screen.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'app/core/bindings/initial_binding.dart';
@@ -29,10 +31,20 @@ import 'app/features/reports/presentation/views/reports_view.dart';
 import 'app/features/reports/presentation/bindings/reports_binding.dart';
 import 'app/features/settings/presentation/views/settings_view.dart';
 import 'app/features/settings/presentation/bindings/settings_binding.dart';
+import 'app/features/investment/presentation/views/investment_view.dart';
+import 'app/features/investment/presentation/bindings/investment_binding.dart';
+
+import 'package:tahir_showroom/app/features/sales/presentation/views/new_sale_view.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/bindings/new_sale_binding.dart';
+import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
+
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // ── Device License Check (runs before anything else) ──
+  final license = await DeviceLicense.isDeviceAuthorized();
+
   await WindowsSingleInstance.ensureSingleInstance(
     args,
     "ALTAHIRShowroomInstance",
@@ -52,21 +64,22 @@ void main(List<String> args) async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
-    title: 'AL-AL-TAHIR Showroom',
+    title: 'AL-TAHIR Showroom',
   );
   
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
-    // Set taskbar icon explicitly for Windows
     if (Platform.isWindows) {
       await windowManager.setIcon('assets/app_icon.ico');
     }
-    // Prevent default close so we can handle it
     await windowManager.setPreventClose(true);
   });
-  
-  runApp(const TahirShowroomApp());
+
+  // Gate: authorized → normal app, unauthorized → lock screen
+  runApp(license.authorized
+      ? const TahirShowroomApp()
+      : UnauthorizedApp(macAddress: license.macAddress));
 }
 
 class TahirShowroomApp extends StatefulWidget {
@@ -94,7 +107,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
     );
     
     // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
-    await trayManager.setToolTip('AL-AL-TAHIR Showroom');
+    await trayManager.setToolTip('AL-TAHIR Showroom');
     
     // Create tray context menu
     Menu menu = Menu(
@@ -184,6 +197,16 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         binding: InventoryBinding(),
       ),
       GetPage(
+        name: '/inventory/add',
+        page: () => const AddStockView(),
+        binding: ProcurementBinding(),
+      ),
+      GetPage(
+        name: '/sales/new',
+        page: () => const NewSaleView(),
+        binding: NewSaleBinding(),
+      ),
+      GetPage(
         name: '/sales',
         page: () => const SalesView(),
         binding: SalesBinding(),
@@ -204,8 +227,13 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
         binding: ReportsBinding(),
       ),
       GetPage(
+        name: '/investment',
+        page: () => const InvestmentView(),
+        binding: InvestmentBinding(),
+      ),
+      GetPage(
         name: '/settings',
-        page: () => const SettingsView(),
+        page: () => SettingsView(),
         binding: SettingsBinding(),
       ),
       GetPage(
@@ -220,7 +248,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       init: Get.rootController,
       builder: (ctrl) => MaterialApp(
         navigatorKey: Get.key,
-        title: 'AL-AL-TAHIR Showroom',
+        title: 'AL-TAHIR Showroom',
         debugShowCheckedModeBanner: false,
         
         // Theme

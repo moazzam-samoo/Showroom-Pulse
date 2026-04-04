@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
-import 'package:tahir_showroom/app/core/constants/app_assets.dart';
+import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
+import 'package:tahir_showroom/app/core/widgets/app_showroom_logo.dart';
 
 /// Sidebar Navigation Widget
 /// 
@@ -12,7 +14,7 @@ import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 /// - Collapsed sidebar (64px width)
 /// - Icon-only navigation
 /// - Active state with cyan glow (Dark) / light blue (Light)
-class SidebarNavigation extends StatelessWidget {
+class SidebarNavigation extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int>? onItemSelected;
 
@@ -23,47 +25,117 @@ class SidebarNavigation extends StatelessWidget {
   });
 
   @override
+  State<SidebarNavigation> createState() => _SidebarNavigationState();
+}
+
+class _SidebarNavigationState extends State<SidebarNavigation> {
+  final List<FocusNode> _focusNodes = List.generate(10, (_) => FocusNode());
+  final FocusScopeNode _scopeNode = FocusScopeNode();
+
+  @override
+  void dispose() {
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
+    _scopeNode.dispose();
+    super.dispose();
+  }
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      width: 64,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        border: Border(
-          right: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: AppSpacing.base),
-          // Logo
-          _buildLogo(isDark),
-          const SizedBox(height: AppSpacing.xl),
-          // Navigation Items
-          Expanded(
-            child: Column(
-              children: [
-                _buildNavItem(0, LucideIcons.layoutDashboard, 'Dashboard', isDark),
-                _buildNavItem(1, LucideIcons.truck, 'Dealers', isDark), // New Tab
-                _buildNavItem(2, LucideIcons.bike, 'Inventory', isDark),
-                _buildNavItem(3, LucideIcons.shoppingCart, 'Sales', isDark),
-                _buildNavItem(4, LucideIcons.wallet, 'Installments', isDark), // NEW
-                _buildNavItem(5, LucideIcons.users, 'Customers', isDark),
-                _buildNavItem(6, LucideIcons.barChart3, 'Reports', isDark),
-              ],
+    return FocusScope(
+      node: _scopeNode,
+      child: Focus(
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          if (event is KeyDownEvent) {
+            final currentFocus = _scopeNode.focusedChild;
+            if (currentFocus != null) {
+              final currentIndex = _focusNodes.indexOf(currentFocus);
+              if (currentIndex != -1) {
+                // Handling Enter Key
+                if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+                  // Simulate click depending on index
+                  if (currentIndex == 9) { // 9 is logout based on current list
+                    _handleLogout();
+                  } else if (widget.onItemSelected != null) {
+                    widget.onItemSelected!(currentIndex);
+                  } else {
+                    _handleNavigation(currentIndex);
+                  }
+                  return KeyEventResult.handled;
+                }
+
+                // Handling Arrow Keys
+                if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+                   final nextIndex = (currentIndex + 1) % _focusNodes.length;
+                   _focusNodes[nextIndex].requestFocus();
+                   return KeyEventResult.handled;
+                }
+                
+                if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+                   final prevIndex = currentIndex == 0 ? _focusNodes.length - 1 : currentIndex - 1;
+                   _focusNodes[prevIndex].requestFocus();
+                   return KeyEventResult.handled;
+                }
+
+                // Handling Tab Key Logic
+                if (event.logicalKey == LogicalKeyboardKey.tab) {
+                  final isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+                  if (currentIndex == _focusNodes.length - 1 && !isShiftPressed) {
+                    _focusNodes[0].requestFocus();
+                    return KeyEventResult.handled;
+                  } else if (currentIndex == 0 && isShiftPressed) {
+                    _focusNodes[_focusNodes.length - 1].requestFocus();
+                    return KeyEventResult.handled;
+                  }
+                }
+              }
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Container(
+          width: 64,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            border: Border(
+              right: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                width: 1,
+              ),
             ),
           ),
-          // Bottom Items
-          _buildNavItem(7, LucideIcons.settings, 'Settings', isDark),
-          const SizedBox(height: AppSpacing.base),
-          _buildNavItem(8, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
-          const SizedBox(height: AppSpacing.base),
-        ],
+          child: Column(
+            children: [
+              const SizedBox(height: AppSpacing.base),
+              // Logo
+              _buildLogo(isDark),
+              const SizedBox(height: AppSpacing.md),
+              // Navigation Items
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildNavItem(0, LucideIcons.layoutDashboard, 'Dashboard', isDark),
+                    _buildNavItem(1, LucideIcons.truck, 'Dealers', isDark),
+                    _buildNavItem(2, LucideIcons.bike, 'Inventory', isDark),
+                    _buildNavItem(3, LucideIcons.shoppingCart, 'Sales', isDark),
+                    _buildNavItem(4, LucideIcons.wallet, 'Installments', isDark),
+                    _buildNavItem(5, LucideIcons.users, 'Customers', isDark),
+                    _buildNavItem(6, LucideIcons.barChart3, 'Reports', isDark),
+                    _buildNavItem(7, LucideIcons.piggyBank, 'Investment', isDark),
+                  ],
+                ),
+              ),
+              // Bottom Items
+              _buildNavItem(8, LucideIcons.settings, 'Settings', isDark),
+              const SizedBox(height: AppSpacing.sm),
+              _buildNavItem(9, LucideIcons.logOut, 'Logout', isDark, isLogout: true),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -85,6 +157,8 @@ class SidebarNavigation extends StatelessWidget {
       case 6:
         return LucideIcons.barChart3;
       case 7:
+        return LucideIcons.piggyBank;
+      case 8:
         return LucideIcons.settings;
       default:
         return LucideIcons.bike;
@@ -92,32 +166,9 @@ class SidebarNavigation extends StatelessWidget {
   }
 
   Widget _buildLogo(bool isDark) {
-    return Container(
-      width: 48,
-      height: 48,
-      padding: const EdgeInsets.all(2.0),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: Image.asset(
-          AppAssets.logo,
-          fit: BoxFit.contain,
-        ),
-      ),
+    return const AppShowroomLogo(
+      size: 44,
+      borderRadius: 10,
     );
   }
 
@@ -128,44 +179,63 @@ class SidebarNavigation extends StatelessWidget {
     bool isDark, {
     bool isLogout = false,
   }) {
-    final isSelected = selectedIndex == index && !isLogout;
+    final isSelected = widget.selectedIndex == index && !isLogout;
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    
+    final isFocused = _focusNodes[index].hasFocus;
+    final showIndicator = isSelected || isFocused;
     
     return Tooltip(
       message: tooltip,
       preferBelow: false,
       child: InkWell(
+        focusNode: _focusNodes[index],
+        autofocus: isSelected,
+        onFocusChange: (hasFocus) {
+          setState(() {}); // Rebuild to show focus indicator
+        },
         onTap: () {
           if (isLogout) {
             _handleLogout();
-          } else if (onItemSelected != null) {
-            onItemSelected!(index);
+          } else if (widget.onItemSelected != null) {
+            widget.onItemSelected!(index);
           } else {
             _handleNavigation(index);
           }
         },
+        // Visual focus indicator
+        focusColor: primaryColor.withOpacity(0.12),
+        hoverColor: primaryColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 48,
-          height: 48,
-          margin: const EdgeInsets.symmetric(vertical: 4),
+          width: 44,
+          height: 44,
+          margin: const EdgeInsets.symmetric(vertical: 2),
           decoration: BoxDecoration(
-            color: isSelected
+            color: showIndicator
                 ? (isDark
                     ? primaryColor.withOpacity(0.15)
                     : AppColors.lightPrimaryLight)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            border: isSelected
+            border: showIndicator
                 ? Border.all(
-                    color: primaryColor.withOpacity(0.3),
-                    width: 1,
+                    color: primaryColor.withOpacity(isFocused ? 0.6 : 0.3),
+                    width: isFocused ? 2 : 1,
                   )
                 : null,
+            boxShadow: isFocused ? [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.2),
+                blurRadius: 8,
+                spreadRadius: 1,
+              )
+            ] : null,
           ),
           child: Icon(
             icon,
             size: 20,
-            color: isSelected
+            color: showIndicator
                 ? primaryColor
                 : (isDark
                     ? AppColors.darkTextSecondary
@@ -200,7 +270,7 @@ class SidebarNavigation extends StatelessWidget {
   }
 
   void _handleNavigation(int index) {
-    if (index == selectedIndex) return;
+    if (index == widget.selectedIndex) return;
     
     switch (index) {
       case 0:
@@ -225,6 +295,9 @@ class SidebarNavigation extends StatelessWidget {
         Get.offNamed('/reports');
         break;
       case 7:
+        Get.offNamed('/investment');
+        break;
+      case 8:
         Get.offNamed('/settings');
         break;
     }

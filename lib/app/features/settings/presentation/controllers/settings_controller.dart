@@ -25,6 +25,10 @@ class SettingsController extends GetxController {
   final isImporting = false.obs;
   final exportProgress = ''.obs;
   final importProgress = ''.obs;
+  final isCompressingMedia = false.obs;
+  final compressMediaProgress = ''.obs;
+  
+  final ownerNameController = TextEditingController();
 
   late final BackupService _backupService;
 
@@ -41,6 +45,9 @@ class SettingsController extends GetxController {
   Future<void> loadSettings() async {
     isLoading.value = true;
     settings.value = await _repository.getSettings();
+    if (settings.value != null) {
+      ownerNameController.text = settings.value!.ownerName ?? '';
+    }
     isLoading.value = false;
   }
 
@@ -52,6 +59,27 @@ class SettingsController extends GetxController {
       if (Get.isRegistered<DashboardController>()) {
         Get.find<DashboardController>().loadProfileSettings();
       }
+    }
+  }
+
+  Future<void> updateOwnerName() async {
+    if (settings.value == null) return;
+    
+    final newName = ownerNameController.text.trim();
+    settings.value!.ownerName = newName.isEmpty ? null : newName;
+    
+    try {
+      await saveSettings();
+      settings.refresh();
+      AppToast.showSuccess(
+        title: 'Profile Updated',
+        message: 'Owner name saved successfully',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Save Failed',
+        message: 'Could not save owner name: $e',
+      );
     }
   }
 
@@ -117,6 +145,37 @@ class SettingsController extends GetxController {
     final current = getBikeModelsList();
     current.removeWhere((x) => x == model);
     settings.value!.bikeModels = current.join(',');
+    settings.refresh();
+    saveSettings();
+  }
+
+  List<String> getBikeYearsList() {
+    return settings.value?.bikeYears
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList() ?? [];
+  }
+
+  void addBikeYear(String year) {
+    if (settings.value == null || year.trim().isEmpty) return;
+    final y = year.trim();
+    final current = getBikeYearsList();
+    if (!current.any((x) => x.toLowerCase() == y.toLowerCase())) {
+      current.add(y);
+      // Sort years descending
+      current.sort((a, b) => (int.tryParse(b) ?? 0).compareTo(int.tryParse(a) ?? 0));
+      settings.value!.bikeYears = current.join(',');
+      settings.refresh();
+      saveSettings();
+    }
+  }
+
+  void removeBikeYear(String year) {
+    if (settings.value == null) return;
+    final current = getBikeYearsList();
+    current.removeWhere((x) => x == year);
+    settings.value!.bikeYears = current.join(',');
     settings.refresh();
     saveSettings();
   }
@@ -336,6 +395,71 @@ class SettingsController extends GetxController {
     } finally {
       isImporting.value = false;
       importProgress.value = '';
+    }
+  }
+
+  Future<void> compressHistoricalMedia() async {
+    if (isCompressingMedia.value) return;
+    
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: Get.isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+        title: Row(
+          children: [
+            Icon(Icons.compress, color: Get.isDarkMode ? Colors.cyanAccent : Colors.blue, size: 22),
+            const SizedBox(width: 8),
+            Text('Compress Historical Media?', style: TextStyle(fontSize: 16, color: Get.isDarkMode ? Colors.white : Colors.black)),
+          ],
+        ),
+        content: Text(
+          'This will apply modern compression to all existing images, reducing their size permanently. This is a one-time operation.',
+          style: TextStyle(fontSize: 13, color: Get.isDarkMode ? Colors.white70 : Colors.black87),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Cancel', style: TextStyle(color: Get.isDarkMode ? Colors.white70 : Colors.black87)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Get.isDarkMode ? Colors.cyanAccent : Colors.blue,
+              foregroundColor: Get.isDarkMode ? Colors.black : Colors.white,
+            ),
+            onPressed: () => Get.back(result: true),
+            child: const Text('Start Compression', style: TextStyle(fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    isCompressingMedia.value = true;
+    compressMediaProgress.value = 'Finding files to compress...';
+
+    // Small delay to allow UI to show loading state
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    try {
+      final fileService = Get.find<FileService>();
+      await fileService.compressHistoricalMedia(
+        onProgress: (total, processed) {
+          compressMediaProgress.value = 'Processed $processed of $total files...';
+        },
+      );
+
+      AppToast.showSuccess(
+        title: 'Compression Complete',
+        message: 'All historical media files have been optimized.',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Compression Failed',
+        message: 'An error occurred during compression: $e',
+      );
+    } finally {
+      isCompressingMedia.value = false;
+      compressMediaProgress.value = '';
     }
   }
 }

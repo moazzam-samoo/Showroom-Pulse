@@ -60,16 +60,27 @@ class SupplierHistoryView extends GetView<SupplierController> {
                   color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
                 ),
               ),
-              ElevatedButton.icon(
-                key: addSupplierKey,
-                onPressed: () => Get.to(() => const AddStockView()),
-                icon: const Icon(LucideIcons.plus),
-                label: const Text('Add Stock (Batch)'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                ),
+              Row(
+                children: [
+                   IconButton(
+                    onPressed: () => controller.exportAllSuppliersPdf(),
+                    icon: const Icon(LucideIcons.download),
+                    tooltip: 'Download All Suppliers Report',
+                    color: primaryColor,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  ElevatedButton.icon(
+                    key: addSupplierKey,
+                    onPressed: () => Get.to(() => const AddStockView()),
+                    icon: const Icon(LucideIcons.plus),
+                    label: const Text('Add Stock (Batch)'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -140,7 +151,11 @@ class SupplierHistoryView extends GetView<SupplierController> {
                                     return ListTile(
                                       selected: isSelected,
                                       selectedTileColor: primaryColor.withOpacity(0.1),
-                                      leading: _buildSupplierAvatar(supplier, isDark, primaryColor, Get.find<FileService>()),
+                                      leading: InkWell(
+                                        onTap: () => _showSupplierDetailCard(context, supplier),
+                                        borderRadius: BorderRadius.circular(20),
+                                        child: _buildSupplierAvatar(supplier, isDark, primaryColor, Get.find<FileService>()),
+                                      ),
                                       title: Text(supplier.name, style: const TextStyle(fontSize: 14)),
                                       subtitle: Text(supplier.phone, style: const TextStyle(fontSize: 12)),
                                       onTap: () => controller.selectedSupplier.value = supplier,
@@ -409,6 +424,15 @@ class SupplierHistoryView extends GetView<SupplierController> {
                                 Icon(LucideIcons.history, size: 20, color: primaryColor),
                                 const SizedBox(width: 8),
                                 Text('Purchase History - ${supplier.name}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                const Spacer(),
+                                IconButton(
+                                  onPressed: () => controller.exportSupplierDetailPdf(supplier),
+                                  icon: const Icon(LucideIcons.download, size: 18),
+                                  tooltip: 'Download Purchase History PDF',
+                                  color: primaryColor,
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
                               ],
                             ),
                           ),
@@ -574,7 +598,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                  physics: const NeverScrollableScrollPhysics(),
                  itemCount: bikes.length,
                  separatorBuilder: (_, __) => const Divider(height: 1, indent: 16),
-                 itemBuilder: (ctx, i) {
+                 itemBuilder: (context, i) {
                    final bike = bikes[i];
                    return ListTile(
                      dense: true,
@@ -585,6 +609,7 @@ class SupplierHistoryView extends GetView<SupplierController> {
                        'Rs ${NumberFormat("#,##0").format(bike.purchasePrice)}',
                        style: const TextStyle(fontWeight: FontWeight.w500),
                      ),
+                     onTap: () => _showBikeDetailDialog(context, bike, batch.purchaseDate),
                    );
                  },
                );
@@ -592,6 +617,207 @@ class SupplierHistoryView extends GetView<SupplierController> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSupplierDetailCard(BuildContext context, Supplier supplier) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final fileService = Get.find<FileService>();
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: bgColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: Container(
+          width: 400,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Profile Pic
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: primaryColor, width: 2),
+                  image: supplier.profilePicFilename != null
+                      ? DecorationImage(
+                          image: FileImage(File(fileService.getSupplierProfileImagePathSync(supplier.profilePicFilename!, supplier.name))),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: supplier.profilePicFilename == null
+                    ? Icon(LucideIcons.user, size: 60, color: primaryColor)
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                supplier.name,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textPrimary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              _buildDetailInfoRow(LucideIcons.phone, 'Phone', supplier.phone, textSecondary, textPrimary),
+              const SizedBox(height: 12),
+              _buildDetailInfoRow(LucideIcons.creditCard, 'CNIC', supplier.cnic, textSecondary, textPrimary),
+              
+              if (supplier.cnicPicFilename != null) ...[
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('CNIC Image', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textSecondary)),
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  child: Image.file(
+                    File(fileService.getSupplierCnicImagePathSync(supplier.cnicPicFilename!, supplier.name)),
+                    height: 180,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  ),
+                  child: const Text('Okay', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBikeDetailDialog(BuildContext context, Bike bike, DateTime purchaseDate) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final fileService = Get.find<FileService>();
+    final currencyFormat = NumberFormat.currency(locale: 'en_PK', symbol: 'Rs ', decimalDigits: 0);
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: bgColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: Container(
+          width: 450,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Bike Image or Icon
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkElevated : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: bike.imageFilename != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                        child: Image.file(
+                          File(fileService.getBikeImagePathSync(bike.imageFilename!)),
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(LucideIcons.bike, size: 64, color: primaryColor.withOpacity(0.5)),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                '${bike.model} ${bike.brand}',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${bike.color} • ${bike.modelYear}',
+                style: TextStyle(fontSize: 14, color: textSecondary),
+              ),
+              const Divider(height: 32),
+              
+              _buildDetailInfoRow(LucideIcons.hash, 'Engine No.', bike.engineNumber, textSecondary, textPrimary, isMono: true),
+              const SizedBox(height: 10),
+              _buildDetailInfoRow(LucideIcons.hash, 'Chassis No.', bike.chassisNumber, textSecondary, textPrimary, isMono: true),
+              if (bike.condition == BikeConditionEnum.usedBike) ...[
+                const SizedBox(height: 10),
+                _buildDetailInfoRow(
+                  LucideIcons.hash, 
+                  'Reg. No.', 
+                  (bike.registrationNumber != null && bike.registrationNumber!.isNotEmpty) 
+                      ? bike.registrationNumber! 
+                      : 'N/A', 
+                  textSecondary, 
+                  textPrimary, 
+                  isMono: true
+                ),
+              ],
+              const SizedBox(height: 10),
+              _buildDetailInfoRow(LucideIcons.list, 'Condition', bike.condition.name == 'usedBike' ? 'USED' : 'NEW', textSecondary, textPrimary),
+              const SizedBox(height: 10),
+              _buildDetailInfoRow(LucideIcons.calendar, 'Purchase Date', DateFormat('dd MMM yyyy').format(purchaseDate), textSecondary, textPrimary),
+              const SizedBox(height: 10),
+              _buildDetailInfoRow(LucideIcons.banknote, 'Purchase Price', currencyFormat.format(bike.purchasePrice), textSecondary, primaryColor, isBold: true),
+              
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                  ),
+                  child: const Text('Okay', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailInfoRow(IconData icon, String label, String value, Color labelColor, Color valueColor, {bool isMono = false, bool isBold = false}) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: labelColor.withOpacity(0.7)),
+        const SizedBox(width: 10),
+        Text(label, style: TextStyle(color: labelColor, fontSize: 13)),
+        const Spacer(),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+            fontFamily: isMono ? 'monospace' : null,
+          ),
+        ),
+      ],
     );
   }
 
@@ -888,3 +1114,4 @@ class SupplierHistoryView extends GetView<SupplierController> {
     );
   }
 }
+

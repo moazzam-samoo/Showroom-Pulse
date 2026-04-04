@@ -20,19 +20,10 @@ import '../widgets/kpi_section.dart';
 import '../widgets/performance_chart.dart';
 import '../widgets/stock_allocation_chart.dart';
 import '../widgets/quick_actions.dart';
-import '../widgets/upcoming_installments.dart';
+import '../widgets/investment_snapshot.dart';
 import '../widgets/kpi_detail_dialogs.dart';
 
 /// Dashboard View - Main screen after login
-/// 
-/// Analyzed from: Dark Theme UI/Dashboard Page.png
-/// Layout:
-/// - Left: Sidebar Navigation (64px)
-/// - Right: Main Content
-///   - Header: Title + Status Bar
-///   - KPI Section: 4 gradient cards
-///   - Charts Row: Performance Velocity + Stock Allocation
-///   - Transaction Feed: Live table
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
 
@@ -110,6 +101,9 @@ class _DashboardViewState extends State<DashboardView> {
                   Get.offNamed('/reports');
                   break;
                 case 7:
+                  Get.offNamed('/investment');
+                  break;
+                case 8:
                   Get.offNamed('/settings');
                   break;
               }
@@ -133,8 +127,9 @@ class _DashboardViewState extends State<DashboardView> {
                         // KPI Section
                         Obx(() => KpiSection(
                           key: _kpiKey,
-                          totalAssetValue: PriceFormatter.formatLakhWords(controller.totalAssetValue.value),
-                          totalAssetGrowth: '+${controller.totalAssetGrowth.value.toStringAsFixed(1)}% MTD',
+                          totalAssetValue: PriceFormatter.formatLakhWords(controller.totalInvestment.value),
+                          investmentAllocatedText: '${PriceFormatter.formatLakhWords(controller.allocatedInvestment.value)} Allocated',
+                          investmentAvailableText: '${PriceFormatter.formatLakhWords(controller.availableInvestment.value)} Avl',
                           unitsInStock: controller.unitsInStock.value,
                           lowStockAlert: controller.lowStockAlert.value,
                           monthlySalesRevenue: PriceFormatter.formatLakhWords(controller.monthlyRevenue.value),
@@ -179,12 +174,10 @@ class _DashboardViewState extends State<DashboardView> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        // Upcoming Installments (replaces empty Transaction Feed)
-                        SizedBox(
-                          height: 350,
-                          child: Obx(() => UpcomingInstallmentsWidget(
-                            installments: controller.upcomingInstallments.toList(),
-                          )),
+                        // Investment Snapshot
+                        const SizedBox(
+                          height: 210,
+                          child: InvestmentSnapshotWidget(),
                         ),
                       ],
                     ),
@@ -756,8 +749,6 @@ class _DashboardViewState extends State<DashboardView> {
       ),
     );
   }
-
-  // Removed _getSampleTransactions() method - using real data now
 }
 
 // Authored by: Moazzam Samoo

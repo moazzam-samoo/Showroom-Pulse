@@ -78,6 +78,27 @@ class InventorySettingsView extends GetView<SettingsController> {
             context: context,
             addHint: 'Enter new model name (e.g. CG125)',
           ),
+
+          _divider(isDark),
+
+          // Bike Years Section
+          _buildManageSection(
+            key: null,
+            title: '📅 Bike Models (Year)',
+            subtitle: 'Manage custom years shown in the Year dropdowns.',
+            items: controller.getBikeYearsList(),
+            onAdd: (val) {
+              controller.addBikeYear(val);
+              AppToast.showSuccess(title: 'Year Added', message: '$val has been added.');
+            },
+            onDelete: (val) {
+              controller.removeBikeYear(val);
+              AppToast.showInfo(title: 'Year Removed', message: '$val has been removed.');
+            },
+            isDark: isDark,
+            context: context,
+            addHint: 'Enter new year (e.g. 2024)',
+          ),
         ],
       );
     });

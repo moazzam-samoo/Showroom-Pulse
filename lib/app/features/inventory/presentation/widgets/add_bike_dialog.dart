@@ -11,6 +11,9 @@ import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:get/get.dart';
 import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/core/utils/phone_number_input_formatter.dart';
+import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 
 class AddBikeDialog extends StatefulWidget {
   final Function(Map<String, dynamic>)? onSave;
@@ -26,21 +29,34 @@ class AddBikeDialog extends StatefulWidget {
 
 class _AddBikeDialogState extends State<AddBikeDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Form controllers
-  final _brandController = TextEditingController();
-  final _modelController = TextEditingController();
+  final _makerController = TextEditingController();
+  final _hpController = TextEditingController();
+  final _modelYearController = TextEditingController();
   final _engineNoController = TextEditingController();
   final _chassisNoController = TextEditingController();
   final _purchasePriceController = TextEditingController();
   final _sellingPriceController = TextEditingController();
+  final _purchaserNameController = TextEditingController();
+  final _purchaserPhoneController = TextEditingController();
+  final _purchaserCnicController = TextEditingController();
+  final _regNumberController = TextEditingController();
 
   String? _selectedColor;
   String _selectedCondition = 'New';
   File? _selectedImage;
+  File? _purchaserCnicFrontImage;
+  File? _purchaserCnicBackImage;
 
-  final _brandFocus = FocusNode();
-  final _modelFocus = FocusNode();
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  final _makerFocus = FocusNode();
+  final _hpFocus = FocusNode();
+  final _modelYearFocus = FocusNode();
   final _conditionFocus = FocusNode();
   final _colorFocus = FocusNode();
   final _engineFocus = FocusNode();
@@ -48,14 +64,23 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _purchaseFocus = FocusNode();
   final _sellingFocus = FocusNode();
   final _imageFocus = FocusNode();
+  final _purchaserNameFocus = FocusNode();
+  final _purchaserPhoneFocus = FocusNode();
+  final _purchaserCnicFocus = FocusNode();
+  final _cnicFrontFocus = FocusNode();
+  final _cnicBackFocus = FocusNode();
+  final _regNumberFocus = FocusNode();
   final _submitFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
     if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowDown || event.logicalKey == LogicalKeyboardKey.enter) {
-        if (_brandFocus.hasFocus) {
-          _modelFocus.requestFocus();
-        } else if (_modelFocus.hasFocus) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+          event.logicalKey == LogicalKeyboardKey.enter) {
+        if (_makerFocus.hasFocus) {
+          _hpFocus.requestFocus();
+        } else if (_hpFocus.hasFocus) {
+          _modelYearFocus.requestFocus();
+        } else if (_modelYearFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
           _colorFocus.requestFocus();
@@ -70,14 +95,42 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_sellingFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
-          if (event.logicalKey == LogicalKeyboardKey.enter) {
-            _pickImage();
+          _purchaserNameFocus.requestFocus();
+        } else if (_purchaserNameFocus.hasFocus) {
+          _purchaserPhoneFocus.requestFocus();
+        } else if (_purchaserPhoneFocus.hasFocus) {
+          _purchaserCnicFocus.requestFocus();
+        } else if (_purchaserCnicFocus.hasFocus) {
+          _cnicFrontFocus.requestFocus();
+        } else if (_cnicFrontFocus.hasFocus) {
+          _cnicBackFocus.requestFocus();
+        } else if (_cnicBackFocus.hasFocus) {
+          if (_selectedCondition == 'Used') {
+            _regNumberFocus.requestFocus();
           } else {
             _submitFocus.requestFocus();
           }
+        } else if (_regNumberFocus.hasFocus) {
+          _submitFocus.requestFocus();
         }
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         if (_submitFocus.hasFocus) {
+          if (_selectedCondition == 'Used') {
+            _regNumberFocus.requestFocus();
+          } else {
+            _cnicBackFocus.requestFocus();
+          }
+        } else if (_regNumberFocus.hasFocus) {
+          _cnicBackFocus.requestFocus();
+        } else if (_cnicBackFocus.hasFocus) {
+          _cnicFrontFocus.requestFocus();
+        } else if (_cnicFrontFocus.hasFocus) {
+          _purchaserCnicFocus.requestFocus();
+        } else if (_purchaserCnicFocus.hasFocus) {
+          _purchaserPhoneFocus.requestFocus();
+        } else if (_purchaserPhoneFocus.hasFocus) {
+          _purchaserNameFocus.requestFocus();
+        } else if (_purchaserNameFocus.hasFocus) {
           _imageFocus.requestFocus();
         } else if (_imageFocus.hasFocus) {
           _sellingFocus.requestFocus();
@@ -92,9 +145,11 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         } else if (_colorFocus.hasFocus) {
           _conditionFocus.requestFocus();
         } else if (_conditionFocus.hasFocus) {
-          _modelFocus.requestFocus();
-        } else if (_modelFocus.hasFocus) {
-          _brandFocus.requestFocus();
+          _modelYearFocus.requestFocus();
+        } else if (_modelYearFocus.hasFocus) {
+          _hpFocus.requestFocus();
+        } else if (_hpFocus.hasFocus) {
+          _makerFocus.requestFocus();
         }
       }
     }
@@ -102,14 +157,20 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
   @override
   void dispose() {
-    _brandController.dispose();
-    _modelController.dispose();
+    _makerController.dispose();
+    _hpController.dispose();
+    _modelYearController.dispose();
     _engineNoController.dispose();
     _chassisNoController.dispose();
     _purchasePriceController.dispose();
     _sellingPriceController.dispose();
-    _brandFocus.dispose();
-    _modelFocus.dispose();
+    _purchaserNameController.dispose();
+    _purchaserPhoneController.dispose();
+    _purchaserCnicController.dispose();
+    _regNumberController.dispose();
+    _makerFocus.dispose();
+    _hpFocus.dispose();
+    _modelYearFocus.dispose();
     _conditionFocus.dispose();
     _colorFocus.dispose();
     _engineFocus.dispose();
@@ -117,18 +178,31 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _purchaseFocus.dispose();
     _sellingFocus.dispose();
     _imageFocus.dispose();
+    _purchaserNameFocus.dispose();
+    _purchaserPhoneFocus.dispose();
+    _purchaserCnicFocus.dispose();
+    _cnicFrontFocus.dispose();
+    _cnicBackFocus.dispose();
+    _regNumberFocus.dispose();
     _submitFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImage(
+      {bool forCnicFront = false, bool forCnicBack = false}) async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.image,
     );
 
     if (result != null && result.files.single.path != null) {
       setState(() {
-        _selectedImage = File(result.files.single.path!);
+        if (forCnicFront) {
+          _purchaserCnicFrontImage = File(result.files.single.path!);
+        } else if (forCnicBack) {
+          _purchaserCnicBackImage = File(result.files.single.path!);
+        } else {
+          _selectedImage = File(result.files.single.path!);
+        }
       });
     }
   }
@@ -136,13 +210,23 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
       final List<String> missingFields = [];
-      if (_brandController.text.trim().isEmpty) missingFields.add('Brand');
-      if (_modelController.text.trim().isEmpty) missingFields.add('Model');
+      if (_makerController.text.trim().isEmpty) missingFields.add('Maker');
+      if (_hpController.text.trim().isEmpty) missingFields.add('Horse Power');
+      if (_modelYearController.text.trim().isEmpty)
+        missingFields.add('Model (Year)');
+      if (_selectedCondition == 'Used' && _regNumberController.text.trim().isEmpty)
+        missingFields.add('Registered Number');
       if (_selectedColor == null) missingFields.add('Color');
-      
-      final purchase = double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ?? 0.0;
-      final selling = double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ?? 0.0;
-      
+
+      final purchase =
+          double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ??
+              0.0;
+      final selling =
+          double.tryParse(_sellingPriceController.text.replaceAll(',', '')) ??
+              0.0;
+      // Investment is permanently locked to 100% of the Purchase Price
+      final investment = purchase;
+
       if (purchase <= 0) missingFields.add('Purchase Price');
       if (selling <= 0) missingFields.add('Selling Price');
       if (_selectedImage == null) missingFields.add('Bike Image');
@@ -150,15 +234,24 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       void executeSave() {
         if (widget.onSave != null) {
           widget.onSave!({
-            'brand': _brandController.text,
-            'model': _modelController.text,
+            'maker': _makerController.text,
+            'horsePower': _hpController.text,
+            'modelYear':
+                int.tryParse(_modelYearController.text) ?? DateTime.now().year,
+            'registrationNumber': _selectedCondition == 'Used' ? _regNumberController.text.trim() : null,
             'condition': _selectedCondition,
             'color': _selectedColor,
             'engineNumber': _engineNoController.text,
             'chassisNumber': _chassisNoController.text,
             'purchasePrice': purchase,
             'sellingPrice': selling,
+            'investmentAmount': investment,
             'imageFile': _selectedImage,
+            'purchaserName': _purchaserNameController.text.trim(),
+            'purchaserPhone': _purchaserPhoneController.text.trim(),
+            'purchaserCnic': _purchaserCnicController.text.trim(),
+            'purchaserCnicFront': _purchaserCnicFrontImage,
+            'purchaserCnicBack': _purchaserCnicBackImage,
           });
           Navigator.pop(context);
         }
@@ -179,12 +272,15 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   Widget build(BuildContext context) {
     // Theme Colors
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final sectionHeaderBg = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final sectionHeaderBg =
+        isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
     const sectionHeaderText = Colors.white;
     // Updated to use AppColors directly for consistency
-    final labelColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final labelColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
     final inputBg = isDark ? AppColors.darkElevated : AppColors.lightBackground;
-    final inputBorder = isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
+    final inputBorder =
+        isDark ? AppColors.darkBorderInput : AppColors.lightBorder;
 
     return AppDialog(
       title: 'Add New Motorcycle',
@@ -202,7 +298,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: sectionHeaderBg,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text(
                   'Save to Inventory (Enter)',
@@ -219,131 +316,336 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
         child: Form(
           key: _formKey,
           child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Left Column
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      _buildSection(
-                        title: 'Basic Details',
-                        color: sectionHeaderBg,
-                        textColor: sectionHeaderText,
-                        children: [
-                          _buildAutocompleteGroup(
-                            label: 'Brand:',
-                            controller: _brandController,
-                            hint: 'e.g. Honda',
-                            isDark: isDark,
-                            bg: inputBg,
-                            border: inputBorder,
-                            labelColor: labelColor,
-                            focusNode: _brandFocus,
-                            autofocus: true,
-                            getOptions: () => Get.isRegistered<SettingsController>()
-                                ? Get.find<SettingsController>().getBikeBrandsList()
-                                : [],
-                          ),
-                          const SizedBox(height: 16),
-                          _buildAutocompleteGroup(
-                            label: 'Model:',
-                            controller: _modelController,
-                            hint: 'e.g. CG125',
-                            isDark: isDark,
-                            bg: inputBg,
-                            border: inputBorder,
-                            labelColor: labelColor,
-                            focusNode: _modelFocus,
-                            getOptions: () => Get.isRegistered<SettingsController>()
-                                ? Get.find<SettingsController>().getBikeModelsList()
-                                : [],
-                          ),
-                          const SizedBox(height: 10),
-                          _buildConditionGroup('Condition:', isDark, inputBg, inputBorder, labelColor, _conditionFocus),
-                          const SizedBox(height: 10),
-                          _buildColorSkinGroup('Color:', labelColor, _colorFocus),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _buildSection(
-                        title: 'Technical Specs',
-                        color: sectionHeaderBg,
-                        textColor: sectionHeaderText,
-                        children: [
-                          _buildInputGroup('Engine No.:', _engineNoController, '', isDark, inputBg, inputBorder, labelColor, _engineFocus, maxLength: 17, isRequired: true),
-                          const SizedBox(height: 10),
-                          _buildInputGroup('Chassis No.:', _chassisNoController, '', isDark, inputBg, inputBorder, labelColor, _chassisFocus, maxLength: 17, isRequired: true),
-                        ],
-                      ),
-                    ],
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left Column
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        _buildSection(
+                          title: 'Basic Details',
+                          color: sectionHeaderBg,
+                          textColor: sectionHeaderText,
+                          children: [
+                            _buildAutocompleteGroup(
+                              label: 'Maker:',
+                              controller: _makerController,
+                              hint: 'e.g. Honda',
+                              isDark: isDark,
+                              bg: inputBg,
+                              border: inputBorder,
+                              labelColor: labelColor,
+                              focusNode: _makerFocus,
+                              autofocus: true,
+                              getOptions: () =>
+                                  Get.isRegistered<SettingsController>()
+                                      ? Get.find<SettingsController>()
+                                          .getBikeBrandsList()
+                                      : [],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildAutocompleteGroup(
+                              label: 'Horse Power:',
+                              controller: _hpController,
+                              hint: 'e.g. CG125',
+                              isDark: isDark,
+                              bg: inputBg,
+                              border: inputBorder,
+                              labelColor: labelColor,
+                              focusNode: _hpFocus,
+                              getOptions: () =>
+                                  Get.isRegistered<SettingsController>()
+                                      ? Get.find<SettingsController>()
+                                          .getBikeModelsList()
+                                      : [],
+                            ),
+                            const SizedBox(height: 16),
+                            _buildAutocompleteGroup(
+                                label: 'Model (Year):',
+                                controller: _modelYearController,
+                                hint: 'e.g. 2024',
+                                isDark: isDark,
+                                bg: inputBg,
+                                border: inputBorder,
+                                labelColor: labelColor,
+                                focusNode: _modelYearFocus,
+                                getOptions: () =>
+                                    Get.isRegistered<SettingsController>()
+                                        ? Get.find<SettingsController>()
+                                            .getBikeYearsList()
+                                        : [],
+                            ),
+                            const SizedBox(height: 10),
+                            _buildConditionGroup('Condition:', isDark, inputBg,
+                                inputBorder, labelColor, _conditionFocus,
+                                onChanged: (val) {
+                              setState(() {
+                                _selectedCondition = val;
+                              });
+                            }),
+                            if (_selectedCondition == 'Used') ...[
+                              const SizedBox(height: 10),
+                              _buildInputGroup(
+                                  'Reg #:',
+                                  _regNumberController,
+                                  'Enter registration number',
+                                  isDark,
+                                  inputBg,
+                                  inputBorder,
+                                  labelColor,
+                                  _regNumberFocus,
+                                  isRequired: true),
+                            ],
+                            const SizedBox(height: 10),
+                            _buildColorSkinGroup(
+                                'Color:', labelColor, _colorFocus),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildSection(
+                          title: 'Technical Specs',
+                          color: sectionHeaderBg,
+                          textColor: sectionHeaderText,
+                          children: [
+                            _buildInputGroup(
+                                'Engine No.:',
+                                _engineNoController,
+                                '',
+                                isDark,
+                                inputBg,
+                                inputBorder,
+                                labelColor,
+                                _engineFocus,
+                                maxLength: 17,
+                                isRequired: true),
+                            const SizedBox(height: 10),
+                            _buildInputGroup(
+                                'Chassis No.:',
+                                _chassisNoController,
+                                '',
+                                isDark,
+                                inputBg,
+                                inputBorder,
+                                labelColor,
+                                _chassisFocus,
+                                maxLength: 17,
+                                isRequired: true),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Right Column
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      _buildSection(
-                        title: 'Financials',
-                        color: sectionHeaderBg,
-                        textColor: sectionHeaderText,
-                        children: [
-                          _buildInputGroup('Purchase Price:', _purchasePriceController, '0', isDark, inputBg, inputBorder, labelColor, _purchaseFocus, isNumber: true),
-                          const SizedBox(height: 10),
-                          _buildInputGroup('Selling Price:', _sellingPriceController, '0', isDark, inputBg, inputBorder, labelColor, _sellingFocus, isNumber: true),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Image Upload
-                      BlinkingFocusBuilder(
-                        focusNode: _imageFocus,
-                        child: GestureDetector(
-                          onTap: () {
-                            _imageFocus.requestFocus();
-                            _pickImage();
-                          },
-                          child: Container(
-                            height: 140, // Reduced from 180 to fit content without scroll
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                            color: inputBg,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: inputBorder, width: 2),
-                          ),
-                          child: _selectedImage != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: Image.file(_selectedImage!, fit: BoxFit.cover),
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(LucideIcons.camera, size: 48, color: isDark ? Colors.grey[500] : Colors.grey[400]),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Upload Bike Image',
-                                      style: TextStyle(
-                                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                  const SizedBox(width: 16),
+                  // Right Column
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        _buildSection(
+                          title: 'Purchase Details',
+                          color: sectionHeaderBg,
+                          textColor: sectionHeaderText,
+                          children: [
+                            _buildInputGroup(
+                              'Dealer/Seller Name:',
+                              _purchaserNameController,
+                              'Enter name',
+                              isDark,
+                              inputBg,
+                              inputBorder,
+                              labelColor,
+                              _purchaserNameFocus,
+                            ),
+                            const SizedBox(height: 10),
+                            _buildInputGroup(
+                              'Dealer/Seller Phone:',
+                              _purchaserPhoneController,
+                              '03xx-xxxxxxx',
+                              isDark,
+                              inputBg,
+                              inputBorder,
+                              labelColor,
+                              _purchaserPhoneFocus,
+                              inputFormatters: [PhoneNumberInputFormatter()],
+                            ),
+                            const SizedBox(height: 10),
+                            _buildInputGroup(
+                              'Dealer/Seller CNIC:',
+                              _purchaserCnicController,
+                              'xxxxx-xxxxxxx-x',
+                              isDark,
+                              inputBg,
+                              inputBorder,
+                              labelColor,
+                              _purchaserCnicFocus,
+                              inputFormatters: [CnicInputFormatter()],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildCnicImagePicker(
+                                    label: 'CNIC Front',
+                                    image: _purchaserCnicFrontImage,
+                                    isDark: isDark,
+                                    inputBg: inputBg,
+                                    inputBorder: inputBorder,
+                                    focusNode: _cnicFrontFocus,
+                                    onTap: () => _pickImage(forCnicFront: true),
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _buildCnicImagePicker(
+                                    label: 'CNIC Back',
+                                    image: _purchaserCnicBackImage,
+                                    isDark: isDark,
+                                    inputBg: inputBg,
+                                    inputBorder: inputBorder,
+                                    focusNode: _cnicBackFocus,
+                                    onTap: () => _pickImage(forCnicBack: true),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Divider(),
+                            const SizedBox(height: 16),
+                            _buildInputGroup(
+                                'Purchase Price:',
+                                _purchasePriceController,
+                                '0',
+                                isDark,
+                                inputBg,
+                                inputBorder,
+                                labelColor,
+                                _purchaseFocus,
+                                isNumber: true),
+                            const SizedBox(height: 10),
+                            _buildInputGroup(
+                                'Expected Selling Price:',
+                                _sellingPriceController,
+                                '0',
+                                isDark,
+                                inputBg,
+                                inputBorder,
+                                labelColor,
+                                _sellingFocus,
+                                isNumber: true),
+                            const SizedBox(height: 10),
+                            // Investment tracking is automatically 100% of Purchase Price
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Image Upload
+                        BlinkingFocusBuilder(
+                          focusNode: _imageFocus,
+                          child: GestureDetector(
+                            onTap: () {
+                              _imageFocus.requestFocus();
+                              _pickImage();
+                            },
+                            child: Container(
+                              height: 140,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: inputBg,
+                                borderRadius: BorderRadius.circular(12),
+                                border:
+                                    Border.all(color: inputBorder, width: 2),
+                              ),
+                              child: _selectedImage != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.file(_selectedImage!,
+                                          fit: BoxFit.cover),
+                                    )
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(LucideIcons.camera,
+                                            size: 48,
+                                            color: isDark
+                                                ? Colors.grey[500]
+                                                : Colors.grey[400]),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Upload Bike Image',
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCnicImagePicker({
+    required String label,
+    required File? image,
+    required bool isDark,
+    required Color inputBg,
+    required Color inputBorder,
+    required FocusNode focusNode,
+    required VoidCallback onTap,
+  }) {
+    return BlinkingFocusBuilder(
+      focusNode: focusNode,
+      child: GestureDetector(
+        onTap: () {
+          focusNode.requestFocus();
+          onTap();
+        },
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: inputBg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: inputBorder, width: 2),
+          ),
+          child: image != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.file(image, fit: BoxFit.cover),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(LucideIcons.image,
+                        size: 24,
+                        color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -358,7 +660,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Reduced vertical padding
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 8), // Reduced vertical padding
           decoration: BoxDecoration(
             color: color,
             borderRadius: const BorderRadius.only(
@@ -392,16 +695,20 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   }
 
   Widget _buildInputGroup(
-    String label,
-    TextEditingController controller,
-    String hint,
-    bool isDark,
-    Color bg,
-    Color border,
-    Color? labelColor,
-    FocusNode focusNode,
-    {bool isNumber = false, bool autofocus = false, int? maxLength, bool isRequired = false}
-  ) {
+      String label,
+      TextEditingController controller,
+      String hint,
+      bool isDark,
+      Color bg,
+      Color border,
+      Color? labelColor,
+      FocusNode focusNode,
+      {bool isNumber = false,
+      bool useGrouping = true,
+      bool autofocus = false,
+      int? maxLength,
+      bool isRequired = false,
+      List<TextInputFormatter>? inputFormatters}) {
     return Row(
       children: [
         SizedBox(
@@ -424,38 +731,59 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               focusNode: focusNode,
               autofocus: autofocus,
               maxLength: maxLength,
-              textInputAction: TextInputAction.next, // Important for keyboard nav
-              keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+              textInputAction:
+                  TextInputAction.next, // Important for keyboard nav
+              keyboardType:
+                  isNumber ? TextInputType.number : TextInputType.text,
               inputFormatters: [
-                if (isNumber) ThousandsSeparatorInputFormatter(),
-                if (maxLength != null) LengthLimitingTextInputFormatter(maxLength),
+                if (isNumber && useGrouping) ThousandsSeparatorInputFormatter(),
+                if (maxLength != null)
+                  LengthLimitingTextInputFormatter(maxLength),
+                if (inputFormatters != null) ...inputFormatters,
               ],
-            style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              isDense: true,
-              counterText: '', // Hide default counter
-              hintText: hint,
-              hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
-              filled: true,
-              fillColor: bg,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: border),
+              style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                  fontSize: 13),
+              decoration: InputDecoration(
+                isDense: true,
+                counterText: '', // Hide default counter
+                hintText: hint,
+                hintStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                    fontSize: 13),
+                filled: true,
+                fillColor: bg,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? AppColors.darkPrimary
+                          : AppColors.lightPrimary,
+                      width: 2),
+                ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
-              ),
-            ),
-              validator: isRequired ? (value) {
-                if (value == null || value.trim().isEmpty) return 'Required';
-                return null;
-              } : null,
+              validator: isRequired
+                  ? (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    }
+                  : null,
             ),
           ),
         ),
@@ -499,28 +827,33 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                   return currentOptions;
                 }
                 return currentOptions.where((String option) {
-                  return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                  return option
+                      .toLowerCase()
+                      .contains(textEditingValue.text.toLowerCase());
                 });
               },
               onSelected: (String selection) {
                 controller.text = selection;
               },
-              fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+              fieldViewBuilder: (BuildContext context,
+                  TextEditingController fieldTextEditingController,
+                  FocusNode fieldFocusNode,
+                  VoidCallback onFieldSubmitted) {
                 // Keep the internal text controller synced with our external one
                 fieldTextEditingController.text = controller.text;
                 fieldTextEditingController.addListener(() {
                   controller.text = fieldTextEditingController.text;
                 });
-                
+
                 // Keep the focus node synced
                 focusNode.addListener(() {
                   if (focusNode.hasFocus && !fieldFocusNode.hasFocus) {
-                     fieldFocusNode.requestFocus();
+                    fieldFocusNode.requestFocus();
                   }
                 });
                 fieldFocusNode.addListener(() {
                   if (fieldFocusNode.hasFocus && !focusNode.hasFocus) {
-                     focusNode.requestFocus();
+                    focusNode.requestFocus();
                   }
                 });
 
@@ -529,14 +862,23 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                   focusNode: fieldFocusNode,
                   autofocus: autofocus,
                   textInputAction: TextInputAction.next,
-                  style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
+                  style: TextStyle(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                      fontSize: 13),
                   decoration: InputDecoration(
                     isDense: true,
                     hintText: hint,
-                    hintStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted, fontSize: 13),
+                    hintStyle: TextStyle(
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                        fontSize: 13),
                     filled: true,
                     fillColor: bg,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(color: border),
@@ -547,10 +889,18 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
+                      borderSide: BorderSide(
+                          color: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          width: 2),
                     ),
-                    suffixIcon: Icon(Icons.arrow_drop_down, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                    suffixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    suffixIcon: Icon(Icons.arrow_drop_down,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
+                    suffixIconConstraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Required';
@@ -558,13 +908,17 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                   },
                 );
               },
-              optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+              optionsViewBuilder: (BuildContext context,
+                  AutocompleteOnSelected<String> onSelected,
+                  Iterable<String> options) {
                 return Align(
                   alignment: Alignment.topLeft,
                   child: Material(
                     elevation: 4.0,
                     borderRadius: BorderRadius.circular(8),
-                    color: isDark ? AppColors.darkElevated : AppColors.lightSurface,
+                    color: isDark
+                        ? AppColors.darkElevated
+                        : AppColors.lightSurface,
                     child: Container(
                       width: 200, // Approximate width of the input field
                       constraints: const BoxConstraints(maxHeight: 200),
@@ -583,7 +937,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                               child: Text(
                                 option,
                                 style: TextStyle(
-                                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                  color: isDark
+                                      ? AppColors.darkTextPrimary
+                                      : AppColors.lightTextPrimary,
                                   fontSize: 13,
                                 ),
                               ),
@@ -643,8 +999,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     Color bg,
     Color border,
     Color? labelColor,
-    FocusNode focusNode,
-  ) {
+    FocusNode focusNode, {
+    Function(String)? onChanged,
+  }) {
     return Row(
       children: [
         SizedBox(
@@ -669,7 +1026,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 isDense: true,
                 filled: true,
                 fillColor: bg,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: border),
@@ -680,11 +1038,20 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 2),
+                  borderSide: BorderSide(
+                      color: isDark
+                          ? AppColors.darkPrimary
+                          : AppColors.lightPrimary,
+                      width: 2),
                 ),
               ),
-              dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
-              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary, fontSize: 13),
+              dropdownColor:
+                  isDark ? AppColors.darkElevated : AppColors.lightSurface,
+              style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                  fontSize: 13),
               items: ['New', 'Used'].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
@@ -694,6 +1061,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
               onChanged: (newValue) {
                 if (newValue != null) {
                   setState(() => _selectedCondition = newValue);
+                  if (onChanged != null) onChanged(newValue);
                 }
               },
             ),

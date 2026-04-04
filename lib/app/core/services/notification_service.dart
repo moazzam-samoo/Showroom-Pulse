@@ -5,7 +5,6 @@ import 'package:local_notifier/local_notifier.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:intl/intl.dart';
 
@@ -22,7 +21,7 @@ class NotificationService extends GetxService {
     if (_isInitialized) return;
     try {
       await localNotifier.setup(
-        appName: 'AL-AL-TAHIR Showroom',
+        appName: 'AL-TAHIR Showroom',
         shortcutPolicy: ShortcutPolicy.requireCreate,
       );
       _isInitialized = true;
@@ -45,8 +44,7 @@ class NotificationService extends GetxService {
   }
 
   Future<void> checkAndNotify() async {
-    final isarService = Get.find<IsarService>();
-    final repository = InstallmentRepository(isarService.isar);
+    final repository = InstallmentRepository();
 
     // Get active and partially paid contracts
     final contracts = await repository.getActiveContracts();

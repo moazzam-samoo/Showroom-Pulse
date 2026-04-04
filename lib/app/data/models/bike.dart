@@ -46,6 +46,19 @@ class Bike {
   @Index() 
   late double cashSalePrice;
 
+  // -- Funding Ratios (V2) --
+  /// The exact mathematical amount of Personal Capital that paid for this bike
+  double fundedByPersonal = 0.0;
+  
+  /// The exact mathematical amount of Partnership Capital that paid for this bike
+  double fundedByPartnership = 0.0;
+  
+  /// The exact mathematical amount of Other Capital that paid for this bike
+  double fundedByOther = 0.0;
+  
+  /// The exact mathematical amount of Loan Capital that paid for this bike
+  double fundedByLoan = 0.0;
+
   // -- Media --
   String? imageFilename; // Stored as [engineNumber].jpg in Media/Bikes/
 
@@ -67,6 +80,19 @@ class Bike {
 
   /// Additional notes
   String? notes;
+
+  /// Investment amount allocated to this bike (from user's capital)
+  double investmentAmount = 0.0;
+
+  /// Registration Number (For Used Bikes)
+  String? registrationNumber;
+
+  // -- Purchaser Details (V2 - Optional) --
+  String? purchaserName;
+  String? purchaserPhone;
+  String? purchaserCnic;
+  String? purchaserCnicFrontFilename;
+  String? purchaserCnicBackFilename;
 }
 
 // Authored by: Moazzam Samoo

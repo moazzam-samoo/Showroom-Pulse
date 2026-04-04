@@ -27,7 +27,7 @@ class AppSettings {
   // -- NEW FIELDS FROM SETTINGS UI UPDATE --
 
   /// Showroom Name (General Settings)
-  String showroomName = 'AL-AL-TAHIR Showroom';
+  String showroomName = 'AL-TAHIR Showroom';
 
   /// Showroom Logo path (General Settings)
   String? showroomLogoPath;
@@ -68,6 +68,9 @@ class AppSettings {
 
   /// Custom bike models (comma-separated)
   String bikeModels = 'CG125,CD70,GS150,CB150F,Pridor,CG125S,CB150F-SE,YBR125,GD110,GR150';
+
+  /// Custom bike models (Year) (comma-separated)
+  String bikeYears = '2024,2025,2026';
 }
 
 // Authored by: Moazzam Samoo

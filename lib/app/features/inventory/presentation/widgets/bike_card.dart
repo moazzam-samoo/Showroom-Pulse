@@ -5,8 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/utils/thousands_separator_input_formatter.dart';
-
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
+import 'package:tahir_showroom/app/core/widgets/app_bike_image.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
 
@@ -91,23 +91,12 @@ class _BikeCardState extends State<BikeCard> {
               // 1. Image Area
               Stack(
                 children: [
-                  // Image
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                    child: SizedBox(
-                      height: 150, // Match SaleCard exact dimension
-                      width: double.infinity,
-                      child: Hero(
-                        tag: 'bike_${widget.bike.engineNumber}',
-                        child: widget.bike.imageFilename != null
-                            ? Image.file(
-                                File(widget.bike.imageFilename!),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => _buildPlaceholder(isDark),
-                              )
-                            : _buildPlaceholder(isDark),
-                      ),
-                    ),
+                  AppBikeImage(
+                    imagePath: widget.bike.imageFilename,
+                    height: 150,
+                    borderRadius: 16,
+                    heroTag: 'bike_${widget.bike.engineNumber}',
+                    iconSize: 32,
                   ),
                     
                     // Gradient Overlay
@@ -214,7 +203,7 @@ class _BikeCardState extends State<BikeCard> {
                         children: [
                           Expanded(
                             child: Text(
-                              "${widget.bike.brand} ${widget.bike.model}",
+                              "${widget.bike.model} ${widget.bike.brand}",
                               style: TextStyle(
                                 fontSize: widget.compact ? 14 : 16,
                                 fontWeight: FontWeight.bold,
@@ -418,19 +407,6 @@ class _BikeCardState extends State<BikeCard> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildPlaceholder(bool isDark) {
-    return Container(
-      color: isDark ? const Color(0xFF0F172A) : Colors.grey[200],
-      child: Center(
-        child: Icon(
-          LucideIcons.bike,
-          size: 32,
-          color: isDark ? Colors.grey[700] : Colors.grey[400],
-        ),
-      ),
     );
   }
 

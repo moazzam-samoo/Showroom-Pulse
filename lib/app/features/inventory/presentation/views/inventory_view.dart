@@ -12,6 +12,7 @@ import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_filter_bar.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/add_bike_dialog.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/widgets/edit_bike_dialog.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/widgets/bike_detail_dialog.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
@@ -126,7 +127,15 @@ class _InventoryViewState extends State<InventoryView> {
                         Get.offNamed('/reports');
                         break;
                       case 7:
+
+                        Get.offNamed('/investment');
+
+                        break;
+
+                      case 8:
+
                         Get.offNamed('/settings');
+
                         break;
                     }
                   },
@@ -138,6 +147,16 @@ class _InventoryViewState extends State<InventoryView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          'Inventory Management',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
                         // Filter Bar
                         Container(
                           key: _filterBarKey,
@@ -310,9 +329,25 @@ class _InventoryViewState extends State<InventoryView> {
     );
   }
 
-  void _showBikeDetails(Bike bike) {
-    // TODO: Navigate to bike detail view
-    debugPrint('Show details for: ${bike.model}');
+  void _showBikeDetails(Bike bike) async {
+    final controller = Get.find<InventoryController>();
+    
+    // Quick lookups
+    final sale = await controller.getSaleForBike(bike.id);
+    final customer = await controller.getCustomerBySale(sale);
+    final supplier = await controller.getSupplierForBike(bike);
+
+    if (Get.context != null) {
+      showDialog(
+        context: Get.context!,
+        builder: (context) => BikeDetailDialog(
+          bike: bike,
+          sale: sale,
+          customer: customer,
+          supplier: supplier,
+        ),
+      );
+    }
   }
 
   void _editBike(BuildContext context, Bike bike) {

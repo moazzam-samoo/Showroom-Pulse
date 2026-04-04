@@ -1,13 +1,20 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 import 'package:tahir_showroom/app/features/procurement/domain/supplier_service.dart';
 import 'package:isar/isar.dart';
+
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
+import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 
 class BikeEntry {
   String engineNumber = '';
@@ -16,8 +23,9 @@ class BikeEntry {
   String brand = ''; // Default
   BikeConditionEnum condition = BikeConditionEnum.newBike;
   String color = '';
-  int modelYear = DateTime.now().year;
+  int? modelYear;
   double purchasePrice = 0.0;
+  String registrationNumber = '';
   File? imageFile;
   Bike? existingBike; // For Edit Mode
 
@@ -27,6 +35,7 @@ class BikeEntry {
   final FocusNode brandFocus = FocusNode();
   final FocusNode modelFocus = FocusNode();
   final FocusNode conditionFocus = FocusNode();
+  final FocusNode regNumberFocus = FocusNode();
   final FocusNode colorFocus = FocusNode();
   final FocusNode yearFocus = FocusNode();
   final FocusNode priceFocus = FocusNode();
@@ -38,6 +47,7 @@ class BikeEntry {
     brandFocus.dispose();
     modelFocus.dispose();
     conditionFocus.dispose();
+    regNumberFocus.dispose();
     colorFocus.dispose();
     yearFocus.dispose();
     priceFocus.dispose();
@@ -56,15 +66,17 @@ class SupplierController extends GetxController {
   // Search State
   final searchQuery = ''.obs;
   final searchController = TextEditingController();
+  final ReportPdfService _pdfService = ReportPdfService();
 
   List<Supplier> get filteredSuppliers {
     if (searchQuery.value.isEmpty) return suppliers;
-    final query = searchQuery.value.toLowerCase();
-    return suppliers.where((s) => 
-      s.name.toLowerCase().contains(query) || 
-      s.phone.contains(query) || 
-      s.cnic.contains(query)
-    ).toList();
+    final query = searchQuery.value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    return suppliers.where((s) {
+      final name = s.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final phone = s.phone.replaceAll(RegExp(r'[^0-9]'), '');
+      final cnic = s.cnic.replaceAll(RegExp(r'[^0-9]'), '');
+      return name.contains(query) || phone.contains(query) || cnic.contains(query);
+    }).toList();
   }
 
   // New Supplier State
@@ -124,6 +136,13 @@ class SupplierController extends GetxController {
     super.onClose();
   }
 
+  InvestmentService _getInvestmentService() {
+    if (!Get.isRegistered<InvestmentService>()) {
+      Get.put(InvestmentService());
+    }
+    return Get.find<InvestmentService>();
+  }
+
   Future<void> loadSuppliers() async {
     final list = await _supplierService.getAllSuppliers();
     suppliers.assignAll(list);
@@ -160,6 +179,7 @@ class SupplierController extends GetxController {
         ..model = bike.model
         ..brand = bike.brand
         ..condition = bike.condition
+        ..registrationNumber = bike.registrationNumber ?? ''
         ..color = bike.color
         ..modelYear = bike.modelYear
         ..purchasePrice = bike.purchasePrice
@@ -280,6 +300,13 @@ class SupplierController extends GetxController {
         );
         return;
       }
+      if (e.condition == BikeConditionEnum.usedBike && e.registrationNumber.trim().isEmpty) {
+        AppNotificationDialog.showError(
+          title: 'Missing Required Details',
+          message: 'Row ${i + 1} is missing Registration Number. It is required for "Used" condition.',
+        );
+        return;
+      }
     }
 
     if (!isNewSupplier.value && selectedSupplier.value == null) {
@@ -331,6 +358,22 @@ class SupplierController extends GetxController {
 
         if (finalSupplier == null) return;
 
+        final int batchSize = bikeEntries.length;
+        final double batchTotal = totalBatchCost.value;
+        final String supplierName = finalSupplier.name;
+
+        // Capital Guard
+        final invService = _getInvestmentService();
+        final availableBalance = await invService.getAvailableBalance();
+        if (batchTotal > availableBalance) {
+          final format = NumberFormat('#,##0', 'en_US');
+          AppNotificationDialog.showError(
+            title: 'Not Enough Capital',
+            message: 'You cannot use Rs ${format.format(batchTotal)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and add capital first.',
+          );
+          return;
+        }
+
         if (editingBatch.value != null) {
           await _handleUpdateBatch(editingBatch.value!, finalSupplier);
         } else {
@@ -340,6 +383,26 @@ class SupplierController extends GetxController {
         clearBatchForm();
         await loadSuppliers();
         _refreshSelectedSupplier();
+
+        // Trigger Investment UI Refresh
+        if (Get.isRegistered<InvestmentController>()) {
+          Get.find<InvestmentController>().loadInvestmentData();
+        }
+
+        // Show Financial Toast
+        try {
+          final investmentService = _getInvestmentService();
+          final remainingBalance = await investmentService.getAvailableBalance();
+          final deficitWarning = remainingBalance < 0 ? ' (⚠️ Deficit)' : '';
+          
+          AppToast.showFinancial(
+            title: 'Stock Saved',
+            line1: '📦 Saved $batchSize bikes from $supplierName',
+            line2: 'Capital Used: Rs ${batchTotal.toStringAsFixed(0)} | Remaining: Rs ${remainingBalance.toStringAsFixed(0)}$deficitWarning',
+          );
+        } catch (e) {
+          debugPrint('Failed to show financial toast: $e');
+        }
 
         Get.dialog(
           Dialog(
@@ -429,10 +492,12 @@ class SupplierController extends GetxController {
           ..brand = entry.brand
           ..condition = entry.condition
           ..color = entry.color
-          ..modelYear = entry.modelYear
+          ..modelYear = entry.modelYear ?? DateTime.now().year
           ..purchasePrice = entry.purchasePrice
+          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null
           ..cashSalePrice = 0 
-          ..status = BikeStatusEnum.available;
+          ..status = BikeStatusEnum.available
+          ..investmentAmount = entry.purchasePrice;
 
         if (entry.imageFile != null) {
           bike.imageFilename = await _fileService.saveBikeImage(entry.imageFile!, entry.engineNumber);
@@ -440,12 +505,30 @@ class SupplierController extends GetxController {
         bikes.add(bike);
       }
 
-      await _supplierService.savePurchaseBatch(
+      // Automatically allocate capital priorities for all bikes in batch
+      final invService = _getInvestmentService();
+      final financials = await invService.getCategoryFinancials();
+      _allocateFundingForBikes(bikes, financials);
+
+      final batch = await _supplierService.savePurchaseBatch(
         supplier: supplier,
         date: purchaseDate.value,
         billImage: billImage.value,
         bikes: bikes,
       );
+
+      // Record investment for this batch
+      try {
+        final investmentService = _getInvestmentService();
+        final totalBatchInvestment = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
+        await investmentService.recordBatchPurchaseInvestment(
+          amount: totalBatchInvestment,
+          batchId: batch.id,
+          date: purchaseDate.value,
+        );
+      } catch (e) {
+        debugPrint('Failed to record batch investment: $e');
+      }
   }
 
   Future<void> _handleUpdateBatch(PurchaseBatch batch, Supplier supplier) async {
@@ -481,8 +564,9 @@ class SupplierController extends GetxController {
           ..brand = entry.brand
           ..condition = entry.condition
           ..color = entry.color
-          ..modelYear = entry.modelYear
-          ..purchasePrice = entry.purchasePrice;
+          ..modelYear = entry.modelYear ?? entry.existingBike?.modelYear ?? DateTime.now().year
+          ..purchasePrice = entry.purchasePrice
+          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null;
           
         // Handle Image Update
         if (entry.imageFile != null) {
@@ -492,6 +576,11 @@ class SupplierController extends GetxController {
         bikesToSave.add(bike);
       }
 
+      // Re-allocate capital priorities (Handles New Bikes + Price Changes in existing bikes)
+      final invService = _getInvestmentService();
+      final financials = await invService.getCategoryFinancials();
+      _allocateFundingForBikes(bikesToSave, financials);
+
       await _supplierService.updateFullPurchaseBatch(
         batch: batch,
         newSupplier: supplier,
@@ -500,6 +589,70 @@ class SupplierController extends GetxController {
         bikesToSave: bikesToSave,
         deletedBikeIds: bikesToDeleteIds,
       );
+  }
+
+  void _allocateFundingForBikes(List<Bike> bikes, List<CategoryFinancials> financials) {
+    final priorityOrder = [
+      InvestmentCategoryEnum.personalCapital,
+      InvestmentCategoryEnum.partnership,
+      InvestmentCategoryEnum.other,
+      InvestmentCategoryEnum.loan,
+    ];
+
+    Map<InvestmentCategoryEnum, double> availableFunds = {};
+    for (final cat in priorityOrder) {
+      availableFunds[cat] = financials.firstWhere(
+        (e) => e.category == cat,
+        orElse: () => CategoryFinancials(category: cat, injected: 0, available: 0)
+      ).available;
+    }
+
+    // Recover funds from existing bikes in THIS batch so we can perfectly re-distribute them
+    for (var bike in bikes) {
+      if (bike.id != Isar.autoIncrement && bike.id > 0) {
+         availableFunds[InvestmentCategoryEnum.personalCapital] = (availableFunds[InvestmentCategoryEnum.personalCapital] ?? 0) + bike.fundedByPersonal;
+         availableFunds[InvestmentCategoryEnum.partnership] = (availableFunds[InvestmentCategoryEnum.partnership] ?? 0) + bike.fundedByPartnership;
+         availableFunds[InvestmentCategoryEnum.other] = (availableFunds[InvestmentCategoryEnum.other] ?? 0) + bike.fundedByOther;
+         availableFunds[InvestmentCategoryEnum.loan] = (availableFunds[InvestmentCategoryEnum.loan] ?? 0) + bike.fundedByLoan;
+      }
+    }
+
+    for (var bike in bikes) {
+      double remainingToFund = bike.purchasePrice;
+
+      // Reset existing funding before recalculating
+      bike.fundedByPersonal = 0;
+      bike.fundedByPartnership = 0;
+      bike.fundedByOther = 0;
+      bike.fundedByLoan = 0;
+      bike.investmentAmount = bike.purchasePrice;
+
+      for (final cat in priorityOrder) {
+        if (remainingToFund <= 0) break;
+        
+        final availableForCat = availableFunds[cat] ?? 0.0;
+        if (availableForCat > 0) {
+          double assigned = 0.0;
+          if (availableForCat >= remainingToFund) {
+            assigned = remainingToFund;
+            remainingToFund = 0;
+          } else {
+            assigned = availableForCat;
+            remainingToFund -= availableForCat;
+          }
+
+          availableFunds[cat] = availableFunds[cat]! - assigned;
+
+          switch(cat) {
+             case InvestmentCategoryEnum.personalCapital: bike.fundedByPersonal = assigned; break;
+             case InvestmentCategoryEnum.partnership: bike.fundedByPartnership = assigned; break;
+             case InvestmentCategoryEnum.other: bike.fundedByOther = assigned; break;
+             case InvestmentCategoryEnum.loan: bike.fundedByLoan = assigned; break;
+             default: break;
+          }
+        }
+      }
+    }
   }
 
   void clearBatchForm() {
@@ -527,6 +680,73 @@ class SupplierController extends GetxController {
     if (selectedSupplier.value != null) {
       final fresh = suppliers.firstWhereOrNull((s) => s.id == selectedSupplier.value!.id);
       selectedSupplier.value = fresh; 
+    }
+  }
+  // --- PDF Export ---
+  Future<void> exportAllSuppliersPdf() async {
+    try {
+      final List<Map<String, dynamic>> supplierData = [];
+      for (final s in suppliers) {
+        final batches = await _supplierService.getSupplierBatches(s.id);
+        double totalAmount = 0;
+        for (final b in batches) {
+          final bikes = await _supplierService.getBatchBikes(b.id);
+          totalAmount += bikes.fold(0.0, (sum, bike) => sum + bike.purchasePrice);
+        }
+        supplierData.add({
+          'name': s.name,
+          'phone': s.phone,
+          'cnic': s.cnic,
+          'batchCount': batches.length,
+          'totalAmount': totalAmount,
+        });
+      }
+
+      final path =
+          await _pdfService.generateAllSuppliersReport(supplierData: supplierData);
+      if (path != null) {
+        AppToast.showSuccess(
+            title: 'PDF Exported', message: 'Report saved to Downloads');
+      } else {
+        AppToast.showError(
+            title: 'Export Failed', message: 'Could not generate PDF');
+      }
+    } catch (e) {
+      debugPrint('Error exporting all suppliers PDF: $e');
+      AppToast.showError(title: 'Export Error', message: e.toString());
+    }
+  }
+
+  Future<void> exportSupplierDetailPdf(Supplier supplier) async {
+    try {
+      final batches = await _supplierService.getSupplierBatches(supplier.id);
+      final List<Map<String, dynamic>> batchData = [];
+
+      for (final b in batches) {
+        final bikes = await _supplierService.getBatchBikes(b.id);
+        batchData.add({
+          'date': b.purchaseDate,
+          'bikes': bikes,
+          'totalAmount':
+              bikes.fold(0.0, (sum, bike) => sum + bike.purchasePrice),
+        });
+      }
+
+      final path = await _pdfService.generateSupplierDetailReport(
+        supplier: supplier,
+        batches: batchData,
+      );
+
+      if (path != null) {
+        AppToast.showSuccess(
+            title: 'PDF Exported', message: 'History saved to Downloads');
+      } else {
+        AppToast.showError(
+            title: 'Export Failed', message: 'Could not generate PDF');
+      }
+    } catch (e) {
+      debugPrint('Error exporting supplier history PDF: $e');
+      AppToast.showError(title: 'Export Error', message: e.toString());
     }
   }
 }

@@ -54,16 +54,15 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     // Now find the index in 'newString' that follows that many digits
     int newCursorOffset = 0;
     int digitsEncountered = 0;
-    
+
     for (int i = 0; i < newString.length; i++) {
-        if (RegExp(r'\d').hasMatch(newString[i])) {
-            digitsEncountered++;
-        }
-        if (digitsEncountered == digitsBeforeCursor) {
-            // Found the spot. The cursor should be AFTER this digit.
-            newCursorOffset = i + 1;
-            break; 
-        }
+      if (RegExp(r'\d').hasMatch(newString[i])) {
+        digitsEncountered++;
+      }
+      newCursorOffset = i + 1;
+      if (digitsEncountered >= digitsBeforeCursor) {
+        break;
+      }
     }
     
     // Edge case: if digitsBeforeCursor is 0, we are at start

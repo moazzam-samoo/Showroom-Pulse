@@ -62,9 +62,9 @@ class BikeFilterBar extends StatelessWidget {
   });
 
   // Sample data
-  static const List<String> brands = ['Honda', 'Suzuki', 'Yamaha', 'Road Prince', 'United'];
-  static const List<String> engineCCs = ['70cc', '100cc', '110cc', '125cc', '150cc'];
-  static const List<String> statuses = ['Available', 'Sold', 'Pending'];
+  static const List<String> brands = ['Honda', 'Suzuki', 'Yamaha', 'Road Prince', 'United', 'Unique', 'Hi-Speed'];
+  static const List<String> engineCCs = ['CD70', 'CG125', '100cc', '110cc', '150cc'];
+  static const List<String> statuses = ['All', 'Available', 'Installment Sold', 'Cash Sold', 'Both Sold'];
   static const List<String> conditions = ['New', 'Used'];
   static const List<String> colors = [
     'Red', 'Black', 'Blue', 'Silver', 'White', 'Grey', 'Green',
@@ -208,7 +208,7 @@ class BikeFilterBar extends StatelessWidget {
             children: [
               _buildDropdown(
                 value: selectedBrand,
-                hint: 'Brand',
+                hint: 'Maker',
                 items: brands,
                 onChanged: onBrandChanged,
                 isDark: isDark,
@@ -216,7 +216,7 @@ class BikeFilterBar extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               _buildDropdown(
                 value: selectedCC,
-                hint: 'Engine CC',
+                hint: 'Horse Power',
                 items: engineCCs,
                 onChanged: onCCChanged,
                 isDark: isDark,

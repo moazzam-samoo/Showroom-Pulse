@@ -265,10 +265,14 @@ class StatementService {
         children: [
           pw.Text('Bike Details', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
-          _pdfInfoRow('Model', '${bike.brand} ${bike.model}'),
+          _pdfInfoRow('Maker', bike.brand),
+          _pdfInfoRow('Horse Power', bike.model),
+          _pdfInfoRow('Model', bike.modelYear.toString()),
           _pdfInfoRow('Color', bike.color),
           _pdfInfoRow('Engine #', bike.engineNumber),
           _pdfInfoRow('Chassis #', bike.chassisNumber),
+          if (bike.condition == BikeConditionEnum.usedBike && bike.registrationNumber != null)
+            _pdfInfoRow('Reg #', bike.registrationNumber!),
         ],
       ),
     );
@@ -302,7 +306,7 @@ class StatementService {
           pw.Row(
             children: [
               pw.Expanded(child: _pdfInfoRow('Total Paid', _currencyFormat.format(contract.totalPaid))),
-              pw.Expanded(child: _pdfInfoRow('Remaining', _currencyFormat.format(contract.remainingBalance))),
+              pw.Expanded(child: _pdfInfoRow('Remaining', contract.status == ContractStatusEnum.completed ? 'Rs 0' : _currencyFormat.format(contract.remainingBalance))),
             ],
           ),
           pw.Row(
@@ -380,7 +384,7 @@ class StatementService {
           pw.Text('Witness Information', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Witnesses are on file at AL-AL-TAHIR Showroom.',
+            'Witnesses are on file at AL-TAHIR Showroom.',
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],

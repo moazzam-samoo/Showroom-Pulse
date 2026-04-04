@@ -12,6 +12,8 @@ import 'package:tahir_showroom/app/core/utils/installment_calculator.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
@@ -97,8 +99,7 @@ class NewSaleController extends GetxController {
   late final CustomerRepository _customerRepository;
 
   void _initCustomerRepository() {
-    final isarService = Get.find<IsarService>();
-    _customerRepository = CustomerRepository(isarService.isar);
+    _customerRepository = CustomerRepository();
   }
 
   Future<void> searchCustomers(String query) async {
@@ -161,7 +162,7 @@ class NewSaleController extends GetxController {
 
   // Installment Controllers
   final discountController = TextEditingController(text: '0'); // Shared or Installment specific
-  final downPaymentController = TextEditingController();
+  final downPaymentController = TextEditingController(text: '0');
   final monthsController = TextEditingController(text: '12');
   final markupType = MarkupType.fixed.obs;
   final markupValueController = TextEditingController(text: '0');
@@ -290,6 +291,11 @@ class NewSaleController extends GetxController {
     _registerNavigationFields();
     
     _loadDefaultSettings();
+
+    // Clear on Focus logic for numeric fields with default "0"
+    _setupClearOnFocus(downPaymentFocus, downPaymentController);
+    _setupClearOnFocus(discountFocus, discountController);
+    _setupClearOnFocus(markupValueFocus, markupValueController);
 
     downPaymentController.addListener(_calculateInstallment);
     discountController.addListener(_calculateInstallment);
@@ -431,6 +437,20 @@ class NewSaleController extends GetxController {
     }
   }
 
+  void _setupClearOnFocus(FocusNode focusNode, TextEditingController controller) {
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        if (controller.text == '0') {
+          controller.clear();
+        }
+      } else {
+        if (controller.text.trim().isEmpty) {
+          controller.text = '0';
+        }
+      }
+    });
+  }
+
   Future<void> loadAvailableBikes() async {
     final service = Get.find<IsarService>();
     final fileService = Get.find<FileService>();
@@ -473,6 +493,7 @@ class NewSaleController extends GetxController {
     try {
       final basePrice = ((bike.cashSalePrice as num?)?.toDouble() ?? 0.0) - discount;
       final result = InstallmentCalculator.calculate(
+        originalPrice: bike.cashSalePrice,
         cashPrice: basePrice > 0 ? basePrice : 0.0,
         markupType: markupType.value,
         markupValue: markupVal,
@@ -547,6 +568,16 @@ class NewSaleController extends GetxController {
         );
         return;
       }
+      
+      final discount = double.tryParse(discountController.text.replaceAll(',', '')) ?? 0;
+      final basePriceAfterDiscount = bike!.cashSalePrice - discount;
+      if (downPayment >= basePriceAfterDiscount && basePriceAfterDiscount > 0) {
+        AppNotificationDialog.showError(
+          title: 'Invalid Down Payment',
+          message: 'Down payment cannot be equal to or exceed the discounted price of the bike.',
+        );
+        return;
+      }
     }
 
     // Customer Validation
@@ -605,6 +636,36 @@ class NewSaleController extends GetxController {
       if (witness2AddressController.text.trim().isEmpty) missingFields.add('Witness 2 Address');
     }
 
+    // === LOSS WARNING: Check if selling below purchase price ===
+    if (saleType.value == SaleType.cash && selectedBike.value != null) {
+      final saleAmount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+      final purchasePrice = selectedBike.value!.purchasePrice;
+      if (saleAmount > 0 && saleAmount < purchasePrice) {
+        final loss = purchasePrice - saleAmount;
+        final currFmt = NumberFormat.currency(locale: 'en_PK', symbol: 'Rs ', decimalDigits: 0);
+        AppNotificationDialog.showConfirmation(
+          title: '⚠️ Selling Below Purchase Price',
+          message: 'You are selling this bike at ${currFmt.format(loss)} LOSS.\n\n'
+                   'Purchase Price: ${currFmt.format(purchasePrice)}\n'
+                   'Sale Price: ${currFmt.format(saleAmount)}\n\n'
+                   'This loss will be deducted from your profit.',
+          confirmText: 'Proceed with Loss',
+          cancelText: 'Cancel Sale',
+          onConfirm: () {
+            if (missingFields.isNotEmpty) {
+              AppNotificationDialog.showOptionalFieldsWarning(
+                missingFields: missingFields,
+                onProceed: _executeSale,
+              );
+            } else {
+              _executeSale();
+            }
+          },
+        );
+        return;
+      }
+    }
+
     if (missingFields.isNotEmpty) {
       AppNotificationDialog.showOptionalFieldsWarning(
         missingFields: missingFields,
@@ -624,6 +685,9 @@ class NewSaleController extends GetxController {
 
     try {
       // Execute the database transaction
+      int? installmentContractId;
+      int? saleId;
+
       await _isarService.isar.writeTxn(() async {
         // A. Create/Get Customer
         Customer? customer;
@@ -764,8 +828,11 @@ class NewSaleController extends GetxController {
 
           // Link Contract to Sale
           sale.installmentContractId = contract.id;
+          installmentContractId = contract.id;
           await _isarService.isar.sales.put(sale);
         }
+
+        saleId = sale.id;
 
         // D2. Create and Save Witness Records (for both cash and installment sales)
         // For installment sales, use contract ID. For cash sales, use sale ID (as negative to distinguish)
@@ -832,6 +899,44 @@ class NewSaleController extends GetxController {
       });
 
       // If we reach here, transaction was successful
+
+      // === INVESTMENT TRACKING: Record revenue from this sale ===
+      if (Get.isRegistered<InvestmentService>()) {
+        try {
+          final investmentService = Get.find<InvestmentService>();
+          final bike = selectedBike.value!;
+
+          if (saleType.value == SaleType.cash) {
+            // Cash sale: record full sale revenue + profit/loss
+            final saleAmount = double.tryParse(
+                    cashAmountController.text.replaceAll(',', '')) ?? 0;
+            await investmentService.recordBikeSaleRevenue(
+              bikeId: bike.id,
+              saleAmount: saleAmount,
+              purchasePrice: bike.purchasePrice,
+              saleId: saleId ?? 0, // Sale ID from transaction
+              bikeName: '${bike.model} ${bike.brand}',
+            );
+          } else if (saleType.value == SaleType.installment) {
+            // Installment sale: record down payment as revenue
+            final dpAmount = double.tryParse(
+                    downPaymentController.text.replaceAll(',', '')) ?? 0;
+            if (dpAmount > 0) {
+              await investmentService.recordInstallmentPaymentRevenue(
+                contractId: installmentContractId ?? 0,
+                amount: dpAmount,
+                bikeId: bike.id,
+                previousTotalPaid: 0.0,
+                purchasePrice: bike.purchasePrice,
+                description: 'Down Payment — ${bike.model} ${bike.brand}',
+              );
+            }
+          }
+        } catch (e) {
+          debugPrint('InvestmentService recording warning: $e');
+        }
+      }
+
       // Refresh sales data and dashboard stats (non-critical, errors won't affect success message)
       try {
         final salesController = Get.find<SalesController>();
@@ -850,8 +955,37 @@ class NewSaleController extends GetxController {
         }
       }
 
+      // Refresh investment KPIs if controller is registered
+      if (Get.isRegistered<InvestmentController>()) {
+        try {
+          final investmentController = Get.find<InvestmentController>();
+          await investmentController.loadInvestmentData();
+        } catch (e) {
+          debugPrint('InvestmentController refresh warning: $e');
+        }
+      }
+
       // IMPORTANT: Close the dialog FIRST, then show success message
       Get.back(); // Close the new sale dialog
+
+      // Show Financial Toast
+      String toastLine1 = '✅ Sale Recorded — ${selectedBike.value!.model}';
+      String toastLine2 = '';
+      
+      if (saleType.value == SaleType.cash) {
+        final saleAmount = double.tryParse(cashAmountController.text.replaceAll(',', '')) ?? 0;
+        final profit = saleAmount - selectedBike.value!.purchasePrice;
+        toastLine2 = 'Revenue: Rs ${saleAmount.toStringAsFixed(0)} | Profit: Rs ${profit.toStringAsFixed(0)}';
+      } else {
+        final dpAmount = double.tryParse(downPaymentController.text.replaceAll(',', '')) ?? 0;
+        toastLine2 = 'Down Payment Received: Rs ${dpAmount.toStringAsFixed(0)}';
+      }
+      
+      AppToast.showFinancial(
+        title: 'Sale Successful',
+        line1: toastLine1,
+        line2: toastLine2,
+      );
 
       // Get theme info
       final context = Get.context!;
@@ -1209,10 +1343,14 @@ class NewSaleController extends GetxController {
         'customerCnic': customerCnicController.text,
         'customerContact': customerPhoneController.text,
         'customerAddress': customerAddressController.text,
+        'bikeMaker': selectedBike.value?.brand ?? '',
         'bikeModel': selectedBike.value?.model ?? '',
+        'bikeYear': selectedBike.value?.modelYear.toString() ?? '',
         'bikeColor': selectedBike.value?.color ?? '',
         'bikeChassisNumber': selectedBike.value?.chassisNumber ?? '',
         'bikeEngineNumber': selectedBike.value?.engineNumber ?? '',
+        'bikeCondition': selectedBike.value?.condition.name,
+        'bikeRegistrationNumber': selectedBike.value?.registrationNumber,
         'isCash': isCash,
         'saleDate': today,
         'witnesses': witnesses,

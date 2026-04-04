@@ -156,13 +156,16 @@ class SalesService {
     )).toList();
 
     return SaleCardData(
-      bikeModel: '${bike.brand} ${bike.model}',
+      bikeModel: '${bike.model} ${bike.brand}',
       bikeBrand: bike.brand,
       bikeColor: bike.color,
       bikeCondition: bike.condition,
       bikeImage: bikeImagePath,
       bikeChassisNumber: bike.chassisNumber,
       bikeEngineNumber: bike.engineNumber,
+      bikeYear: bike.modelYear.toString(),
+      bikeMaker: bike.brand,
+      bikeRegistrationNumber: bike.condition == BikeConditionEnum.usedBike ? bike.registrationNumber : null,
       customerName: customer.fullName,
       customerCnic: customer.cnicNumber,
       customerContact: customer.phoneNumber,

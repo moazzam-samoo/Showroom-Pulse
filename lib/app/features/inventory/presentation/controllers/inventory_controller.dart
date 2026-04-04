@@ -4,8 +4,12 @@ import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:tahir_showroom/app/core/services/file_service.dart';
+import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
 import 'package:tahir_showroom/app/features/inventory/domain/inventory_service.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
@@ -21,7 +25,7 @@ class InventoryController extends GetxController {
   final searchController = TextEditingController();
   final RxnString selectedBrand = RxnString();
   final RxnString selectedCC = RxnString();
-  final RxnString selectedStatus = RxnString();
+  final RxnString selectedStatus = RxnString('Available'); // Explicitly set to 'Available' as per request
   final RxnString selectedCondition = RxnString();
   final RxnString selectedColor = RxnString();
   final RxnString selectedSkin = RxnString();
@@ -44,6 +48,13 @@ class InventoryController extends GetxController {
     super.onClose();
   }
 
+  InvestmentService _getInvestmentService() {
+    if (!Get.isRegistered<InvestmentService>()) {
+      Get.put(InvestmentService());
+    }
+    return Get.find<InvestmentService>();
+  }
+
   /// Load all bikes from database
   Future<void> loadBikes() async {
     isLoading.value = true;
@@ -54,8 +65,14 @@ class InventoryController extends GetxController {
       
       // Update image paths to full paths
       for (var bike in bikes) {
-        if (bike.imageFilename != null) {
+        if (bike.imageFilename != null && !bike.imageFilename!.contains('\\') && !bike.imageFilename!.contains('/')) {
           bike.imageFilename = _fileService.getBikeImagePath(bike.imageFilename!);
+        }
+        if (bike.purchaserCnicFrontFilename != null && !bike.purchaserCnicFrontFilename!.contains('\\') && !bike.purchaserCnicFrontFilename!.contains('/')) {
+          bike.purchaserCnicFrontFilename = _fileService.getBikeImagePath(bike.purchaserCnicFrontFilename!);
+        }
+        if (bike.purchaserCnicBackFilename != null && !bike.purchaserCnicBackFilename!.contains('\\') && !bike.purchaserCnicBackFilename!.contains('/')) {
+          bike.purchaserCnicBackFilename = _fileService.getBikeImagePath(bike.purchaserCnicBackFilename!);
         }
       }
     } catch (e) {
@@ -79,16 +96,14 @@ class InventoryController extends GetxController {
 
     try {
       final bike = Bike()
-        ..model = data['model'] ?? ''
-        ..brand = data['brand']?.toString().trim().isNotEmpty == true 
-            ? data['brand'] 
-            : (data['model']?.toString().split(' ').first ?? '')
+        ..model = data['maker'] ?? ''
+        ..brand = data['horsePower'] ?? ''
+        ..modelYear = data['modelYear'] ?? DateTime.now().year
         ..condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike
         ..color = data['color'] ?? ''
-        ..modelYear = DateTime.now().year // Default to current year
-
         ..engineNumber = data['engineNumber']
         ..chassisNumber = data['chassisNumber']
+        ..registrationNumber = data['registrationNumber']
         ..purchasePrice = data['purchasePrice']
         ..cashSalePrice = data['sellingPrice']
         ..status = BikeStatusEnum.available;
@@ -103,14 +118,123 @@ class InventoryController extends GetxController {
         bike.imageFilename = filename; // Save filename in DB
       }
 
-      await _inventoryService.addBike(bike);
+      // Handle Purchaser CNIC Images
+      if (data['purchaserCnicFront'] != null && data['purchaserCnicFront'] is File) {
+        bike.purchaserCnicFrontFilename = await _fileService.saveBikePurchaserCnic(
+          data['purchaserCnicFront'],
+          bike.engineNumber,
+          'front',
+        );
+      }
+      if (data['purchaserCnicBack'] != null && data['purchaserCnicBack'] is File) {
+        bike.purchaserCnicBackFilename = await _fileService.saveBikePurchaserCnic(
+          data['purchaserCnicBack'],
+          bike.engineNumber,
+          'back',
+        );
+      }
+
+      bike.purchaserName = data['purchaserName'];
+      bike.purchaserPhone = data['purchaserPhone'];
+      bike.purchaserCnic = data['purchaserCnic'];
+
+      // Assign investment amount if provided
+      final investmentAmount = double.tryParse(data['investmentAmount']?.toString() ?? '0') ?? 0.0;
+      bike.investmentAmount = investmentAmount;
+
+      if (investmentAmount > 0) {
+        final invService = _getInvestmentService();
+        final availableBalance = await invService.getAvailableBalance();
+        if (investmentAmount > availableBalance) {
+          final format = NumberFormat('#,##0', 'en_US');
+          AppNotificationDialog.showError(
+            title: 'Not Enough Capital',
+            message: 'You cannot use Rs ${format.format(investmentAmount)} because your available balance is only Rs ${format.format(availableBalance)}.\n\nPlease go to the Investment screen and invest more cash first.',
+          );
+          return false;
+        }
+
+        // --- Priority Distribution (Funding Snapshot) ---
+        final financials = await invService.getCategoryFinancials();
+        double remainingToFund = investmentAmount;
+
+        final priorityOrder = [
+          InvestmentCategoryEnum.personalCapital,
+          InvestmentCategoryEnum.partnership,
+          InvestmentCategoryEnum.other,
+          InvestmentCategoryEnum.loan,
+        ];
+
+        for (final cat in priorityOrder) {
+          if (remainingToFund <= 0) break;
+          
+          final catData = financials.firstWhere(
+            (e) => e.category == cat, 
+            orElse: () => CategoryFinancials(category: cat, injected: 0, available: 0)
+          );
+          
+          final availableForCat = catData.available;
+          if (availableForCat > 0) {
+            double assigned = 0.0;
+            if (availableForCat >= remainingToFund) {
+              assigned = remainingToFund;
+              remainingToFund = 0;
+            } else {
+              assigned = availableForCat;
+              remainingToFund -= availableForCat;
+            }
+
+            switch(cat) {
+               case InvestmentCategoryEnum.personalCapital: bike.fundedByPersonal = assigned; break;
+               case InvestmentCategoryEnum.partnership: bike.fundedByPartnership = assigned; break;
+               case InvestmentCategoryEnum.other: bike.fundedByOther = assigned; break;
+               case InvestmentCategoryEnum.loan: bike.fundedByLoan = assigned; break;
+               default: break;
+            }
+          }
+        }
+      }
+
+
+
+      final addedId = await _inventoryService.addBike(bike);
+      
+      // Record investment if capital was injected
+      if (investmentAmount > 0) {
+        try {
+          final invService = _getInvestmentService();
+          await invService.recordBikePurchaseInvestment(
+            amount: investmentAmount,
+            date: DateTime.now(),
+            bikeId: addedId,
+          );
+        } catch (e) {
+          debugPrint('Failed to record investment: $e');
+        }
+      }
       
       await loadBikes(); // Refresh list
       
-      AppToast.showSuccess(
-        title: 'Success',
-        message: 'Bike added to inventory',
-      );
+      // Trigger Investment UI Refresh
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
+
+      if (investmentAmount > 0) {
+        final invService = _getInvestmentService();
+        final remainingBalance = await invService.getAvailableBalance();
+        final deficitWarning = remainingBalance < 0 ? ' (⚠️ Deficit)' : '';
+        AppToast.showFinancial(
+          title: 'Success',
+          line1: '🏍️ ${bike.model} ${bike.brand} added to Inventory',
+          line2: 'Capital Used: Rs ${investmentAmount.toStringAsFixed(0)} | Remaining: Rs ${remainingBalance.toStringAsFixed(0)}$deficitWarning',
+        );
+      } else {
+        AppToast.showSuccess(
+          title: 'Success',
+          message: 'Bike added to inventory',
+        );
+      }
       return true;
     } catch (e) {
       AppNotificationDialog.showError(
@@ -143,16 +267,19 @@ class InventoryController extends GetxController {
   Future<bool> updateBikeDetails(Bike bike, Map<String, dynamic> data) async {
     try {
       // Update bike fields
-      bike.model = data['model'] ?? '';
-      bike.brand = data['brand']?.toString().trim().isNotEmpty == true 
-          ? data['brand'] 
-          : (data['model']?.toString().split(' ').first ?? ''); // Update brand
+      bike.model = data['maker'] ?? '';
+      bike.brand = data['horsePower'] ?? '';
+      bike.modelYear = data['modelYear'] ?? DateTime.now().year;
       bike.condition = data['condition'] == 'Used' ? BikeConditionEnum.usedBike : BikeConditionEnum.newBike;
       bike.color = data['color'] ?? '';
       bike.engineNumber = data['engineNumber'] ?? '';
       bike.chassisNumber = data['chassisNumber'] ?? '';
+      bike.registrationNumber = data['registrationNumber'];
       bike.purchasePrice = data['purchasePrice'] ?? 0.0;
       bike.cashSalePrice = data['sellingPrice'] ?? 0.0;
+      bike.purchaserName = data['purchaserName'];
+      bike.purchaserPhone = data['purchaserPhone'];
+      bike.purchaserCnic = data['purchaserCnic'];
 
       // Handle Image update if new file provided
       if (data['imageFile'] != null && data['imageFile'] is File) {
@@ -178,9 +305,30 @@ class InventoryController extends GetxController {
         bike.imageFilename = filename; // Update filename in DB
       }
 
+      // Handle Purchaser CNIC updates
+      if (data['purchaserCnicFront'] != null && data['purchaserCnicFront'] is File) {
+        bike.purchaserCnicFrontFilename = await _fileService.saveBikePurchaserCnic(
+          data['purchaserCnicFront'],
+          bike.engineNumber,
+          'front',
+        );
+      }
+      if (data['purchaserCnicBack'] != null && data['purchaserCnicBack'] is File) {
+        bike.purchaserCnicBackFilename = await _fileService.saveBikePurchaserCnic(
+          data['purchaserCnicBack'],
+          bike.engineNumber,
+          'back',
+        );
+      }
+
       await _inventoryService.updateBike(bike);
       
       await loadBikes(); // Refresh list
+      
+      // Trigger Investment UI Refresh
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
       
       AppToast.showSuccess(
         title: 'Success',
@@ -216,26 +364,44 @@ class InventoryController extends GetxController {
   /// Delete a bike
   Future<void> deleteBike(Bike bike) async {
     try {
-      // 1. Delete image if exists
-      if (bike.imageFilename != null) {
-        // Note: bike.imageFilename currently holds the full path due to loadBikes processing
-        // We need to extract just the filename if we were deleting by ID, 
-        // but here we can just pass the path if fileService supports it, 
-        // OR construct path. 
-        // Actually InventoryService deleteBike only needs ID.
-        // File deletion:
-        // await _fileService.deleteFile(bike.imageFilename!); // careful if path is full or relative
-      }
+      // 1. Handle Investment Refund
+      double refundedAmount = 0;
+      final invService = _getInvestmentService();
       
+      // We always try to remove investment - the service handles 
+      // check for existence (individual or batch)
+      await invService.removeBikePurchaseInvestment(bike);
+      
+      // If the bike had a stored investment amount, we use it for the toast
+      if (bike.investmentAmount > 0) {
+        refundedAmount = bike.investmentAmount;
+      } else {
+        // Fallback to purchase price if investment field was't synced yet
+        refundedAmount = bike.purchasePrice;
+      }
+
+      // 2. Trigger Investment UI Refresh (Direct GetX signal)
+      if (Get.isRegistered<InvestmentController>()) {
+        Get.find<InvestmentController>().loadInvestmentData();
+      }
+
       // 2. Delete from DB
       await _inventoryService.deleteBike(bike.id);
       
       await loadBikes();
       
-      AppToast.showSuccess(
-        title: 'Success',
-        message: 'Bike deleted successfully',
-      );
+      if (refundedAmount > 0) {
+        AppToast.showFinancial(
+          title: 'Deleted Successfully',
+          line1: '🏍️ ${bike.model} removed from inventory',
+          line2: 'Capital Refunded: Rs ${refundedAmount.toStringAsFixed(0)} back to Available Cash',
+        );
+      } else {
+        AppToast.showSuccess(
+          title: 'Success',
+          message: 'Bike deleted successfully',
+        );
+      }
     } catch (e) {
       AppNotificationDialog.showError(
         title: 'Error',
@@ -246,132 +412,127 @@ class InventoryController extends GetxController {
 
   /// Get filtered bikes based on current filter state
   List<Bike> get filteredBikes {
-    return bikes.where((bike) {
-      // Enhanced text search: model, engine, chassis
-      final searchQuery = searchController.text.toLowerCase();
-      if (searchQuery.isNotEmpty) {
-        // Check for Status Keywords
-        bool isStatusKeyword = false;
-        bool statusMatches = false;
-        
-        // Match exact keywords (case-insensitive done by toLowerCase())
-        if (searchQuery == 'available') {
-           isStatusKeyword = true;
-           if (bike.status == BikeStatusEnum.available) statusMatches = true;
-        } else if (searchQuery == 'sold') {
-           isStatusKeyword = true;
-           if (bike.status == BikeStatusEnum.sold) statusMatches = true;
-        } else if (searchQuery == 'installment' || searchQuery == 'reserved') {
-           isStatusKeyword = true;
-           if (bike.status == BikeStatusEnum.installment) statusMatches = true;
-        }
+    // Access all reactive dependencies first to ensure reactivity
+    final searchQuery = searchController.text.trim().toLowerCase();
+    final brandFilter = selectedBrand.value?.toLowerCase();
+    final ccFilter = selectedCC.value?.toLowerCase().replaceAll('cc', '');
+    final statusFilter = selectedStatus.value?.toLowerCase();
+    final conditionFilter = selectedCondition.value?.toLowerCase();
+    final colorFilter = selectedColor.value?.toLowerCase();
+    final skinFilter = selectedSkin.value?.toLowerCase();
+    final minP = minPrice.value;
+    final maxP = maxPrice.value;
 
-        final matches = bike.model.toLowerCase().contains(searchQuery) ||
+    return bikes.where((bike) {
+      // 1. Search Query Filter
+      if (searchQuery.isNotEmpty) {
+        bool statusMatches = false;
+        if (searchQuery == 'available' && bike.status == BikeStatusEnum.available) statusMatches = true;
+        if (searchQuery == 'sold' && bike.status == BikeStatusEnum.sold) statusMatches = true;
+        if ((searchQuery == 'installment' || searchQuery == 'reserved') && bike.status == BikeStatusEnum.installment) statusMatches = true;
+
+        final matchesText = bike.model.toLowerCase().contains(searchQuery) ||
             bike.brand.toLowerCase().contains(searchQuery) ||
             bike.color.toLowerCase().contains(searchQuery) ||
             bike.engineNumber.toLowerCase().contains(searchQuery) ||
             bike.chassisNumber.toLowerCase().contains(searchQuery) ||
             bike.purchasePrice.toInt().toString().contains(searchQuery) ||
             bike.cashSalePrice.toInt().toString().contains(searchQuery) ||
-            (bike.condition == BikeConditionEnum.newBike ? 'new' : 'used').contains(searchQuery) ||
-            statusMatches; // Include status match
+            (bike.condition == BikeConditionEnum.newBike ? 'new' : 'used').contains(searchQuery);
             
-        if (!matches) return false;
+        if (!matchesText && !statusMatches) return false;
       }
 
-      // Brand filter
-      if (selectedBrand.value != null && selectedBrand.value!.isNotEmpty) {
-        if (!bike.brand.toLowerCase().contains(selectedBrand.value!.toLowerCase()) && 
-            !bike.model.toLowerCase().contains(selectedBrand.value!.toLowerCase())) {
+      // 2. Maker (Brand) Filter
+      if (brandFilter != null && brandFilter.isNotEmpty) {
+        if (!bike.model.toLowerCase().contains(brandFilter) && 
+            !bike.brand.toLowerCase().contains(brandFilter)) {
           return false;
         }
       }
 
-      // CC Filter
-      if (selectedCC.value != null && selectedCC.value!.isNotEmpty) {
-         final cc = selectedCC.value!.toLowerCase().replaceAll('cc', '');
-         if (!bike.model.toLowerCase().contains(cc)) {
-           return false;
-         }
-      }
-
-      // Status filter
-      if (selectedStatus.value != null && selectedStatus.value!.isNotEmpty) {
-        final statusString = bike.status.toString().split('.').last;
-        if (statusString.toLowerCase() != selectedStatus.value!.toLowerCase()) {
-          if (selectedStatus.value!.toLowerCase() == 'pending' && statusString == 'installment') {
-             // allow
-          } else {
-             return false;
-          }
-        }
-      }
-
-      // Condition filter
-      if (selectedCondition.value != null && selectedCondition.value!.isNotEmpty) {
-        final conditionString = bike.condition == BikeConditionEnum.newBike ? 'New' : 'Used';
-        if (conditionString.toLowerCase() != selectedCondition.value!.toLowerCase()) {
+      // 3. Horse Power (CC) Filter
+      if (ccFilter != null && ccFilter.isNotEmpty) {
+        if (!bike.brand.toLowerCase().contains(ccFilter) && 
+            !bike.model.toLowerCase().contains(ccFilter)) {
           return false;
         }
       }
 
-      // Color filter
-      if (selectedColor.value != null && selectedColor.value!.isNotEmpty) {
-        if (bike.color.toLowerCase() != selectedColor.value!.toLowerCase()) {
-          return false;
+      // 4. Status Filter
+      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+        final status = bike.status;
+        if (statusFilter == 'available') {
+          if (status != BikeStatusEnum.available) return false;
+        } else if (statusFilter == 'installment sold') {
+          if (status != BikeStatusEnum.installment) return false;
+        } else if (statusFilter == 'cash sold') {
+          if (status != BikeStatusEnum.sold) return false;
+        } else if (statusFilter == 'both sold') {
+          if (status == BikeStatusEnum.available) return false;
         }
       }
 
-      // Skin filter
-      if (selectedSkin.value != null && selectedSkin.value!.isNotEmpty) {
-        if (bike.color.toLowerCase() != selectedSkin.value!.toLowerCase()) {
-          return false;
-        }
+      // 5. Condition Filter
+      if (conditionFilter != null && conditionFilter.isNotEmpty) {
+        final conditionString = bike.condition == BikeConditionEnum.newBike ? 'new' : 'used';
+        if (conditionString != conditionFilter) return false;
       }
 
-      // Price range filter (checks both purchase and sale price)
-      if (minPrice.value != null || maxPrice.value != null) {
-        final purchasePrice = bike.purchasePrice;
+      // 6. Color Filter
+      if (colorFilter != null && colorFilter.isNotEmpty) {
+        if (bike.color.toLowerCase() != colorFilter) return false;
+      }
+
+      // 7. Skin Filter
+      if (skinFilter != null && skinFilter.isNotEmpty) {
+        // Skin info is often kept in notes or suffix of color, but for now exact match on color
+        if (!bike.color.toLowerCase().contains(skinFilter)) return false;
+      }
+
+      // 8. Price Range Filter
+      if (minP != null || maxP != null) {
         final salePrice = bike.cashSalePrice;
-        
-        bool priceMatches = false;
-        
-        // Check if either price falls within range
-        if (minPrice.value != null && maxPrice.value != null) {
-          priceMatches = (purchasePrice >= minPrice.value! && purchasePrice <= maxPrice.value!) ||
-                        (salePrice >= minPrice.value! && salePrice <= maxPrice.value!);
-        } else if (minPrice.value != null) {
-          priceMatches = purchasePrice >= minPrice.value! || salePrice >= minPrice.value!;
-        } else if (maxPrice.value != null) {
-          priceMatches = purchasePrice <= maxPrice.value! || salePrice <= maxPrice.value!;
-        }
-        
-        if (!priceMatches) return false;
+        if (minP != null && salePrice < minP) return false;
+        if (maxP != null && salePrice > maxP) return false;
       }
 
       return true;
     }).toList()..sort((a, b) {
-      // Define status priority: Available = 0, Installment = 1, Sold = 2
+      // Sort priority: Available (0) > Installment (1) > Sold (2)
       int getStatusPriority(BikeStatusEnum status) {
         switch (status) {
-          case BikeStatusEnum.available:
-            return 0;
-          case BikeStatusEnum.installment:
-            return 1;
-          case BikeStatusEnum.sold:
-            return 2;
+          case BikeStatusEnum.available: return 0;
+          case BikeStatusEnum.installment: return 1;
+          case BikeStatusEnum.sold: return 2;
         }
       }
-      
-      // First, sort by status priority
       final statusComparison = getStatusPriority(a.status).compareTo(getStatusPriority(b.status));
-      
-      // If status is the same, sort by price descending (highest price first)
       if (statusComparison == 0) {
-        return b.cashSalePrice.compareTo(a.cashSalePrice);
+        return b.dateAdded.compareTo(a.dateAdded); // Newest first for same status
       }
-      
       return statusComparison;
     });
+  }
+
+  /// Helper to get Sale record for a bike
+  Future<dynamic> getSaleForBike(int bikeId) async {
+    return await _inventoryService.getSaleByBikeId(bikeId);
+  }
+
+  /// Helper to get Customer record for a sale
+  Future<dynamic> getCustomerBySale(dynamic sale) async {
+    if (sale == null) return null;
+    return await _inventoryService.getCustomerById(sale.customerId);
+  }
+
+  /// Helper to get Supplier/Dealer for a bike
+  Future<dynamic> getSupplierForBike(Bike bike) async {
+    await bike.batch.load();
+    if (bike.batch.value != null) {
+      await bike.batch.value!.supplier.load();
+      return bike.batch.value!.supplier.value;
+    }
+    return null;
   }
 }

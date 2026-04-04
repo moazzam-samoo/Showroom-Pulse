@@ -167,7 +167,8 @@ class KpiCard extends StatelessWidget {
 /// Monthly Sales Revenue, Critical Arrears
 class KpiSection extends StatelessWidget {
   final String totalAssetValue;
-  final String totalAssetGrowth;
+  final String investmentAllocatedText;
+  final String investmentAvailableText;
   final int unitsInStock;
   final int lowStockAlert;
   final String monthlySalesRevenue;
@@ -184,7 +185,8 @@ class KpiSection extends StatelessWidget {
   const KpiSection({
     super.key,
     this.totalAssetValue = 'Rs. 0',
-    this.totalAssetGrowth = '+0% MTD Growth',
+    this.investmentAllocatedText = '0 Allocated',
+    this.investmentAvailableText = '0 Available',
     this.unitsInStock = 0,
     this.lowStockAlert = 0,
     this.monthlySalesRevenue = 'Rs. 0',
@@ -205,14 +207,14 @@ class KpiSection extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Total Asset Value
+          // Total Asset Value / Investment
           Expanded(
             child: KpiCard(
-              title: 'TOTAL ASSET VALUE',
+              title: 'CAPITAL INVESTMENT',
               value: totalAssetValue,
-              subtitle: totalAssetGrowth,
-              subtitleColor: Colors.greenAccent,
-              icon: LucideIcons.dollarSign,
+              subtitle: '$investmentAllocatedText • $investmentAvailableText',
+              subtitleColor: Colors.orangeAccent,
+              icon: LucideIcons.wallet,
               onTap: onAssetValueTap,
             ),
           ),

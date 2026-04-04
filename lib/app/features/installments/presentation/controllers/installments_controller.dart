@@ -5,11 +5,12 @@ import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/statement_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
+
+enum DateFilter { all, thisMonth, lastMonth, last3Months, thisYear }
 
 /// Data class for displaying contract with related info
 class ContractDisplayData {
@@ -42,7 +43,9 @@ class ContractDisplayData {
   }
 
   /// Get progress text (e.g., "7/12")
-  String get progressText => '${contract.paymentsMade}/${contract.months}';
+  String get progressText => contract.status == ContractStatusEnum.completed
+      ? '${contract.paymentsMade}/${contract.paymentsMade}'
+      : '${contract.paymentsMade}/${contract.months}';
 
   /// Calculate days until next due
   int? get daysUntilDue {
@@ -60,20 +63,23 @@ class InstallmentsController extends GetxController {
   final isLoading = true.obs;
   final selectedContractId = Rxn<int>();
   final searchQuery = ''.obs;
+  final dateFilter = DateFilter.all.obs;
   final searchController = TextEditingController();
   final statusFilter = Rxn<ContractStatusEnum>();
-
-  // Filter options
   final showDueThisWeek = false.obs;
 
   bool get hasActiveFilters =>
-      searchQuery.value.isNotEmpty || showDueThisWeek.value || statusFilter.value != null;
+      searchQuery.value.isNotEmpty ||
+      showDueThisWeek.value ||
+      statusFilter.value != null ||
+      dateFilter.value != DateFilter.all;
 
   void clearFilters() {
     searchQuery.value = '';
     searchController.clear();
     showDueThisWeek.value = false;
     statusFilter.value = null;
+    dateFilter.value = DateFilter.all;
     loadContracts();
   }
 
@@ -84,9 +90,14 @@ class InstallmentsController extends GetxController {
     loadContracts();
   }
 
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
+  }
+
   void _initRepository() {
-    final isarService = Get.find<IsarService>();
-    _repository = InstallmentRepository(isarService.isar);
+    _repository = InstallmentRepository();
   }
 
   /// Load all contracts with related data
@@ -132,6 +143,51 @@ class InstallmentsController extends GetxController {
         }
       }
 
+      // Apply search filter
+      if (searchQuery.value.isNotEmpty) {
+        final query = searchQuery.value.toLowerCase();
+        final queryNoCommas = query.replaceAll(',', '');
+        displayData.retainWhere((data) {
+          final totalAmountStr = data.contract.totalAmount.toInt().toString();
+          return data.customer.fullName.toLowerCase().contains(query) ||
+              data.customer.cnicNumber.contains(query) ||
+              data.bike.model.toLowerCase().contains(query) ||
+              totalAmountStr.contains(queryNoCommas);
+        });
+      }
+
+      // Apply date filter
+      if (dateFilter.value != DateFilter.all) {
+        final now = DateTime.now();
+        DateTime startDate;
+        DateTime? endDate;
+
+        switch (dateFilter.value) {
+          case DateFilter.thisMonth:
+            startDate = DateTime(now.year, now.month, 1);
+            break;
+          case DateFilter.lastMonth:
+            startDate = DateTime(now.year, now.month - 1, 1);
+            endDate = DateTime(now.year, now.month, 1);
+            break;
+          case DateFilter.last3Months:
+            startDate = DateTime(now.year, now.month - 3, 1);
+            break;
+          case DateFilter.thisYear:
+            startDate = DateTime(now.year, 1, 1);
+            break;
+          default:
+            startDate = DateTime(2000);
+        }
+        
+        displayData.removeWhere((d) {
+          final date = d.contract.contractDate;
+          final tooEarly = date.isBefore(startDate);
+          final tooLate = endDate != null && (date.isAfter(endDate) || date.isAtSameMomentAs(endDate));
+          return tooEarly || tooLate;
+        });
+      }
+
       // Sort: Date Descending -> Total Amount Descending
       displayData.sort((a, b) {
         final dateComparison = b.contract.contractDate.compareTo(a.contract.contractDate);
@@ -141,17 +197,7 @@ class InstallmentsController extends GetxController {
         return dateComparison;
       });
 
-      // Apply search filter
-      if (searchQuery.value.isNotEmpty) {
-        final query = searchQuery.value.toLowerCase();
-        contracts.value = displayData.where((data) {
-          return data.customer.fullName.toLowerCase().contains(query) ||
-              data.customer.cnicNumber.contains(query) ||
-              data.bike.model.toLowerCase().contains(query);
-        }).toList();
-      } else {
-        contracts.value = displayData;
-      }
+      contracts.value = displayData;
 
       // Auto-select first if none selected
       if (selectedContractId.value == null && contracts.isNotEmpty) {
@@ -193,6 +239,12 @@ class InstallmentsController extends GetxController {
     loadContracts();
   }
 
+  /// Set date filter
+  void setDateFilter(DateFilter filter) {
+    dateFilter.value = filter;
+    loadContracts();
+  }
+
   /// Toggle due this week filter
   void toggleDueThisWeek() {
     showDueThisWeek.value = !showDueThisWeek.value;
@@ -228,6 +280,32 @@ class InstallmentsController extends GetxController {
       } catch (_) {}
     } catch (e) {
       AppNotificationDialog.showError(title: 'Error', message: 'Failed to record payment: $e');
+    }
+  }
+
+  /// Admin manually completes a contract
+  Future<void> adminComplete({required bool allPaymentReceived}) async {
+    if (selectedContractId.value == null) return;
+
+    try {
+      await _repository.adminCompleteContract(
+        contractId: selectedContractId.value!,
+        allPaymentReceived: allPaymentReceived,
+      );
+      await loadContracts();
+      AppToast.showSuccess(
+        title: 'Success',
+        message: allPaymentReceived
+            ? 'Installment completed successfully'
+            : 'Installment completed (Balance waived)',
+      );
+
+      // Refresh notifications
+      try {
+        await Get.find<NotificationService>().checkAndNotify();
+      } catch (_) {}
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to complete installment: $e');
     }
   }
 

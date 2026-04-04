@@ -58,33 +58,88 @@ const BikeSchema = CollectionSchema(
       name: r'engineNumber',
       type: IsarType.string,
     ),
-    r'imageFilename': PropertySchema(
+    r'fundedByLoan': PropertySchema(
       id: 8,
+      name: r'fundedByLoan',
+      type: IsarType.double,
+    ),
+    r'fundedByOther': PropertySchema(
+      id: 9,
+      name: r'fundedByOther',
+      type: IsarType.double,
+    ),
+    r'fundedByPartnership': PropertySchema(
+      id: 10,
+      name: r'fundedByPartnership',
+      type: IsarType.double,
+    ),
+    r'fundedByPersonal': PropertySchema(
+      id: 11,
+      name: r'fundedByPersonal',
+      type: IsarType.double,
+    ),
+    r'imageFilename': PropertySchema(
+      id: 12,
       name: r'imageFilename',
       type: IsarType.string,
     ),
+    r'investmentAmount': PropertySchema(
+      id: 13,
+      name: r'investmentAmount',
+      type: IsarType.double,
+    ),
     r'model': PropertySchema(
-      id: 9,
+      id: 14,
       name: r'model',
       type: IsarType.string,
     ),
     r'modelYear': PropertySchema(
-      id: 10,
+      id: 15,
       name: r'modelYear',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 11,
+      id: 16,
       name: r'notes',
       type: IsarType.string,
     ),
     r'purchasePrice': PropertySchema(
-      id: 12,
+      id: 17,
       name: r'purchasePrice',
       type: IsarType.double,
     ),
+    r'purchaserCnic': PropertySchema(
+      id: 18,
+      name: r'purchaserCnic',
+      type: IsarType.string,
+    ),
+    r'purchaserCnicBackFilename': PropertySchema(
+      id: 19,
+      name: r'purchaserCnicBackFilename',
+      type: IsarType.string,
+    ),
+    r'purchaserCnicFrontFilename': PropertySchema(
+      id: 20,
+      name: r'purchaserCnicFrontFilename',
+      type: IsarType.string,
+    ),
+    r'purchaserName': PropertySchema(
+      id: 21,
+      name: r'purchaserName',
+      type: IsarType.string,
+    ),
+    r'purchaserPhone': PropertySchema(
+      id: 22,
+      name: r'purchaserPhone',
+      type: IsarType.string,
+    ),
+    r'registrationNumber': PropertySchema(
+      id: 23,
+      name: r'registrationNumber',
+      type: IsarType.string,
+    ),
     r'status': PropertySchema(
-      id: 13,
+      id: 24,
       name: r'status',
       type: IsarType.byte,
       enumMap: _BikestatusEnumValueMap,
@@ -174,6 +229,42 @@ int _bikeEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  {
+    final value = object.purchaserCnic;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.purchaserCnicBackFilename;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.purchaserCnicFrontFilename;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.purchaserName;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.purchaserPhone;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.registrationNumber;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -191,12 +282,23 @@ void _bikeSerialize(
   writer.writeDateTime(offsets[5], object.dateAdded);
   writer.writeDateTime(offsets[6], object.dateSold);
   writer.writeString(offsets[7], object.engineNumber);
-  writer.writeString(offsets[8], object.imageFilename);
-  writer.writeString(offsets[9], object.model);
-  writer.writeLong(offsets[10], object.modelYear);
-  writer.writeString(offsets[11], object.notes);
-  writer.writeDouble(offsets[12], object.purchasePrice);
-  writer.writeByte(offsets[13], object.status.index);
+  writer.writeDouble(offsets[8], object.fundedByLoan);
+  writer.writeDouble(offsets[9], object.fundedByOther);
+  writer.writeDouble(offsets[10], object.fundedByPartnership);
+  writer.writeDouble(offsets[11], object.fundedByPersonal);
+  writer.writeString(offsets[12], object.imageFilename);
+  writer.writeDouble(offsets[13], object.investmentAmount);
+  writer.writeString(offsets[14], object.model);
+  writer.writeLong(offsets[15], object.modelYear);
+  writer.writeString(offsets[16], object.notes);
+  writer.writeDouble(offsets[17], object.purchasePrice);
+  writer.writeString(offsets[18], object.purchaserCnic);
+  writer.writeString(offsets[19], object.purchaserCnicBackFilename);
+  writer.writeString(offsets[20], object.purchaserCnicFrontFilename);
+  writer.writeString(offsets[21], object.purchaserName);
+  writer.writeString(offsets[22], object.purchaserPhone);
+  writer.writeString(offsets[23], object.registrationNumber);
+  writer.writeByte(offsets[24], object.status.index);
 }
 
 Bike _bikeDeserialize(
@@ -216,13 +318,24 @@ Bike _bikeDeserialize(
   object.dateAdded = reader.readDateTime(offsets[5]);
   object.dateSold = reader.readDateTimeOrNull(offsets[6]);
   object.engineNumber = reader.readString(offsets[7]);
+  object.fundedByLoan = reader.readDouble(offsets[8]);
+  object.fundedByOther = reader.readDouble(offsets[9]);
+  object.fundedByPartnership = reader.readDouble(offsets[10]);
+  object.fundedByPersonal = reader.readDouble(offsets[11]);
   object.id = id;
-  object.imageFilename = reader.readStringOrNull(offsets[8]);
-  object.model = reader.readString(offsets[9]);
-  object.modelYear = reader.readLong(offsets[10]);
-  object.notes = reader.readStringOrNull(offsets[11]);
-  object.purchasePrice = reader.readDouble(offsets[12]);
-  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+  object.imageFilename = reader.readStringOrNull(offsets[12]);
+  object.investmentAmount = reader.readDouble(offsets[13]);
+  object.model = reader.readString(offsets[14]);
+  object.modelYear = reader.readLong(offsets[15]);
+  object.notes = reader.readStringOrNull(offsets[16]);
+  object.purchasePrice = reader.readDouble(offsets[17]);
+  object.purchaserCnic = reader.readStringOrNull(offsets[18]);
+  object.purchaserCnicBackFilename = reader.readStringOrNull(offsets[19]);
+  object.purchaserCnicFrontFilename = reader.readStringOrNull(offsets[20]);
+  object.purchaserName = reader.readStringOrNull(offsets[21]);
+  object.purchaserPhone = reader.readStringOrNull(offsets[22]);
+  object.registrationNumber = reader.readStringOrNull(offsets[23]);
+  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[24])] ??
       BikeStatusEnum.available;
   return object;
 }
@@ -252,16 +365,38 @@ P _bikeDeserializeProp<P>(
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (reader.readStringOrNull(offset)) as P;
-    case 9:
-      return (reader.readString(offset)) as P;
-    case 10:
-      return (reader.readLong(offset)) as P;
-    case 11:
-      return (reader.readStringOrNull(offset)) as P;
-    case 12:
       return (reader.readDouble(offset)) as P;
+    case 9:
+      return (reader.readDouble(offset)) as P;
+    case 10:
+      return (reader.readDouble(offset)) as P;
+    case 11:
+      return (reader.readDouble(offset)) as P;
+    case 12:
+      return (reader.readStringOrNull(offset)) as P;
     case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
+      return (reader.readLong(offset)) as P;
+    case 16:
+      return (reader.readStringOrNull(offset)) as P;
+    case 17:
+      return (reader.readDouble(offset)) as P;
+    case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
+      return (reader.readStringOrNull(offset)) as P;
+    case 20:
+      return (reader.readStringOrNull(offset)) as P;
+    case 21:
+      return (reader.readStringOrNull(offset)) as P;
+    case 22:
+      return (reader.readStringOrNull(offset)) as P;
+    case 23:
+      return (reader.readStringOrNull(offset)) as P;
+    case 24:
       return (_BikestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           BikeStatusEnum.available) as P;
     default:
@@ -1426,6 +1561,255 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByLoanEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fundedByLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByLoanGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fundedByLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByLoanLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fundedByLoan',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByLoanBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fundedByLoan',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByOtherEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fundedByOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByOtherGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fundedByOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByOtherLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fundedByOther',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByOtherBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fundedByOther',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPartnershipEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fundedByPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      fundedByPartnershipGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fundedByPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPartnershipLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fundedByPartnership',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPartnershipBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fundedByPartnership',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPersonalEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fundedByPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPersonalGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fundedByPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPersonalLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fundedByPersonal',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> fundedByPersonalBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fundedByPersonal',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1620,6 +2004,68 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'imageFilename',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'investmentAmount',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> investmentAmountBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'investmentAmount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -2010,6 +2456,904 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'purchaserCnic',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'purchaserCnic',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaserCnic',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'purchaserCnic',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'purchaserCnic',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnic',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserCnicIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'purchaserCnic',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'purchaserCnicBackFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'purchaserCnicBackFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaserCnicBackFilename',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'purchaserCnicBackFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'purchaserCnicBackFilename',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnicBackFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicBackFilenameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'purchaserCnicBackFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'purchaserCnicFrontFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'purchaserCnicFrontFilename',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaserCnicFrontFilename',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameContains(String value,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'purchaserCnicFrontFilename',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'purchaserCnicFrontFilename',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserCnicFrontFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      purchaserCnicFrontFilenameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'purchaserCnicFrontFilename',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'purchaserName',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'purchaserName',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaserName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'purchaserName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'purchaserName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'purchaserName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'purchaserPhone',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'purchaserPhone',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaserPhone',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'purchaserPhone',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'purchaserPhone',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaserPhone',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> purchaserPhoneIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'purchaserPhone',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'registrationNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      registrationNumberIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'registrationNumber',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'registrationNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'registrationNumber',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'registrationNumber',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition> registrationNumberIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'registrationNumber',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      registrationNumberIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'registrationNumber',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterFilterCondition> statusEqualTo(
       BikeStatusEnum value) {
     return QueryBuilder.apply(this, (query) {
@@ -2178,6 +3522,54 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByLoan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByLoanDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByLoan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByOther', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByOtherDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByOther', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPartnership', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByPartnershipDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPartnership', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPersonal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByFundedByPersonalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPersonal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByImageFilename() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageFilename', Sort.asc);
@@ -2187,6 +3579,18 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByImageFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByInvestmentAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.desc);
     });
   }
 
@@ -2235,6 +3639,79 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchasePriceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'purchasePrice', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserCnic() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnic', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserCnicDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnic', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserCnicBackFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicBackFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserCnicBackFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicBackFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserCnicFrontFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicFrontFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy>
+      sortByPurchaserCnicFrontFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicFrontFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserPhone() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserPhone', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByPurchaserPhoneDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserPhone', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByRegistrationNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'registrationNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByRegistrationNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'registrationNumber', Sort.desc);
     });
   }
 
@@ -2348,6 +3825,54 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByLoan', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByLoanDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByLoan', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByOther', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByOtherDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByOther', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPartnership', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByPartnershipDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPartnership', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPersonal', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByFundedByPersonalDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fundedByPersonal', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2369,6 +3894,18 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByImageFilenameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'imageFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByInvestmentAmountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'investmentAmount', Sort.desc);
     });
   }
 
@@ -2417,6 +3954,79 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchasePriceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'purchasePrice', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserCnic() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnic', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserCnicDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnic', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserCnicBackFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicBackFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserCnicBackFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicBackFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserCnicFrontFilename() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicFrontFilename', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy>
+      thenByPurchaserCnicFrontFilenameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserCnicFrontFilename', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserName() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserName', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserNameDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserName', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserPhone() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserPhone', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByPurchaserPhoneDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'purchaserPhone', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByRegistrationNumber() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'registrationNumber', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByRegistrationNumberDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'registrationNumber', Sort.desc);
     });
   }
 
@@ -2487,11 +4097,41 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QDistinct> distinctByFundedByLoan() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fundedByLoan');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByFundedByOther() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fundedByOther');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByFundedByPartnership() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fundedByPartnership');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByFundedByPersonal() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fundedByPersonal');
+    });
+  }
+
   QueryBuilder<Bike, Bike, QDistinct> distinctByImageFilename(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'imageFilename',
           caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByInvestmentAmount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'investmentAmount');
     });
   }
 
@@ -2518,6 +4158,54 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
   QueryBuilder<Bike, Bike, QDistinct> distinctByPurchasePrice() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'purchasePrice');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByPurchaserCnic(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'purchaserCnic',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByPurchaserCnicBackFilename(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'purchaserCnicBackFilename',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByPurchaserCnicFrontFilename(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'purchaserCnicFrontFilename',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByPurchaserName(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'purchaserName',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByPurchaserPhone(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'purchaserPhone',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByRegistrationNumber(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'registrationNumber',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -2583,9 +4271,39 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Bike, double, QQueryOperations> fundedByLoanProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fundedByLoan');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> fundedByOtherProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fundedByOther');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> fundedByPartnershipProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fundedByPartnership');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> fundedByPersonalProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fundedByPersonal');
+    });
+  }
+
   QueryBuilder<Bike, String?, QQueryOperations> imageFilenameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageFilename');
+    });
+  }
+
+  QueryBuilder<Bike, double, QQueryOperations> investmentAmountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'investmentAmount');
     });
   }
 
@@ -2610,6 +4328,44 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
   QueryBuilder<Bike, double, QQueryOperations> purchasePriceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'purchasePrice');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations> purchaserCnicProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'purchaserCnic');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations>
+      purchaserCnicBackFilenameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'purchaserCnicBackFilename');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations>
+      purchaserCnicFrontFilenameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'purchaserCnicFrontFilename');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations> purchaserNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'purchaserName');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations> purchaserPhoneProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'purchaserPhone');
+    });
+  }
+
+  QueryBuilder<Bike, String?, QQueryOperations> registrationNumberProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'registrationNumber');
     });
   }
 

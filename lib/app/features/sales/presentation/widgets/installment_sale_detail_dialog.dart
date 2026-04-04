@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/widgets/app_bike_image.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
@@ -261,7 +262,13 @@ class InstallmentSaleDetailDialog extends StatelessWidget {
         Row(
           children: [
              // Bike Image
-             _buildPhotoBox(data.bikeImage, isDark, width: 100, height: 70, icon: LucideIcons.bike),
+             AppBikeImage(
+               imagePath: data.bikeImage,
+               width: 100,
+               height: 70,
+               borderRadius: AppRadius.lg,
+               iconSize: 32,
+             ),
              const SizedBox(width: AppSpacing.lg),
              
              // Details Grid

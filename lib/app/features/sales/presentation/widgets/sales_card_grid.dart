@@ -76,40 +76,51 @@ class SalesCardGrid extends StatelessWidget {
 
         // If filtering by specific status, we show full width
         // If All Status, we show split view
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isWide = screenWidth > 1200;
+        final splitCrossAxis = isWide ? 2 : 1; 
+        final singleCrossAxis = isWide ? 4 : (screenWidth > 800 ? 3 : 2);
+
         if (status == 'All Status') {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Cash Sales Column
               Expanded(
-                child: Column(
-                  children: [
-                    _buildColumnHeader('Cash Sales', const Color(0xFFEF4444), isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    Expanded(
-                      child: _buildGroupedList(cashSales, isDark, crossAxisCount: 2),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0), // Padding for hover space
+                  child: Column(
+                    children: [
+                      _buildColumnHeader('Cash Sales', const Color(0xFFEF4444), isDark),
+                      const SizedBox(height: AppSpacing.md),
+                      Expanded(
+                        child: _buildGroupedList(context, cashSales, isDark, crossAxisCount: splitCrossAxis),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
               // Center Divider
               Container(
                 width: 1,
-                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 color: isDark ? Colors.white.withOpacity(0.1) : Colors.grey.shade300,
               ),
 
               // Installment Sales Column
               Expanded(
-                child: Column(
-                  children: [
-                    _buildColumnHeader('Installment Sales', const Color(0xFFF59E0B), isDark),
-                     const SizedBox(height: AppSpacing.md),
-                    Expanded(
-                      child: _buildGroupedList(installmentSales, isDark, crossAxisCount: 2),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0), // Padding for hover space
+                  child: Column(
+                    children: [
+                      _buildColumnHeader('Installment Sales', const Color(0xFFF59E0B), isDark),
+                       const SizedBox(height: AppSpacing.md),
+                      Expanded(
+                        child: _buildGroupedList(context, installmentSales, isDark, crossAxisCount: splitCrossAxis),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -119,14 +130,17 @@ class SalesCardGrid extends StatelessWidget {
           final salesToShow = status == 'Cash' ? cashSales : installmentSales;
           final color = status == 'Cash' ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
           
-          return Column(
-             children: [
-                _buildColumnHeader('$status Sales', color, isDark),
-                const SizedBox(height: AppSpacing.md),
-                Expanded(
-                  child: _buildGroupedList(salesToShow, isDark, crossAxisCount: 4),
-                ),
-             ],
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0), // Padding for hover space
+            child: Column(
+               children: [
+                  _buildColumnHeader('$status Sales', color, isDark),
+                  const SizedBox(height: AppSpacing.md),
+                  Expanded(
+                    child: _buildGroupedList(context, salesToShow, isDark, crossAxisCount: singleCrossAxis),
+                  ),
+               ],
+            ),
           );
         }
       });
@@ -154,7 +168,7 @@ class SalesCardGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildGroupedList(List<SaleCardData> salesList, bool isDark, {required int crossAxisCount}) {
+  Widget _buildGroupedList(BuildContext context, List<SaleCardData> salesList, bool isDark, {required int crossAxisCount}) {
     // Grouping Logic
     final Map<String, List<SaleCardData>> groupedSales = {};
     for (var sale in salesList) {
@@ -187,67 +201,70 @@ class SalesCardGrid extends StatelessWidget {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl, right: AppSpacing.md),
-      itemCount: groupedSales.keys.length,
-      itemBuilder: (context, index) {
-        final month = groupedSales.keys.elementAt(index);
-        final monthSales = groupedSales[month]!;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl, right: AppSpacing.md),
+        itemCount: groupedSales.keys.length,
+        itemBuilder: (context, index) {
+          final month = groupedSales.keys.elementAt(index);
+          final monthSales = groupedSales[month]!;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Month Header
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white24 : Colors.grey.shade400,
-                      borderRadius: BorderRadius.circular(2),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Month Header
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white24 : Colors.grey.shade400,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    month,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : Colors.black54,
+                    const SizedBox(width: 8),
+                    Text(
+                      month,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Divider(
-                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade200,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Divider(
+                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade200,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Masonry Grid
-            MasonryGridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: crossAxisCount, 
-              mainAxisSpacing: AppSpacing.lg,
-              crossAxisSpacing: AppSpacing.lg,
-              itemCount: monthSales.length,
-              itemBuilder: (context, idx) {
-                return SaleCard(data: monthSales[idx])
-                  .animate(delay: (50 * idx).ms)
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
-              },
-            ),
-             const SizedBox(height: AppSpacing.sm),
-          ],
-        );
-      },
+              // Masonry Grid
+              MasonryGridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: crossAxisCount, 
+                mainAxisSpacing: AppSpacing.lg,
+                crossAxisSpacing: AppSpacing.lg,
+                itemCount: monthSales.length,
+                itemBuilder: (context, idx) {
+                  return SaleCard(data: monthSales[idx])
+                    .animate(delay: (50 * idx).ms)
+                    .fadeIn(duration: 300.ms)
+                    .slideY(begin: 0.1, end: 0, curve: Curves.easeOut);
+                },
+              ),
+               const SizedBox(height: AppSpacing.sm),
+            ],
+          );
+        },
+      ),
     );
   }
 

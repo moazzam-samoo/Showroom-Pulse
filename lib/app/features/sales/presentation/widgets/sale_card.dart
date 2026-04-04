@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
+import 'package:tahir_showroom/app/core/widgets/app_bike_image.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/cash_sale_detail_dialog.dart';
@@ -38,6 +39,9 @@ class SaleCardData {
   final String bikeImage; 
   final String bikeChassisNumber;
   final String bikeEngineNumber;
+  final String? bikeYear;
+  final String? bikeMaker;
+  final String? bikeRegistrationNumber; // Only for used bikes
   final String customerName;
   final String customerCnic;
   final String customerContact;
@@ -76,6 +80,9 @@ class SaleCardData {
     required this.bikeImage,
     required this.bikeChassisNumber,
     required this.bikeEngineNumber,
+    this.bikeYear,
+    this.bikeMaker,
+    this.bikeRegistrationNumber,
     required this.customerName,
     required this.customerCnic,
     required this.customerContact,
@@ -135,7 +142,7 @@ class _SaleCardState extends State<SaleCard> {
           }
         },
         child: AnimatedScale(
-          scale: isHovered ? 1.02 : 1.0,
+          scale: isHovered ? 1.015 : 1.0,
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
           child: AnimatedContainer(
@@ -168,41 +175,16 @@ class _SaleCardState extends State<SaleCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Image Header with Badge
-            Stack(
-              children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-                    child: SizedBox(
+              // 1. Image Header with Badge
+              Stack(
+                children: [
+                    AppBikeImage(
+                      imagePath: data.bikeImage,
                       height: 120,
-                      width: double.infinity,
-                      child: data.bikeImage.isNotEmpty
-                          ? Image.file(
-                              File(data.bikeImage),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
-                                child: Center(
-                                  child: Icon(
-                                    LucideIcons.bike,
-                                    size: 48,
-                                    color: isDark ? Colors.white12 : Colors.grey,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Container(
-                              color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade200,
-                              child: Center(
-                                child: Icon(
-                                  LucideIcons.bike,
-                                  size: 48,
-                                  color: isDark ? Colors.white12 : Colors.grey,
-                                ),
-                              ),
-                            ),
+                      borderRadius: AppRadius.xl,
+                      heroTag: 'sale_bike_${data.bikeEngineNumber}',
+                      iconSize: 48,
                     ),
-                  ),
                 // Gradient Overlay
                 Positioned.fill(
                   child: DecoratedBox(

@@ -15,12 +15,12 @@ class ProfitSummaryTable extends StatelessWidget {
     final currencyFormat = NumberFormat('#,##0', 'en_PK');
 
     // Calculate totals
-    double totalCash = 0, totalInstallment = 0, totalProfit = 0, totalEarned = 0;
+    double totalCash = 0, totalInstallment = 0, totalProfit = 0, totalAssetValue = 0;
     for (final brand in data.values) {
       totalCash += brand['cash'] ?? 0;
       totalInstallment += brand['installment'] ?? 0;
       totalProfit += brand['total'] ?? 0;
-      totalEarned += brand['earned'] ?? 0;
+      totalAssetValue += brand['assetValue'] ?? 0;
     }
 
     return Container(
@@ -55,13 +55,22 @@ class ProfitSummaryTable extends StatelessWidget {
                   ),
                 )
               : Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(2),
-                    1: FlexColumnWidth(2),
-                    2: FlexColumnWidth(2),
-                    3: FlexColumnWidth(2),
-                    4: FlexColumnWidth(2),
-                  },
+              columnWidths: data.keys.any((k) => k.contains(' | '))
+                  ? const {
+                      0: FlexColumnWidth(2), // Brand
+                      1: FlexColumnWidth(1.5), // Base
+                      2: FlexColumnWidth(1.5), // Markup
+                      3: FlexColumnWidth(1.5), // Total
+                      4: FlexColumnWidth(1.5), // Earned
+                      5: FlexColumnWidth(1.5), // Month
+                    }
+                  : const {
+                      0: FlexColumnWidth(2),
+                      1: FlexColumnWidth(2),
+                      2: FlexColumnWidth(2),
+                      3: FlexColumnWidth(2),
+                      4: FlexColumnWidth(2),
+                    },
                   children: [
                     // Header
                     TableRow(
@@ -73,11 +82,12 @@ class ProfitSummaryTable extends StatelessWidget {
                         ),
                       ),
                       children: [
-                        _headerCell('Category', isDark),
+                        _headerCell('Maker / Description', isDark),
                         _headerCell('Base Profit', isDark),
-                        _headerCell('Installment Markup', isDark),
+                        _headerCell('Markup', isDark),
                         _headerCell('Total Profit', isDark),
-                        _headerCell('Earned', isDark),
+                        _headerCell('Asset Value', isDark),
+                        if (data.keys.any((k) => k.contains(' | '))) _headerCell('Month', isDark),
                       ],
                     ),
                     // Data rows
@@ -85,69 +95,88 @@ class ProfitSummaryTable extends StatelessWidget {
                       final installmentValue = entry.value['installment'] ?? 0;
                       final isCashOnly = installmentValue == 0;
 
-                      return TableRow(
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(
-                              color: isDark
-                                  ? AppColors.darkBorder.withValues(alpha: 0.5)
-                                  : AppColors.lightBorderLight,
+                          final displayKey = entry.key.split(' | ');
+                          final brandName = displayKey.length > 1 ? displayKey[1] : displayKey[0];
+                          final monthName = displayKey.length > 1 ? displayKey[0] : '';
+                          final isMultiMonth = data.keys.any((k) => k.contains(' | '));
+
+                          return TableRow(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : AppColors.lightBorderLight,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        children: [
-                          _dataCell(entry.key, isDark, isBold: false),
-                          _dataCell('Rs ${currencyFormat.format(entry.value['cash'] ?? 0)}', isDark),
-                          _dataCell(
-                            isCashOnly ? 'Sold on Cash' : 'Rs ${currencyFormat.format(installmentValue)}',
-                            isDark,
-                            color: isCashOnly
-                                ? (isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary)
-                                : null,
-                          ),
-                          _dataCell(
-                            'Rs ${currencyFormat.format(entry.value['total'] ?? 0)}',
-                            isDark,
-                            color: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
-                            isBold: true,
-                          ),
-                          _dataCell(
-                            'Rs ${currencyFormat.format(entry.value['earned'] ?? 0)}',
-                            isDark,
-                            color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                            isBold: true,
-                          ),
-                        ],
-                      );
-                    }),
+                            children: [
+                              _dataCell(brandName, isDark, isBold: false),
+                              _dataCell('Rs ${currencyFormat.format(entry.value['cash'] ?? 0)}', isDark),
+                              _dataCell(
+                                isCashOnly ? 'N/A' : 'Rs ${currencyFormat.format(installmentValue)}',
+                                isDark,
+                                color: isCashOnly ? (isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary) : null,
+                              ),
+                              _dataCell(
+                                'Rs ${currencyFormat.format(entry.value['total'] ?? 0)}',
+                                  isDark,
+                                  color: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
+                                  isBold: true,
+                              ),
+                              _dataCell(
+                                'Rs ${currencyFormat.format(entry.value['assetValue'] ?? 0)}',
+                                isDark,
+                                isBold: true,
+                              ),
+                              if (isMultiMonth) _dataCell(monthName, isDark),
+                            ],
+                          );
+                        }),
                     // Total row
                     TableRow(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? AppColors.darkPrimary.withValues(alpha: 0.1)
-                            : AppColors.lightPrimaryLight,
+                            ? AppColors.darkPrimary.withValues(alpha: 0.15)
+                            : AppColors.lightPrimary.withValues(alpha: 0.1),
+                        border: Border(
+                          top: BorderSide(
+                            color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                            width: 1,
+                          ),
+                        ),
                       ),
                       children: [
-                        _dataCell('TOTAL', isDark, isBold: true),
-                        _dataCell('Rs ${currencyFormat.format(totalCash)}', isDark, isBold: true),
-                        _dataCell('Rs ${currencyFormat.format(totalInstallment)}', isDark, isBold: true),
-                        _dataCell(
+                        _totalCell('TOTAL', isDark),
+                        _totalCell('Rs ${currencyFormat.format(totalCash)}', isDark),
+                        _totalCell('Rs ${currencyFormat.format(totalInstallment)}', isDark),
+                        _totalCell(
                           'Rs ${currencyFormat.format(totalProfit)}',
                           isDark,
                           color: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
-                          isBold: true,
                         ),
-                        _dataCell(
-                          'Rs ${currencyFormat.format(totalEarned)}',
+                        _totalCell(
+                          'Rs ${currencyFormat.format(totalAssetValue)}',
                           isDark,
-                          color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                          isBold: true,
                         ),
+                        if (data.keys.any((k) => k.contains(' | '))) _totalCell('', isDark),
                       ],
                     ),
                   ],
                 ),
         ],
+      ),
+    );
+  }
+
+  Widget _totalCell(String text, bool isDark, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: color ?? (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+        ),
       ),
     );
   }

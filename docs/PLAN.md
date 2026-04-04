@@ -1,57 +1,21 @@
-# Plan: Hybrid UX Pattern for NotifVications
+## 🎼 Orchestration Plan: Auto-Comma Formatting
 
-This document outlines the implementation plan for replacing the 50+ existing `Get.snackbar` notifications with a Hybrid UX Pattern (Toasts for info/success, Pop-ups for errors/critical alerts), serving as Phase 1 of the orchestration process.
+### Context
+The user requested an audit of text inputs that accept numbers, intending to add automatic comma formatting (e.g., `1,000,000`) where currency is expected, and to remove it from non-currency numeric inputs where it is inappropriate.
 
-## User Review Required
->
-> [!IMPORTANT]
-> Please review this plan. This will apply a significant UI overhaul across 18 files.
-> Once approved, the Orchestration mode will proceed to Phase 2 (Implementation).
+### ➕ ADD Auto-Comma Formatting To:
+These fields handle monetary values but currently lack the `ThousandsSeparatorInputFormatter`:
+1. `d:\Tahir-Showroom\lib\app\features\investment\presentation\widgets\add_investment_dialog.dart` -> **Add Capital / Withdraw Capital Amount** input.
+2. `d:\Tahir-Showroom\lib\app\features\reports\presentation\widgets\expense_tracker.dart` -> **Add Expense Amount** input.
+3. `d:\Tahir-Showroom\lib\app\features\procurement\presentation\views\supplier_history_view.dart` -> **Record Payment Amount** to supplier.
+4. `d:\Tahir-Showroom\lib\app\features\installments\presentation\widgets\record_payment_dialog.dart` -> **Delay Fine Amount** input.
 
-## Proposed Changes
+### ➖ REMOVE Auto-Comma Formatting From:
+These fields currently have the `ThousandsSeparatorInputFormatter` blindly applied via `if (isNumber)` flag, resulting in inappropriate formatting for years/durations (e.g., "Year 2,024"):
+1. `d:\Tahir-Showroom\lib\app\features\inventory\presentation\widgets\add_bike_dialog.dart` -> **Model Year** input.
+2. `d:\Tahir-Showroom\lib\app\features\inventory\presentation\widgets\edit_bike_dialog.dart` -> **Model Year** input.
+3. `d:\Tahir-Showroom\lib\app\features\sales\presentation\widgets\payment_plan_step.dart` -> **Duration (Months)** and **Advance Installments (Count)** inputs.
 
-### Core UI Components
-
-#### [NEW] `lib/app/core/widgets/app_toast.dart`
-
-- Create an elegant, top-right floating toast component for Success/Info messages.
-- Non-blocking and self-dismissible (3-4 seconds).
-- Supports closing on `Esc`.
-
-#### [NEW] `lib/app/core/widgets/app_notification_dialog.dart`
-
-- Create a dedicated dialog component specifically for Errors and Critical alerts.
-- Uses `Get.dialog` with `barrierDismissible: true` (closes on click outside).
-- Built-in `RawKeyboardListener` for `Enter` and `Esc` to dismiss.
-- Highly visible, preventing the user from missing critical failures or validation issues.
-
-### Implementation Areas (Agents: `frontend-specialist`, `backend-specialist`)
-
-The 50+ snackbars across these areas will be categorized and refactored:
-
-#### Sales & Transactions
-
-- **Invoices/Success**: Replace with `AppToast.showSuccess(...)`
-- **Missing selections/Failed saves**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Inventory & Procurement
-
-- **Supplier added/updated**: Replace with `AppToast.showSuccess(...)`
-- **Validation errors (e.g. Please add a bike)**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Settings & Configuration
-
-- **Profile saved**: Replace with `AppToast.showSuccess(...)`
-- **Database backup failed / Logo failed**: Replace with `AppNotificationDialog.showError(...)`
-
-#### Core, Auth & Dashboard
-
-- **Installment warnings**: Replace with `AppNotificationDialog.showWarning(...)` or `showError(...)` depending on severity.
-- **Login fails/Data fetch fails**: Replace with `AppNotificationDialog.showError(...)`
-
-## Verification Plan
-
-### Manual Verification
-
-- Execute actions that trigger success messages to verify Toasts appear and vanish without screen blocking.
-- Execute actions that trigger error messages to verify Pop-ups dim the screen, and disappear when clicking outside, or pressing `Esc` / `Enter`.
+### Next Steps
+1. The `frontend-specialist` agent will update the inputs in the designated files, either injecting the `ThousandsSeparatorInputFormatter` or stripping it conditionally.
+2. The `test-engineer` agent will verify integer parsing (`.replaceAll(',', '')`) does not break state persistence on save for these dynamically changed fields.

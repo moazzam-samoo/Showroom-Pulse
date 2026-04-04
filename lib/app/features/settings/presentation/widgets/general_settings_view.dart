@@ -184,7 +184,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
             key: replayTourKey,
             child: _buildSettingRow(
             title: 'App Walkthrough',
-            subtitle: 'Restart the guided tour of AL-AL-TAHIR Showroom',
+            subtitle: 'Restart the guided tour of AL-TAHIR Showroom',
             isDark: isDark,
             trailing: ElevatedButton.icon(
               icon: const Icon(LucideIcons.playCircle, size: 14),

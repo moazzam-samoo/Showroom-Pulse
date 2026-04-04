@@ -151,7 +151,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
               BlinkingFocusBuilder(
                 focusNode: _methodFocus,
                 child: DropdownButtonFormField<PaymentMethod>(
-                  initialValue: _selectedMethod,
+                  value: _selectedMethod,
                   focusNode: _methodFocus,
                   dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
                   style: TextStyle(

@@ -30,7 +30,7 @@ class CheckpointService extends GetxService {
   CheckpointService(this._fileService, this._isarService);
 
   String get _checkpointDir => _fileService.checkpointPath;
-  static const int _maxCheckpoints = 4;
+  static const int _maxCheckpoints = 2;
   static const int _daysBetweenCheckpoints = 7;
 
   /// Call on app startup to auto-save a snapshot if 7 days have passed
@@ -56,6 +56,17 @@ class CheckpointService extends GetxService {
       }
 
       if (shouldCreate) {
+        // Change-detection guard: skip if DB size is unchanged
+        final dbDir = Directory(_fileService.databasePath);
+        final dbFile = File(p.join(dbDir.path, 'default.isar'));
+        if (await dbFile.exists() && checkpoints.isNotEmpty) {
+          final currentSize = await dbFile.length();
+          if (currentSize == checkpoints.first.sizeBytes) {
+            debugPrint('CheckpointService: DB unchanged ($currentSize bytes), skipping checkpoint');
+            return;
+          }
+        }
+
         debugPrint('CheckpointService: Creating new auto-checkpoint...');
         final dateStamp = DateFormat('yyyy-MM-dd_HHmm').format(DateTime.now());
         final snapshotPath = p.join(_checkpointDir, 'checkpoint_$dateStamp.isar');

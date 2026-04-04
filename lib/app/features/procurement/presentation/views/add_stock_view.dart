@@ -72,8 +72,15 @@ class AddStockView extends GetView<SupplierController> {
           if (entry.engineFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
           else if (entry.chassisFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
           else if (entry.brandFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
-          else if (entry.modelFocus.hasFocus) { entry.conditionFocus.requestFocus(); return; }
-          else if (entry.conditionFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
+          else if (entry.conditionFocus.hasFocus) {
+            if (entry.condition == BikeConditionEnum.usedBike) {
+              entry.regNumberFocus.requestFocus();
+            } else {
+              entry.colorFocus.requestFocus();
+            }
+            return;
+          }
+          else if (entry.regNumberFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
           else if (entry.colorFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
           else if (entry.yearFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
           else if (entry.priceFocus.hasFocus) { entry.imageFocus.requestFocus(); return; }
@@ -106,7 +113,15 @@ class AddStockView extends GetView<SupplierController> {
           if (entry.imageFocus.hasFocus) { entry.priceFocus.requestFocus(); return; }
           else if (entry.priceFocus.hasFocus) { entry.yearFocus.requestFocus(); return; }
           else if (entry.yearFocus.hasFocus) { entry.colorFocus.requestFocus(); return; }
-          else if (entry.colorFocus.hasFocus) { entry.conditionFocus.requestFocus(); return; }
+          else if (entry.colorFocus.hasFocus) {
+            if (entry.condition == BikeConditionEnum.usedBike) {
+              entry.regNumberFocus.requestFocus();
+            } else {
+              entry.conditionFocus.requestFocus();
+            }
+            return;
+          }
+          else if (entry.regNumberFocus.hasFocus) { entry.conditionFocus.requestFocus(); return; }
           else if (entry.conditionFocus.hasFocus) { entry.modelFocus.requestFocus(); return; }
           else if (entry.modelFocus.hasFocus) { entry.brandFocus.requestFocus(); return; }
           else if (entry.brandFocus.hasFocus) { entry.chassisFocus.requestFocus(); return; }
@@ -528,11 +543,11 @@ class AddStockView extends GetView<SupplierController> {
               children: [
                 Expanded(flex: 2, child: Text('Engine #')),
                 Expanded(flex: 2, child: Text('Chassis #')),
-                Expanded(flex: 2, child: Text('Brand')),
-                Expanded(flex: 2, child: Text('Model')),
+                Expanded(flex: 2, child: Text('Maker')),
+                Expanded(flex: 2, child: Text('Horse Power')),
                 Expanded(flex: 2, child: Text('Condition')),
                 Expanded(flex: 2, child: Text('Color')),
-                Expanded(flex: 1, child: Text('Year')),
+                Expanded(flex: 2, child: Text('Year')),
                 Expanded(flex: 2, child: Text('Purchase Price')),
                 Expanded(flex: 1, child: Text('Image')),
                 SizedBox(width: 40), // Delete Action
@@ -606,7 +621,7 @@ class AddStockView extends GetView<SupplierController> {
                            initialValue: entry.brand,
                            focusNode: entry.brandFocus,
                            isDark: isDark,
-                           hint: 'Brand',
+                           hint: 'Maker',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeBrandsList()
                                : [],
@@ -624,7 +639,7 @@ class AddStockView extends GetView<SupplierController> {
                            initialValue: entry.model,
                            focusNode: entry.modelFocus,
                            isDark: isDark,
-                           hint: 'Model',
+                           hint: 'Horse Power',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeModelsList()
                                : [],
@@ -636,27 +651,53 @@ class AddStockView extends GetView<SupplierController> {
                     // Condition
                     Expanded(
                       flex: 2,
-                      child: BlinkingFocusBuilder(
-                        focusNode: entry.conditionFocus,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButtonFormField<BikeConditionEnum>(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          BlinkingFocusBuilder(
                             focusNode: entry.conditionFocus,
-                            initialValue: entry.condition,
-                            decoration: _inputDecoration('Condition', isDark),
-                            dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
-                            style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
-                            items: const [
-                              DropdownMenuItem(value: BikeConditionEnum.newBike, child: Text('New', style: TextStyle(fontSize: 13))),
-                              DropdownMenuItem(value: BikeConditionEnum.usedBike, child: Text('Used', style: TextStyle(fontSize: 13))),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                entry.conditionFocus.requestFocus();
-                                entry.condition = val;
-                              }
-                            },
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButtonFormField<BikeConditionEnum>(
+                                focusNode: entry.conditionFocus,
+                                initialValue: entry.condition,
+                                decoration: _inputDecoration('Condition', isDark),
+                                dropdownColor: isDark ? AppColors.darkElevated : AppColors.lightSurface,
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13),
+                                items: const [
+                                  DropdownMenuItem(value: BikeConditionEnum.newBike, child: Text('New', style: TextStyle(fontSize: 13))),
+                                  DropdownMenuItem(value: BikeConditionEnum.usedBike, child: Text('Used', style: TextStyle(fontSize: 13))),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    entry.conditionFocus.requestFocus();
+                                    entry.condition = val;
+                                    controller.bikeEntries.refresh(); // Build to show/hide Reg #
+                                  }
+                                },
+                              ),
+                            ),
                           ),
-                        ),
+                          if (entry.condition == BikeConditionEnum.usedBike) ...[
+                            const SizedBox(height: 4),
+                            BlinkingFocusBuilder(
+                              focusNode: entry.regNumberFocus,
+                              child: TextFormField(
+                                initialValue: entry.registrationNumber,
+                                focusNode: entry.regNumberFocus,
+                                textInputAction: TextInputAction.next,
+                                onChanged: (v) => entry.registrationNumber = v,
+                                validator: (val) {
+                                  if (entry.condition == BikeConditionEnum.usedBike && (val == null || val.trim().isEmpty)) {
+                                    return 'Required';
+                                  }
+                                  return null;
+                                },
+                                decoration: _inputDecoration('Reg #', isDark),
+                                style: TextStyle(fontSize: 12, color: isDark ? Colors.white : Colors.black),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                      const SizedBox(width: 8),
@@ -683,17 +724,18 @@ class AddStockView extends GetView<SupplierController> {
                      const SizedBox(width: 8),
                     // Year
                     Expanded(
-                      flex: 1,
+                      flex: 2,
                       child: BlinkingFocusBuilder(
                         focusNode: entry.yearFocus,
-                        child: TextFormField(
-                          initialValue: entry.modelYear.toString(),
+                        child: _buildCompactAutocomplete(
+                          initialValue: entry.modelYear?.toString() ?? '',
                           focusNode: entry.yearFocus,
-                          textInputAction: TextInputAction.next,
+                          isDark: isDark,
+                          hint: 'Year',
+                          getOptions: () => Get.isRegistered<SettingsController>()
+                              ? Get.find<SettingsController>().getBikeYearsList()
+                              : [],
                           onChanged: (v) => entry.modelYear = int.tryParse(v) ?? DateTime.now().year,
-                           decoration: _inputDecoration('Year', isDark),
-                          style: TextStyle(fontSize: 13, color: isDark ? Colors.white : Colors.black),
-                          keyboardType: TextInputType.number,
                         ),
                       ),
                     ),
@@ -870,7 +912,7 @@ class AddStockView extends GetView<SupplierController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total Batch Cost',
+                'Total Investment Required',
                 style: TextStyle(
                   color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                   fontSize: 14,
@@ -885,6 +927,15 @@ class AddStockView extends GetView<SupplierController> {
                   fontWeight: FontWeight.bold,
                 ),
               )),
+              const SizedBox(height: 4),
+              Text(
+                'This amount will be allocated from capital',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
           BlinkingFocusBuilder(

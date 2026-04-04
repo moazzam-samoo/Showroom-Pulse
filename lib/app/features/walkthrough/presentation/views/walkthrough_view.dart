@@ -78,6 +78,12 @@ class WalkthroughView extends GetView<WalkthroughController> {
                     visualIcon: LucideIcons.barChart3,
                     iconColor: isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
                   ),
+                  IntroSlide(
+                    title: 'Investment & ROI',
+                    description: 'Monitor your capital, liquid cash, and real-time Return on Investment.',
+                    visualIcon: LucideIcons.trendingUp,
+                    iconColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  ),
                 ],
               ),
             ),
@@ -87,7 +93,7 @@ class WalkthroughView extends GetView<WalkthroughController> {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: SmoothPageIndicator(
                 controller: pageController,
-                count: 6,
+                count: 7,
                 effect: WormEffect(
                   dotHeight: 8,
                   dotWidth: 8,
@@ -101,7 +107,7 @@ class WalkthroughView extends GetView<WalkthroughController> {
             Padding(
               padding: const EdgeInsets.fromLTRB(40, 0, 40, 40),
               child: Obx(() {
-                final isLastPage = controller.currentPage.value == 5;
+                final isLastPage = controller.currentPage.value == 6;
                 return SizedBox(
                   width: double.infinity,
                   height: 56,

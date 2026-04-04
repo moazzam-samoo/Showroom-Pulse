@@ -32,83 +32,88 @@ const AppSettingsSchema = CollectionSchema(
       name: r'bikeModels',
       type: IsarType.string,
     ),
-    r'cloudSyncEnabled': PropertySchema(
+    r'bikeYears': PropertySchema(
       id: 3,
+      name: r'bikeYears',
+      type: IsarType.string,
+    ),
+    r'cloudSyncEnabled': PropertySchema(
+      id: 4,
       name: r'cloudSyncEnabled',
       type: IsarType.bool,
     ),
     r'currencySymbol': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'currencySymbol',
       type: IsarType.string,
     ),
     r'dateFormat': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'dateFormat',
       type: IsarType.string,
     ),
     r'defaultExpenseCategories': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'defaultExpenseCategories',
       type: IsarType.string,
     ),
     r'defaultMarkupPercentage': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'defaultMarkupPercentage',
       type: IsarType.double,
     ),
     r'emiRounding': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'emiRounding',
       type: IsarType.string,
     ),
     r'isDarkTheme': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'isDarkTheme',
       type: IsarType.bool,
     ),
     r'lastBackupDate': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'lastBackupDate',
       type: IsarType.dateTime,
     ),
     r'lateFeePercentage': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'lateFeePercentage',
       type: IsarType.double,
     ),
     r'ownerName': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'ownerName',
       type: IsarType.string,
     ),
     r'ownerProfilePicPath': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'ownerProfilePicPath',
       type: IsarType.string,
     ),
     r'pdfDownloadLocation': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'pdfDownloadLocation',
       type: IsarType.string,
     ),
     r'showroomAddress': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'showroomAddress',
       type: IsarType.string,
     ),
     r'showroomLogoPath': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'showroomLogoPath',
       type: IsarType.string,
     ),
     r'showroomName': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'showroomName',
       type: IsarType.string,
     ),
     r'showroomPhone': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'showroomPhone',
       type: IsarType.string,
     )
@@ -135,6 +140,7 @@ int _appSettingsEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.bikeBrands.length * 3;
   bytesCount += 3 + object.bikeModels.length * 3;
+  bytesCount += 3 + object.bikeYears.length * 3;
   bytesCount += 3 + object.currencySymbol.length * 3;
   bytesCount += 3 + object.dateFormat.length * 3;
   bytesCount += 3 + object.defaultExpenseCategories.length * 3;
@@ -188,22 +194,23 @@ void _appSettingsSerialize(
   writer.writeBool(offsets[0], object.automaticLateFeeEnabled);
   writer.writeString(offsets[1], object.bikeBrands);
   writer.writeString(offsets[2], object.bikeModels);
-  writer.writeBool(offsets[3], object.cloudSyncEnabled);
-  writer.writeString(offsets[4], object.currencySymbol);
-  writer.writeString(offsets[5], object.dateFormat);
-  writer.writeString(offsets[6], object.defaultExpenseCategories);
-  writer.writeDouble(offsets[7], object.defaultMarkupPercentage);
-  writer.writeString(offsets[8], object.emiRounding);
-  writer.writeBool(offsets[9], object.isDarkTheme);
-  writer.writeDateTime(offsets[10], object.lastBackupDate);
-  writer.writeDouble(offsets[11], object.lateFeePercentage);
-  writer.writeString(offsets[12], object.ownerName);
-  writer.writeString(offsets[13], object.ownerProfilePicPath);
-  writer.writeString(offsets[14], object.pdfDownloadLocation);
-  writer.writeString(offsets[15], object.showroomAddress);
-  writer.writeString(offsets[16], object.showroomLogoPath);
-  writer.writeString(offsets[17], object.showroomName);
-  writer.writeString(offsets[18], object.showroomPhone);
+  writer.writeString(offsets[3], object.bikeYears);
+  writer.writeBool(offsets[4], object.cloudSyncEnabled);
+  writer.writeString(offsets[5], object.currencySymbol);
+  writer.writeString(offsets[6], object.dateFormat);
+  writer.writeString(offsets[7], object.defaultExpenseCategories);
+  writer.writeDouble(offsets[8], object.defaultMarkupPercentage);
+  writer.writeString(offsets[9], object.emiRounding);
+  writer.writeBool(offsets[10], object.isDarkTheme);
+  writer.writeDateTime(offsets[11], object.lastBackupDate);
+  writer.writeDouble(offsets[12], object.lateFeePercentage);
+  writer.writeString(offsets[13], object.ownerName);
+  writer.writeString(offsets[14], object.ownerProfilePicPath);
+  writer.writeString(offsets[15], object.pdfDownloadLocation);
+  writer.writeString(offsets[16], object.showroomAddress);
+  writer.writeString(offsets[17], object.showroomLogoPath);
+  writer.writeString(offsets[18], object.showroomName);
+  writer.writeString(offsets[19], object.showroomPhone);
 }
 
 AppSettings _appSettingsDeserialize(
@@ -216,23 +223,24 @@ AppSettings _appSettingsDeserialize(
   object.automaticLateFeeEnabled = reader.readBool(offsets[0]);
   object.bikeBrands = reader.readString(offsets[1]);
   object.bikeModels = reader.readString(offsets[2]);
-  object.cloudSyncEnabled = reader.readBool(offsets[3]);
-  object.currencySymbol = reader.readString(offsets[4]);
-  object.dateFormat = reader.readString(offsets[5]);
-  object.defaultExpenseCategories = reader.readString(offsets[6]);
-  object.defaultMarkupPercentage = reader.readDouble(offsets[7]);
-  object.emiRounding = reader.readString(offsets[8]);
+  object.bikeYears = reader.readString(offsets[3]);
+  object.cloudSyncEnabled = reader.readBool(offsets[4]);
+  object.currencySymbol = reader.readString(offsets[5]);
+  object.dateFormat = reader.readString(offsets[6]);
+  object.defaultExpenseCategories = reader.readString(offsets[7]);
+  object.defaultMarkupPercentage = reader.readDouble(offsets[8]);
+  object.emiRounding = reader.readString(offsets[9]);
   object.id = id;
-  object.isDarkTheme = reader.readBool(offsets[9]);
-  object.lastBackupDate = reader.readDateTimeOrNull(offsets[10]);
-  object.lateFeePercentage = reader.readDouble(offsets[11]);
-  object.ownerName = reader.readStringOrNull(offsets[12]);
-  object.ownerProfilePicPath = reader.readStringOrNull(offsets[13]);
-  object.pdfDownloadLocation = reader.readStringOrNull(offsets[14]);
-  object.showroomAddress = reader.readStringOrNull(offsets[15]);
-  object.showroomLogoPath = reader.readStringOrNull(offsets[16]);
-  object.showroomName = reader.readString(offsets[17]);
-  object.showroomPhone = reader.readStringOrNull(offsets[18]);
+  object.isDarkTheme = reader.readBool(offsets[10]);
+  object.lastBackupDate = reader.readDateTimeOrNull(offsets[11]);
+  object.lateFeePercentage = reader.readDouble(offsets[12]);
+  object.ownerName = reader.readStringOrNull(offsets[13]);
+  object.ownerProfilePicPath = reader.readStringOrNull(offsets[14]);
+  object.pdfDownloadLocation = reader.readStringOrNull(offsets[15]);
+  object.showroomAddress = reader.readStringOrNull(offsets[16]);
+  object.showroomLogoPath = reader.readStringOrNull(offsets[17]);
+  object.showroomName = reader.readString(offsets[18]);
+  object.showroomPhone = reader.readStringOrNull(offsets[19]);
   return object;
 }
 
@@ -250,25 +258,25 @@ P _appSettingsDeserializeProp<P>(
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readBool(offset)) as P;
-    case 4:
       return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readBool(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
     case 7:
-      return (reader.readDouble(offset)) as P;
-    case 8:
       return (reader.readString(offset)) as P;
-    case 9:
-      return (reader.readBool(offset)) as P;
-    case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 11:
+    case 8:
       return (reader.readDouble(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 12:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 13:
       return (reader.readStringOrNull(offset)) as P;
     case 14:
@@ -278,8 +286,10 @@ P _appSettingsDeserializeProp<P>(
     case 16:
       return (reader.readStringOrNull(offset)) as P;
     case 17:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 18:
+      return (reader.readString(offset)) as P;
+    case 19:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -656,6 +666,142 @@ extension AppSettingsQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'bikeModels',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'bikeYears',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'bikeYears',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'bikeYears',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bikeYears',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterFilterCondition>
+      bikeYearsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'bikeYears',
         value: '',
       ));
     });
@@ -2593,6 +2739,18 @@ extension AppSettingsQuerySortBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByBikeYears() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeYears', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> sortByBikeYearsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeYears', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       sortByCloudSyncEnabled() {
     return QueryBuilder.apply(this, (query) {
@@ -2845,6 +3003,18 @@ extension AppSettingsQuerySortThenBy
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByBikeYears() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeYears', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppSettings, AppSettings, QAfterSortBy> thenByBikeYearsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'bikeYears', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QAfterSortBy>
       thenByCloudSyncEnabled() {
     return QueryBuilder.apply(this, (query) {
@@ -3092,6 +3262,13 @@ extension AppSettingsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppSettings, AppSettings, QDistinct> distinctByBikeYears(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'bikeYears', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<AppSettings, AppSettings, QDistinct>
       distinctByCloudSyncEnabled() {
     return QueryBuilder.apply(this, (query) {
@@ -3234,6 +3411,12 @@ extension AppSettingsQueryProperty
   QueryBuilder<AppSettings, String, QQueryOperations> bikeModelsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'bikeModels');
+    });
+  }
+
+  QueryBuilder<AppSettings, String, QQueryOperations> bikeYearsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'bikeYears');
     });
   }
 

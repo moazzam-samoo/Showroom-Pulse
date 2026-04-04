@@ -104,7 +104,11 @@ class InstallmentContract {
   }
 
   /// Get the number of payments remaining
-  int get paymentsRemaining => months - paymentsMade;
+  int get paymentsRemaining =>
+      status == ContractStatusEnum.completed ? 0 : months - paymentsMade;
+
+  /// Whether remaining balance was waived (not collected)
+  bool isWaived = false;
 
   /// Check if contract is overdue
   bool get isOverdue {

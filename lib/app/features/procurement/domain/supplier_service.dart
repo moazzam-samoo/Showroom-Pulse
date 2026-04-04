@@ -8,12 +8,10 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 
 class SupplierService extends GetxService {
-  late Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
   final FileService _fileService = Get.find<FileService>();
 
   Future<SupplierService> init() async {
-    final isarService = Get.find<IsarService>();
-    _isar = isarService.isar;
     return this;
   }
 
@@ -127,8 +125,22 @@ class SupplierService extends GetxService {
 
   // --- Procurement (Batches) ---
 
+  Future<List<PurchaseBatch>> getSupplierBatches(int supplierId) async {
+    final supplier = await _isar.suppliers.get(supplierId);
+    if (supplier == null) return [];
+    await supplier.batches.load();
+    return supplier.batches.toList();
+  }
+
+  Future<List<Bike>> getBatchBikes(int batchId) async {
+    final batch = await _isar.purchaseBatchs.get(batchId);
+    if (batch == null) return [];
+    await batch.bikes.load();
+    return batch.bikes.toList();
+  }
+
   /// Saves a complete purchase batch with multiple bikes in a single transaction
-  Future<void> savePurchaseBatch({
+  Future<PurchaseBatch> savePurchaseBatch({
     required Supplier supplier,
     required DateTime date,
     required File? billImage,
@@ -156,22 +168,14 @@ class SupplierService extends GetxService {
       
       // 3. Save Bikes and Link to Batch
       for (var bike in bikes) {
-        // Save image if file exists (logic handled before creating bike object or here?)
-        // Assuming bike object passed here has imageFilename set or we handle it in controller.
-        // If the bike object has a temporary image path, we need to move it to final location?
-        // Let's assume the controller handles saving individual bike images via FileService 
-        // AND sets the filenames on the Bike objects BEFORE passing them here.
-        
         // Link to batch
         bike.batch.value = batch;
         await _isar.bikes.put(bike);
         await bike.batch.save();
       }
-      
-      // PurchaseBatch has: `final supplier = IsarLink<Supplier>();`
-      // Supplier has: `@Backlink(to: 'supplier') final batches = IsarLinks<PurchaseBatch>();`
-      // So setting `batch.supplier.value = supplier` is sufficient.
     });
+
+    return batch;
   }
 
   Future<void> updatePurchaseBatch(PurchaseBatch batch, DateTime newDate) async {

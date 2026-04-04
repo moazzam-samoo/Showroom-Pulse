@@ -1,6 +1,8 @@
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/sale.dart';
+import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:get/get.dart';
 
 class InventoryService {
@@ -22,7 +24,7 @@ class InventoryService {
   }
 
   /// Add a new bike to inventory
-  Future<void> addBike(Bike bike) async {
+  Future<int> addBike(Bike bike) async {
     final isar = _isarService.isar;
     
     // Check if engine or chassis number already exists
@@ -47,6 +49,8 @@ class InventoryService {
     await isar.writeTxn(() async {
       await isar.bikes.put(bike);
     });
+
+    return bike.id;
   }
 
   /// Update an existing bike
@@ -63,5 +67,17 @@ class InventoryService {
     await isar.writeTxn(() async {
       await isar.bikes.delete(id);
     });
+  }
+
+  /// Get Sale record for a specific bike
+  Future<Sale?> getSaleByBikeId(int bikeId) async {
+    final isar = _isarService.isar;
+    return await isar.sales.filter().bikeIdEqualTo(bikeId).findFirst();
+  }
+
+  /// Get Customer record by ID
+  Future<Customer?> getCustomerById(int customerId) async {
+    final isar = _isarService.isar;
+    return await isar.customers.get(customerId);
   }
 }

@@ -1,16 +1,21 @@
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
+
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
 
 /// Repository for managing installment contracts and payments
 class InstallmentRepository {
-  final Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
-  InstallmentRepository(this._isar);
+  InstallmentRepository();
 
   // ==================== CONTRACT QUERIES ====================
 
@@ -133,6 +138,7 @@ class InstallmentRepository {
       // Update contract
       final contract = await _isar.installmentContracts.get(contractId);
       if (contract != null) {
+        final previousTotalPaid = contract.totalPaid;
         contract.totalPaid += amount;
         contract.paymentsMade += 1;
         contract.lastPaymentDate = payment.paymentDate;
@@ -140,6 +146,8 @@ class InstallmentRepository {
         // Update status based on payment
         if (contract.totalPaid >= contract.totalAmount) {
           contract.status = ContractStatusEnum.completed;
+          contract.months = contract.paymentsMade; // Adjust duration for early completion
+          contract.nextDueDate = null;
         } else if (contract.totalPaid > 0) {
           contract.status = ContractStatusEnum.partiallyPaid;
         }
@@ -147,12 +155,99 @@ class InstallmentRepository {
         // Calculate next due date
         if (contract.status != ContractStatusEnum.completed) {
           contract.nextDueDate = _calculateNextDueDate(contract);
-        } else {
-          contract.nextDueDate = null;
         }
 
         await _isar.installmentContracts.put(contract);
+
+        // === INVESTMENT TRACKING: Record installment payment revenue ===
+        if (Get.isRegistered<InvestmentService>()) {
+          try {
+            final investmentService = Get.find<InvestmentService>();
+            final bike = await _isar.bikes.get(contract.bikeId);
+            await investmentService.recordInstallmentPaymentRevenue(
+              contractId: contractId,
+              amount: amount,
+              bikeId: contract.bikeId,
+              previousTotalPaid: previousTotalPaid,
+              purchasePrice: bike?.purchasePrice ?? 0.0,
+              description: bike != null
+                  ? 'Monthly Payment \u2014 ${bike.model} ${bike.brand}'
+                  : 'Monthly Payment \u2014 Contract #$contractId',
+              inTransaction: true,
+            );
+            // Profit is now finalized continuously inside recordInstallmentPaymentRevenue
+          } catch (e) {
+            debugPrint('InvestmentService payment recording warning: $e');
+          }
+        }
+
+        // Refresh investment KPIs
+        _refreshInvestmentKPIs();
       }
+    });
+  }
+
+  /// Admin manually completes a contract (Paid vs Waived)
+  Future<void> adminCompleteContract({
+    required int contractId,
+    required bool allPaymentReceived,
+  }) async {
+    await _isar.writeTxn(() async {
+      final contract = await _isar.installmentContracts.get(contractId);
+      if (contract == null) return;
+      
+      final previousTotalPaid = contract.totalPaid;
+
+      if (allPaymentReceived) {
+        // Record remaining as a final payment
+        final remaining = contract.totalAmount - contract.totalPaid;
+        if (remaining > 0) {
+          final payment = Payment()
+            ..contractId = contractId
+            ..amount = remaining
+            ..method = PaymentMethod.cash
+            ..notes = 'Final payment (Admin completed)'
+            ..paymentDate = DateTime.now();
+          await _isar.payments.put(payment);
+          contract.totalPaid = contract.totalAmount;
+          contract.paymentsMade += 1;
+
+          // === INVESTMENT TRACKING: Record final payment as revenue ===
+          if (Get.isRegistered<InvestmentService>()) {
+            try {
+              final investmentService = Get.find<InvestmentService>();
+              final bike = await _isar.bikes.get(contract.bikeId);
+              await investmentService.recordInstallmentPaymentRevenue(
+                contractId: contractId,
+                amount: remaining,
+                bikeId: contract.bikeId,
+                previousTotalPaid: previousTotalPaid,
+                purchasePrice: bike?.purchasePrice ?? 0.0,
+                description: bike != null
+                    ? 'Final Payment (Admin) \u2014 ${bike.model} ${bike.brand}'
+                    : 'Final Payment (Admin) \u2014 Contract #$contractId',
+                inTransaction: true,
+              );
+            } catch (e) {
+              debugPrint('InvestmentService admin-complete revenue recording warning: $e');
+            }
+          }
+        }
+      } else {
+        // Waive remaining → don't add to revenue
+        contract.isWaived = true;
+      }
+
+      contract.status = ContractStatusEnum.completed;
+      contract.months = contract.paymentsMade;
+      contract.nextDueDate = null;
+      contract.lastPaymentDate = DateTime.now();
+
+      await _isar.installmentContracts.put(contract);
+      // Profit is now finalized continuously inside recordInstallmentPaymentRevenue
+      
+      // Refresh investment KPIs
+      _refreshInvestmentKPIs();
     });
   }
 
@@ -218,8 +313,9 @@ class InstallmentRepository {
         int fixedCount = 0;
 
         for (final contract in allContracts) {
-          // Check if down payment is 0 or missing
-          if (contract.downPayment <= 0) {
+          // Check if down payment is 0 or missing (ONLY apply to legacy contracts created before a certain date)
+          // 0 down payment is a valid business case for new contracts!
+          if (contract.downPayment <= 0 && contract.contractDate.isBefore(DateTime(2025, 3, 1))) {
             // Find payments for this contract
             final payments = await _isar.payments
                 .filter()
@@ -256,6 +352,26 @@ class InstallmentRepository {
             }
           }
         }
+        // 1.5 Auto-fix accidentally hijacked first payments on 0-down plans
+        final accidentalRepairs = await _isar.payments
+            .filter()
+            .notesEqualTo('Down Payment (Repaired)')
+            .findAll();
+            
+        int restoredCount = 0;
+        for (final payment in accidentalRepairs) {
+           final contract = await _isar.installmentContracts.get(payment.contractId);
+           if (contract != null && contract.contractDate.isAfter(DateTime(2025, 3, 1))) {
+              payment.isDownPayment = false;
+              payment.notes = 'Restored Payment'; // Clear the buggy note
+              contract.downPayment = 0; // Reset it to valid 0 down payment
+              await _isar.payments.put(payment);
+              await _isar.installmentContracts.put(contract);
+              restoredCount++;
+           }
+        }
+        if (restoredCount > 0) debugPrint('Restored $restoredCount accidentally repaired down payments');
+
         debugPrint('Legacy Repair Complete. Fixed $fixedCount contracts.');
       });
       
@@ -337,6 +453,8 @@ class InstallmentRepository {
           if (remaining <= 0) {
              debugPrint('  - marking as COMPLETED (Balance 0)');
              contract.status = ContractStatusEnum.completed;
+             contract.months = contract.paymentsMade; // Adjust duration
+             contract.nextDueDate = null;
              changed = true;
           }
           
@@ -351,6 +469,15 @@ class InstallmentRepository {
       
     } catch (e) {
       debugPrint('Error in Rounding/Overpayment fix: $e');
+    }
+  }
+
+  /// Refresh investment controller KPIs if registered
+  void _refreshInvestmentKPIs() {
+    if (Get.isRegistered<InvestmentController>()) {
+      try {
+        Get.find<InvestmentController>().loadInvestmentData();
+      } catch (_) {}
     }
   }
 }
