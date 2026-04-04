@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart' as tahir_showroom;
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/features/customers/presentation/widgets/add_customer_dialog.dart';
@@ -54,8 +53,7 @@ class CustomersController extends GetxController {
   }
 
   void _initRepository() {
-    final isarService = Get.find<IsarService>();
-    _repository = CustomerRepository(isarService.isar);
+    _repository = CustomerRepository();
   }
 
   /// Load all customer data and stats

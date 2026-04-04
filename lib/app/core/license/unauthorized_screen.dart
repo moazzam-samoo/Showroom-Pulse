@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
@@ -12,13 +13,11 @@ class UnauthorizedScreen extends StatefulWidget {
   State<UnauthorizedScreen> createState() => _UnauthorizedScreenState();
 }
 
-class _UnauthorizedScreenState extends State<UnauthorizedScreen>
-    with WindowListener {
+class _UnauthorizedScreenState extends State<UnauthorizedScreen> with WindowListener {
   @override
   void initState() {
     super.initState();
     windowManager.addListener(this);
-    windowManager.setPreventClose(true);
   }
 
   @override
@@ -29,7 +28,11 @@ class _UnauthorizedScreenState extends State<UnauthorizedScreen>
 
   @override
   void onWindowClose() {
-    // Blocked
+    // Because main.dart globally sets `windowManager.setPreventClose(true)`,
+    // we MUST explicitly listen to the close event here and manually exit the app.
+    // Exiting the app process guarantees that the next time the user opens the app,
+    // the system will run main() again and re-evaluate the hardware MAC address.
+    exit(0);
   }
 
   @override

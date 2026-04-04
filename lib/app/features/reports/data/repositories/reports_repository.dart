@@ -4,11 +4,14 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
+
 /// Repository for revenue calculations
 class ReportsRepository {
-  final Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
-  ReportsRepository(this._isar);
+  ReportsRepository();
 
   // ─── Revenue Queries ───────────────────────────────────────
 

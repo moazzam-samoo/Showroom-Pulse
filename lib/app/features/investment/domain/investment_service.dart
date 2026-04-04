@@ -26,12 +26,11 @@ class CategoryFinancials {
 }
 
 class InvestmentService extends GetxService {
-  late Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
   @override
   void onInit() {
     super.onInit();
-    _isar = Get.find<IsarService>().isar;
   }
 
   // ==================== CAPITAL OPERATIONS ====================

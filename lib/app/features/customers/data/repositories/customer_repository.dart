@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
-import 'package:collection/collection.dart';
+import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
@@ -89,9 +90,9 @@ class TransactionRecord {
 
 /// Repository for customer data with aggregations
 class CustomerRepository {
-  final Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
-  CustomerRepository(this._isar);
+  CustomerRepository();
 
   /// Get all customers with their transaction summaries
   Future<List<CustomerWithTransactions>> getAllCustomersWithTransactions({

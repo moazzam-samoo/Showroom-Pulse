@@ -9,11 +9,13 @@ import 'package:tahir_showroom/app/features/investment/domain/investment_service
 import 'package:tahir_showroom/app/features/investment/presentation/controllers/investment_controller.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
+
 /// Repository for managing installment contracts and payments
 class InstallmentRepository {
-  final Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
-  InstallmentRepository(this._isar);
+  InstallmentRepository();
 
   // ==================== CONTRACT QUERIES ====================
 

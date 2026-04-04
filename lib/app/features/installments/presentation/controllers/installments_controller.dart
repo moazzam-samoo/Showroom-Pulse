@@ -5,7 +5,6 @@ import 'package:tahir_showroom/app/data/models/payment.dart';
 import 'package:tahir_showroom/app/data/models/customer.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/installments/data/repositories/installment_repository.dart';
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/core/services/statement_service.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
@@ -98,8 +97,7 @@ class InstallmentsController extends GetxController {
   }
 
   void _initRepository() {
-    final isarService = Get.find<IsarService>();
-    _repository = InstallmentRepository(isarService.isar);
+    _repository = InstallmentRepository();
   }
 
   /// Load all contracts with related data
