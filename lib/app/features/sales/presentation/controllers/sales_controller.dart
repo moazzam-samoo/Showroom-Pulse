@@ -252,5 +252,33 @@ class SalesController extends GetxController {
     }
     return amount.toStringAsFixed(0);
   }
+
+  /// Delete a sale (cascade delete)
+  Future<void> deleteSale(int saleId) async {
+    try {
+      isLoading.value = true;
+      final success = await _salesService.deleteSaleWithCascade(saleId);
+      
+      if (success) {
+        AppToast.showSuccess(
+          title: 'Deleted',
+          message: 'Sale records deleted successfully',
+        );
+        await refreshSales();
+      } else {
+        AppNotificationDialog.showError(
+          title: 'Error',
+          message: 'Failed to delete sale records',
+        );
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Delete failed: $e',
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
 }
 

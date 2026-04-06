@@ -6,8 +6,7 @@ import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
-enum InvestmentFilter { all, weekly, monthly, yearly }
-enum CategoryFilter { all, withdrawals, investments, bikeInvestments, revenue }
+enum InvestmentFilter { all, weekly, monthly, yearly, custom }
 
 class InvestmentController extends GetxController {
   final InvestmentService _investmentService = Get.find<InvestmentService>();
@@ -51,8 +50,6 @@ class InvestmentController extends GetxController {
   // History & Filters
   final investmentHistory = <Investment>[].obs;
   final filteredHistory = <Investment>[].obs;
-  final selectedFilter = InvestmentFilter.all.obs;
-  final selectedCategoryFilter = CategoryFilter.all.obs;
   final kpiFilter = ''.obs;
 
   // Search
@@ -151,25 +148,12 @@ class InvestmentController extends GetxController {
     _applyFilters();
   }
 
-  void setFilter(InvestmentFilter filter) {
-    selectedFilter.value = filter;
-    _applyFilters();
-  }
-
-  void setCategoryFilter(CategoryFilter filter) {
-    selectedCategoryFilter.value = filter;
-    kpiFilter.value = ''; // Reset KPI filter when changing category
-    _applyFilters();
-  }
-
   void setKpiFilter(String kpiName) {
     if (kpiFilter.value == kpiName) {
       kpiFilter.value = ''; // Toggle off if clicked again
     } else {
       kpiFilter.value = kpiName;
-      // Reset other broad filters so the user sees all relevant history for the KPI
-      selectedFilter.value = InvestmentFilter.all;
-      selectedCategoryFilter.value = CategoryFilter.all;
+      // Reset search so the user sees all relevant history for the KPI
       searchQuery.value = '';
       searchController.clear();
     }
@@ -179,46 +163,7 @@ class InvestmentController extends GetxController {
   void _applyFilters() {
     List<Investment> temp = investmentHistory.toList();
 
-    // 1. Apply Date Filter
-    final now = DateTime.now();
-    switch (selectedFilter.value) {
-      case InvestmentFilter.weekly:
-        final lastWeek = now.subtract(const Duration(days: 7));
-        temp = temp.where((inv) => inv.date.isAfter(lastWeek)).toList();
-        break;
-      case InvestmentFilter.monthly:
-        final lastMonth = DateTime(now.year, now.month - 1, now.day);
-        temp = temp.where((inv) => inv.date.isAfter(lastMonth)).toList();
-        break;
-      case InvestmentFilter.yearly:
-        final lastYear = DateTime(now.year - 1, now.month, now.day);
-        temp = temp.where((inv) => inv.date.isAfter(lastYear)).toList();
-        break;
-      case InvestmentFilter.all:
-        break;
-    }
-
-    // 2. Apply Category Filter
-    switch (selectedCategoryFilter.value) {
-      case CategoryFilter.withdrawals:
-        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal).toList();
-        break;
-      case CategoryFilter.investments:
-        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.capitalInjection).toList();
-        break;
-      case CategoryFilter.bikeInvestments:
-        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
-        break;
-      case CategoryFilter.revenue:
-        temp = temp.where((inv) =>
-            inv.type == InvestmentTypeEnum.bikeSale ||
-            inv.type == InvestmentTypeEnum.installmentPayment).toList();
-        break;
-      case CategoryFilter.all:
-        break;
-    }
-
-    // 3. Apply Search Filter
+    // 1. Apply Search Filter
     if (searchQuery.value.isNotEmpty) {
       final query = searchQuery.value.toLowerCase();
       final queryNoCommas = query.replaceAll(',', '');
@@ -236,14 +181,13 @@ class InvestmentController extends GetxController {
       }).toList();
     }
 
-    // 4. Apply KPI Filter
+    // 2. Apply KPI Filter
     if (kpiFilter.value.isNotEmpty) {
       final kpi = kpiFilter.value;
       if (kpi == 'Total Invested') {
         temp = temp.where((inv) => inv.type == InvestmentTypeEnum.capitalInjection).toList();
       } else if (kpi == 'Available Cash') {
-        // Available Cash is derived from many entries. Showing all is the most logical, 
-        // but we can filter out non-cash impacting things if any exist
+        // Available Cash is derived from many entries. Showing all is the most logical.
       } else if (kpi == 'Net Profit') {
         temp = temp.where((inv) => inv.profitAmount != 0).toList();
       } else if (kpi == 'Total Withdrawals') {
@@ -268,6 +212,7 @@ class InvestmentController extends GetxController {
 
     filteredHistory.assignAll(temp);
   }
+
 
   Future<void> saveCapitalInvestment() async {
     if (amountController.text.trim().isEmpty) {

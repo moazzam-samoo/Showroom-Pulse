@@ -16,8 +16,10 @@ import 'package:image/image.dart' as img;
 ///     └── Customers/
 class FileService extends GetxService {
   late String _rootPath;
+  late String _documentsPath;
   
   String get rootPath => _rootPath;
+  String get documentsPath => _documentsPath;
   String get databasePath => p.join(_rootPath, 'Database');
   String get checkpointPath => p.join(_rootPath, 'Checkpoints');
   String get stagingPath => p.join(_rootPath, 'RestoreStaging');
@@ -25,12 +27,13 @@ class FileService extends GetxService {
   String get bikesMediaPath => p.join(mediaPath, 'Bikes');
   String get customersMediaPath => p.join(mediaPath, 'Customers');
   String get profileMediaPath => p.join(mediaPath, 'Profile');
-
+ 
   /// Initialize the file service and create directory structure
   Future<FileService> init() async {
     // Get Documents directory
     final documentsDir = await getApplicationDocumentsDirectory();
-    _rootPath = p.join(documentsDir.path, 'TahirShowroom');
+    _documentsPath = documentsDir.path;
+    _rootPath = p.join(_documentsPath, 'TahirShowroom');
     
     // Create directory structure
     await _createDirectoryStructure();

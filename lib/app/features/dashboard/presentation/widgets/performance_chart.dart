@@ -177,18 +177,24 @@ class _PerformanceChartState extends State<PerformanceChart> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 24,
+                      interval: 1,
                       getTitlesWidget: (value, meta) {
                         const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-                        if (value.toInt() >= 0 && value.toInt() < days.length) {
-                          return Text(
-                            days[value.toInt()],
-                            style: TextStyle(
-                              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                              fontSize: 10,
+                        final index = value.toInt();
+                        if (index >= 0 && index < days.length) {
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            space: 4,
+                            child: Text(
+                              days[index],
+                              style: TextStyle(
+                                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                                fontSize: 10,
+                              ),
                             ),
                           );
                         }
-                        return const Text('');
+                        return const SizedBox.shrink();
                       },
                     ),
                   ),
