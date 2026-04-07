@@ -33,6 +33,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
   final FocusNode _collectorFocus = FocusNode();
   final FocusNode _notesFocus = FocusNode();
   final FocusNode _submitFocus = FocusNode();
+  final FocusNode _keyboardFocus = FocusNode();
 
   @override
   void initState() {
@@ -53,6 +54,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
     _collectorFocus.dispose();
     _notesFocus.dispose();
     _submitFocus.dispose();
+    _keyboardFocus.dispose();
     super.dispose();
   }
 
@@ -62,7 +64,7 @@ class _RecordPaymentDialogState extends State<RecordPaymentDialog> {
     final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
 
     return KeyboardListener(
-      focusNode: FocusNode()..requestFocus(),
+      focusNode: _keyboardFocus,
       onKeyEvent: (KeyEvent event) {
         if (event is KeyDownEvent) {
           if (event.logicalKey == LogicalKeyboardKey.escape) {
