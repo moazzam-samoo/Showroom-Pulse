@@ -59,6 +59,7 @@ class DashboardController extends GetxController {
   final unitsInStock = 0.obs;
   final lowStockAlert = 0.obs;
   final totalInstallmentValue = 0.0.obs;
+  final netProfit = 0.0.obs;
 
   // Upcoming Installments (for bottom widget)
   final upcomingInstallments = <UpcomingInstallment>[].obs;
@@ -148,6 +149,7 @@ class DashboardController extends GetxController {
       totalInvestment.value = await investmentService.getTotalCapital();
       allocatedInvestment.value = await investmentService.getTotalAllocated();
       availableInvestment.value = await investmentService.getAvailableBalance();
+      netProfit.value = await investmentService.getTotalProfit();
 
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 

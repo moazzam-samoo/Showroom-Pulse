@@ -8,6 +8,7 @@ class KpiDetailDialog extends StatelessWidget {
   final Color accentColor;
   final Widget body;
   final Widget? footer;
+  final Widget? topFilter;
 
   const KpiDetailDialog({
     super.key,
@@ -16,6 +17,7 @@ class KpiDetailDialog extends StatelessWidget {
     required this.accentColor,
     required this.body,
     this.footer,
+    this.topFilter,
   });
 
   @override
@@ -89,6 +91,16 @@ class KpiDetailDialog extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Top Filter Row (Optional)
+            if (topFilter != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: borderCol.withOpacity(0.5))),
+                ),
+                child: topFilter!,
+              ),
 
             // Scrollable Body
             Expanded(

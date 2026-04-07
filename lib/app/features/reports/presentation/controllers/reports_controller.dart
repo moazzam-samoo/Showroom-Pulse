@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
@@ -42,8 +41,7 @@ class ReportsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    final isar = Get.find<IsarService>().isar;
-    _repository = ReportsRepository(isar);
+    _repository = ReportsRepository();
     loadData();
   }
 

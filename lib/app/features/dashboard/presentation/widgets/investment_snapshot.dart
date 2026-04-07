@@ -34,7 +34,9 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                   Icon(
                     LucideIcons.wallet,
                     size: 20,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
@@ -42,7 +44,9 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
                 ],
@@ -54,14 +58,15 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                    color:
+                        isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          
+
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,23 +75,31 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                   child: Obx(() => _buildSnapshotItem(
                         context: context,
                         isDark: isDark,
-                        icon: Icons.savings,
-                        title: 'Available Cash',
-                        amount: controller.availableInvestment.value,
-                        color: Colors.green,
+                        icon: Icons.inventory_2,
+                        title: 'Cash in Inventory',
+                        amount: controller.totalAssetValue.value,
+                        color: const Color.fromARGB(255, 221, 236, 12),
+                        subtitle: 'Purchase value in showroom',
                       )),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: Obx(() => _buildSnapshotItem(
-                        context: context,
-                        isDark: isDark,
-                        icon: Icons.motorcycle,
-                        title: 'Cash on Bikes',
-                        amount: controller.allocatedInvestment.value,
-                        color: Colors.orange,
-                        subtitle: '${controller.unitsInStock.value} unsold bikes',
-                      )),
+                  child: Obx(() {
+                    final profit = controller.netProfit.value;
+                    final isProfit = profit >= 0;
+                    return _buildSnapshotItem(
+                      context: context,
+                      isDark: isDark,
+                      icon: isProfit ? Icons.trending_up : Icons.trending_down,
+                      title: 'Net Profit',
+                      amount: profit,
+                      color: isProfit
+                          ? const Color.fromARGB(255, 32, 232, 52)
+                          : Colors.red,
+                      subtitle:
+                          isProfit ? 'Total net earnings' : 'Total net loss',
+                    );
+                  }),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -97,7 +110,8 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                         title: 'Future Payments',
                         amount: controller.totalInstallmentValue.value,
                         color: Colors.blue,
-                        subtitle: '${controller.activeContracts.value} active contracts',
+                        subtitle:
+                            '${controller.activeContracts.value} active contracts',
                       )),
                 ),
               ],
@@ -147,7 +161,9 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -164,7 +180,9 @@ class InvestmentSnapshotWidget extends GetView<DashboardController> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
               ),
             ),
           ),

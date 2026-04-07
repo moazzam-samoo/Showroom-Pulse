@@ -14,6 +14,7 @@ void main() {
       // Months = 12
       // EMI = 10,000
       final result = InstallmentCalculator.calculate(
+        originalPrice: 100000,
         cashPrice: 100000,
         markupType: MarkupType.percentage,
         markupValue: 40.0,
@@ -35,6 +36,7 @@ void main() {
       // Months = 10
       // EMI = 10,000
       final result = InstallmentCalculator.calculate(
+        originalPrice: 100000,
         cashPrice: 100000,
         markupType: MarkupType.fixed,
         markupValue: 15000,
@@ -54,6 +56,7 @@ void main() {
       // Months 10
       // EMI 14,000
       final result = InstallmentCalculator.calculate(
+        originalPrice: 100000,
         cashPrice: 100000,
         markupType: MarkupType.percentage,
         markupValue: 40.0,
@@ -67,6 +70,7 @@ void main() {
     test('Throws Error on Zero Months', () {
       expect(
         () => InstallmentCalculator.calculate(
+          originalPrice: 10000,
           cashPrice: 10000,
           markupType: MarkupType.percentage,
           markupValue: 10,

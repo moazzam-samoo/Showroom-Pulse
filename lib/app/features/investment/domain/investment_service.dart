@@ -26,12 +26,11 @@ class CategoryFinancials {
 }
 
 class InvestmentService extends GetxService {
-  late Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
 
   @override
   void onInit() {
     super.onInit();
-    _isar = Get.find<IsarService>().isar;
   }
 
   // ==================== CAPITAL OPERATIONS ====================
@@ -352,48 +351,69 @@ class InvestmentService extends GetxService {
   // ==================== BALANCE CALCULATIONS ====================
 
   /// Returns sum of all capital injections
-  Future<double> getTotalCapital() async {
-    final capitalRecords = await _isar.investments
+  Future<double> getTotalCapital({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.capitalInjection)
-        .findAll();
+        .typeEqualTo(InvestmentTypeEnum.capitalInjection);
+    
+    final filtered = _applyDateRange(query, start, end);
+    final capitalRecords = await filtered.findAll();
     return capitalRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
   }
 
   /// Returns sum of all allocations (bike purchases) + withdrawals
-  Future<double> getTotalAllocated() async {
-    final allocatedRecords = await _isar.investments
+  Future<double> getTotalAllocated({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.bikePurchase)
-        .or()
-        .typeEqualTo(InvestmentTypeEnum.withdrawal)
-        .findAll();
+        .group((q) => q
+            .typeEqualTo(InvestmentTypeEnum.bikePurchase)
+            .or()
+            .typeEqualTo(InvestmentTypeEnum.withdrawal));
+    
+    final filtered = _applyDateRange(query, start, end);
+    final allocatedRecords = await filtered.findAll();
     return allocatedRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
+  }
+
+  /// Helper to apply date range to an existing query builder
+  QueryBuilder<Investment, Investment, QAfterFilterCondition> _applyDateRange(
+    QueryBuilder<Investment, Investment, dynamic> q, 
+    DateTime? start, 
+    DateTime? end
+  ) {
+    var query = q as QueryBuilder<Investment, Investment, QAfterFilterCondition>;
+    if (start != null) query = query.dateGreaterThan(start, include: true);
+    if (end != null) query = query.dateLessThan(end, include: true);
+    return query;
   }
 
 
 
   /// Sum of all revenue from cash bike sales
-  Future<double> getCashFromSales() async {
-    final saleRecords = await _isar.investments
+  Future<double> getCashFromSales({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.bikeSale)
-        .findAll();
+        .typeEqualTo(InvestmentTypeEnum.bikeSale);
+        
+    final filtered = _applyDateRange(query, start, end);
+    final saleRecords = await filtered.findAll();
     return saleRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
   }
 
   /// Sum of all revenue from installment payments
-  Future<double> getCashFromInstallments() async {
-    final installmentRecords = await _isar.investments
+  Future<double> getCashFromInstallments({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.installmentPayment)
-        .findAll();
+        .typeEqualTo(InvestmentTypeEnum.installmentPayment);
+        
+    final filtered = _applyDateRange(query, start, end);
+    final installmentRecords = await filtered.findAll();
     return installmentRecords.fold<double>(0.0, (sum, i) => sum + i.amount);
   }
 
   /// Returns current available balance (capital - allocated + sales + installments - locked)
-  Future<double> getAvailableBalance() async {
-    final List<CategoryFinancials> breakdown = await getCategoryFinancials();
+  Future<double> getAvailableBalance({DateTime? start, DateTime? end}) async {
+    final List<CategoryFinancials> breakdown = await getCategoryFinancials(start: start, end: end);
     final unlockedAvailable = breakdown.fold<double>(0.0, (sum, c) => sum + c.available);
     
     // Total Available now natively includes exactly distributed profit from the category breakdown
@@ -411,8 +431,14 @@ class InvestmentService extends GetxService {
 
   /// Calculates the breakdown of capital across categories based on priority spending.
   /// Priority: Personal > Partnership > Other > Loan
-  Future<List<CategoryFinancials>> getCategoryFinancials() async {
-    final allInvestments = await _isar.investments.where().findAll();
+  Future<List<CategoryFinancials>> getCategoryFinancials({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments.filter().idGreaterThan(-1); // Starting point that returns QAfterFilterCondition
+    
+    final filtered = _applyDateRange(query, start, end);
+    final allInvestments = await filtered.findAll();
+    
+    // For bikes, we filter by date too if needed (though bikes might be lifecycle objects)
+    // Actually, investment records for bikes are already filtered in allInvestments.
     final allBikes = await _isar.bikes.where().findAll();
 
     final categories = [
@@ -521,22 +547,24 @@ class InvestmentService extends GetxService {
   // ==================== PROFIT CALCULATIONS ====================
 
   /// Returns total realized profit (cash sale profits + completed installment profits)
-  Future<double> getTotalProfit() async {
+  Future<double> getTotalProfit({DateTime? start, DateTime? end}) async {
     // Profit from cash sales (including losses as negative)
-    final saleRecords = await _isar.investments
+    final saleQuery = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.bikeSale)
-        .findAll();
-    final saleProfit =
-        saleRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
+        .typeEqualTo(InvestmentTypeEnum.bikeSale);
+    
+    final saleFiltered = _applyDateRange(saleQuery, start, end);
+    final saleRecords = await saleFiltered.findAll();
+    final saleProfit = saleRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
 
     // Profit from installments (continuous cost-recovery logic)
-    final installmentRecords = await _isar.investments
+    final installmentQuery = _isar.investments
         .filter()
-        .typeEqualTo(InvestmentTypeEnum.installmentPayment)
-        .findAll();
-    final installmentProfit = 
-        installmentRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
+        .typeEqualTo(InvestmentTypeEnum.installmentPayment);
+        
+    final installmentFiltered = _applyDateRange(installmentQuery, start, end);
+    final installmentRecords = await installmentFiltered.findAll();
+    final installmentProfit = installmentRecords.fold<double>(0.0, (sum, i) => sum + i.profitAmount);
 
     return saleProfit + installmentProfit;
   }
@@ -764,14 +792,18 @@ class InvestmentService extends GetxService {
   // ==================== KPI DETAIL DATA ====================
 
   /// Detail data for "Sold & Completed Bikes" KPI popup
-  Future<List<Map<String, dynamic>>> getSoldAndCompletedBikesDetail() async {
+  Future<List<Map<String, dynamic>>> getSoldAndCompletedBikesDetail({DateTime? start, DateTime? end}) async {
     final List<Map<String, dynamic>> result = [];
 
     // 1. Cash-sold bikes
-    final soldBikes = await _isar.bikes
+    var soldBikesQuery = _isar.bikes
         .filter()
-        .statusEqualTo(BikeStatusEnum.sold)
-        .findAll();
+        .statusEqualTo(BikeStatusEnum.sold);
+    
+    if (start != null) soldBikesQuery = soldBikesQuery.dateAddedGreaterThan(start, include: true);
+    if (end != null) soldBikesQuery = soldBikesQuery.dateAddedLessThan(end, include: true);
+
+    final soldBikes = await soldBikesQuery.findAll();
 
     for (final bike in soldBikes) {
       final sale = await _isar.sales
@@ -799,10 +831,14 @@ class InvestmentService extends GetxService {
     }
 
     // 2. Completed installment bikes
-    final installmentBikes = await _isar.bikes
+    var installmentBikesQuery = _isar.bikes
         .filter()
-        .statusEqualTo(BikeStatusEnum.installment)
-        .findAll();
+        .statusEqualTo(BikeStatusEnum.installment);
+    
+    if (start != null) installmentBikesQuery = installmentBikesQuery.dateAddedGreaterThan(start, include: true);
+    if (end != null) installmentBikesQuery = installmentBikesQuery.dateAddedLessThan(end, include: true);
+
+    final installmentBikes = await installmentBikesQuery.findAll();
 
     for (final bike in installmentBikes) {
       final contract = await _isar.installmentContracts
@@ -834,14 +870,18 @@ class InvestmentService extends GetxService {
   }
 
   /// Detail data for "Active Inventory Bikes" KPI popup
-  Future<List<Map<String, dynamic>>> getActiveInventoryBikesDetail() async {
+  Future<List<Map<String, dynamic>>> getActiveInventoryBikesDetail({DateTime? start, DateTime? end}) async {
     final List<Map<String, dynamic>> result = [];
 
     // 1. Available bikes
-    final availableBikes = await _isar.bikes
+    var availableBikesQuery = _isar.bikes
         .filter()
-        .statusEqualTo(BikeStatusEnum.available)
-        .findAll();
+        .statusEqualTo(BikeStatusEnum.available);
+    
+    if (start != null) availableBikesQuery = availableBikesQuery.dateAddedGreaterThan(start, include: true);
+    if (end != null) availableBikesQuery = availableBikesQuery.dateAddedLessThan(end, include: true);
+
+    final availableBikes = await availableBikesQuery.findAll();
 
     for (final bike in availableBikes) {
       result.add({
@@ -859,10 +899,14 @@ class InvestmentService extends GetxService {
     }
 
     // 2. On-installment bikes (active contracts only)
-    final installmentBikes = await _isar.bikes
+    var installmentBikesQuery = _isar.bikes
         .filter()
-        .statusEqualTo(BikeStatusEnum.installment)
-        .findAll();
+        .statusEqualTo(BikeStatusEnum.installment);
+    
+    if (start != null) installmentBikesQuery = installmentBikesQuery.dateAddedGreaterThan(start, include: true);
+    if (end != null) installmentBikesQuery = installmentBikesQuery.dateAddedLessThan(end, include: true);
+
+    final installmentBikes = await installmentBikesQuery.findAll();
 
     for (final bike in installmentBikes) {
       final contract = await _isar.installmentContracts
@@ -890,14 +934,15 @@ class InvestmentService extends GetxService {
   }
 
   /// Detail data for "Maintenance" KPI popup
-  Future<List<Map<String, dynamic>>> getMaintenanceDetail() async {
-    final records = await _isar.investments
+  Future<List<Map<String, dynamic>>> getMaintenanceDetail({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
         .typeEqualTo(InvestmentTypeEnum.withdrawal)
         .and()
-        .categoryEqualTo(InvestmentCategoryEnum.maintenance)
-        .sortByDateDesc()
-        .findAll();
+        .categoryEqualTo(InvestmentCategoryEnum.maintenance);
+        
+    final filtered = _applyDateRange(query, start, end);
+    final records = await filtered.sortByDateDesc().findAll();
 
     return records.map((inv) => {
       'date': inv.date,
@@ -907,8 +952,8 @@ class InvestmentService extends GetxService {
   }
 
   /// Detail data for "Total Expenses" KPI popup (maintenance + expense + personal use)
-  Future<List<Map<String, dynamic>>> getExpensesDetail() async {
-    final records = await _isar.investments
+  Future<List<Map<String, dynamic>>> getExpensesDetail({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments
         .filter()
         .typeEqualTo(InvestmentTypeEnum.withdrawal)
         .and()
@@ -917,9 +962,10 @@ class InvestmentService extends GetxService {
             .or()
             .categoryEqualTo(InvestmentCategoryEnum.expense)
             .or()
-            .categoryEqualTo(InvestmentCategoryEnum.personalUse))
-        .sortByDateDesc()
-        .findAll();
+            .categoryEqualTo(InvestmentCategoryEnum.personalUse));
+            
+    final filtered = _applyDateRange(query, start, end);
+    final records = await filtered.sortByDateDesc().findAll();
 
     return records.map((inv) {
       String typeLabel = 'Expense';
@@ -938,15 +984,20 @@ class InvestmentService extends GetxService {
   }
 
   /// Detail data for "Future Payments" KPI popup
-  Future<List<Map<String, dynamic>>> getFuturePaymentsDetail() async {
-    final activeContracts = await _isar.installmentContracts
+  Future<List<Map<String, dynamic>>> getFuturePaymentsDetail({DateTime? start, DateTime? end}) async {
+    var activeContractsQuery = _isar.installmentContracts
         .filter()
-        .statusEqualTo(ContractStatusEnum.active)
-        .or()
-        .statusEqualTo(ContractStatusEnum.partiallyPaid)
-        .or()
-        .statusEqualTo(ContractStatusEnum.overdue)
-        .findAll();
+        .group((q) => q
+            .statusEqualTo(ContractStatusEnum.active)
+            .or()
+            .statusEqualTo(ContractStatusEnum.partiallyPaid)
+            .or()
+            .statusEqualTo(ContractStatusEnum.overdue));
+
+    if (start != null) activeContractsQuery = activeContractsQuery.contractDateGreaterThan(start, include: true);
+    if (end != null) activeContractsQuery = activeContractsQuery.contractDateLessThan(end, include: true);
+
+    final activeContracts = await activeContractsQuery.findAll();
 
     final List<Map<String, dynamic>> result = [];
 
@@ -981,15 +1032,20 @@ class InvestmentService extends GetxService {
   }
 
   /// Detail data for "Future Profit" KPI popup
-  Future<List<Map<String, dynamic>>> getFutureProfitDetail() async {
-    final activeContracts = await _isar.installmentContracts
+  Future<List<Map<String, dynamic>>> getFutureProfitDetail({DateTime? start, DateTime? end}) async {
+    var activeContractsQuery = _isar.installmentContracts
         .filter()
-        .statusEqualTo(ContractStatusEnum.active)
-        .or()
-        .statusEqualTo(ContractStatusEnum.partiallyPaid)
-        .or()
-        .statusEqualTo(ContractStatusEnum.overdue)
-        .findAll();
+        .group((q) => q
+            .statusEqualTo(ContractStatusEnum.active)
+            .or()
+            .statusEqualTo(ContractStatusEnum.partiallyPaid)
+            .or()
+            .statusEqualTo(ContractStatusEnum.overdue));
+
+    if (start != null) activeContractsQuery = activeContractsQuery.contractDateGreaterThan(start, include: true);
+    if (end != null) activeContractsQuery = activeContractsQuery.contractDateLessThan(end, include: true);
+
+    final activeContracts = await activeContractsQuery.findAll();
 
     final List<Map<String, dynamic>> result = [];
 
@@ -1029,9 +1085,11 @@ class InvestmentService extends GetxService {
 
   // ==================== HISTORY ====================
 
-  /// Returns investment history sorted by date descending
-  Future<List<Investment>> getInvestmentHistory() async {
-    return await _isar.investments.where().sortByDateDesc().findAll();
+  /// Returns investment history filtered by date and sorted by date descending
+  Future<List<Investment>> getInvestmentHistory({DateTime? start, DateTime? end}) async {
+    final query = _isar.investments.filter().idGreaterThan(-1);
+    final filtered = _applyDateRange(query, start, end);
+    return await filtered.sortByDateDesc().findAll();
   }
 
   // ==================== DATA MIGRATION ====================

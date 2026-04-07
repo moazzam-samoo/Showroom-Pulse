@@ -21,6 +21,8 @@ class AppNotificationDialog {
     required VoidCallback onConfirm,
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
+    Color? confirmColor,
+    IconData icon = LucideIcons.helpCircle,
   }) {
     final isDark = Get.isDarkMode;
     final dialogBg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
@@ -38,7 +40,7 @@ class AppNotificationDialog {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.helpCircle, color: primaryColor, size: 64),
+              Icon(icon, color: confirmColor ?? primaryColor, size: 64),
               const SizedBox(height: 24),
               Text(
                 title,
@@ -84,7 +86,7 @@ class AppNotificationDialog {
                         onConfirm();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
+                        backgroundColor: confirmColor ?? primaryColor,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,

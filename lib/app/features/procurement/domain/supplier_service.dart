@@ -8,12 +8,10 @@ import 'package:tahir_showroom/app/data/models/purchase_batch.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
 
 class SupplierService extends GetxService {
-  late Isar _isar;
+  Isar get _isar => Get.find<IsarService>().isar;
   final FileService _fileService = Get.find<FileService>();
 
   Future<SupplierService> init() async {
-    final isarService = Get.find<IsarService>();
-    _isar = isarService.isar;
     return this;
   }
 

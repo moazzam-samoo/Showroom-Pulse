@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -11,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/constants/app_assets.dart';
 import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/core/services/file_service.dart';
 import 'package:tahir_showroom/app/data/models/app_settings.dart';
 import 'package:tahir_showroom/app/features/customers/data/repositories/customer_repository.dart';
 import 'package:tahir_showroom/app/data/models/supplier.dart';
@@ -498,15 +498,23 @@ class ReportPdfService {
   }
 
   Future<String> _getDownloadsPath() async {
-    if (Platform.isWindows) {
-      final userProfile = Platform.environment['USERPROFILE'];
-      if (userProfile != null) {
-        final downloadsDir = Directory('$userProfile\\Downloads');
-        if (await downloadsDir.exists()) return downloadsDir.path;
-      }
+    final isarService = Get.find<IsarService>();
+    final isar = isarService.isar;
+    final fileService = Get.find<FileService>();
+    final settings = await isar.appSettings.where().findFirst() ?? AppSettings();
+    
+    // 1. Use User Configured Path
+    if (settings.pdfDownloadLocation != null && settings.pdfDownloadLocation!.isNotEmpty) {
+      final customDir = Directory('${settings.pdfDownloadLocation}\\Al-Tahir Autos PDFs');
+      if (!await customDir.exists()) await customDir.create(recursive: true);
+      return customDir.path;
     }
-    final dir = await getApplicationDocumentsDirectory();
-    return dir.path;
+
+    // 2. Default to Documents Path (User's specific request)
+    final documentsPath = fileService.documentsPath;
+    final defaultDir = Directory('$documentsPath\\Al-Tahir Autos PDFs');
+    if (!await defaultDir.exists()) await defaultDir.create(recursive: true);
+    return defaultDir.path;
   }
 
   // ═══════════════════════════════════════════════════════════

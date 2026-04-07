@@ -62,6 +62,52 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           ),
         ),
         _divider(isDark),
+        
+        // PDF Download Location
+        _buildInfoRow(
+          title: 'PDF Download Location',
+          subtitle: 'Choose where all generated PDF reports will be saved',
+          icon: LucideIcons.fileDown,
+          isDark: isDark,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Text(
+                  controller.settings.value?.pdfDownloadLocation ?? 'Default (Documents Folder)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    fontFamily: 'Consolas',
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              if (controller.settings.value?.pdfDownloadLocation != null)
+                IconButton(
+                  onPressed: controller.resetPdfDownloadLocation,
+                  icon: const Icon(LucideIcons.rotateCcw, size: 16),
+                  tooltip: 'Reset to Default',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              const SizedBox(width: AppSpacing.sm),
+              ElevatedButton(
+                onPressed: controller.updatePdfDownloadLocation,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Browse', style: TextStyle(fontSize: 11)),
+              ),
+            ],
+          ),
+        ),
+        _divider(isDark),
 
         // Export
         Container(

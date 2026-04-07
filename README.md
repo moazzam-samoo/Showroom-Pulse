@@ -27,12 +27,13 @@
 ## ✨ Key Features
 
 - 📦 **Smart Inventory Management**: Track vehicles by Chassis and Engine numbers. Real-time availability status for Available, Sold, or Installment stock.
-- 💳 **Advanced Installment Tracking**: Automate monthly EMI calculations, generate dynamic payment schedules, and alert staff about overdue accounts.
+- 💳 **Advanced Installment Tracking**: Automate monthly EMI calculations, generate dynamic payment schedules, alert staff about overdue accounts, and utilize intuitive number formatting for inputs.
 - 💰 **Comprehensive POS**: Seamlessly handle Cash and Installment sales workflows with automated contract generation.
-- 📊 **Real-time Analytics Dashboard**: Executive KPIs, total asset value breakdowns, performance metrics, and graphical reporting.
+- 📊 **Real-time Analytics Dashboard**: Executive KPIs, total asset value breakdowns, performance metrics, and professional graphical reporting.
 - 🌙 **Adaptive UI/UX**: State-of-the-art Glassmorphism UI, smooth micro-animations, and full Dark/Light mode support.
-- 🖨️ **Invoice & PDF Generation**: Built-in native print support for cash receipts, installment contracts, and system reports.
+- 🖨️ **Invoice & PDF Generation**: Built-in native print support for cash receipts, installment contracts, and refined system reports.
 - 🔒 **Backup & Recovery**: Automated `.tahir` ZIP backups via Isar database dumping.
+- 🛡️ **Hardware Security**: Device locking mechanisms via strict physical MAC address verification to prevent unauthorized duplication and execution.
 
 ---
 
@@ -108,19 +109,25 @@ flutter run -d windows
 
 ### Building for Production
 
-To compile a highly optimized, release-ready Windows executable:
+To compile a highly optimized, obfuscated, and release-ready Windows executable (which secures hardcoded lists like authorized MAC addresses):
 
 ```bash
-flutter build windows
+flutter build windows --release --obfuscate --split-debug-info=build/debug-info
 ```
-The compiled `.exe` and associated DLL dependencies will be located in `build\windows\runner\Release\`.
+The compiled `.exe` and associated DLL dependencies will be located in `build\windows\x64\runner\Release\`.
+
+#### Creating the Installer
+Once the production build is finished, use **Inno Setup** to package the application.
+Open `installer/setup.iss` in Inno Setup Compiler and compile it to generate a redistributable `ALTahirShowroom_Setup_v1.0.0.exe` file.
 
 ---
 
 ## 🔐 Security & Privacy Practices
 
 This software handles sensitive financial and customer metadata.
+- **Hardware Authorization (MAC Licensing)**: The application checks the system's physical MAC address during the startup sequence. Unauthorized devices are physically gated behind an inescapable lock screen protecting all local APIs from initializing.
 - **No Hardcoded Credentials**: Administrative credentials are obfuscated and stored securely using `crypto` SHA-256 protocols. They are never kept statically in the source code.
+- **Binary Obfuscation**: Production binaries are compiled using Flutter's native obfuscation protocols (`--obfuscate`) to scramble reverse-engineering attempts of sensitive constants.
 - **Local Isolation**: All customer profiles and business ledgers are securely stored locally inside the application's secure application data directories using Isar indexing.
 - **DO NOT commit `*.isar` or `.tahir` backup files to version control.**
 

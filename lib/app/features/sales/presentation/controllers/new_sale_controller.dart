@@ -99,8 +99,7 @@ class NewSaleController extends GetxController {
   late final CustomerRepository _customerRepository;
 
   void _initCustomerRepository() {
-    final isarService = Get.find<IsarService>();
-    _customerRepository = CustomerRepository(isarService.isar);
+    _customerRepository = CustomerRepository();
   }
 
   Future<void> searchCustomers(String query) async {
