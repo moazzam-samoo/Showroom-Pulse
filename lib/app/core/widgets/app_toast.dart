@@ -89,7 +89,7 @@ class AppToast {
       margin: const EdgeInsets.only(top: 24, left: 24, right: 24),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       maxWidth: 400,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(milliseconds: 1700),
       isDismissible: true,
       dismissDirection: DismissDirection.horizontal,
       boxShadows: [

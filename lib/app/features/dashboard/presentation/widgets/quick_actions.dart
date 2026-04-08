@@ -56,10 +56,10 @@ class QuickActionsRow extends StatelessWidget {
         },
       ),
       QuickActionButton(
-        label: 'Record Payment',
-        icon: LucideIcons.wallet,
+        label: 'Investment',
+        icon: LucideIcons.piggyBank,
         color: const Color(0xFFF59E0B),
-        onTap: () => Get.offNamed('/installments'),
+        onTap: () => Get.offNamed('/investment'),
       ),
       QuickActionButton(
         label: 'Add Expense',
