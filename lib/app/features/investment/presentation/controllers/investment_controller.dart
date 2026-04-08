@@ -6,7 +6,10 @@ import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 
-enum InvestmentFilter { all, weekly, monthly, yearly, custom }
+enum InvestmentFilter { all, weekly, monthly, lastMonth, yearly, custom, specificMonth }
+enum InvestmentTransactionType { all, installment, investment, purchase, withdrawal, sale }
+
+
 
 class InvestmentController extends GetxController {
   final InvestmentService _investmentService = Get.find<InvestmentService>();
@@ -51,6 +54,13 @@ class InvestmentController extends GetxController {
   final investmentHistory = <Investment>[].obs;
   final filteredHistory = <Investment>[].obs;
   final kpiFilter = ''.obs;
+  
+  // ── New Filter State ──
+  final selectedTimeRange = InvestmentFilter.all.obs;
+  final selectedTransactionType = InvestmentTransactionType.all.obs;
+  final selectedSpecificMonth = DateTime.now().obs; // For both custom picker and dropdown
+
+
 
   // Search
   final searchQuery = ''.obs;
@@ -148,6 +158,34 @@ class InvestmentController extends GetxController {
     _applyFilters();
   }
 
+  // ── Filter Setters ──
+  void setTimeFilter(InvestmentFilter value) {
+    selectedTimeRange.value = value;
+    _applyFilters();
+  }
+
+  void setTransactionType(InvestmentTransactionType value) {
+    selectedTransactionType.value = value;
+    _applyFilters();
+  }
+
+  void setSpecificMonth(DateTime date, {bool isFromDropdown = false}) {
+    selectedSpecificMonth.value = date;
+    selectedTimeRange.value = isFromDropdown ? InvestmentFilter.specificMonth : InvestmentFilter.custom;
+    _applyFilters();
+  }
+
+  void resetFilters() {
+    selectedTimeRange.value = InvestmentFilter.all;
+    selectedTransactionType.value = InvestmentTransactionType.all;
+    kpiFilter.value = '';
+    searchQuery.value = '';
+    searchController.clear();
+    _applyFilters();
+  }
+
+
+
   void setKpiFilter(String kpiName) {
     if (kpiFilter.value == kpiName) {
       kpiFilter.value = ''; // Toggle off if clicked again
@@ -163,7 +201,73 @@ class InvestmentController extends GetxController {
   void _applyFilters() {
     List<Investment> temp = investmentHistory.toList();
 
-    // 1. Apply Search Filter
+    // ── 1. Time Range Filter ──
+    final now = DateTime.now();
+    switch (selectedTimeRange.value) {
+      case InvestmentFilter.weekly:
+        // Week starts from Monday
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        final start = DateTime(weekStart.year, weekStart.month, weekStart.day);
+        temp = temp.where((inv) => inv.date.isAfter(start) || inv.date.isAtSameMomentAs(start)).toList();
+        break;
+      case InvestmentFilter.monthly:
+        final start = DateTime(now.year, now.month, 1);
+        temp = temp.where((inv) => inv.date.isAfter(start) || inv.date.isAtSameMomentAs(start)).toList();
+        break;
+      case InvestmentFilter.lastMonth:
+        // Handle year wrap around (e.g. if now is January, last month is December of previous year)
+        final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
+        final lastMonthVal = now.month == 1 ? 12 : now.month - 1;
+        final start = DateTime(lastMonthYear, lastMonthVal, 1);
+        final end = DateTime(now.year, now.month, 1);
+        temp = temp.where((inv) =>
+          (inv.date.isAfter(start) || inv.date.isAtSameMomentAs(start)) &&
+          inv.date.isBefore(end)
+        ).toList();
+        break;
+      case InvestmentFilter.yearly:
+        final start = DateTime(now.year, 1, 1);
+        temp = temp.where((inv) => inv.date.isAfter(start) || inv.date.isAtSameMomentAs(start)).toList();
+        break;
+      case InvestmentFilter.custom:
+      case InvestmentFilter.specificMonth:
+        final sm = selectedSpecificMonth.value;
+        final start = DateTime(sm.year, sm.month, 1);
+        final end = DateTime(sm.year, sm.month + 1, 1);
+        temp = temp.where((inv) =>
+          (inv.date.isAfter(start) || inv.date.isAtSameMomentAs(start)) &&
+          inv.date.isBefore(end)
+        ).toList();
+        break;
+      case InvestmentFilter.all:
+        break;
+    }
+
+
+
+    // ── 2. Transaction Type Filter ──
+    switch (selectedTransactionType.value) {
+      case InvestmentTransactionType.installment:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.installmentPayment).toList();
+        break;
+      case InvestmentTransactionType.investment:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.capitalInjection).toList();
+        break;
+      case InvestmentTransactionType.purchase:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikePurchase).toList();
+        break;
+      case InvestmentTransactionType.withdrawal:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.withdrawal).toList();
+        break;
+      case InvestmentTransactionType.sale:
+        temp = temp.where((inv) => inv.type == InvestmentTypeEnum.bikeSale).toList();
+        break;
+      case InvestmentTransactionType.all:
+        break;
+    }
+
+
+    // ── 3. Apply Search Filter ──
     if (searchQuery.value.isNotEmpty) {
       final query = searchQuery.value.toLowerCase();
       final queryNoCommas = query.replaceAll(',', '');
@@ -181,7 +285,7 @@ class InvestmentController extends GetxController {
       }).toList();
     }
 
-    // 2. Apply KPI Filter
+    // ── 4. Apply KPI Filter ──
     if (kpiFilter.value.isNotEmpty) {
       final kpi = kpiFilter.value;
       if (kpi == 'Total Invested') {
@@ -212,6 +316,7 @@ class InvestmentController extends GetxController {
 
     filteredHistory.assignAll(temp);
   }
+
 
 
   Future<void> saveCapitalInvestment() async {

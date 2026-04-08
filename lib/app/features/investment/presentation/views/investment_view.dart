@@ -8,6 +8,8 @@ import 'package:tahir_showroom/app/features/investment/presentation/widgets/inve
 import 'package:tahir_showroom/app/features/investment/presentation/widgets/kpi_detail_popups.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/investment_intro_overlay.dart';
+import 'package:tahir_showroom/app/features/investment/presentation/widgets/investment_filter_bar.dart';
+
 
 class InvestmentView extends GetView<InvestmentController> {
   const InvestmentView({super.key});
@@ -253,10 +255,28 @@ class InvestmentView extends GetView<InvestmentController> {
                                       color: textCol,
                                     ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  Obx(() => Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '${controller.filteredHistory.length} Records',
+                                      style: const TextStyle(
+                                        color: Color(0xFF6366F1),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )),
                                   const Spacer(),
                                 ],
                               ),
                               const SizedBox(height: 16),
+                              const InvestmentFilterBar(),
+
                             ],
                           ),
                         ),

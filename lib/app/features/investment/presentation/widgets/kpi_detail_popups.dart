@@ -840,10 +840,17 @@ class _KpiDetailReactiveWrapperState<T> extends State<_KpiDetailReactiveWrapper<
         return (start: DateTime(now.year, 1, 1), end: now);
       case InvestmentFilter.all:
         return (start: null, end: null);
+      case InvestmentFilter.lastMonth:
+        // Handle year wrap around
+        final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
+        final lastMonthVal = now.month == 1 ? 12 : now.month - 1;
+        return (start: DateTime(lastMonthYear, lastMonthVal, 1), end: DateTime(now.year, now.month, 1));
+      case InvestmentFilter.specificMonth:
       case InvestmentFilter.custom:
         final start = DateTime(_selectedYear.value, _selectedMonth.value, 1);
         final end = DateTime(_selectedYear.value, _selectedMonth.value + 1, 0, 23, 59, 59);
         return (start: start, end: end);
+
     }
   }
 
