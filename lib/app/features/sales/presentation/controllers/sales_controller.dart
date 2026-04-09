@@ -213,6 +213,8 @@ class SalesController extends GetxController {
         'bikeEngineNumber': data.bikeEngineNumber,
         'bikeCondition': data.bikeCondition?.name, // 'newBike' or 'usedBike'
         'bikeRegistrationNumber': data.bikeRegistrationNumber,
+        'isCustomerPapersDelivered': data.isCustomerPapersDelivered,
+        'customerPapersPromisedDate': data.customerPapersPromisedDate,
         'isCash': data.isCash,
         'amountPaid': data.amountPaid,
         'sellingPrice': data.sellingPrice,

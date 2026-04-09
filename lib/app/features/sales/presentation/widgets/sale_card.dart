@@ -72,8 +72,15 @@ class SaleCardData {
   // Installment completion status
   final bool isInstallmentCompleted;
 
+  // Document tracking
+  final bool isCustomerPapersDelivered;
+  final String? customerPapersPromisedDate;
+
   // Sale ID for deletion/updates
   final int id;
+
+  // Bike ID (for paper status updates)
+  final int bikeId;
 
   SaleCardData({
     required this.id,
@@ -109,6 +116,9 @@ class SaleCardData {
     this.discountAmount = 0.0,
     this.discountPercentage = 0.0,
     this.isInstallmentCompleted = false,
+    this.isCustomerPapersDelivered = false,
+    this.customerPapersPromisedDate,
+    this.bikeId = 0,
   });
 }
 
@@ -368,6 +378,72 @@ class _SaleCardState extends State<SaleCard> {
                                 '- ${data.discountPercentage.toStringAsFixed(1)}%',
                                 style: GoogleFonts.outfit(
                                   fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      // Papers Pending tag (red warning)
+                      if (!data.isCustomerPapersDelivered) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.redAccent.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.fileWarning, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Papers Pending',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      // Papers Collected tag (green confirmation)
+                      if (data.isCustomerPapersDelivered) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16A34A),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF16A34A).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.fileCheck, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Papers Collected',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),

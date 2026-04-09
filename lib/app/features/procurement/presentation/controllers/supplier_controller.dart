@@ -29,6 +29,10 @@ class BikeEntry {
   File? imageFile;
   Bike? existingBike; // For Edit Mode
 
+  // Vehicle Paper Tracking
+  bool isPapersReceived = false;
+  DateTime? papersPromisedDate;
+
   // Focus Nodes for Keyboard Navigation
   final FocusNode engineFocus = FocusNode();
   final FocusNode chassisFocus = FocusNode();
@@ -183,6 +187,8 @@ class SupplierController extends GetxController {
         ..color = bike.color
         ..modelYear = bike.modelYear
         ..purchasePrice = bike.purchasePrice
+        ..isPapersReceived = bike.isCustomerPapersDelivered
+        ..papersPromisedDate = bike.customerPapersPromisedDate
         ..existingBike = bike; 
         
       bikeEntries.add(entry);
@@ -497,7 +503,9 @@ class SupplierController extends GetxController {
           ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null
           ..cashSalePrice = 0 
           ..status = BikeStatusEnum.available
-          ..investmentAmount = entry.purchasePrice;
+          ..investmentAmount = entry.purchasePrice
+          ..isCustomerPapersDelivered = entry.isPapersReceived
+          ..customerPapersPromisedDate = entry.isPapersReceived ? null : entry.papersPromisedDate;
 
         if (entry.imageFile != null) {
           bike.imageFilename = await _fileService.saveBikeImage(entry.imageFile!, entry.engineNumber);
@@ -566,7 +574,9 @@ class SupplierController extends GetxController {
           ..color = entry.color
           ..modelYear = entry.modelYear ?? entry.existingBike?.modelYear ?? DateTime.now().year
           ..purchasePrice = entry.purchasePrice
-          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null;
+          ..registrationNumber = entry.condition == BikeConditionEnum.usedBike ? entry.registrationNumber : null
+          ..isCustomerPapersDelivered = entry.isPapersReceived
+          ..customerPapersPromisedDate = entry.isPapersReceived ? null : entry.papersPromisedDate;
           
         // Handle Image Update
         if (entry.imageFile != null) {

@@ -174,6 +174,13 @@ class _BikeCardState extends State<BikeCard> {
                       ),
                     ),
 
+                    // Papers Status Badge (bottom right of image)
+                    Positioned(
+                      bottom: 6,
+                      right: 8,
+                      child: _buildPapersBadge(widget.bike),
+                    ),
+
                     // Actions (Hide in compact mode)
                     if (!widget.compact)
                       Positioned(
@@ -453,6 +460,68 @@ class _BikeCardState extends State<BikeCard> {
     if (status.name.toLowerCase() == 'installment') return 'INSTALLMENT (RESERVED)';
     if (status.name.toLowerCase() == 'sold') return 'SOLD (NOT AVAILABLE)';
     return status.name.toUpperCase();
+  }
+
+  Widget _buildPapersBadge(Bike bike) {
+    // Only show badge if papers are NOT collected (pending/overdue)
+    if (bike.isDealerPapersCollected) {
+      // Show a subtle green "Papers ✓" for collected
+      if (widget.compact) return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        decoration: BoxDecoration(
+          color: Colors.green.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4)],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(LucideIcons.fileCheck, size: 10, color: Colors.white),
+            const SizedBox(width: 3),
+            const Text('Papers ✓', style: TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      );
+    }
+
+    // Determine if overdue
+    final now = DateTime.now();
+    final isOverdue = bike.dealerPapersPromisedDate != null &&
+        bike.dealerPapersPromisedDate!.isBefore(now);
+    final badgeColor = isOverdue ? Colors.red : Colors.orange;
+    final badgeLabel = isOverdue ? 'Papers Overdue' : 'Papers Pending';
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: widget.compact ? 5 : 8,
+        vertical: widget.compact ? 2 : 3,
+      ),
+      decoration: BoxDecoration(
+        color: badgeColor.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.35), blurRadius: 4)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isOverdue ? LucideIcons.alertCircle : LucideIcons.fileWarning,
+            size: widget.compact ? 8 : 10,
+            color: Colors.white,
+          ),
+          SizedBox(width: widget.compact ? 2 : 3),
+          Text(
+            widget.compact ? (isOverdue ? 'Overdue' : 'Pending') : badgeLabel,
+            style: TextStyle(
+              fontSize: widget.compact ? 8 : 9,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildColorIndicator(String colorName, bool compact, bool isDark) {

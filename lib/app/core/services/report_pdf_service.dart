@@ -865,6 +865,14 @@ class ReportPdfService {
                 _infoRow('Engine No:', saleData['bikeEngineNumber']),
                 if (saleData['bikeCondition'] == 'usedBike' && saleData['bikeRegistrationNumber'] != null)
                   _infoRow('Reg. No:', saleData['bikeRegistrationNumber']),
+                
+                // Papers Update
+                pw.SizedBox(height: 4),
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 4),
+                _infoRow('Papers Status:', saleData['isCustomerPapersDelivered'] == true ? 'Delivered' : 'Pending'),
+                if (saleData['isCustomerPapersDelivered'] != true && saleData['customerPapersPromisedDate'] != null)
+                  _infoRow('Promised Date:', saleData['customerPapersPromisedDate']),
               ],
             ),
           ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tahir_showroom/app/core/utils/data_refresher.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:tahir_showroom/app/core/services/file_service.dart';
@@ -143,7 +144,9 @@ class InventoryController extends GetxController {
         ..registrationNumber = data['registrationNumber']
         ..purchasePrice = data['purchasePrice']
         ..cashSalePrice = data['sellingPrice']
-        ..status = BikeStatusEnum.available;
+        ..status = BikeStatusEnum.available
+        ..isDealerPapersCollected = data['isDealerPapersCollected'] ?? false
+        ..dealerPapersPromisedDate = data['dealerPapersPromisedDate'];
 
       // Handle Image
       if (data['imageFile'] != null && data['imageFile'] is File) {
@@ -250,7 +253,8 @@ class InventoryController extends GetxController {
         }
       }
       
-      await loadBikes(); // Refresh list
+      await loadBikes();
+      DataRefresher.refreshAll();
       
       // Trigger Investment UI Refresh
       if (Get.isRegistered<InvestmentController>()) {
@@ -317,6 +321,8 @@ class InventoryController extends GetxController {
       bike.purchaserName = data['purchaserName'];
       bike.purchaserPhone = data['purchaserPhone'];
       bike.purchaserCnic = data['purchaserCnic'];
+      bike.isDealerPapersCollected = data['isDealerPapersCollected'] ?? false;
+      bike.dealerPapersPromisedDate = data['dealerPapersPromisedDate'];
 
       // Handle Image update if new file provided
       if (data['imageFile'] != null && data['imageFile'] is File) {
@@ -360,7 +366,8 @@ class InventoryController extends GetxController {
 
       await _inventoryService.updateBike(bike);
       
-      await loadBikes(); // Refresh list
+      await loadBikes();
+      DataRefresher.refreshAll();
       
       // Trigger Investment UI Refresh
       if (Get.isRegistered<InvestmentController>()) {
@@ -381,6 +388,57 @@ class InventoryController extends GetxController {
     }
   }
 
+  /// Quick update just for Dealer Papers
+  Future<void> markDealerPapersCollected(Bike bike) async {
+    try {
+      bike.isDealerPapersCollected = true;
+      bike.dealerPapersPromisedDate = null;
+      await _inventoryService.updateBike(bike);
+      bikes.refresh();
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Dealer papers marked as collected.',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to update papers status: $e',
+      );
+    }
+  }
+
+  /// Quick update just for Customer Papers
+  Future<void> markCustomerPapersDelivered(Bike bike) async {
+    try {
+      bike.isCustomerPapersDelivered = true;
+      bike.customerPapersPromisedDate = null;
+      await _inventoryService.updateBike(bike);
+      bikes.refresh();
+      AppToast.showSuccess(
+        title: 'Success',
+        message: 'Customer papers marked as delivered.',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to update papers status: $e',
+      );
+    }
+  }
+
+  /// Update paper status fields without forcing "collected/delivered = true"
+  /// Used when user updates the promised date or unchecks the checkbox.
+  Future<void> updateBikePaperStatus(Bike bike) async {
+    try {
+      await _inventoryService.updateBike(bike);
+      bikes.refresh();
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Failed to save paper status: $e',
+      );
+    }
+  }
 
   /// Pick an image from gallery/filesystem
   Future<File?> pickImage() async {

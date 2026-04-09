@@ -43,103 +43,123 @@ const BikeSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _BikeconditionEnumValueMap,
     ),
-    r'dateAdded': PropertySchema(
+    r'customerPapersPromisedDate': PropertySchema(
       id: 5,
+      name: r'customerPapersPromisedDate',
+      type: IsarType.dateTime,
+    ),
+    r'dateAdded': PropertySchema(
+      id: 6,
       name: r'dateAdded',
       type: IsarType.dateTime,
     ),
     r'dateSold': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'dateSold',
       type: IsarType.dateTime,
     ),
+    r'dealerPapersPromisedDate': PropertySchema(
+      id: 8,
+      name: r'dealerPapersPromisedDate',
+      type: IsarType.dateTime,
+    ),
     r'engineNumber': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'engineNumber',
       type: IsarType.string,
     ),
     r'fundedByLoan': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'fundedByLoan',
       type: IsarType.double,
     ),
     r'fundedByOther': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'fundedByOther',
       type: IsarType.double,
     ),
     r'fundedByPartnership': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'fundedByPartnership',
       type: IsarType.double,
     ),
     r'fundedByPersonal': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'fundedByPersonal',
       type: IsarType.double,
     ),
     r'imageFilename': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'imageFilename',
       type: IsarType.string,
     ),
     r'investmentAmount': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'investmentAmount',
       type: IsarType.double,
     ),
+    r'isCustomerPapersDelivered': PropertySchema(
+      id: 16,
+      name: r'isCustomerPapersDelivered',
+      type: IsarType.bool,
+    ),
+    r'isDealerPapersCollected': PropertySchema(
+      id: 17,
+      name: r'isDealerPapersCollected',
+      type: IsarType.bool,
+    ),
     r'model': PropertySchema(
-      id: 14,
+      id: 18,
       name: r'model',
       type: IsarType.string,
     ),
     r'modelYear': PropertySchema(
-      id: 15,
+      id: 19,
       name: r'modelYear',
       type: IsarType.long,
     ),
     r'notes': PropertySchema(
-      id: 16,
+      id: 20,
       name: r'notes',
       type: IsarType.string,
     ),
     r'purchasePrice': PropertySchema(
-      id: 17,
+      id: 21,
       name: r'purchasePrice',
       type: IsarType.double,
     ),
     r'purchaserCnic': PropertySchema(
-      id: 18,
+      id: 22,
       name: r'purchaserCnic',
       type: IsarType.string,
     ),
     r'purchaserCnicBackFilename': PropertySchema(
-      id: 19,
+      id: 23,
       name: r'purchaserCnicBackFilename',
       type: IsarType.string,
     ),
     r'purchaserCnicFrontFilename': PropertySchema(
-      id: 20,
+      id: 24,
       name: r'purchaserCnicFrontFilename',
       type: IsarType.string,
     ),
     r'purchaserName': PropertySchema(
-      id: 21,
+      id: 25,
       name: r'purchaserName',
       type: IsarType.string,
     ),
     r'purchaserPhone': PropertySchema(
-      id: 22,
+      id: 26,
       name: r'purchaserPhone',
       type: IsarType.string,
     ),
     r'registrationNumber': PropertySchema(
-      id: 23,
+      id: 27,
       name: r'registrationNumber',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 24,
+      id: 28,
       name: r'status',
       type: IsarType.byte,
       enumMap: _BikestatusEnumValueMap,
@@ -279,26 +299,30 @@ void _bikeSerialize(
   writer.writeString(offsets[2], object.chassisNumber);
   writer.writeString(offsets[3], object.color);
   writer.writeByte(offsets[4], object.condition.index);
-  writer.writeDateTime(offsets[5], object.dateAdded);
-  writer.writeDateTime(offsets[6], object.dateSold);
-  writer.writeString(offsets[7], object.engineNumber);
-  writer.writeDouble(offsets[8], object.fundedByLoan);
-  writer.writeDouble(offsets[9], object.fundedByOther);
-  writer.writeDouble(offsets[10], object.fundedByPartnership);
-  writer.writeDouble(offsets[11], object.fundedByPersonal);
-  writer.writeString(offsets[12], object.imageFilename);
-  writer.writeDouble(offsets[13], object.investmentAmount);
-  writer.writeString(offsets[14], object.model);
-  writer.writeLong(offsets[15], object.modelYear);
-  writer.writeString(offsets[16], object.notes);
-  writer.writeDouble(offsets[17], object.purchasePrice);
-  writer.writeString(offsets[18], object.purchaserCnic);
-  writer.writeString(offsets[19], object.purchaserCnicBackFilename);
-  writer.writeString(offsets[20], object.purchaserCnicFrontFilename);
-  writer.writeString(offsets[21], object.purchaserName);
-  writer.writeString(offsets[22], object.purchaserPhone);
-  writer.writeString(offsets[23], object.registrationNumber);
-  writer.writeByte(offsets[24], object.status.index);
+  writer.writeDateTime(offsets[5], object.customerPapersPromisedDate);
+  writer.writeDateTime(offsets[6], object.dateAdded);
+  writer.writeDateTime(offsets[7], object.dateSold);
+  writer.writeDateTime(offsets[8], object.dealerPapersPromisedDate);
+  writer.writeString(offsets[9], object.engineNumber);
+  writer.writeDouble(offsets[10], object.fundedByLoan);
+  writer.writeDouble(offsets[11], object.fundedByOther);
+  writer.writeDouble(offsets[12], object.fundedByPartnership);
+  writer.writeDouble(offsets[13], object.fundedByPersonal);
+  writer.writeString(offsets[14], object.imageFilename);
+  writer.writeDouble(offsets[15], object.investmentAmount);
+  writer.writeBool(offsets[16], object.isCustomerPapersDelivered);
+  writer.writeBool(offsets[17], object.isDealerPapersCollected);
+  writer.writeString(offsets[18], object.model);
+  writer.writeLong(offsets[19], object.modelYear);
+  writer.writeString(offsets[20], object.notes);
+  writer.writeDouble(offsets[21], object.purchasePrice);
+  writer.writeString(offsets[22], object.purchaserCnic);
+  writer.writeString(offsets[23], object.purchaserCnicBackFilename);
+  writer.writeString(offsets[24], object.purchaserCnicFrontFilename);
+  writer.writeString(offsets[25], object.purchaserName);
+  writer.writeString(offsets[26], object.purchaserPhone);
+  writer.writeString(offsets[27], object.registrationNumber);
+  writer.writeByte(offsets[28], object.status.index);
 }
 
 Bike _bikeDeserialize(
@@ -315,27 +339,31 @@ Bike _bikeDeserialize(
   object.condition =
       _BikeconditionValueEnumMap[reader.readByteOrNull(offsets[4])] ??
           BikeConditionEnum.newBike;
-  object.dateAdded = reader.readDateTime(offsets[5]);
-  object.dateSold = reader.readDateTimeOrNull(offsets[6]);
-  object.engineNumber = reader.readString(offsets[7]);
-  object.fundedByLoan = reader.readDouble(offsets[8]);
-  object.fundedByOther = reader.readDouble(offsets[9]);
-  object.fundedByPartnership = reader.readDouble(offsets[10]);
-  object.fundedByPersonal = reader.readDouble(offsets[11]);
+  object.customerPapersPromisedDate = reader.readDateTimeOrNull(offsets[5]);
+  object.dateAdded = reader.readDateTime(offsets[6]);
+  object.dateSold = reader.readDateTimeOrNull(offsets[7]);
+  object.dealerPapersPromisedDate = reader.readDateTimeOrNull(offsets[8]);
+  object.engineNumber = reader.readString(offsets[9]);
+  object.fundedByLoan = reader.readDouble(offsets[10]);
+  object.fundedByOther = reader.readDouble(offsets[11]);
+  object.fundedByPartnership = reader.readDouble(offsets[12]);
+  object.fundedByPersonal = reader.readDouble(offsets[13]);
   object.id = id;
-  object.imageFilename = reader.readStringOrNull(offsets[12]);
-  object.investmentAmount = reader.readDouble(offsets[13]);
-  object.model = reader.readString(offsets[14]);
-  object.modelYear = reader.readLong(offsets[15]);
-  object.notes = reader.readStringOrNull(offsets[16]);
-  object.purchasePrice = reader.readDouble(offsets[17]);
-  object.purchaserCnic = reader.readStringOrNull(offsets[18]);
-  object.purchaserCnicBackFilename = reader.readStringOrNull(offsets[19]);
-  object.purchaserCnicFrontFilename = reader.readStringOrNull(offsets[20]);
-  object.purchaserName = reader.readStringOrNull(offsets[21]);
-  object.purchaserPhone = reader.readStringOrNull(offsets[22]);
-  object.registrationNumber = reader.readStringOrNull(offsets[23]);
-  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[24])] ??
+  object.imageFilename = reader.readStringOrNull(offsets[14]);
+  object.investmentAmount = reader.readDouble(offsets[15]);
+  object.isCustomerPapersDelivered = reader.readBool(offsets[16]);
+  object.isDealerPapersCollected = reader.readBool(offsets[17]);
+  object.model = reader.readString(offsets[18]);
+  object.modelYear = reader.readLong(offsets[19]);
+  object.notes = reader.readStringOrNull(offsets[20]);
+  object.purchasePrice = reader.readDouble(offsets[21]);
+  object.purchaserCnic = reader.readStringOrNull(offsets[22]);
+  object.purchaserCnicBackFilename = reader.readStringOrNull(offsets[23]);
+  object.purchaserCnicFrontFilename = reader.readStringOrNull(offsets[24]);
+  object.purchaserName = reader.readStringOrNull(offsets[25]);
+  object.purchaserPhone = reader.readStringOrNull(offsets[26]);
+  object.registrationNumber = reader.readStringOrNull(offsets[27]);
+  object.status = _BikestatusValueEnumMap[reader.readByteOrNull(offsets[28])] ??
       BikeStatusEnum.available;
   return object;
 }
@@ -359,44 +387,52 @@ P _bikeDeserializeProp<P>(
       return (_BikeconditionValueEnumMap[reader.readByteOrNull(offset)] ??
           BikeConditionEnum.newBike) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
-    case 6:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
     case 7:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 8:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 10:
       return (reader.readDouble(offset)) as P;
     case 11:
       return (reader.readDouble(offset)) as P;
     case 12:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 13:
       return (reader.readDouble(offset)) as P;
     case 14:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 15:
-      return (reader.readLong(offset)) as P;
-    case 16:
-      return (reader.readStringOrNull(offset)) as P;
-    case 17:
       return (reader.readDouble(offset)) as P;
+    case 16:
+      return (reader.readBool(offset)) as P;
+    case 17:
+      return (reader.readBool(offset)) as P;
     case 18:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 19:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 20:
       return (reader.readStringOrNull(offset)) as P;
     case 21:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 22:
       return (reader.readStringOrNull(offset)) as P;
     case 23:
       return (reader.readStringOrNull(offset)) as P;
     case 24:
+      return (reader.readStringOrNull(offset)) as P;
+    case 25:
+      return (reader.readStringOrNull(offset)) as P;
+    case 26:
+      return (reader.readStringOrNull(offset)) as P;
+    case 27:
+      return (reader.readStringOrNull(offset)) as P;
+    case 28:
       return (_BikestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           BikeStatusEnum.available) as P;
     default:
@@ -1309,6 +1345,80 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'customerPapersPromisedDate',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'customerPapersPromisedDate',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'customerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'customerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'customerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      customerPapersPromisedDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'customerPapersPromisedDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterFilterCondition> dateAddedEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -1423,6 +1533,80 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'dateSold',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dealerPapersPromisedDate',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dealerPapersPromisedDate',
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dealerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dealerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dealerPapersPromisedDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      dealerPapersPromisedDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dealerPapersPromisedDate',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2066,6 +2250,26 @@ extension BikeQueryFilter on QueryBuilder<Bike, Bike, QFilterCondition> {
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      isCustomerPapersDeliveredEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isCustomerPapersDelivered',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterFilterCondition>
+      isDealerPapersCollectedEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isDealerPapersCollected',
+        value: value,
       ));
     });
   }
@@ -3486,6 +3690,19 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByCustomerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerPapersPromisedDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy>
+      sortByCustomerPapersPromisedDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerPapersPromisedDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByDateAdded() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateAdded', Sort.asc);
@@ -3507,6 +3724,18 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByDateSoldDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateSold', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByDealerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dealerPapersPromisedDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByDealerPapersPromisedDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dealerPapersPromisedDate', Sort.desc);
     });
   }
 
@@ -3591,6 +3820,30 @@ extension BikeQuerySortBy on QueryBuilder<Bike, Bike, QSortBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> sortByInvestmentAmountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'investmentAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByIsCustomerPapersDelivered() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCustomerPapersDelivered', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByIsCustomerPapersDeliveredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCustomerPapersDelivered', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByIsDealerPapersCollected() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDealerPapersCollected', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> sortByIsDealerPapersCollectedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDealerPapersCollected', Sort.desc);
     });
   }
 
@@ -3789,6 +4042,19 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByCustomerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerPapersPromisedDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy>
+      thenByCustomerPapersPromisedDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'customerPapersPromisedDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByDateAdded() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateAdded', Sort.asc);
@@ -3810,6 +4076,18 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByDateSoldDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dateSold', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByDealerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dealerPapersPromisedDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByDealerPapersPromisedDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dealerPapersPromisedDate', Sort.desc);
     });
   }
 
@@ -3906,6 +4184,30 @@ extension BikeQuerySortThenBy on QueryBuilder<Bike, Bike, QSortThenBy> {
   QueryBuilder<Bike, Bike, QAfterSortBy> thenByInvestmentAmountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'investmentAmount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByIsCustomerPapersDelivered() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCustomerPapersDelivered', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByIsCustomerPapersDeliveredDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isCustomerPapersDelivered', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByIsDealerPapersCollected() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDealerPapersCollected', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QAfterSortBy> thenByIsDealerPapersCollectedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isDealerPapersCollected', Sort.desc);
     });
   }
 
@@ -4078,6 +4380,12 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
     });
   }
 
+  QueryBuilder<Bike, Bike, QDistinct> distinctByCustomerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'customerPapersPromisedDate');
+    });
+  }
+
   QueryBuilder<Bike, Bike, QDistinct> distinctByDateAdded() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dateAdded');
@@ -4087,6 +4395,12 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
   QueryBuilder<Bike, Bike, QDistinct> distinctByDateSold() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dateSold');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByDealerPapersPromisedDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dealerPapersPromisedDate');
     });
   }
 
@@ -4132,6 +4446,18 @@ extension BikeQueryWhereDistinct on QueryBuilder<Bike, Bike, QDistinct> {
   QueryBuilder<Bike, Bike, QDistinct> distinctByInvestmentAmount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'investmentAmount');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByIsCustomerPapersDelivered() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isCustomerPapersDelivered');
+    });
+  }
+
+  QueryBuilder<Bike, Bike, QDistinct> distinctByIsDealerPapersCollected() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isDealerPapersCollected');
     });
   }
 
@@ -4253,6 +4579,13 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Bike, DateTime?, QQueryOperations>
+      customerPapersPromisedDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'customerPapersPromisedDate');
+    });
+  }
+
   QueryBuilder<Bike, DateTime, QQueryOperations> dateAddedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dateAdded');
@@ -4262,6 +4595,13 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
   QueryBuilder<Bike, DateTime?, QQueryOperations> dateSoldProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dateSold');
+    });
+  }
+
+  QueryBuilder<Bike, DateTime?, QQueryOperations>
+      dealerPapersPromisedDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dealerPapersPromisedDate');
     });
   }
 
@@ -4304,6 +4644,19 @@ extension BikeQueryProperty on QueryBuilder<Bike, Bike, QQueryProperty> {
   QueryBuilder<Bike, double, QQueryOperations> investmentAmountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'investmentAmount');
+    });
+  }
+
+  QueryBuilder<Bike, bool, QQueryOperations>
+      isCustomerPapersDeliveredProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isCustomerPapersDelivered');
+    });
+  }
+
+  QueryBuilder<Bike, bool, QQueryOperations> isDealerPapersCollectedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isDealerPapersCollected');
     });
   }
 

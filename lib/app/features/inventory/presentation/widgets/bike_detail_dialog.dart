@@ -7,12 +7,14 @@ import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/core/utils/data_refresher.dart';
 
-class BikeDetailDialog extends StatelessWidget {
+class BikeDetailDialog extends StatefulWidget {
   final Bike bike;
-  final dynamic sale; // Could be Sale model
-  final dynamic customer; // Could be Customer model
-  final dynamic supplier; // Could be Supplier model
+  final dynamic sale;
+  final dynamic customer;
+  final dynamic supplier;
 
   const BikeDetailDialog({
     super.key,
@@ -21,6 +23,58 @@ class BikeDetailDialog extends StatelessWidget {
     this.customer,
     this.supplier,
   });
+
+  @override
+  State<BikeDetailDialog> createState() => _BikeDetailDialogState();
+}
+
+class _BikeDetailDialogState extends State<BikeDetailDialog> {
+  // Local mutable paper state (initialized from bike in initState)
+  late bool _isDealerPapersCollected;
+  late DateTime? _dealerPapersPromisedDate;
+  late bool _isCustomerPapersDelivered;
+  late DateTime? _customerPapersPromisedDate;
+
+  // Getter shorthand
+  Bike get bike => widget.bike;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDealerPapersCollected = bike.isDealerPapersCollected;
+    _dealerPapersPromisedDate = bike.dealerPapersPromisedDate;
+    _isCustomerPapersDelivered = bike.isCustomerPapersDelivered;
+    _customerPapersPromisedDate = bike.customerPapersPromisedDate;
+  }
+
+  Future<void> _saveDealerPaperStatus() async {
+    if (!Get.isRegistered<InventoryController>()) return;
+    final ctrl = Get.find<InventoryController>();
+    if (_isDealerPapersCollected) {
+      await ctrl.markDealerPapersCollected(bike);
+      DataRefresher.refreshAll();
+    } else {
+      // Update with new promised date
+      bike.isDealerPapersCollected = false;
+      bike.dealerPapersPromisedDate = _dealerPapersPromisedDate;
+      await ctrl.updateBikePaperStatus(bike);
+      DataRefresher.refreshAll();
+    }
+  }
+
+  Future<void> _saveCustomerPaperStatus() async {
+    if (!Get.isRegistered<InventoryController>()) return;
+    final ctrl = Get.find<InventoryController>();
+    if (_isCustomerPapersDelivered) {
+      await ctrl.markCustomerPapersDelivered(bike);
+      DataRefresher.refreshAll();
+    } else {
+      bike.isCustomerPapersDelivered = false;
+      bike.customerPapersPromisedDate = _customerPapersPromisedDate;
+      await ctrl.updateBikePaperStatus(bike);
+      DataRefresher.refreshAll();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +91,7 @@ class BikeDetailDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 800, maxHeight: 700),
         child: Column(
           children: [
-            // Header
             _buildHeader(headerColor, isDark),
-
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.xl),
@@ -50,13 +101,11 @@ class BikeDetailDialog extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left: Bike Image
                         Expanded(
                           flex: 4,
                           child: _buildBikeImage(isDark),
                         ),
                         const SizedBox(width: AppSpacing.xl),
-                        // Right: Key Attributes
                         Expanded(
                           flex: 5,
                           child: _buildAttributes(isDark),
@@ -67,7 +116,6 @@ class BikeDetailDialog extends StatelessWidget {
                     const Divider(),
                     const SizedBox(height: AppSpacing.xl),
 
-                    // Purchase & Sale Info
                     if (bike.status == BikeStatusEnum.available)
                       _buildUnifiedPurchaseInfo(isDark)
                     else
@@ -102,18 +150,13 @@ class BikeDetailDialog extends StatelessWidget {
           const Icon(LucideIcons.bike, color: Colors.white, size: 28),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${bike.model} ${bike.brand}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            child: Text(
+              '${bike.model} ${bike.brand}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           IconButton(
@@ -193,10 +236,10 @@ class BikeDetailDialog extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: _getStatusColor(bike.status).withOpacity(0.1),
+            color: _getStatusColor(bike.status).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppRadius.full),
             border: Border.all(
-                color: _getStatusColor(bike.status).withOpacity(0.3)),
+                color: _getStatusColor(bike.status).withValues(alpha: 0.3)),
           ),
           child: Text(
             bike.status.toString().split('.').last.toUpperCase(),
@@ -217,12 +260,14 @@ class BikeDetailDialog extends StatelessWidget {
       icon: LucideIcons.shoppingBag,
       isDark: isDark,
       children: [
-        _buildDetailRow('Dealer/Supplier:', supplier?.name ?? 'N/A', isDark),
+        _buildDetailRow('Dealer/Supplier:', widget.supplier?.name ?? 'N/A', isDark),
         _buildDetailRow('Purchase Date:',
             DateFormat('dd MMM yyyy').format(bike.dateAdded), isDark),
         _buildDetailRow('Purchase Price:',
             'Rs. ${NumberFormat('#,###').format(bike.purchasePrice)}', isDark,
             textColor: Colors.redAccent),
+        const SizedBox(height: AppSpacing.sm),
+        _buildInteractivePaperRow(isDark, isDealer: true),
       ],
     );
   }
@@ -239,9 +284,9 @@ class BikeDetailDialog extends StatelessWidget {
           _buildDetailRow('Phone:', bike.purchaserPhone!, isDark),
         if (bike.purchaserCnic != null && bike.purchaserCnic!.isNotEmpty)
           _buildDetailRow('CNIC:', bike.purchaserCnic!, isDark),
-        if (supplier != null)
-          _buildDetailRow('Supplier:', supplier?.name ?? 'N/A', isDark),
-        
+        if (widget.supplier != null)
+          _buildDetailRow('Supplier:', widget.supplier?.name ?? 'N/A', isDark),
+
         const Divider(height: 16),
         _buildDetailRow('Purchase Date:',
             DateFormat('dd MMM yyyy').format(bike.dateAdded), isDark),
@@ -250,7 +295,10 @@ class BikeDetailDialog extends StatelessWidget {
             textColor: Colors.redAccent),
         _buildDetailRow('Expected Price:',
             'Rs. ${NumberFormat('#,###').format(bike.cashSalePrice)}', isDark),
-        
+
+        const SizedBox(height: AppSpacing.md),
+        _buildInteractivePaperRow(isDark, isDealer: true),
+
         const SizedBox(height: AppSpacing.md),
         if (bike.purchaserCnicFrontFilename != null ||
             bike.purchaserCnicBackFilename != null)
@@ -262,21 +310,18 @@ class BikeDetailDialog extends StatelessWidget {
   Widget _buildSaleInfo(bool isDark) {
     final bool isAvailable = bike.status == BikeStatusEnum.available;
     final String title = isAvailable ? 'Dealer / Source Details' : 'Sale Details';
-    final IconData icon =
-        isAvailable ? LucideIcons.truck : LucideIcons.userCheck;
+    final IconData icon = isAvailable ? LucideIcons.truck : LucideIcons.userCheck;
     final String labelPrefix = isAvailable ? 'Dealer' : 'Purchaser';
 
-    // Logic for values:
-    // If available, show intake details (dealer); if sold/installment, prioritize customer record.
     final String? pName = isAvailable
         ? bike.purchaserName
-        : (customer?.fullName ?? bike.purchaserName);
+        : (widget.customer?.fullName ?? bike.purchaserName);
     final String? pPhone = isAvailable
         ? bike.purchaserPhone
-        : (customer?.phoneNumber ?? bike.purchaserPhone);
+        : (widget.customer?.phoneNumber ?? bike.purchaserPhone);
     final String? pCnic = isAvailable
         ? bike.purchaserCnic
-        : (customer?.cnicNumber ?? bike.purchaserCnic);
+        : (widget.customer?.cnicNumber ?? bike.purchaserCnic);
 
     return _buildInfoSection(
       title: title,
@@ -305,6 +350,221 @@ class BikeDetailDialog extends StatelessWidget {
                 color: isDark ? Colors.grey[500] : Colors.grey[600],
                 fontStyle: FontStyle.italic),
           ),
+        if (!isAvailable) ...[
+          const SizedBox(height: AppSpacing.md),
+          _buildInteractivePaperRow(isDark, isDealer: false),
+        ],
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────────────
+  // Interactive Paper Row: Checkbox + Status chip + Date picker
+  // ─────────────────────────────────────────────────────
+  Widget _buildInteractivePaperRow(bool isDark, {required bool isDealer}) {
+    final bool isCollected = isDealer ? _isDealerPapersCollected : _isCustomerPapersDelivered;
+    final DateTime? promisedDate = isDealer ? _dealerPapersPromisedDate : _customerPapersPromisedDate;
+    final String label = isDealer ? 'Dealer Papers' : 'Customer Docs';
+
+    final now = DateTime.now();
+    Color statusColor;
+    String statusText;
+    IconData statusIcon;
+
+    if (isCollected) {
+      statusColor = Colors.green;
+      statusText = 'Collected';
+      statusIcon = LucideIcons.checkCircle;
+    } else if (promisedDate != null && promisedDate.isBefore(now)) {
+      statusColor = Colors.red;
+      statusText = 'OVERDUE';
+      statusIcon = LucideIcons.alertCircle;
+    } else if (promisedDate != null) {
+      statusColor = Colors.orange;
+      statusText = 'Due ${DateFormat('dd MMM').format(promisedDate)}';
+      statusIcon = LucideIcons.clock;
+    } else {
+      statusColor = Colors.orange;
+      statusText = 'Pending';
+      statusIcon = LucideIcons.fileWarning;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Row 1: Label + Checkbox + Status chip
+        Row(
+          children: [
+            Icon(LucideIcons.fileText, size: 16,
+                color: isDark ? Colors.grey[400] : Colors.grey[600]),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            // Checkbox
+            Transform.scale(
+              scale: 0.9,
+              child: Checkbox(
+                value: isCollected,
+                onChanged: (val) async {
+                  setState(() {
+                    if (isDealer) {
+                      _isDealerPapersCollected = val ?? false;
+                      if (val == true) _dealerPapersPromisedDate = null;
+                    } else {
+                      _isCustomerPapersDelivered = val ?? false;
+                      if (val == true) _customerPapersPromisedDate = null;
+                    }
+                  });
+                  if (isDealer) {
+                    await _saveDealerPaperStatus();
+                  } else {
+                    await _saveCustomerPaperStatus();
+                  }
+                },
+                activeColor: Colors.green,
+                checkColor: Colors.white,
+                side: BorderSide(
+                  color: isCollected ? Colors.green : statusColor,
+                  width: 2,
+                ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4)),
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Status Chip
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(statusIcon, size: 12, color: statusColor),
+                  const SizedBox(width: 4),
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // Row 2: Date picker button (only when unchecked)
+        if (!isCollected) ...[
+          const SizedBox(height: 6),
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: promisedDate ?? DateTime.now().add(const Duration(days: 7)),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (picked != null) {
+                setState(() {
+                  if (isDealer) {
+                    _dealerPapersPromisedDate = picked;
+                  } else {
+                    _customerPapersPromisedDate = picked;
+                  }
+                });
+                if (isDealer) {
+                  await _saveDealerPaperStatus();
+                } else {
+                  await _saveCustomerPaperStatus();
+                }
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: (promisedDate != null && promisedDate.isBefore(DateTime.now()))
+                    ? Colors.red.withValues(alpha: 0.08)
+                    : Colors.orange.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: (promisedDate != null && promisedDate.isBefore(DateTime.now()))
+                      ? Colors.red.withValues(alpha: 0.4)
+                      : Colors.orange.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.calendarDays,
+                    size: 14,
+                    color: (promisedDate != null && promisedDate.isBefore(DateTime.now()))
+                        ? Colors.red
+                        : Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    promisedDate == null
+                        ? 'Tap to set promised date'
+                        : 'Promised: ${DateFormat('dd MMM yyyy').format(promisedDate)}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: (promisedDate != null && promisedDate.isBefore(DateTime.now()))
+                          ? Colors.red
+                          : Colors.orange,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(LucideIcons.pencil, size: 12,
+                      color: (promisedDate != null && promisedDate.isBefore(DateTime.now()))
+                          ? Colors.red
+                          : Colors.orange),
+                ],
+              ),
+            ),
+          ),
+
+          // Overdue warning banner
+          if (promisedDate != null && promisedDate.isBefore(DateTime.now())) ...[
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.alertTriangle, size: 12, color: Colors.red),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Papers are ${DateTime.now().difference(promisedDate).inDays} day(s) overdue!',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ],
     );
   }
@@ -346,7 +606,7 @@ class BikeDetailDialog extends StatelessWidget {
             child: Image.file(
               File(path),
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Icon(LucideIcons.image, size: 16),
+              errorBuilder: (_, __, ___) => const Icon(LucideIcons.image, size: 16),
             ),
           ),
         ),

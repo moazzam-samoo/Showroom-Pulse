@@ -49,6 +49,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
 
   String? _selectedColor;
   BikeConditionEnum _selectedCondition = BikeConditionEnum.newBike;
+  bool _isDealerPapersCollected = false;
+  DateTime? _dealerPapersPromisedDate;
 
   File? _selectedImage;
   String? _existingImagePath;
@@ -68,6 +70,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
   final _modelYearFocus = FocusNode();
   final _regNumberFocus = FocusNode();
   final _submitFocus = FocusNode();
+  final _papersPromisedFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
     if (event is KeyDownEvent) {
@@ -175,6 +178,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _selectedColor = widget.bike.color;
     _selectedCondition = widget.bike.condition;
     _existingImagePath = widget.bike.imageFilename;
+    _isDealerPapersCollected = widget.bike.isDealerPapersCollected;
+    _dealerPapersPromisedDate = widget.bike.dealerPapersPromisedDate;
   }
 
   @override
@@ -205,6 +210,7 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
     _modelYearFocus.dispose();
     _regNumberFocus.dispose();
     _submitFocus.dispose();
+    _papersPromisedFocus.dispose();
     super.dispose();
   }
 
@@ -248,6 +254,8 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
           'purchaserCnic': _purchaserCnicController.text.trim(),
           'modelYear': int.tryParse(_modelYearController.text) ?? widget.bike.modelYear,
           'registrationNumber': _selectedCondition == BikeConditionEnum.usedBike ? _regNumberController.text.trim() : null,
+          'isDealerPapersCollected': _isDealerPapersCollected,
+          'dealerPapersPromisedDate': _dealerPapersPromisedDate,
         });
         Navigator.pop(context);
       }
@@ -441,7 +449,16 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
                           ),
                         ],
                       ),
- const SizedBox(height: 24),
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        title: 'Paper Tracking',
+                        color: sectionHeaderBg,
+                        textColor: sectionHeaderText,
+                        children: [
+                          _buildPaperStatusGroup(isDark, inputBg, inputBorder, labelColor),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                       // Image Upload
                       BlinkingFocusBuilder(
                         focusNode: _imageFocus,
@@ -855,6 +872,91 @@ class _EditBikeDialogState extends State<EditBikeDialog> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPaperStatusGroup(bool isDark, Color inputBg, Color inputBorder, Color? labelColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Papers Collected from Dealer?',
+              style: TextStyle(
+                color: labelColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            Switch(
+              value: _isDealerPapersCollected,
+              onChanged: (val) => setState(() => _isDealerPapersCollected = val),
+              activeColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+            ),
+          ],
+        ),
+        if (!_isDealerPapersCollected) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              SizedBox(
+                width: 80,
+                child: Text(
+                  'Promised On',
+                  style: TextStyle(
+                    color: labelColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: BlinkingFocusBuilder(
+                  focusNode: _papersPromisedFocus,
+                  child: InkWell(
+                    onTap: () async {
+                      _papersPromisedFocus.requestFocus();
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _dealerPapersPromisedDate ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          _dealerPapersPromisedDate = picked;
+                        });
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: inputBg,
+                        border: Border.all(color: inputBorder),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _dealerPapersPromisedDate == null
+                            ? 'Select Date'
+                            : '${_dealerPapersPromisedDate!.day}/${_dealerPapersPromisedDate!.month}/${_dealerPapersPromisedDate!.year}',
+                        style: TextStyle(
+                          color: _dealerPapersPromisedDate == null
+                              ? (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)
+                              : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

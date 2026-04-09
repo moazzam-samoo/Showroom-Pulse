@@ -93,6 +93,14 @@ class Bike {
   String? purchaserCnic;
   String? purchaserCnicFrontFilename;
   String? purchaserCnicBackFilename;
+
+  // -- Document Tracking (Dealer Side) --
+  bool isDealerPapersCollected = false;
+  DateTime? dealerPapersPromisedDate;
+
+  // -- Document Tracking (Customer Side) --
+  bool isCustomerPapersDelivered = false;
+  DateTime? customerPapersPromisedDate;
 }
 
 // Authored by: Moazzam Samoo

@@ -193,6 +193,10 @@ class NewSaleController extends GetxController {
   // Processing State
   final isProcessingSale = false.obs;
 
+  // Document Tracking
+  final isCustomerPapersDelivered = false.obs;
+  final customerPapersPromisedDate = Rxn<DateTime>();
+
   // Available Inventory
   final availableBikes = <Bike>[].obs;
 
@@ -314,6 +318,8 @@ class NewSaleController extends GetxController {
       }
       _calculateInstallment();
     });
+    // Recalculate immediately when user switches to Installment mode
+    ever(saleType, (_) => _calculateInstallment());
     ever(
         selectedBike,
         (_) =>
@@ -759,6 +765,8 @@ class NewSaleController extends GetxController {
         bike.status = saleType.value == SaleType.cash
             ? BikeStatusEnum.sold
             : BikeStatusEnum.installment;
+        bike.isCustomerPapersDelivered = isCustomerPapersDelivered.value;
+        bike.customerPapersPromisedDate = customerPapersPromisedDate.value;
         await _isarService.isar.bikes.put(bike);
 
         // C. Create Sale Record

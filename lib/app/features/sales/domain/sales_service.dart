@@ -191,6 +191,11 @@ class SalesService {
       discountAmount: sale.discountAmount,
       discountPercentage: sale.discountPercentage,
       isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
+      isCustomerPapersDelivered: bike.isCustomerPapersDelivered,
+      customerPapersPromisedDate: bike.customerPapersPromisedDate != null 
+          ? '${bike.customerPapersPromisedDate!.day.toString().padLeft(2, '0')}/${bike.customerPapersPromisedDate!.month.toString().padLeft(2, '0')}/${bike.customerPapersPromisedDate!.year}'
+          : null,
+      bikeId: bike.id,
     );
   }
 

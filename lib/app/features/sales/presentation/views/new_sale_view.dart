@@ -12,6 +12,7 @@ import 'package:tahir_showroom/app/features/sales/presentation/widgets/bike_sele
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/customer_form_step.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/payment_plan_step.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/witness_form_step.dart';
+import 'package:tahir_showroom/app/features/sales/presentation/widgets/customer_paper_tracking_step.dart';
 
 class NewSaleView extends GetView<NewSaleController> {
   const NewSaleView({super.key});
@@ -97,6 +98,17 @@ class NewSaleView extends GetView<NewSaleController> {
             const AppCard(
               child: PaymentPlanStep(),
             ),
+            const SizedBox(height: AppSpacing.xl),
+
+            // Section 5: Document Tracking
+            _buildSectionHeader(context, '5. Document Tracking', LucideIcons.fileText),
+            const SizedBox(height: AppSpacing.sm),
+            const AppCard(
+              child: Padding(
+                padding: EdgeInsets.all(AppSpacing.md),
+                child: CustomerPaperTrackingStep(),
+              ),
+            ),
             
             const SizedBox(height: 100), // Space for FAB
           ].animate(interval: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
@@ -168,7 +180,7 @@ class NewSaleView extends GetView<NewSaleController> {
     
     // Check payment
     if (controller.cashAmountController.text.isNotEmpty) return true;
-    if (controller.downPaymentController.text.isNotEmpty) return true;
+    if (controller.downPaymentController.text.isNotEmpty && controller.downPaymentController.text != '0') return true;
     
     return false;
   }

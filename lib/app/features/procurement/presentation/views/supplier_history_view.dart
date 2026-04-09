@@ -21,6 +21,9 @@ import 'package:tahir_showroom/app/core/utils/cnic_input_formatter.dart';
 import 'package:tahir_showroom/app/core/widgets/blinking_focus_builder.dart';
 import 'package:tahir_showroom/app/core/widgets/app_text_field.dart';
 import 'package:tahir_showroom/app/core/services/file_service.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/core/utils/data_refresher.dart';
 
 class SupplierHistoryView extends GetView<SupplierController> {
   final GlobalKey? addSupplierKey;
@@ -708,96 +711,9 @@ class SupplierHistoryView extends GetView<SupplierController> {
   }
 
   void _showBikeDetailDialog(BuildContext context, Bike bike, DateTime purchaseDate) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-    final fileService = Get.find<FileService>();
-    final currencyFormat = NumberFormat.currency(locale: 'en_PK', symbol: 'Rs ', decimalDigits: 0);
-
     Get.dialog(
-      Dialog(
-        backgroundColor: bgColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        child: Container(
-          width: 450,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Bike Image or Icon
-              Container(
-                width: double.infinity,
-                height: 180,
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkElevated : Colors.grey[100],
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: bike.imageFilename != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: Image.file(
-                          File(fileService.getBikeImagePathSync(bike.imageFilename!)),
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Icon(LucideIcons.bike, size: 64, color: primaryColor.withOpacity(0.5)),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                '${bike.model} ${bike.brand}',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${bike.color} • ${bike.modelYear}',
-                style: TextStyle(fontSize: 14, color: textSecondary),
-              ),
-              const Divider(height: 32),
-              
-              _buildDetailInfoRow(LucideIcons.hash, 'Engine No.', bike.engineNumber, textSecondary, textPrimary, isMono: true),
-              const SizedBox(height: 10),
-              _buildDetailInfoRow(LucideIcons.hash, 'Chassis No.', bike.chassisNumber, textSecondary, textPrimary, isMono: true),
-              if (bike.condition == BikeConditionEnum.usedBike) ...[
-                const SizedBox(height: 10),
-                _buildDetailInfoRow(
-                  LucideIcons.hash, 
-                  'Reg. No.', 
-                  (bike.registrationNumber != null && bike.registrationNumber!.isNotEmpty) 
-                      ? bike.registrationNumber! 
-                      : 'N/A', 
-                  textSecondary, 
-                  textPrimary, 
-                  isMono: true
-                ),
-              ],
-              const SizedBox(height: 10),
-              _buildDetailInfoRow(LucideIcons.list, 'Condition', bike.condition.name == 'usedBike' ? 'USED' : 'NEW', textSecondary, textPrimary),
-              const SizedBox(height: 10),
-              _buildDetailInfoRow(LucideIcons.calendar, 'Purchase Date', DateFormat('dd MMM yyyy').format(purchaseDate), textSecondary, textPrimary),
-              const SizedBox(height: 10),
-              _buildDetailInfoRow(LucideIcons.banknote, 'Purchase Price', currencyFormat.format(bike.purchasePrice), textSecondary, primaryColor, isBold: true),
-              
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Get.back(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-                  ),
-                  child: const Text('Okay', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      _BikeDetailDialog(bike: bike, purchaseDate: purchaseDate),
+      barrierDismissible: true,
     );
   }
 
@@ -1115,3 +1031,478 @@ class SupplierHistoryView extends GetView<SupplierController> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Bike Detail Dialog — StatefulWidget with Vehicle Papers tracking
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BikeDetailDialog extends StatefulWidget {
+  final Bike bike;
+  final DateTime purchaseDate;
+
+  const _BikeDetailDialog({required this.bike, required this.purchaseDate});
+
+  @override
+  State<_BikeDetailDialog> createState() => _BikeDetailDialogState();
+}
+
+class _BikeDetailDialogState extends State<_BikeDetailDialog> {
+  late bool _papersReceived;
+  DateTime? _promisedDate;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _papersReceived = widget.bike.isDealerPapersCollected;
+    _promisedDate = widget.bike.dealerPapersPromisedDate;
+  }
+
+  Future<void> _savePaperStatus() async {
+    setState(() => _isSaving = true);
+    try {
+      final isar = Get.find<IsarService>().isar;
+      await isar.writeTxn(() async {
+        final fresh = await isar.bikes.get(widget.bike.id);
+        if (fresh != null) {
+          fresh.isDealerPapersCollected = _papersReceived;
+          fresh.dealerPapersPromisedDate = _papersReceived ? null : _promisedDate;
+          await isar.bikes.put(fresh);
+        }
+      });
+      if (Get.isRegistered<InventoryController>()) {
+        Get.find<InventoryController>().loadBikes();
+        DataRefresher.refreshAll();
+      }
+    } catch (e) {
+      debugPrint('Error saving paper status: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final surfaceColor = isDark ? AppColors.darkElevated : Colors.grey[50]!;
+    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final borderColor = isDark ? AppColors.darkBorder : Colors.grey.shade200;
+    final fileService = Get.find<FileService>();
+    final currencyFormat = NumberFormat.currency(locale: 'en_PK', symbol: 'Rs ', decimalDigits: 0);
+
+    final isOverdue = !_papersReceived &&
+        _promisedDate != null &&
+        _promisedDate!.isBefore(DateTime.now());
+
+    return Dialog(
+      backgroundColor: bgColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      child: SingleChildScrollView(
+        child: Container(
+          width: 460,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+
+              // ── Bike Image ──────────────────────────────────────────────
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: Container(
+                  width: double.infinity,
+                  height: 180,
+                  color: isDark ? const Color(0xFF1A2035) : Colors.grey[100],
+                  child: widget.bike.imageFilename != null
+                      ? Image.file(
+                          File(fileService.getBikeImagePathSync(widget.bike.imageFilename!)),
+                          fit: BoxFit.cover,
+                        )
+                      : Center(
+                          child: Icon(LucideIcons.bike, size: 64, color: primaryColor.withOpacity(0.4)),
+                        ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Title ────────────────────────────────────────────────────
+              Text(
+                '${widget.bike.model} ${widget.bike.brand}',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  '${widget.bike.color} • ${widget.bike.modelYear}',
+                  style: TextStyle(fontSize: 13, color: textSecondary),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Info Rows ─────────────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  children: [
+                    _infoRow(LucideIcons.hash, 'Engine No.', widget.bike.engineNumber, textSecondary, textPrimary, isMono: true),
+                    _divider(borderColor),
+                    _infoRow(LucideIcons.hash, 'Chassis No.', widget.bike.chassisNumber, textSecondary, textPrimary, isMono: true),
+                    if (widget.bike.condition == BikeConditionEnum.usedBike) ...[
+                      _divider(borderColor),
+                      _infoRow(
+                        LucideIcons.hash,
+                        'Reg. No.',
+                        (widget.bike.registrationNumber?.isNotEmpty == true)
+                            ? widget.bike.registrationNumber!
+                            : 'N/A',
+                        textSecondary, textPrimary, isMono: true,
+                      ),
+                    ],
+                    _divider(borderColor),
+                    _infoRow(LucideIcons.list, 'Condition',
+                        widget.bike.condition.name == 'usedBike' ? 'USED' : 'NEW',
+                        textSecondary, textPrimary),
+                    _divider(borderColor),
+                    _infoRow(LucideIcons.calendar, 'Purchase Date',
+                        DateFormat('dd MMM yyyy').format(widget.purchaseDate),
+                        textSecondary, textPrimary),
+                    _divider(borderColor),
+                    _infoRow(LucideIcons.banknote, 'Purchase Price',
+                        currencyFormat.format(widget.bike.purchasePrice),
+                        textSecondary, primaryColor, isBold: true),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Vehicle Papers Section ────────────────────────────────────
+              Container(
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: isOverdue
+                        ? Colors.red.withOpacity(0.5)
+                        : _papersReceived
+                            ? Colors.green.withOpacity(0.4)
+                            : Colors.orange.withOpacity(0.4),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // Section header
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _papersReceived
+                            ? Colors.green.withOpacity(0.08)
+                            : isOverdue
+                                ? Colors.red.withOpacity(0.08)
+                                : Colors.orange.withOpacity(0.06),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.md)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            LucideIcons.fileCheck2,
+                            size: 15,
+                            color: _papersReceived
+                                ? Colors.green
+                                : isOverdue
+                                    ? Colors.red
+                                    : Colors.orange,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Vehicle Papers',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _papersReceived
+                                  ? Colors.green
+                                  : isOverdue
+                                      ? Colors.red
+                                      : Colors.orange,
+                            ),
+                          ),
+                          const Spacer(),
+                          // Status chip
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: _papersReceived
+                                  ? Colors.green.withOpacity(0.15)
+                                  : isOverdue
+                                      ? Colors.red.withOpacity(0.15)
+                                      : Colors.orange.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _papersReceived ? 'Received' : isOverdue ? 'Overdue' : 'Pending',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: _papersReceived
+                                    ? Colors.green
+                                    : isOverdue
+                                        ? Colors.red
+                                        : Colors.orange,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Overdue warning banner
+                    if (isOverdue)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        color: Colors.red.withOpacity(0.08),
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.alertTriangle, size: 13, color: Colors.red),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Papers promised by ${DateFormat('dd MMM yyyy').format(_promisedDate!)} — now overdue!',
+                              style: const TextStyle(fontSize: 11, color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+
+                          // Toggle row
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () async {
+                              setState(() {
+                                _papersReceived = !_papersReceived;
+                                if (_papersReceived) _promisedDate = null;
+                              });
+                              await _savePaperStatus();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: _papersReceived
+                                    ? Colors.green.withOpacity(0.06)
+                                    : (isDark ? Colors.white.withOpacity(0.04) : Colors.grey.shade100),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: _papersReceived
+                                      ? Colors.green.withOpacity(0.3)
+                                      : borderColor,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: Checkbox(
+                                      value: _papersReceived,
+                                      onChanged: (val) async {
+                                        setState(() {
+                                          _papersReceived = val ?? false;
+                                          if (_papersReceived) _promisedDate = null;
+                                        });
+                                        await _savePaperStatus();
+                                      },
+                                      activeColor: Colors.green,
+                                      side: BorderSide(
+                                        color: _papersReceived ? Colors.green : textSecondary,
+                                        width: 1.5,
+                                      ),
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _papersReceived
+                                              ? 'Papers received from dealer'
+                                              : 'Papers NOT yet received from dealer',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: _papersReceived ? Colors.green : textPrimary,
+                                          ),
+                                        ),
+                                        if (!_papersReceived)
+                                          Text(
+                                            'Tap to mark as received',
+                                            style: TextStyle(fontSize: 11, color: textSecondary),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (_isSaving)
+                                    const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Date picker (only when pending)
+                          if (!_papersReceived) ...[
+                            const SizedBox(height: 10),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _promisedDate ??
+                                      DateTime.now().add(const Duration(days: 7)),
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2030),
+                                );
+                                if (picked != null) {
+                                  setState(() => _promisedDate = picked);
+                                  await _savePaperStatus();
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isOverdue
+                                      ? Colors.red.withOpacity(0.06)
+                                      : primaryColor.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isOverdue
+                                        ? Colors.red.withOpacity(0.4)
+                                        : primaryColor.withOpacity(0.25),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      LucideIcons.calendarDays,
+                                      size: 15,
+                                      color: isOverdue ? Colors.red : primaryColor,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Promised Delivery Date',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: textSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _promisedDate == null
+                                                ? 'Tap to set a date'
+                                                : DateFormat('dd MMM yyyy').format(_promisedDate!),
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: isOverdue
+                                                  ? Colors.red
+                                                  : _promisedDate == null
+                                                      ? textSecondary
+                                                      : textPrimary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      LucideIcons.chevronRight,
+                                      size: 14,
+                                      color: isOverdue ? Colors.red : textSecondary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Okay Button ───────────────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                  ),
+                  child: const Text('Okay', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String label, String value, Color labelColor, Color valueColor,
+      {bool isMono = false, bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: labelColor.withOpacity(0.6)),
+          const SizedBox(width: 10),
+          Text(label, style: TextStyle(color: labelColor, fontSize: 13)),
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 13,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+              fontFamily: isMono ? 'monospace' : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _divider(Color color) => Divider(height: 1, color: color);
+}
