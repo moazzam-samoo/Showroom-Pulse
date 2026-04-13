@@ -12,11 +12,60 @@ import 'package:tahir_showroom/app/core/widgets/app_bike_image.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales_controller.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
+import 'package:tahir_showroom/app/features/inventory/presentation/controllers/inventory_controller.dart';
+import 'package:tahir_showroom/app/core/utils/data_refresher.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
 
-class CashSaleDetailDialog extends StatelessWidget {
+class CashSaleDetailDialog extends StatefulWidget {
   final SaleCardData data;
 
   const CashSaleDetailDialog({super.key, required this.data});
+
+  @override
+  State<CashSaleDetailDialog> createState() => _CashSaleDetailDialogState();
+}
+
+class _CashSaleDetailDialogState extends State<CashSaleDetailDialog> {
+  late bool _isPapersDelivered;
+  late DateTime? _promisedDate;
+
+  SaleCardData get data => widget.data;
+
+  @override
+  void initState() {
+    super.initState();
+    _isPapersDelivered = data.isCustomerPapersDelivered;
+    final raw = data.customerPapersPromisedDate;
+    if (raw != null) {
+      try {
+        final parts = raw.split('/');
+        _promisedDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+      } catch (_) {
+        _promisedDate = null;
+      }
+    } else {
+      _promisedDate = null;
+    }
+  }
+
+  Future<void> _savePaperStatus() async {
+    if (!Get.isRegistered<IsarService>()) return;
+    final isar = Get.find<IsarService>().isar;
+    final bike = await isar.bikes.get(data.bikeId);
+    if (bike == null) return;
+    bike.isCustomerPapersDelivered = _isPapersDelivered;
+    bike.customerPapersPromisedDate = _isPapersDelivered ? null : _promisedDate;
+    if (Get.isRegistered<InventoryController>()) {
+      await Get.find<InventoryController>().updateBikePaperStatus(bike);
+      DataRefresher.refreshAll();
+    } else {
+      await isar.writeTxn(() async => isar.bikes.put(bike));
+    }
+    // Refresh sales list if controller is registered
+    if (Get.isRegistered<SalesController>()) {
+      Get.find<SalesController>().loadSales();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +145,13 @@ class CashSaleDetailDialog extends StatelessWidget {
 
                     // Witness Section
                     _buildWitnessSection(isDark),
+
+                    const SizedBox(height: AppSpacing.xl),
+                    Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Papers Section
+                    _buildPaperTrackingSection(isDark),
 
                     const SizedBox(height: AppSpacing.xl),
                     Divider(color: isDark ? Colors.white12 : Colors.grey.shade200),
@@ -482,14 +538,17 @@ class CashSaleDetailDialog extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
            OutlinedButton(
-            onPressed: () => Get.back(),
+            onPressed: () async {
+              await _savePaperStatus();
+              Get.back();
+            },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
               side: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
               foregroundColor: isDark ? Colors.white : Colors.black87,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
             ),
-            child: const Text('Close'),
+            child: const Text('Save & Close'),
           ),
            const SizedBox(width: AppSpacing.md),
            ElevatedButton.icon(
@@ -643,6 +702,218 @@ class CashSaleDetailDialog extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+      ],
+    );
+  }
+
+  // ─────────────────────────────────────────────
+  // Interactive Customer Paper Tracking Section
+  // ─────────────────────────────────────────────
+  Widget _buildPaperTrackingSection(bool isDark) {
+    final now = DateTime.now();
+    final isDatePast = _promisedDate != null && _promisedDate!.isBefore(now);
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('Vehicle Papers', LucideIcons.fileText, isDark),
+        const SizedBox(height: AppSpacing.md),
+
+        // Toggle row
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: _isPapersDelivered
+                ? Colors.green.withValues(alpha: 0.08)
+                : Colors.orange.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _isPapersDelivered
+                  ? Colors.green.withValues(alpha: 0.4)
+                  : Colors.orange.withValues(alpha: 0.4),
+            ),
+          ),
+          child: Row(
+            children: [
+              Transform.scale(
+                scale: 0.9,
+                child: Checkbox(
+                  value: _isPapersDelivered,
+                  onChanged: (val) async {
+                    setState(() {
+                      _isPapersDelivered = val ?? false;
+                      if (val == true) _promisedDate = null;
+                    });
+                    await _savePaperStatus();
+                  },
+                  activeColor: Colors.green,
+                  checkColor: Colors.white,
+                  side: BorderSide(
+                    color: _isPapersDelivered ? Colors.green : Colors.orange,
+                    width: 2,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isPapersDelivered
+                          ? 'Papers delivered to customer'
+                          : 'Papers NOT yet delivered',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _isPapersDelivered ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                    if (!_isPapersDelivered && _promisedDate != null)
+                      Text(
+                        isDatePast
+                            ? 'Promised: ${DateFormat('dd MMM yyyy').format(_promisedDate!)} (OVERDUE)'
+                            : 'Promised: ${DateFormat('dd MMM yyyy').format(_promisedDate!)}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 11,
+                          color: isDatePast ? Colors.red : Colors.orange,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Status chip
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (_isPapersDelivered ? Colors.green : isDatePast ? Colors.red : Colors.orange)
+                      .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: (_isPapersDelivered ? Colors.green : isDatePast ? Colors.red : Colors.orange)
+                        .withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isPapersDelivered
+                          ? LucideIcons.checkCircle
+                          : isDatePast
+                              ? LucideIcons.alertCircle
+                              : LucideIcons.clock,
+                      size: 11,
+                      color: _isPapersDelivered ? Colors.green : isDatePast ? Colors.red : Colors.orange,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _isPapersDelivered ? 'Delivered' : isDatePast ? 'OVERDUE' : 'Pending',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: _isPapersDelivered ? Colors.green : isDatePast ? Colors.red : Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Date picker (only when not delivered)
+        if (!_isPapersDelivered) ...[
+          const SizedBox(height: 8),
+          if (isDatePast)
+            Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.alertTriangle, size: 13, color: Colors.red),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Papers are ${now.difference(_promisedDate!).inDays} day(s) overdue! Update the date.',
+                    style: GoogleFonts.outfit(fontSize: 11, color: Colors.red, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _promisedDate ?? DateTime.now().add(const Duration(days: 7)),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (picked != null) {
+                setState(() => _promisedDate = picked);
+                await _savePaperStatus();
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: isDatePast
+                    ? Colors.red.withValues(alpha: 0.07)
+                    : primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isDatePast
+                      ? Colors.red.withValues(alpha: 0.4)
+                      : primary.withValues(alpha: 0.35),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.calendarDays,
+                    size: 16,
+                    color: isDatePast ? Colors.red : primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Promised Delivery Date',
+                          style: GoogleFonts.outfit(
+                            fontSize: 10,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                        Text(
+                          _promisedDate == null
+                              ? 'Tap to set promised date'
+                              : DateFormat('EEEE, dd MMM yyyy').format(_promisedDate!),
+                          style: GoogleFonts.outfit(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDatePast ? Colors.red : isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(LucideIcons.pencil, size: 13, color: isDatePast ? Colors.red : primary),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

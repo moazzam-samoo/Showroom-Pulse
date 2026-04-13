@@ -12,6 +12,8 @@ import 'package:tahir_showroom/app/features/installments/presentation/widgets/cu
 import 'package:tahir_showroom/app/features/installments/presentation/widgets/payment_summary_cards.dart';
 import 'package:tahir_showroom/app/features/installments/presentation/widgets/payment_timeline.dart';
 import 'package:tahir_showroom/app/features/installments/presentation/widgets/record_payment_dialog.dart';
+import 'package:tahir_showroom/app/features/installments/presentation/widgets/apply_discount_dialog.dart';
+import 'package:intl/intl.dart';
 
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
@@ -503,6 +505,7 @@ class _InstallmentsViewState extends State<InstallmentsView> {
                 downPayment: selected.contract.downPayment,
                 monthlyEMI: selected.contract.monthlyEMI,
                 isCompleted: selected.contract.status == ContractStatusEnum.completed,
+                onEditRemaining: () => _showApplyDiscountDialog(context, controller),
               ),
               const SizedBox(height: AppSpacing.base),
 
@@ -625,6 +628,10 @@ class _InstallmentsViewState extends State<InstallmentsView> {
               _buildInfoChip('Horse Power: ${data.bike.model}', isDark),
               const SizedBox(height: 4),
               _buildInfoChip('Chassis: ${data.bike.chassisNumber ?? 'N/A'}', isDark),
+              if (data.contract.discountAmount > 0) ...[
+                const SizedBox(height: 4),
+                _buildInfoChip('Discount Added: Rs ${NumberFormat('#,###').format(data.contract.discountAmount)}', isDark, isDiscount: true),
+              ],
             ],
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -643,19 +650,42 @@ class _InstallmentsViewState extends State<InstallmentsView> {
     );
   }
 
-  Widget _buildInfoChip(String text, bool isDark) {
+  Widget _buildInfoChip(String text, bool isDark, {bool isDiscount = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+        color: isDiscount 
+            ? (isDark ? AppColors.darkPrimary.withOpacity(0.2) : AppColors.lightPrimary.withOpacity(0.1))
+            : (isDark ? AppColors.darkCard : AppColors.lightBackground),
         borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: isDiscount ? Border.all(color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary, width: 0.5) : null,
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          color: isDiscount 
+              ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
           fontSize: 11,
+          fontWeight: isDiscount ? FontWeight.bold : FontWeight.normal,
         ),
+      ),
+    );
+  }
+
+  void _showApplyDiscountDialog(BuildContext context, InstallmentsController controller) {
+    final selected = controller.selectedContract;
+    if (selected == null) return;
+    
+    Get.dialog(
+      ApplyDiscountDialog(
+        currentRemaining: selected.contract.remainingBalance,
+        purchasePrice: selected.bike.purchasePrice,
+        currentTotalAmount: selected.contract.totalAmount,
+        remainingMonths: selected.contract.paymentsRemaining,
+        onSubmit: (newRemaining) {
+          controller.applyDiscount(newRemaining);
+        },
       ),
     );
   }

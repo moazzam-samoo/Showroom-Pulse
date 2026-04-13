@@ -179,6 +179,38 @@ class GeneralSettingsView extends GetView<SettingsController> {
           ),
           _divider(isDark),
 
+          // PDF Download Location
+          _buildSettingRow(
+            title: 'PDF Download Location',
+            subtitle: settings.pdfDownloadLocation ?? 'Default Downloads folder',
+            isDark: isDark,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (settings.pdfDownloadLocation != null)
+                  IconButton(
+                    icon: const Icon(LucideIcons.rotateCcw, size: 18),
+                    onPressed: () => controller.resetPdfDownloadLocation(),
+                    tooltip: 'Reset to Default',
+                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                  ),
+                ElevatedButton.icon(
+                  icon: const Icon(LucideIcons.folder, size: 14),
+                  label: const Text('Change Location', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                    foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  onPressed: () => controller.updatePdfDownloadLocation(),
+                ),
+              ],
+            ),
+          ),
+          _divider(isDark),
+
           // Walkthrough Replay
           Container(
             key: replayTourKey,

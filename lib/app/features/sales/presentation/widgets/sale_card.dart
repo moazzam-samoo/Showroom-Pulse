@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +10,7 @@ import 'package:tahir_showroom/app/features/sales/presentation/controllers/sales
 import 'package:tahir_showroom/app/data/models/bike.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/cash_sale_detail_dialog.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/installment_sale_detail_dialog.dart';
+import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 
 /// WitnessData - Data class for witness information
 class WitnessData {
@@ -72,7 +72,18 @@ class SaleCardData {
   // Installment completion status
   final bool isInstallmentCompleted;
 
+  // Document tracking
+  final bool isCustomerPapersDelivered;
+  final String? customerPapersPromisedDate;
+
+  // Sale ID for deletion/updates
+  final int id;
+
+  // Bike ID (for paper status updates)
+  final int bikeId;
+
   SaleCardData({
+    required this.id,
     required this.bikeModel,
     this.bikeBrand,
     required this.bikeColor,
@@ -105,6 +116,9 @@ class SaleCardData {
     this.discountAmount = 0.0,
     this.discountPercentage = 0.0,
     this.isInstallmentCompleted = false,
+    this.isCustomerPapersDelivered = false,
+    this.customerPapersPromisedDate,
+    this.bikeId = 0,
   });
 }
 
@@ -202,26 +216,46 @@ class _SaleCardState extends State<SaleCard> {
                     ),
                   ),
                 ),
-                // Download Button
+                // Download & Delete Buttons
                 Positioned(
                   top: 12,
                   left: 12,
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                         Get.find<SalesController>().exportSaleInvoice(data);
-                      },
-                      borderRadius: BorderRadius.circular(AppRadius.full),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          shape: BoxShape.circle,
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                             Get.find<SalesController>().exportSaleInvoice(data);
+                          },
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.download, size: 18, color: Colors.white),
+                          ),
                         ),
-                        child: const Icon(LucideIcons.download, size: 18, color: Colors.white),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _showDeleteConfirmation(context),
+                          borderRadius: BorderRadius.circular(AppRadius.full),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.8),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.trash2, size: 18, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 // Status Badge
@@ -344,6 +378,72 @@ class _SaleCardState extends State<SaleCard> {
                                 '- ${data.discountPercentage.toStringAsFixed(1)}%',
                                 style: GoogleFonts.outfit(
                                   fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      // Papers Pending tag (red warning)
+                      if (!data.isCustomerPapersDelivered) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent,
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.redAccent.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.fileWarning, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Papers Pending',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      // Papers Collected tag (green confirmation)
+                      if (data.isCustomerPapersDelivered) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16A34A),
+                            borderRadius: BorderRadius.circular(AppRadius.full),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF16A34A).withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(LucideIcons.fileCheck, size: 14, color: Colors.white),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Papers Collected',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
@@ -533,6 +633,21 @@ class _SaleCardState extends State<SaleCard> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    AppNotificationDialog.showConfirmation(
+      title: 'Delete Sale',
+      message: 'Are you sure you want to delete this sale for ${widget.data.bikeModel}?\n\n'
+               'This will:\n'
+               '• Remove this bike from the customer\'s history\n'
+               '• Revert the bike status to "Available" in inventory\n'
+               '• Delete all associated payments and witness records\n\n'
+               'This action cannot be undone.',
+      confirmText: 'Delete Everything',
+      confirmColor: Colors.red,
+      onConfirm: () => Get.find<SalesController>().deleteSale(widget.data.id),
     );
   }
 }

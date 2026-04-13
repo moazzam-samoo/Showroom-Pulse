@@ -188,6 +188,7 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
     return Tooltip(
       message: tooltip,
       preferBelow: false,
+      waitDuration: const Duration(seconds: 1),
       child: InkWell(
         focusNode: _focusNodes[index],
         autofocus: isSelected,

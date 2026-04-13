@@ -213,6 +213,8 @@ class SalesController extends GetxController {
         'bikeEngineNumber': data.bikeEngineNumber,
         'bikeCondition': data.bikeCondition?.name, // 'newBike' or 'usedBike'
         'bikeRegistrationNumber': data.bikeRegistrationNumber,
+        'isCustomerPapersDelivered': data.isCustomerPapersDelivered,
+        'customerPapersPromisedDate': data.customerPapersPromisedDate,
         'isCash': data.isCash,
         'amountPaid': data.amountPaid,
         'sellingPrice': data.sellingPrice,
@@ -251,6 +253,34 @@ class SalesController extends GetxController {
       return '${(amount / 1000).toStringAsFixed(0)},000';
     }
     return amount.toStringAsFixed(0);
+  }
+
+  /// Delete a sale (cascade delete)
+  Future<void> deleteSale(int saleId) async {
+    try {
+      isLoading.value = true;
+      final success = await _salesService.deleteSaleWithCascade(saleId);
+      
+      if (success) {
+        AppToast.showSuccess(
+          title: 'Deleted',
+          message: 'Sale records deleted successfully',
+        );
+        await refreshSales();
+      } else {
+        AppNotificationDialog.showError(
+          title: 'Error',
+          message: 'Failed to delete sale records',
+        );
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Error',
+        message: 'Delete failed: $e',
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 }
 

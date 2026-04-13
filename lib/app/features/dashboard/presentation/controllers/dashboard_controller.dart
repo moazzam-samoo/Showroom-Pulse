@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:get/get.dart';
 import 'package:isar/isar.dart';
@@ -14,7 +15,7 @@ import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcoming_installments.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
-import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
@@ -59,6 +60,7 @@ class DashboardController extends GetxController {
   final unitsInStock = 0.obs;
   final lowStockAlert = 0.obs;
   final totalInstallmentValue = 0.0.obs;
+  final netProfit = 0.0.obs;
 
   // Upcoming Installments (for bottom widget)
   final upcomingInstallments = <UpcomingInstallment>[].obs;
@@ -81,6 +83,9 @@ class DashboardController extends GetxController {
         loadProfileSettings(),
         loadUpcomingInstallments(),
       ]);
+      
+      // Run paper tracking scan after data is loaded
+      checkOverduePapers();
     } catch (e) {
       AppNotificationDialog.showError(
         title: 'Error',
@@ -148,6 +153,7 @@ class DashboardController extends GetxController {
       totalInvestment.value = await investmentService.getTotalCapital();
       allocatedInvestment.value = await investmentService.getTotalAllocated();
       availableInvestment.value = await investmentService.getAvailableBalance();
+      netProfit.value = await investmentService.getTotalProfit();
 
       final bikes = await _isarService.isar.bikes.where().findAll();
       unitsInStock.value = bikes.where((b) => 
@@ -342,6 +348,60 @@ class DashboardController extends GetxController {
   /// Refresh all data (called after new sale)
   Future<void> refreshStats() async {
     await loadAllDashboardData();
+  }
+
+  /// Check for overdue vehicle papers and notify
+  Future<void> checkOverduePapers() async {
+    try {
+      final isar = _isarService.isar;
+      final now = DateTime.now();
+      
+      // Fetch all bikes to check paper statuses
+      final bikes = await isar.bikes.where().findAll();
+      
+      int overdueDealerPapers = 0;
+      int overdueCustomerPapers = 0;
+
+      for (var bike in bikes) {
+        if (!bike.isDealerPapersCollected && 
+            bike.dealerPapersPromisedDate != null && 
+            bike.dealerPapersPromisedDate!.isBefore(now)) {
+          overdueDealerPapers++;
+        }
+        
+        if (!bike.isCustomerPapersDelivered && 
+            bike.customerPapersPromisedDate != null && 
+            bike.customerPapersPromisedDate!.isBefore(now)) {
+          overdueCustomerPapers++;
+        }
+      }
+
+      if (overdueDealerPapers > 0 || overdueCustomerPapers > 0) {
+        String message = '';
+        if (overdueDealerPapers > 0) message += '• $overdueDealerPapers Dealer Papers Overdue\n';
+        if (overdueCustomerPapers > 0) message += '• $overdueCustomerPapers Customer Papers Overdue';
+        
+        // Show as a warning notification after a short delay (so dashboard finishes opening)
+        Future.delayed(const Duration(seconds: 2), () {
+          // Check if snackbar is open, optionally. GetX handles queuing if multiple.
+          Get.snackbar(
+            '⚠️ Overdue Vehicle Papers',
+            message.trim(),
+            snackPosition: SnackPosition.TOP,
+            backgroundColor: Colors.redAccent.shade700,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 8),
+            icon: const Icon(LucideIcons.fileWarning, color: Colors.white, size: 28),
+            margin: const EdgeInsets.all(16),
+            borderRadius: 8,
+            isDismissible: true,
+            forwardAnimationCurve: Curves.easeOutBack,
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking overdue papers: $e');
+    }
   }
 }
 

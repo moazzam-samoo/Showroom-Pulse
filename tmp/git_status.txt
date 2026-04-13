@@ -1,0 +1,13 @@
+﻿A  analysis_results.txt
+M  lib/app/features/dashboard/presentation/widgets/investment_snapshot.dart
+M  lib/app/features/inventory/presentation/controllers/inventory_controller.dart
+M  lib/app/features/inventory/presentation/widgets/add_bike_dialog.dart
+M  lib/app/features/inventory/presentation/widgets/bike_detail_dialog.dart
+UU lib/app/features/inventory/presentation/widgets/edit_bike_dialog.dart
+M  lib/app/features/investment/domain/investment_service.dart
+M  lib/app/features/investment/presentation/controllers/investment_controller.dart
+UU lib/app/features/investment/presentation/views/investment_view.dart
+M  lib/app/features/walkthrough/presentation/controllers/walkthrough_controller.dart
+M  lib/app/features/walkthrough/presentation/views/walkthrough_view.dart
+A  lib/app/features/walkthrough/presentation/widgets/investment_intro_overlay.dart
+?? tmp/git_status.txt

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -47,6 +48,16 @@ class SettingsController extends GetxController {
     settings.value = await _repository.getSettings();
     if (settings.value != null) {
       ownerNameController.text = settings.value!.ownerName ?? '';
+      
+      // Initialize/Migrate PDF download location to Documents directory if null or pointing to old database path
+      final fileService = Get.find<FileService>();
+      final oldDefault = fileService.databasePath;
+      final newDefault = fileService.documentsPath;
+
+      if (settings.value!.pdfDownloadLocation == null || settings.value!.pdfDownloadLocation == oldDefault) {
+        settings.value!.pdfDownloadLocation = newDefault;
+        await _repository.updateSettings(settings.value!);
+      }
     }
     isLoading.value = false;
   }
@@ -85,6 +96,56 @@ class SettingsController extends GetxController {
 
   void changeCategory(String category) {
     selectedCategory.value = category;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  PDF DOWNLOAD LOCATION
+  // ═══════════════════════════════════════════════════════════
+
+  Future<void> updatePdfDownloadLocation() async {
+    try {
+      String? result = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select PDF Download Location',
+      );
+
+      if (result != null) {
+        if (settings.value != null) {
+          settings.value!.pdfDownloadLocation = result;
+          await saveSettings();
+          settings.refresh();
+          AppToast.showSuccess(
+            title: 'Location Updated',
+            message: 'PDFs will now be saved in: $result',
+          );
+        }
+      }
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Selection Failed',
+        message: 'Could not update PDF location: $e',
+      );
+    }
+  }
+
+  Future<void> resetPdfDownloadLocation() async {
+    if (settings.value == null) return;
+    
+    final fileService = Get.find<FileService>();
+    settings.value!.pdfDownloadLocation = fileService.documentsPath;
+
+    try {
+      await saveSettings();
+      settings.refresh();
+      AppToast.showSuccess(
+        title: 'Location Reset',
+        message: 'PDFs will now be saved in the Documents folder by default',
+      );
+    } catch (e) {
+      AppNotificationDialog.showError(
+        title: 'Reset Failed',
+        message: 'Could not reset PDF location: $e',
+      );
+    }
   }
 
   // ═══════════════════════════════════════════════════════════

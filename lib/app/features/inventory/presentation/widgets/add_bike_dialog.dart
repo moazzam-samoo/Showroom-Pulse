@@ -48,6 +48,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   File? _selectedImage;
   File? _purchaserCnicFrontImage;
   File? _purchaserCnicBackImage;
+  bool _isDealerPapersCollected = false;
+  DateTime? _dealerPapersPromisedDate;
 
   @override
   void initState() {
@@ -71,6 +73,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
   final _cnicBackFocus = FocusNode();
   final _regNumberFocus = FocusNode();
   final _submitFocus = FocusNode();
+  final _papersPromisedFocus = FocusNode();
 
   void _handleKeyboardNavigation(KeyEvent event) {
     if (event is KeyDownEvent) {
@@ -185,6 +188,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
     _cnicBackFocus.dispose();
     _regNumberFocus.dispose();
     _submitFocus.dispose();
+    _papersPromisedFocus.dispose();
     super.dispose();
   }
 
@@ -217,6 +221,9 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
       if (_selectedCondition == 'Used' && _regNumberController.text.trim().isEmpty)
         missingFields.add('Registered Number');
       if (_selectedColor == null) missingFields.add('Color');
+      if (!_isDealerPapersCollected && _dealerPapersPromisedDate == null) {
+        missingFields.add('Promised Date for Papers');
+      }
 
       final purchase =
           double.tryParse(_purchasePriceController.text.replaceAll(',', '')) ??
@@ -252,6 +259,8 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
             'purchaserCnic': _purchaserCnicController.text.trim(),
             'purchaserCnicFront': _purchaserCnicFrontImage,
             'purchaserCnicBack': _purchaserCnicBackImage,
+            'isDealerPapersCollected': _isDealerPapersCollected,
+            'dealerPapersPromisedDate': _dealerPapersPromisedDate,
           });
           Navigator.pop(context);
         }
@@ -537,6 +546,10 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
                                 isNumber: true),
                             const SizedBox(height: 10),
                             // Investment tracking is automatically 100% of Purchase Price
+                            const SizedBox(height: 16),
+                            const Divider(),
+                            const SizedBox(height: 12),
+                            _buildPaperStatusGroup(isDark, inputBg, inputBorder, labelColor),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -1068,6 +1081,223 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPaperStatusGroup(bool isDark, Color inputBg, Color inputBorder, Color? labelColor) {
+    final primary = isDark ? AppColors.darkPrimary : AppColors.lightPrimary;
+    final now = DateTime.now();
+    final isDatePast = _dealerPapersPromisedDate != null &&
+        _dealerPapersPromisedDate!.isBefore(now);
+    final needsDate = !_isDealerPapersCollected && _dealerPapersPromisedDate == null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Icon(LucideIcons.fileText, size: 15,
+                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+            const SizedBox(width: 6),
+            Text(
+              'Dealer Vehicle Papers',
+              style: TextStyle(
+                color: labelColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Toggle container
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: _isDealerPapersCollected
+                ? Colors.green.withValues(alpha: 0.08)
+                : Colors.orange.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _isDealerPapersCollected
+                  ? Colors.green.withValues(alpha: 0.35)
+                  : Colors.orange.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _isDealerPapersCollected ? LucideIcons.checkCircle : LucideIcons.clock,
+                size: 16,
+                color: _isDealerPapersCollected ? Colors.green : Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _isDealerPapersCollected
+                      ? 'Papers collected from dealer'
+                      : 'Papers NOT yet collected',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: _isDealerPapersCollected ? Colors.green : Colors.orange,
+                  ),
+                ),
+              ),
+              Switch(
+                value: _isDealerPapersCollected,
+                onChanged: (val) => setState(() {
+                  _isDealerPapersCollected = val;
+                  if (val) _dealerPapersPromisedDate = null;
+                }),
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+
+        // Date picker section (only when NOT collected)
+        if (!_isDealerPapersCollected) ...[
+          const SizedBox(height: 8),
+
+          // Warning: no date set
+          if (needsDate)
+            _buildPaperWarningBanner(
+              'Set a promised date so you know when to follow up.',
+              Colors.orange,
+              LucideIcons.alertTriangle,
+            ),
+
+          // Warning: date is already past
+          if (isDatePast)
+            _buildPaperWarningBanner(
+              'Promised date has passed! Update to a new date.',
+              Colors.red,
+              LucideIcons.alertCircle,
+            ),
+
+          const SizedBox(height: 6),
+
+          // Date picker button (full-width row)
+          BlinkingFocusBuilder(
+            focusNode: _papersPromisedFocus,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () async {
+                _papersPromisedFocus.requestFocus();
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _dealerPapersPromisedDate ??
+                      DateTime.now().add(const Duration(days: 7)),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2101),
+                );
+                if (picked != null) {
+                  setState(() => _dealerPapersPromisedDate = picked);
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDatePast
+                      ? Colors.red.withValues(alpha: 0.07)
+                      : needsDate
+                          ? Colors.orange.withValues(alpha: 0.07)
+                          : primary.withValues(alpha: 0.07),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isDatePast
+                        ? Colors.red.withValues(alpha: 0.5)
+                        : needsDate
+                            ? Colors.orange.withValues(alpha: 0.5)
+                            : primary.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.calendarDays,
+                      size: 16,
+                      color: isDatePast
+                          ? Colors.red
+                          : needsDate
+                              ? Colors.orange
+                              : primary,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Promised Collection Date',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _dealerPapersPromisedDate == null
+                                ? 'Tap to select a date'
+                                : '${_dealerPapersPromisedDate!.day}/${_dealerPapersPromisedDate!.month}/${_dealerPapersPromisedDate!.year}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isDatePast
+                                  ? Colors.red
+                                  : _dealerPapersPromisedDate == null
+                                      ? Colors.orange
+                                      : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      LucideIcons.pencil,
+                      size: 14,
+                      color: isDatePast ? Colors.red : needsDate ? Colors.orange : primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaperWarningBanner(String message, Color color, IconData icon) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

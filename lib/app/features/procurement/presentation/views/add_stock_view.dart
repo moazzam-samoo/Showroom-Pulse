@@ -550,6 +550,7 @@ class AddStockView extends GetView<SupplierController> {
                 Expanded(flex: 2, child: Text('Year')),
                 Expanded(flex: 2, child: Text('Purchase Price')),
                 Expanded(flex: 1, child: Text('Image')),
+                Expanded(flex: 2, child: Text('Vehicle Papers')),
                 SizedBox(width: 40), // Delete Action
               ],
             ),
@@ -612,38 +613,38 @@ class AddStockView extends GetView<SupplierController> {
                       ),
                     ),
                      const SizedBox(width: 8),
-                    // Brand
+                    // Brand / Maker
                     Expanded(
                       flex: 2,
                       child: BlinkingFocusBuilder(
                         focusNode: entry.brandFocus,
                         child: _buildCompactAutocomplete(
-                           initialValue: entry.brand,
+                           initialValue: entry.model, // Maker maps to model in app convention
                            focusNode: entry.brandFocus,
                            isDark: isDark,
                            hint: 'Maker',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeBrandsList()
                                : [],
-                           onChanged: (v) => entry.brand = v,
+                           onChanged: (v) => entry.model = v,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Model
+                    // Model / Horse Power
                     Expanded(
                       flex: 2,
                       child: BlinkingFocusBuilder(
                         focusNode: entry.modelFocus,
                         child: _buildCompactAutocomplete(
-                           initialValue: entry.model,
+                           initialValue: entry.brand, // HP maps to brand in app convention
                            focusNode: entry.modelFocus,
                            isDark: isDark,
                            hint: 'Horse Power',
                            getOptions: () => Get.isRegistered<SettingsController>()
                                ? Get.find<SettingsController>().getBikeModelsList()
                                : [],
-                           onChanged: (v) => entry.model = v,
+                           onChanged: (v) => entry.brand = v,
                         ),
                       ),
                     ),
@@ -784,8 +785,138 @@ class AddStockView extends GetView<SupplierController> {
                          ),
                        ),
                      ),
-                    // Delete
-                    IconButton(
+                     const SizedBox(width: 8),
+                     // Vehicle Papers
+                     Expanded(
+                       flex: 2,
+                       child: StatefulBuilder(
+                         builder: (context, setState) {
+                           final isDatePast = entry.papersPromisedDate != null &&
+                               entry.papersPromisedDate!.isBefore(DateTime.now());
+                           return Column(
+                             mainAxisSize: MainAxisSize.min,
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               InkWell(
+                                 borderRadius: BorderRadius.circular(6),
+                                 onTap: () {
+                                   setState(() {
+                                     entry.isPapersReceived = !entry.isPapersReceived;
+                                     if (entry.isPapersReceived) entry.papersPromisedDate = null;
+                                   });
+                                   controller.bikeEntries.refresh();
+                                 },
+                                 child: Container(
+                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                   decoration: BoxDecoration(
+                                     color: entry.isPapersReceived
+                                         ? Colors.green.withOpacity(0.1)
+                                         : Colors.orange.withOpacity(0.08),
+                                     borderRadius: BorderRadius.circular(6),
+                                     border: Border.all(
+                                       color: entry.isPapersReceived
+                                           ? Colors.green.withOpacity(0.4)
+                                           : Colors.orange.withOpacity(0.4),
+                                     ),
+                                   ),
+                                   child: Row(
+                                     mainAxisSize: MainAxisSize.min,
+                                     children: [
+                                       SizedBox(
+                                         width: 16,
+                                         height: 16,
+                                         child: Checkbox(
+                                           value: entry.isPapersReceived,
+                                           onChanged: (val) {
+                                             setState(() {
+                                               entry.isPapersReceived = val ?? false;
+                                               if (val == true) entry.papersPromisedDate = null;
+                                             });
+                                             controller.bikeEntries.refresh();
+                                           },
+                                           activeColor: Colors.green,
+                                           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                           side: BorderSide(
+                                             color: entry.isPapersReceived ? Colors.green : Colors.orange,
+                                             width: 1.5,
+                                           ),
+                                         ),
+                                       ),
+                                       const SizedBox(width: 5),
+                                       Flexible(
+                                         child: Text(
+                                           entry.isPapersReceived ? 'Received' : 'Pending',
+                                           overflow: TextOverflow.ellipsis,
+                                           style: TextStyle(
+                                             fontSize: 11,
+                                             fontWeight: FontWeight.bold,
+                                             color: entry.isPapersReceived ? Colors.green : Colors.orange,
+                                           ),
+                                         ),
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ),
+                               if (!entry.isPapersReceived) ...[
+                                 const SizedBox(height: 3),
+                                 InkWell(
+                                   borderRadius: BorderRadius.circular(5),
+                                   onTap: () async {
+                                     final picked = await showDatePicker(
+                                       context: context,
+                                       initialDate: entry.papersPromisedDate ??
+                                           DateTime.now().add(const Duration(days: 7)),
+                                       firstDate: DateTime(2020),
+                                       lastDate: DateTime(2030),
+                                     );
+                                     if (picked != null) {
+                                       setState(() => entry.papersPromisedDate = picked);
+                                       controller.bikeEntries.refresh();
+                                     }
+                                   },
+                                   child: Container(
+                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                     decoration: BoxDecoration(
+                                       color: isDatePast
+                                           ? Colors.red.withOpacity(0.08)
+                                           : primaryColor.withOpacity(0.06),
+                                       borderRadius: BorderRadius.circular(5),
+                                       border: Border.all(
+                                         color: isDatePast
+                                             ? Colors.red.withOpacity(0.4)
+                                             : primaryColor.withOpacity(0.3),
+                                       ),
+                                     ),
+                                     child: Row(
+                                       mainAxisSize: MainAxisSize.min,
+                                       children: [
+                                         Icon(LucideIcons.calendarDays, size: 11,
+                                             color: isDatePast ? Colors.red : primaryColor),
+                                         const SizedBox(width: 4),
+                                         Flexible(
+                                           child: Text(
+                                             entry.papersPromisedDate == null
+                                                 ? 'Set date'
+                                                 : '${entry.papersPromisedDate!.day}/${entry.papersPromisedDate!.month}/${entry.papersPromisedDate!.year}',
+                                             overflow: TextOverflow.ellipsis,
+                                             style: TextStyle(
+                                               fontSize: 10,
+                                               color: isDatePast ? Colors.red : (isDark ? Colors.white70 : Colors.black54),
+                                             ),
+                                           ),
+                                         ),
+                                       ],
+                                     ),
+                                   ),
+                                 ),
+                               ],
+                             ],
+                           );
+                         },
+                       ),
+                     ),
+                     IconButton(
                       icon: const Icon(LucideIcons.trash2, size: 16, color: Colors.red),
                       onPressed: () => controller.removeBikeEntry(index),
                     ),

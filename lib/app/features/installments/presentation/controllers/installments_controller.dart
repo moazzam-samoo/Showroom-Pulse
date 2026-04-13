@@ -309,6 +309,39 @@ class InstallmentsController extends GetxController {
     }
   }
 
+  /// Apply a discount to the remaining balance
+  Future<void> applyDiscount(double newRemainingAmount) async {
+    final data = selectedContract;
+    if (data == null) return;
+    
+    final contract = data.contract;
+    final currentRemaining = contract.remainingBalance;
+    
+    if (newRemainingAmount >= currentRemaining) {
+      AppNotificationDialog.showError(title: 'Error', message: 'New balance must be less than current balance.');
+      return;
+    }
+
+    final discountAmount = currentRemaining - newRemainingAmount;
+    final newTotalAmount = contract.totalAmount - discountAmount;
+    final months = contract.paymentsRemaining > 0 ? contract.paymentsRemaining : 1;
+    final newMonthlyEMI = newRemainingAmount / months;
+
+    try {
+      await _repository.applyDiscountToContract(
+        contractId: contract.id,
+        discountAmount: discountAmount,
+        newTotalAmount: newTotalAmount,
+        newMonthlyEMI: newMonthlyEMI,
+      );
+      
+      await loadContracts();
+      AppToast.showSuccess(title: 'Discount Applied', message: 'The remaining balance and EMI have been updated.');
+    } catch (e) {
+      AppNotificationDialog.showError(title: 'Error', message: 'Failed to apply discount: $e');
+    }
+  }
+
   /// Download individual customer's installment statement
   Future<void> downloadStatement() async {
     final data = selectedContract;

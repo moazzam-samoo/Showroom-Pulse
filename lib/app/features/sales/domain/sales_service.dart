@@ -8,6 +8,8 @@ import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 import 'package:tahir_showroom/app/data/models/witness.dart';
 import 'package:tahir_showroom/app/features/sales/presentation/widgets/sale_card.dart';
+import 'package:tahir_showroom/app/data/models/investment.dart';
+import 'package:tahir_showroom/app/data/models/payment.dart';
 
 /// Sales Service - Handles sales-related database operations
 class SalesService {
@@ -156,6 +158,7 @@ class SalesService {
     )).toList();
 
     return SaleCardData(
+      id: sale.id,
       bikeModel: '${bike.model} ${bike.brand}',
       bikeBrand: bike.brand,
       bikeColor: bike.color,
@@ -188,6 +191,11 @@ class SalesService {
       discountAmount: sale.discountAmount,
       discountPercentage: sale.discountPercentage,
       isInstallmentCompleted: contract?.status == ContractStatusEnum.completed,
+      isCustomerPapersDelivered: bike.isCustomerPapersDelivered,
+      customerPapersPromisedDate: bike.customerPapersPromisedDate != null 
+          ? '${bike.customerPapersPromisedDate!.day.toString().padLeft(2, '0')}/${bike.customerPapersPromisedDate!.month.toString().padLeft(2, '0')}/${bike.customerPapersPromisedDate!.year}'
+          : null,
+      bikeId: bike.id,
     );
   }
 
@@ -395,6 +403,61 @@ class SalesService {
     }
     
     return lowStockModels;
+  }
+
+  /// Delete a sale and all its associated records (cascade delete)
+  Future<bool> deleteSaleWithCascade(int saleId) async {
+    final isar = _isarService.isar;
+    try {
+      return await isar.writeTxn(() async {
+        final sale = await isar.sales.get(saleId);
+        if (sale == null) return false;
+
+        final bikeId = sale.bikeId;
+        final installmentContractId = sale.installmentContractId;
+
+        // 1. Revert bike status to available
+        final bike = await isar.bikes.get(bikeId);
+        if (bike != null) {
+          bike.status = BikeStatusEnum.available;
+          await isar.bikes.put(bike);
+        }
+
+        // 2. Delete associated witnesses and payments
+        if (sale.saleType == SaleType.installment && installmentContractId != null) {
+          // Delete witnesses for this contract
+          await isar.witness.filter().contractIdEqualTo(installmentContractId).deleteAll();
+          
+          // Delete payments tied to this contract
+          await isar.payments.filter().contractIdEqualTo(installmentContractId).deleteAll();
+
+          // 3. Delete installment contract
+          await isar.installmentContracts.delete(installmentContractId);
+        } else {
+          // Delete witnesses for cash sales (contractId = -saleId)
+          await isar.witness.filter().contractIdEqualTo(-sale.id).deleteAll();
+        }
+
+        // 4. Delete investment records associated with this sale
+        // We look for investments that mention this sale ID or the bike's chassis number
+        final chassisNumber = bike?.chassisNumber ?? '___NON_EXISTENT___';
+        await isar.investments.filter()
+          .descriptionContains("Sale ID: ${sale.id}")
+          .or()
+          .descriptionContains(chassisNumber)
+          .and()
+          .typeEqualTo(InvestmentTypeEnum.bikeSale)
+          .deleteAll();
+
+        // 5. Delete the sale record itself
+        await isar.sales.delete(sale.id);
+        
+        return true;
+      });
+    } catch (e) {
+      print('Error during cascading sale deletion: $e');
+      return false;
+    }
   }
 }
 

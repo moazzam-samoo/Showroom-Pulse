@@ -14,6 +14,7 @@ class PaymentSummaryCards extends StatelessWidget {
   final double downPayment;
   final double monthlyEMI;
   final bool isCompleted;
+  final VoidCallback? onEditRemaining;
 
   const PaymentSummaryCards({
     super.key,
@@ -24,6 +25,7 @@ class PaymentSummaryCards extends StatelessWidget {
     required this.downPayment,
     required this.monthlyEMI,
     this.isCompleted = false,
+    this.onEditRemaining,
   });
 
   @override
@@ -90,6 +92,7 @@ class PaymentSummaryCards extends StatelessWidget {
                     : (isDark ? AppColors.darkWarning : AppColors.lightWarning),
                 icon: LucideIcons.clock,
                 isDark: isDark,
+                onTap: !isCompleted ? onEditRemaining : null,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -120,8 +123,9 @@ class PaymentSummaryCards extends StatelessWidget {
     required Color valueColor,
     required IconData icon,
     required bool isDark,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    final cardContent = Container(
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -137,13 +141,27 @@ class PaymentSummaryCards extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                    fontSize: 11,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (onTap != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        LucideIcons.edit3,
+                        size: 12,
+                        color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Icon(
@@ -167,6 +185,17 @@ class PaymentSummaryCards extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return cardContent;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: cardContent,
       ),
     );
   }

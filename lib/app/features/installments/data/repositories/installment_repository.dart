@@ -251,6 +251,28 @@ class InstallmentRepository {
     });
   }
 
+  /// Apply a discount to the remaining balance of a contract
+  Future<void> applyDiscountToContract({
+    required int contractId,
+    required double discountAmount,
+    required double newTotalAmount,
+    required double newMonthlyEMI,
+  }) async {
+    await _isar.writeTxn(() async {
+      final contract = await _isar.installmentContracts.get(contractId);
+      if (contract == null) return;
+
+      contract.discountAmount += discountAmount;
+      contract.totalAmount = newTotalAmount;
+      contract.monthlyEMI = newMonthlyEMI;
+
+      await _isar.installmentContracts.put(contract);
+      
+      // Refresh investment KPIs as Future Profit is dynamically tied to totalAmount
+      _refreshInvestmentKPIs();
+    });
+  }
+
   /// Calculate next due date based on contract terms
   DateTime _calculateNextDueDate(InstallmentContract contract) {
     final lastPayment = contract.lastPaymentDate ?? contract.contractDate;

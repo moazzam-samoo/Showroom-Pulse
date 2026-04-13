@@ -6,6 +6,7 @@ const Set<String> _allowedMacs = {
   'BC:03:58:FE:C3:4C', //Moazam's Device
   'AA:09:10:D9:55:BD', //Shumail's Device
   '38:BA:F8:C2:88:7D', // Tahir's Device (Client)
+  'E0:2E:0B:E9:A7:EB', // Tammer's Device
 };
 
 /// Normalizes any MAC format (dash or colon) to uppercase colon-delimited.
