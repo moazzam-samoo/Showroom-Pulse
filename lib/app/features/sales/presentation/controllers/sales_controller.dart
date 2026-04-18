@@ -17,6 +17,7 @@ class SalesController extends GetxController {
   // Filters
   final selectedDateRange = 'All Time'.obs; // Default: All Time
   final selectedStatus = 'All Status'.obs;
+  final selectedCustomerPapers = 'All Papers'.obs;
   final searchQuery = ''.obs;
   final searchController = TextEditingController();
 
@@ -32,6 +33,7 @@ class SalesController extends GetxController {
   void clearFilters() {
     selectedDateRange.value = 'All Time';
     selectedStatus.value = 'All Status';
+    selectedCustomerPapers.value = 'All Papers';
     searchQuery.value = '';
     searchController.clear();
   }
@@ -39,6 +41,11 @@ class SalesController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (Get.arguments != null && Get.arguments is Map) {
+      if (Get.arguments['filterCustomerPapers'] != null) {
+        selectedCustomerPapers.value = Get.arguments['filterCustomerPapers'];
+      }
+    }
     loadSales();
   }
 
@@ -71,6 +78,11 @@ class SalesController extends GetxController {
   void setStatusFilter(String status) {
     selectedStatus.value = status;
     debugPrint('Status Changed: $status');
+  }
+
+  void setCustomerPapersFilter(String filter) {
+    selectedCustomerPapers.value = filter;
+    debugPrint('Customer Papers Changed: $filter');
   }
 
   void setSearchQuery(String query) {
@@ -141,6 +153,13 @@ class SalesController extends GetxController {
           sale.amountPaid.toInt().toString().contains(queryNoCommas);
 
         if (!matches && query != 'sold' && query != 'installment') return false;
+      }
+
+      // 4. Customer Papers Filter
+      final papersFilter = selectedCustomerPapers.value;
+      if (papersFilter != 'All Papers') {
+        if (papersFilter == 'Pending' && sale.isCustomerPapersDelivered) return false;
+        if (papersFilter == 'Delivered' && !sale.isCustomerPapersDelivered) return false;
       }
 
       return true;

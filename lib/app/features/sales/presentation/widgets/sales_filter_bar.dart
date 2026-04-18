@@ -57,6 +57,17 @@ class SalesFilterBar extends GetView<SalesController> {
         
         const SizedBox(width: AppSpacing.md),
 
+        // Customer Papers Filter
+        _buildDropdown(
+          context, 
+          icon: LucideIcons.fileText, 
+          value: controller.selectedCustomerPapers, 
+          items: const ['All Papers', 'Pending', 'Delivered'],
+          onSelected: controller.setCustomerPapersFilter,
+        ),
+        
+        const SizedBox(width: AppSpacing.md),
+
         // Clear Filters Button
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.md),

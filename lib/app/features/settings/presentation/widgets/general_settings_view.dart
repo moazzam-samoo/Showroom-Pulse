@@ -174,6 +174,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
                 controller.settings.refresh();
                 controller.saveSettings();
                 Get.find<ThemeService>().setThemeMode(value);
+                AppToast.showSuccess(title: 'Settings Saved', message: 'Theme applied successfully');
               },
             ),
           ),

@@ -39,8 +39,16 @@ import 'package:tahir_showroom/app/features/sales/presentation/bindings/new_sale
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 
 
+import 'package:local_notifier/local_notifier.dart';
+
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize local notifier for OS-level alerts
+  await localNotifier.setup(
+    appName: 'AL-TAHIR Showroom',
+    shortcutPolicy: ShortcutPolicy.requireCreate,
+  );
 
   // ── Device License Check (runs before anything else) ──
   final license = await DeviceLicense.isDeviceAuthorized();

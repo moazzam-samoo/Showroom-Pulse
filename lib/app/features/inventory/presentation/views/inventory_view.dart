@@ -168,6 +168,7 @@ class _InventoryViewState extends State<InventoryView> {
                             selectedCondition: controller.selectedCondition.value,
                             selectedColor: controller.selectedColor.value,
                             selectedSkin: controller.selectedSkin.value,
+                            selectedDealerPapers: controller.selectedDealerPapers.value,
                             minPrice: controller.minPrice.value,
                             maxPrice: controller.maxPrice.value,
                             onBrandChanged: (v) => controller.selectedBrand.value = v,
@@ -182,6 +183,7 @@ class _InventoryViewState extends State<InventoryView> {
                               controller.selectedSkin.value = v;
                               if (v != null) controller.selectedColor.value = null;
                             },
+                            onDealerPapersChanged: (v) => controller.selectedDealerPapers.value = v,
                             onMinPriceChanged: (v) => controller.minPrice.value = v,
                             onMaxPriceChanged: (v) => controller.maxPrice.value = v,
                             onClearFilters: () {
@@ -192,6 +194,7 @@ class _InventoryViewState extends State<InventoryView> {
                               controller.selectedCondition.value = null;
                               controller.selectedColor.value = null;
                               controller.selectedSkin.value = null;
+                              controller.selectedDealerPapers.value = null;
                               controller.minPrice.value = null;
                               controller.maxPrice.value = null;
                             },

@@ -37,7 +37,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -46,60 +48,78 @@ class ProfileSettingsView extends GetView<SettingsController> {
           Container(
             key: profilePicUploadKey,
             child: _buildSettingRow(
-            title: 'Owner Profile Picture',
-            subtitle: 'Upload a picture to display on the dashboard',
-            isDark: isDark,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (settings.ownerProfilePicPath != null && File(settings.ownerProfilePicPath!).existsSync())
-                  Container(
-                    width: 48,
-                    height: 48,
-                    margin: const EdgeInsets.only(right: AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                        width: 2,
+              title: 'Owner Profile Picture',
+              subtitle: 'Upload a picture to display on the dashboard',
+              isDark: isDark,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (settings.ownerProfilePicPath != null &&
+                      File(settings.ownerProfilePicPath!).existsSync())
+                    Container(
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          width: 2,
+                        ),
+                        image: DecorationImage(
+                          image: FileImage(File(settings.ownerProfilePicPath!)),
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                      image: DecorationImage(
-                        image: FileImage(File(settings.ownerProfilePicPath!)),
-                        fit: BoxFit.cover,
+                    )
+                  else
+                    Container(
+                      width: 48,
+                      height: 48,
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.darkCard
+                            : AppColors.lightSurface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: isDark
+                                ? AppColors.darkBorder
+                                : AppColors.lightBorder),
+                      ),
+                      child: Icon(
+                        LucideIcons.user,
+                        size: 24,
+                        color: isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
                       ),
                     ),
-                  )
-                else
-                  Container(
-                    width: 48,
-                    height: 48,
-                    margin: const EdgeInsets.only(right: AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCard : AppColors.lightSurface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                  const SizedBox(width: AppSpacing.sm),
+                  ElevatedButton.icon(
+                    icon: const Icon(LucideIcons.camera, size: 14),
+                    label: const Text('Upload Photo',
+                        style: TextStyle(fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          isDark ? AppColors.darkCard : AppColors.lightSurface,
+                      foregroundColor: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                      side: BorderSide(
+                          color: isDark
+                              ? AppColors.darkBorder
+                              : AppColors.lightBorder),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
                     ),
-                    child: Icon(
-                      LucideIcons.user,
-                      size: 24,
-                      color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                    ),
+                    onPressed: () => _handleProfilePicUpload(settings),
                   ),
-                const SizedBox(width: AppSpacing.sm),
-                ElevatedButton.icon(
-                  icon: const Icon(LucideIcons.camera, size: 14),
-                  label: const Text('Upload Photo', style: TextStyle(fontSize: 12)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
-                    foregroundColor: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                    side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  onPressed: () => _handleProfilePicUpload(settings),
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           ),
           _divider(isDark),
@@ -116,53 +136,62 @@ class ProfileSettingsView extends GetView<SettingsController> {
               action: ElevatedButton(
                 onPressed: () => controller.updateOwnerName(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  backgroundColor:
+                      isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text('Save', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                child: const Text('Save',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               ),
             ),
           ),
-  _divider(isDark),
+          _divider(isDark),
 
-  // Credential Management Section
-  Padding(
-    padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
-    child: Text(
-      'Account Credentials',
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-      ),
-    ),
-  ),
+          // Credential Management Section
+          Padding(
+            padding: const EdgeInsets.only(
+                top: AppSpacing.lg, bottom: AppSpacing.sm),
+            child: Text(
+              'Account Credentials',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+            ),
+          ),
 
-  // Update Username
-  _buildCredentialRow(
-    title: 'Login Username',
-    subtitle: 'Current: ${Get.find<AuthService>().currentUser.value?.username ?? "admin"}',
-    isDark: isDark,
-    buttonLabel: 'Update Username',
-    onTap: () => _showUpdateUsernameDialog(context, isDark),
-  ),
-  _divider(isDark),
+          // Update Username
+          _buildCredentialRow(
+            title: 'Login Username',
+            subtitle:
+                'Current: ${Get.find<AuthService>().currentUser.value?.username ?? "admin"}',
+            isDark: isDark,
+            buttonLabel: 'Update Username',
+            onTap: () => _showUpdateUsernameDialog(context, isDark),
+          ),
+          _divider(isDark),
 
-  // Update Password
-  _buildCredentialRow(
-    title: 'Login Password',
-    subtitle: 'Choose a strong password for account security',
-    isDark: isDark,
-    buttonLabel: 'Change Password',
-    onTap: () => _showUpdatePasswordDialog(context, isDark),
-  ),
-  _divider(isDark),
+          // Update Password
+          _buildCredentialRow(
+            title: 'Login Password',
+            subtitle: 'Choose a strong password for account security',
+            isDark: isDark,
+            buttonLabel: 'Change Password',
+            onTap: () => _showUpdatePasswordDialog(context, isDark),
+          ),
+          _divider(isDark),
 
-  const SizedBox(height: 40),
-],
+          const SizedBox(height: 40),
+        ],
       );
     });
   }
@@ -187,7 +216,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -195,7 +226,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ],
@@ -205,14 +238,20 @@ class ProfileSettingsView extends GetView<SettingsController> {
           ElevatedButton(
             onPressed: onTap,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
-              foregroundColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-              side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              backgroundColor:
+                  isDark ? AppColors.darkCard : AppColors.lightSurface,
+              foregroundColor:
+                  isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+              side: BorderSide(
+                  color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
             ),
-            child: Text(buttonLabel, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            child: Text(buttonLabel,
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -220,23 +259,36 @@ class ProfileSettingsView extends GetView<SettingsController> {
   }
 
   void _showUpdateUsernameDialog(BuildContext context, bool isDark) {
-    final usernameController = TextEditingController(text: Get.find<AuthService>().currentUser.value?.username);
-    
+    final usernameController = TextEditingController(
+        text: Get.find<AuthService>().currentUser.value?.username);
+
     Get.dialog(
       AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        title: Text('Update Username', style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
+        backgroundColor:
+            isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text('Update Username',
+            style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
               controller: usernameController,
               autofocus: true,
-              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 labelText: 'New Username',
-                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                labelStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ],
@@ -244,20 +296,28 @@ class ProfileSettingsView extends GetView<SettingsController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
               if (usernameController.text.trim().isEmpty) {
-                AppToast.showError(title: 'Error', message: 'Username cannot be empty');
+                AppToast.showError(
+                    title: 'Error', message: 'Username cannot be empty');
                 return;
               }
-              final success = await controller.updateCredentials(usernameController.text.trim(), '');
+              final success = await controller.updateCredentials(
+                  usernameController.text.trim(), '');
               if (success) {
                 Get.back();
-                AppToast.showSuccess(title: 'Success', message: 'Username updated successfully');
+                AppToast.showSuccess(
+                    title: 'Success', message: 'Username updated successfully');
               } else {
-                AppToast.showError(title: 'Error', message: 'Failed to update username');
+                AppToast.showError(
+                    title: 'Error', message: 'Failed to update username');
               }
             },
             child: const Text('Save Changes'),
@@ -270,33 +330,52 @@ class ProfileSettingsView extends GetView<SettingsController> {
   void _showUpdatePasswordDialog(BuildContext context, bool isDark) {
     final passwordController = TextEditingController();
     final confirmController = TextEditingController();
-    
+
     Get.dialog(
       AlertDialog(
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        title: Text('Change Password', style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary)),
+        backgroundColor:
+            isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        title: Text('Change Password',
+            style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
               controller: passwordController,
               obscureText: true,
-              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 labelText: 'New Password',
-                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                labelStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: confirmController,
               obscureText: true,
-              style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
-                labelStyle: TextStyle(color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                labelStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ],
@@ -304,24 +383,33 @@ class ProfileSettingsView extends GetView<SettingsController> {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: Text('Cancel', style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+            child: Text('Cancel',
+                style: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
               if (passwordController.text.isEmpty) {
-                AppToast.showError(title: 'Error', message: 'Password cannot be empty');
+                AppToast.showError(
+                    title: 'Error', message: 'Password cannot be empty');
                 return;
               }
               if (passwordController.text != confirmController.text) {
-                AppToast.showError(title: 'Error', message: 'Passwords do not match');
+                AppToast.showError(
+                    title: 'Error', message: 'Passwords do not match');
                 return;
               }
-              final success = await controller.updateCredentials('', passwordController.text);
+              final success = await controller.updateCredentials(
+                  '', passwordController.text);
               if (success) {
                 Get.back();
-                AppToast.showSuccess(title: 'Success', message: 'Password changed successfully');
+                AppToast.showSuccess(
+                    title: 'Success', message: 'Password changed successfully');
               } else {
-                AppToast.showError(title: 'Error', message: 'Failed to change password');
+                AppToast.showError(
+                    title: 'Error', message: 'Failed to change password');
               }
             },
             child: const Text('Update Password'),
@@ -334,7 +422,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
   Widget _divider(bool isDark) {
     return Divider(
       height: 1,
-      color: isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : AppColors.lightBorderLight,
+      color: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.5)
+          : AppColors.lightBorderLight,
     );
   }
 
@@ -351,9 +441,12 @@ class ProfileSettingsView extends GetView<SettingsController> {
         settings.ownerProfilePicPath = savedPath;
         controller.settings.refresh();
         controller.saveSettings();
-        AppToast.showSuccess(title: 'Profile Updated', message: 'Profile picture saved successfully');
+        AppToast.showSuccess(
+            title: 'Profile Updated',
+            message: 'Profile picture saved successfully');
       } else {
-        AppNotificationDialog.showError(title: 'Error', message: 'Failed to save profile picture');
+        AppNotificationDialog.showError(
+            title: 'Error', message: 'Failed to save profile picture');
       }
     }
   }
@@ -377,13 +470,24 @@ class ProfileSettingsView extends GetView<SettingsController> {
             width: 240,
             child: TextFormField(
               controller: controller,
-              style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+              style: TextStyle(
+                  fontSize: 13,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary),
               decoration: InputDecoration(
                 hintText: hintText,
-                hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted),
                 filled: true,
-                fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                fillColor: isDark
+                    ? AppColors.darkBackground
+                    : AppColors.lightBackground,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -419,7 +523,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -427,7 +533,9 @@ class ProfileSettingsView extends GetView<SettingsController> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ],

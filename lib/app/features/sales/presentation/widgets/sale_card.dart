@@ -139,6 +139,22 @@ class _SaleCardState extends State<SaleCard> {
     final data = widget.data;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
+    // Check if papers are overdue
+    final now = DateTime.now();
+    bool isOverdue = false;
+    if (!data.isCustomerPapersDelivered && data.customerPapersPromisedDate != null) {
+      try {
+        final parts = data.customerPapersPromisedDate!.split('/');
+        if (parts.length == 3) {
+          // Format is DD/MM/YYYY
+          final promisedDate = DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
+          isOverdue = promisedDate.isBefore(now);
+        }
+      } catch (e) {
+        debugPrint('Error parsing promised date: $e');
+      }
+    }
+    
     // Status Badge Details
     final badgeColor = data.isCash ? const Color(0xFFEF4444) : const Color(0xFFF59E0B); // Red (Sold) vs Amber (Installment)
     final badgeLabel = data.isCash ? 'SOLD (NOT AVAILABLE)' : 'INSTALLMENT (RESERVED)';
@@ -166,9 +182,12 @@ class _SaleCardState extends State<SaleCard> {
               color: isDark ? const Color(0xFF1E293B) : Colors.white,
               borderRadius: BorderRadius.circular(AppRadius.xl),
               border: Border.all(
-                color: isDark 
-                    ? (isHovered ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.05))
-                    : (isHovered ? AppColors.lightPrimary.withOpacity(0.5) : AppColors.lightBorder),
+                color: isOverdue
+                    ? Colors.redAccent.withOpacity(isDark ? 0.8 : 1.0)
+                    : isDark 
+                        ? (isHovered ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.05))
+                        : (isHovered ? AppColors.lightPrimary.withOpacity(0.5) : AppColors.lightBorder),
+                width: isOverdue ? 2 : 1,
               ),
               boxShadow: [
                 BoxShadow(
@@ -386,17 +405,17 @@ class _SaleCardState extends State<SaleCard> {
                           ),
                         ),
                       ],
-                      // Papers Pending tag (red warning)
+                      // Papers Pending tag
                       if (!data.isCustomerPapersDelivered) ...[
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: Colors.redAccent,
+                            color: isOverdue ? Colors.redAccent : Colors.orange.shade600,
                             borderRadius: BorderRadius.circular(AppRadius.full),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.redAccent.withOpacity(0.4),
+                                color: (isOverdue ? Colors.redAccent : Colors.orange.shade600).withOpacity(0.4),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -405,10 +424,10 @@ class _SaleCardState extends State<SaleCard> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(LucideIcons.fileWarning, size: 14, color: Colors.white),
+                              Icon(isOverdue ? LucideIcons.alertCircle : LucideIcons.fileWarning, size: 14, color: Colors.white),
                               const SizedBox(width: 4),
                               Text(
-                                'Papers Pending',
+                                isOverdue ? 'Papers Overdue' : 'Papers Pending',
                                 style: GoogleFonts.outfit(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
