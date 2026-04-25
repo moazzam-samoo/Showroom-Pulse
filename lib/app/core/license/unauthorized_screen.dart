@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import '../constants/app_colors.dart';
 
-/// Full-screen lock shown when the device MAC is not in the allow-list.
+/// Full-screen lock shown when the device UUID is not in the allow-list.
 class UnauthorizedScreen extends StatefulWidget {
-  final String macAddress;
-  const UnauthorizedScreen({super.key, required this.macAddress});
+  final String deviceId;
+  const UnauthorizedScreen({super.key, required this.deviceId});
 
   @override
   State<UnauthorizedScreen> createState() => _UnauthorizedScreenState();
@@ -31,7 +31,7 @@ class _UnauthorizedScreenState extends State<UnauthorizedScreen> with WindowList
     // Because main.dart globally sets `windowManager.setPreventClose(true)`,
     // we MUST explicitly listen to the close event here and manually exit the app.
     // Exiting the app process guarantees that the next time the user opens the app,
-    // the system will run main() again and re-evaluate the hardware MAC address.
+    // the system will run main() again and re-evaluate the hardware device ID.
     exit(0);
   }
 
@@ -127,7 +127,7 @@ class _UnauthorizedScreenState extends State<UnauthorizedScreen> with WindowList
                             ),
                             const SizedBox(height: 8),
                             SelectableText(
-                              widget.macAddress,
+                              widget.deviceId,
                               style: const TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
@@ -143,7 +143,7 @@ class _UnauthorizedScreenState extends State<UnauthorizedScreen> with WindowList
                       ElevatedButton.icon(
                         onPressed: () {
                           Clipboard.setData(
-                              ClipboardData(text: widget.macAddress));
+                              ClipboardData(text: widget.deviceId));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('ID Copied Successfully'),
@@ -321,8 +321,8 @@ class _InfoRow extends StatelessWidget {
 
 /// Minimal MaterialApp wrapper that only shows the UnauthorizedScreen.
 class UnauthorizedApp extends StatelessWidget {
-  final String macAddress;
-  const UnauthorizedApp({super.key, required this.macAddress});
+  final String deviceId;
+  const UnauthorizedApp({super.key, required this.deviceId});
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +332,7 @@ class UnauthorizedApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.darkBackground,
       ),
-      home: UnauthorizedScreen(macAddress: macAddress),
+      home: UnauthorizedScreen(deviceId: deviceId),
     );
   }
 }

@@ -87,7 +87,7 @@ void main(List<String> args) async {
   // Gate: authorized → normal app, unauthorized → lock screen
   runApp(license.authorized
       ? const TahirShowroomApp()
-      : UnauthorizedApp(macAddress: license.macAddress));
+      : UnauthorizedApp(deviceId: license.deviceId));
 }
 
 class TahirShowroomApp extends StatefulWidget {
