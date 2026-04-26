@@ -63,6 +63,10 @@ dependencies:
   archive: any
   collection: any
   windows_single_instance: ^1.1.0
+
+  # Firebase (Remote License Management)
+  firebase_core: ^3.13.0
+  cloud_firestore: ^5.6.9
 dev_dependencies:
   flutter_test:
     sdk: flutter

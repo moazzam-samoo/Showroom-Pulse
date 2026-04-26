@@ -1,4 +1,5 @@
 # Project-level configuration.
+set(CMAKE_POLICY_VERSION_MINIMUM "3.5" CACHE STRING "" FORCE)
 cmake_minimum_required(VERSION 3.14)
 project(tahir_showroom LANGUAGES CXX)
 
@@ -31,6 +32,11 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
+
+# Avoid MSVC PDB write contention (C1041) when plugins compile in parallel.
+if(MSVC)
+  add_compile_options(/FS)
+endif()
 
 # Compilation settings that should be applied to most targets.
 #

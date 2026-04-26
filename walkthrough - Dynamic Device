@@ -1,0 +1,236 @@
+# Dynamic Device Licensing — Walkthrough
+
+## What Was Changed
+
+### Files Modified
+| File | Change |
+|------|--------|
+| [pubspec.yaml](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/pubspec.yaml) | Added `firebase_core` + `cloud_firestore` dependencies |
+| [device_license.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/device_license.dart) | Rewrote to check Firebase Firestore + permanent local cache |
+| [unauthorized_screen.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/unauthorized_screen.dart) | Added internet-required popup + wifi-off banner for first-time devices |
+| [main.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/main.dart) | Added `Firebase.initializeApp()` + passes `needsInternet` flag |
+| [setup.iss](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/installer/setup.iss) | Version bumped to 1.0.2 with changelog note |
+
+### Files Deleted
+| File | Reason |
+|------|--------|
+| `allowed_devices.dart` | Hardcoded UUID set replaced by Firebase Firestore |
+
+### Files Already Present (No Changes Needed)
+| File | Status |
+|------|--------|
+| [firebase_options.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/firebase_options.dart) | Already configured for Windows ✅ |
+
+---
+
+## 🔥 STEP 1: Set Up Firestore Collection (One-Time)
+
+### 1.1 Open Firebase Console
+
+Go to: **https://console.firebase.google.com/**
+
+Select your project: **showroom-management-syst-6a941**
+
+### 1.2 Enable Firestore (if not already)
+
+1. In the left sidebar → Click **"Firestore Database"**
+2. If it shows "Create database" → Click it
+3. Choose **"Start in production mode"**
+4. Select location closest to Pakistan → **asia-south1 (Mumbai)** recommended
+5. Click **"Enable"**
+
+### 1.3 Set Security Rules
+
+1. In Firestore → Click the **"Rules"** tab
+2. Replace the default rules with:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /allowed_devices/{deviceId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+3. Click **"Publish"**
+
+---
+
+## 🔑 STEP 2: Add Your First Device (Your Computer)
+
+### 2.1 Add Your UUID to Firestore
+
+1. In Firestore → Click the **"Data"** tab
+2. Click **"+ Start collection"**
+3. Collection ID: **`allowed_devices`** → Click **"Next"**
+4. Document ID: **`E5B8A756-64CE-40C9-9846-745D225D9E8C`** (your device UUID)
+5. Add these fields:
+
+| Field name | Type | Value |
+|-----------|------|-------|
+| `label` | string | `Moazzam's Device` |
+| `active` | boolean | `true` |
+| `addedAt` | timestamp | *(click the calendar icon and pick today)* |
+
+6. Click **"Save"**
+
+> [!TIP]
+> The `label` and `addedAt` fields are for YOUR reference only. The app only checks `active`.
+
+---
+
+## 🆕 STEP 3: How to Add a New Client Device
+
+When a client installs the app for the first time:
+
+### What the client sees:
+
+1. They open the app
+2. **If they have internet** → App checks Firebase → UUID not found → Shows **"Unauthorized Device"** screen with their UUID displayed
+3. **If they have NO internet** → Shows **"Unauthorized Device"** screen + **popup dialog** saying "Internet connection required for one-time registration"
+
+### What YOU do:
+
+1. Client copies their UUID from the screen and sends it to you (via WhatsApp, call, etc.)
+2. Open **Firebase Console** → **Firestore** → **`allowed_devices`** collection
+3. Click **"+ Add document"**
+4. Set **Document ID** = the client's UUID (paste it exactly)
+5. Add fields:
+
+| Field name | Type | Value |
+|-----------|------|-------|
+| `label` | string | `Client Name / Shop Name` |
+| `active` | boolean | `true` |
+| `addedAt` | timestamp | *(pick today)* |
+
+6. Click **"Save"**
+7. Tell the client: **"Connect to internet and restart the app"**
+8. ✅ Done! They're authorized forever. No internet needed again.
+
+---
+
+## 🔒 STEP 4: How to Revoke a Client's Access
+
+1. Open **Firebase Console** → **Firestore** → **`allowed_devices`**
+2. Click on the client's UUID document
+3. Change `active` from `true` → `false`
+4. Click **"Save"**
+5. Next time the client opens the app **while connected to internet** → they get locked out
+6. The app does a silent background check (3 seconds) — if revoked, the next app launch shows **Unauthorized**
+
+> [!NOTE]
+> If the client has NO internet, they can still use the app. But the moment they have internet and open the app, the background check catches the revocation.
+
+---
+
+## 🧪 STEP 5: Testing Guide
+
+### Test 1: Your Device (Positive — Should Work)
+
+1. Make sure your UUID `E5B8A756-64CE-40C9-9846-745D225D9E8C` is in Firestore with `active: true`
+2. Build: `flutter build windows`
+3. Run the app
+4. ✅ **Expected:** App opens normally (dashboard/login)
+
+### Test 2: First Launch Without Internet
+
+1. **Disconnect your internet** (turn off WiFi/Ethernet)
+2. Clear the app's SharedPreferences cache:
+   - Delete the folder: `%APPDATA%\com.example\tahir_showroom\`
+   - OR uninstall and reinstall the app
+3. Run the app
+4. ✅ **Expected:** Shows **Unauthorized screen** + **popup dialog** saying "Internet connection required"
+
+### Test 3: First Launch With Internet (Registration)
+
+1. **Reconnect internet**
+2. Make sure your UUID is in Firestore
+3. Run the app (with cleared cache from Test 2, or after reinstall)
+4. ✅ **Expected:** App opens normally — UUID verified and cached
+
+### Test 4: Offline After Registration
+
+1. **Disconnect internet**
+2. Close and reopen the app
+3. ✅ **Expected:** App opens normally — using permanent cache
+
+### Test 5: Revocation
+
+1. In Firebase Console → change your UUID's `active` to `false`
+2. **Connect internet** → open the app
+3. App opens this time (background check fires, updates cache)
+4. **Close and reopen the app**
+5. ✅ **Expected:** Shows **Unauthorized screen** — access revoked!
+6. **Don't forget:** Set `active` back to `true` after testing!
+
+### Test 6: Unknown Device
+
+1. In Firebase Console → temporarily **delete** your UUID document
+2. Clear cache: delete `%APPDATA%\com.example\tahir_showroom\`
+3. Run the app with internet
+4. ✅ **Expected:** Shows **Unauthorized screen** with your UUID displayed + copy button
+
+---
+
+## 📦 STEP 6: Build & Create Installer
+
+### Build the App
+```powershell
+cd "c:\Users\Moazzam Samoo\Desktop\Tahir Showroom"
+flutter build windows
+```
+
+### Create Installer
+1. Open **Inno Setup Compiler**
+2. Open: `installer\setup.iss`
+3. Click **Compile** (Ctrl+F9)
+4. Output: `C:\InnoSetup\Output\ALTahirShowroom_Setup_v1.0.2.exe`
+
+### Deploy to Client
+1. Send the installer to the client
+2. They install it
+3. First launch → they see Unauthorized screen + UUID
+4. They send you the UUID
+5. You add it to Firebase
+6. They restart → ✅ Done!
+
+---
+
+## 📋 Quick Reference Card
+
+| Action | Where | What |
+|--------|-------|------|
+| **Add device** | Firebase Console → Firestore → `allowed_devices` | Add doc with UUID as ID, `active: true` |
+| **Revoke device** | Firebase Console → Firestore → `allowed_devices` | Set `active: false` on the UUID doc |
+| **Re-grant device** | Firebase Console → Firestore → `allowed_devices` | Set `active: true` on the UUID doc |
+| **Check all devices** | Firebase Console → Firestore → `allowed_devices` | Browse collection — see all UUIDs + labels |
+
+---
+
+## 🏗️ How It Works (Technical Summary)
+
+```
+App Launch
+    │
+    ├── Has cached authorization? ──Yes──┐
+    │                                     │
+    │                              Internet available?
+    │                              ├── Yes → Silent 3s background check
+    │                              │         (updates cache if revoked)
+    │                              └── No → Skip (use cache as-is)
+    │                                     │
+    │                               Open app from cache ✅
+    │
+    └── No cache (first time) ──── Internet available?
+                                   ├── Yes → Check Firebase → Cache result
+                                   │         ├── active:true → Open app ✅
+                                   │         └── not found → Unauthorized ❌
+                                   └── No → Show popup: "Connect internet" ❌
+```

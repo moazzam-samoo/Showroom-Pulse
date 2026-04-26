@@ -8,6 +8,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'app/core/license/device_license.dart';
 import 'app/core/license/unauthorized_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'app/core/bindings/initial_binding.dart';
@@ -38,20 +40,21 @@ import 'package:tahir_showroom/app/features/sales/presentation/views/new_sale_vi
 import 'package:tahir_showroom/app/features/sales/presentation/bindings/new_sale_binding.dart';
 import 'package:tahir_showroom/app/features/procurement/presentation/views/add_stock_view.dart';
 
-
 import 'package:local_notifier/local_notifier.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize local notifier for OS-level alerts
   await localNotifier.setup(
     appName: 'AL-TAHIR Showroom',
     shortcutPolicy: ShortcutPolicy.requireCreate,
   );
 
-  // ── Device License Check (runs before anything else) ──
-  final license = await DeviceLicense.isDeviceAuthorized();
+  // Initialize Firebase for remote license management
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   await WindowsSingleInstance.ensureSingleInstance(
     args,
@@ -64,7 +67,7 @@ void main(List<String> args) async {
 
   // Initialize window manager for desktop
   await windowManager.ensureInitialized();
-  
+
   WindowOptions windowOptions = const WindowOptions(
     size: Size(1280, 720),
     minimumSize: Size(800, 600),
@@ -74,7 +77,7 @@ void main(List<String> args) async {
     titleBarStyle: TitleBarStyle.normal,
     title: 'AL-TAHIR Showroom',
   );
-  
+
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
@@ -84,10 +87,84 @@ void main(List<String> args) async {
     await windowManager.setPreventClose(true);
   });
 
-  // Gate: authorized → normal app, unauthorized → lock screen
-  runApp(license.authorized
-      ? const TahirShowroomApp()
-      : UnauthorizedApp(deviceId: license.deviceId));
+  runApp(const LicenseGateApp());
+}
+
+class LicenseGateApp extends StatefulWidget {
+  const LicenseGateApp({super.key});
+
+  @override
+  State<LicenseGateApp> createState() => _LicenseGateAppState();
+}
+
+class _LicenseGateAppState extends State<LicenseGateApp>
+    with WidgetsBindingObserver {
+  ({bool authorized, String deviceId, bool needsInternet})? _license;
+  bool _checking = true;
+  DateTime? _lastRecheckAt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkLicense();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final last = _lastRecheckAt;
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(seconds: 10)) {
+      return;
+    }
+    _checkLicense();
+  }
+
+  Future<void> _checkLicense() async {
+    setState(() {
+      _checking = true;
+    });
+    final license = await DeviceLicense.isDeviceAuthorized();
+    if (!mounted) return;
+    setState(() {
+      _license = license;
+      _checking = false;
+      _lastRecheckAt = DateTime.now();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking || _license == null) {
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: AppColors.darkBackground,
+          body: Center(
+            child: CircularProgressIndicator(color: AppColors.darkPrimary),
+          ),
+        ),
+      );
+    }
+
+    if (_license!.authorized) {
+      return const TahirShowroomApp();
+    }
+
+    return UnauthorizedApp(
+      deviceId: _license!.deviceId,
+      needsInternet: _license!.needsInternet,
+      onRetry: DeviceLicense.isDeviceAuthorized,
+      onAuthorized: _checkLicense,
+    );
+  }
 }
 
 class TahirShowroomApp extends StatefulWidget {
@@ -97,7 +174,8 @@ class TahirShowroomApp extends StatefulWidget {
   State<TahirShowroomApp> createState() => _TahirShowroomAppState();
 }
 
-class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener, TrayListener {
+class _TahirShowroomAppState extends State<TahirShowroomApp>
+    with WindowListener, TrayListener {
   @override
   void initState() {
     windowManager.addListener(this);
@@ -109,14 +187,12 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
   Future<void> _initSystemTray() async {
     // Set tray icon (Windows relies on .ico)
     await trayManager.setIcon(
-      Platform.isWindows 
-          ? 'assets/app_icon.ico' 
-          : '',
+      Platform.isWindows ? 'assets/app_icon.ico' : '',
     );
-    
+
     // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
     await trayManager.setToolTip('AL-TAHIR Showroom');
-    
+
     // Create tray context menu
     Menu menu = Menu(
       items: [
@@ -173,7 +249,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
     // Manual setup replaces GetMaterialApp to add themeAnimationDuration: Duration.zero
     // which GetMaterialApp v4.7.3 doesn't expose. This prevents AnimatedTheme cross-fade
     // that causes GlobalKey collisions on Material ink renderers during theme switches.
-    
+
     // Initialize GetX config and bindings
     Get.config(
       enableLog: true,
@@ -181,7 +257,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       defaultDurationTransition: const Duration(milliseconds: 300),
     );
     InitialBinding().dependencies();
-    
+
     // Register pages with GetX
     final getPages = [
       GetPage(
@@ -241,7 +317,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       ),
       GetPage(
         name: '/settings',
-        page: () => SettingsView(),
+        page: () => const SettingsView(),
         binding: SettingsBinding(),
       ),
       GetPage(
@@ -251,22 +327,22 @@ class _TahirShowroomAppState extends State<TahirShowroomApp> with WindowListener
       ),
     ];
     Get.addPages(getPages);
-    
+
     return GetBuilder<GetMaterialController>(
       init: Get.rootController,
       builder: (ctrl) => MaterialApp(
         navigatorKey: Get.key,
         title: 'AL-TAHIR Showroom',
         debugShowCheckedModeBanner: false,
-        
+
         // Theme
         theme: ctrl.theme ?? AppTheme.lightTheme,
         darkTheme: ctrl.darkTheme ?? AppTheme.darkTheme,
         themeMode: ctrl.themeMode ?? ThemeMode.dark,
-        
+
         // Disable theme animation to prevent GlobalKey collisions
         themeAnimationDuration: Duration.zero,
-        
+
         // Navigation
         home: const SplashScreen(),
         onGenerateRoute: (settings) {
@@ -294,24 +370,27 @@ class FeaturePlaceholder extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : Colors.black),
+          icon: Icon(Icons.arrow_back,
+              color: isDark ? Colors.white : Colors.black),
           onPressed: () => Get.offNamed('/dashboard'),
         ),
       ),
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.construction, size: 64, color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
+            Icon(Icons.construction,
+                size: 64,
+                color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary),
             const SizedBox(height: 16),
             Text(
               '$title Feature Coming Soon',
               style: TextStyle(
-                fontSize: 20, 
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black87
-              ),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87),
             ),
           ],
         ),
@@ -339,7 +418,7 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       // Initialize all async services
       bool isFreshDb = await initializeAsyncServices();
-      
+
       final walkthroughService = Get.find<WalkthroughService>();
       final authService = Get.find<AuthService>();
 
@@ -374,11 +453,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark 
-          ? AppColors.darkBackground 
-          : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -392,7 +470,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.05),
                   width: 1,
                 ),
                 boxShadow: [
@@ -411,7 +491,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.motorcycle,
                     size: 48,
-                    color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                    color:
+                        isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                   ),
                 ),
               ),
@@ -423,8 +504,8 @@ class _SplashScreenState extends State<SplashScreen> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isDark 
-                    ? AppColors.darkTextPrimary 
+                color: isDark
+                    ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
               ),
             ),
@@ -453,11 +534,10 @@ class DashboardPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Get.find<AuthService>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark 
-          ? AppColors.darkBackground 
-          : AppColors.lightBackground,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -473,8 +553,8 @@ class DashboardPlaceholder extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isDark 
-                    ? AppColors.darkTextPrimary 
+                color: isDark
+                    ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
               ),
             ),
@@ -483,8 +563,8 @@ class DashboardPlaceholder extends StatelessWidget {
               'Dashboard UI will be implemented next',
               style: TextStyle(
                 fontSize: 14,
-                color: isDark 
-                    ? AppColors.darkTextSecondary 
+                color: isDark
+                    ? AppColors.darkTextSecondary
                     : AppColors.lightTextSecondary,
               ),
             ),
@@ -497,9 +577,8 @@ class DashboardPlaceholder extends StatelessWidget {
               icon: const Icon(Icons.logout),
               label: const Text('Logout'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isDark 
-                    ? AppColors.darkPrimary 
-                    : AppColors.lightPrimary,
+                backgroundColor:
+                    isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
