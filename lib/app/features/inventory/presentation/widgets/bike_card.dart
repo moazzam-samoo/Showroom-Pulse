@@ -49,6 +49,12 @@ class _BikeCardState extends State<BikeCard> {
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
     const primaryColor = Color(0xFF00ACC1); // Cyan
     
+    // Check if papers are overdue
+    final now = DateTime.now();
+    final isOverdue = !widget.bike.isDealerPapersCollected && 
+                      widget.bike.dealerPapersPromisedDate != null &&
+                      widget.bike.dealerPapersPromisedDate!.isBefore(now);
+    
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -78,10 +84,12 @@ class _BikeCardState extends State<BikeCard> {
                 ),
             ],
             border: Border.all(
-              color: isDark 
-                  ? (_isHovered ? primaryColor.withOpacity(0.5) : const Color(0xFF424242)) // Grey 800
-                  : (_isHovered ? primaryColor.withOpacity(0.5) : AppColors.lightBorder),
-              width: 1,
+              color: isOverdue 
+                  ? Colors.redAccent.withOpacity(isDark ? 0.8 : 1.0)
+                  : isDark 
+                      ? (_isHovered ? primaryColor.withOpacity(0.5) : const Color(0xFF424242)) // Grey 800
+                      : (_isHovered ? primaryColor.withOpacity(0.5) : AppColors.lightBorder),
+              width: isOverdue ? 2 : 1,
             ),
           ),
           clipBehavior: Clip.antiAlias,

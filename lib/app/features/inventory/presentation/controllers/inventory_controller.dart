@@ -30,12 +30,18 @@ class InventoryController extends GetxController {
   final RxnString selectedCondition = RxnString();
   final RxnString selectedColor = RxnString();
   final RxnString selectedSkin = RxnString();
+  final RxnString selectedDealerPapers = RxnString();
   final Rxn<double> minPrice = Rxn<double>();
   final Rxn<double> maxPrice = Rxn<double>();
 
   @override
   void onInit() {
     super.onInit();
+    if (Get.arguments != null && Get.arguments is Map) {
+      if (Get.arguments['filterDealerPapers'] != null) {
+        selectedDealerPapers.value = Get.arguments['filterDealerPapers'];
+      }
+    }
     // Listen to search changes for real-time filtering
     searchController.addListener(() {
       bikes.refresh(); 
@@ -515,6 +521,7 @@ class InventoryController extends GetxController {
     final conditionFilter = selectedCondition.value?.toLowerCase();
     final colorFilter = selectedColor.value?.toLowerCase();
     final skinFilter = selectedSkin.value?.toLowerCase();
+    final dealerPapersFilter = selectedDealerPapers.value?.toLowerCase();
     final minP = minPrice.value;
     final maxP = maxPrice.value;
 
@@ -590,6 +597,12 @@ class InventoryController extends GetxController {
         final salePrice = bike.cashSalePrice;
         if (minP != null && salePrice < minP) return false;
         if (maxP != null && salePrice > maxP) return false;
+      }
+
+      // 9. Dealer Papers Filter
+      if (dealerPapersFilter != null && dealerPapersFilter.isNotEmpty && dealerPapersFilter != 'all') {
+        if (dealerPapersFilter == 'pending' && bike.isDealerPapersCollected) return false;
+        if (dealerPapersFilter == 'collected' && !bike.isDealerPapersCollected) return false;
       }
 
       return true;

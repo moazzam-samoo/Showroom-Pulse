@@ -21,6 +21,7 @@ class BikeFilterBar extends StatelessWidget {
   final String? selectedCondition;
   final String? selectedColor;
   final String? selectedSkin;
+  final String? selectedDealerPapers;
   final double? minPrice;
   final double? maxPrice;
   final ValueChanged<String?>? onBrandChanged;
@@ -29,6 +30,7 @@ class BikeFilterBar extends StatelessWidget {
   final ValueChanged<String?>? onConditionChanged;
   final ValueChanged<String?>? onColorChanged;
   final ValueChanged<String?>? onSkinChanged;
+  final ValueChanged<String?>? onDealerPapersChanged;
   final ValueChanged<double?>? onMinPriceChanged;
   final ValueChanged<double?>? onMaxPriceChanged;
   final ValueChanged<String>? onSearchChanged;
@@ -45,6 +47,7 @@ class BikeFilterBar extends StatelessWidget {
     this.selectedCondition,
     this.selectedColor,
     this.selectedSkin,
+    this.selectedDealerPapers,
     this.minPrice,
     this.maxPrice,
     this.onBrandChanged,
@@ -53,6 +56,7 @@ class BikeFilterBar extends StatelessWidget {
     this.onConditionChanged,
     this.onColorChanged,
     this.onSkinChanged,
+    this.onDealerPapersChanged,
     this.onMinPriceChanged,
     this.onMaxPriceChanged,
     this.onSearchChanged,
@@ -66,6 +70,7 @@ class BikeFilterBar extends StatelessWidget {
   static const List<String> engineCCs = ['CD70', 'CG125', '100cc', '110cc', '150cc'];
   static const List<String> statuses = ['All', 'Available', 'Installment Sold', 'Cash Sold', 'Both Sold'];
   static const List<String> conditions = ['New', 'Used'];
+  static const List<String> dealerPapersOptions = ['Pending', 'Collected'];
   static const List<String> colors = [
     'Red', 'Black', 'Blue', 'Silver', 'White', 'Grey', 'Green',
     'Yellow', 'Orange', 'Purple', 'Maroon',
@@ -251,6 +256,14 @@ class BikeFilterBar extends StatelessWidget {
                 hint: 'Skin/Pattern',
                 items: skins,
                 onChanged: onSkinChanged,
+                isDark: isDark,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _buildDropdown(
+                value: selectedDealerPapers,
+                hint: 'Dealer Papers',
+                items: dealerPapersOptions,
+                onChanged: onDealerPapersChanged,
                 isDark: isDark,
               ),
               const SizedBox(width: AppSpacing.sm),

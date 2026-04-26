@@ -69,36 +69,97 @@ class AppToast {
     required IconData icon,
     required Color iconColor,
   }) {
-    if (Get.isSnackbarOpen) {
-      Get.closeAllSnackbars();
-    }
+    // Close existing toasts/snackbars
+    if (Get.isSnackbarOpen) Get.closeAllSnackbars();
 
     final isDark = Get.isDarkMode;
     final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
-    Get.snackbar(
-      title,
-      message ?? '',
-      messageText: messageText,
-      icon: Icon(icon, color: iconColor),
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: bgColor,
-      colorText: textColor,
-      borderRadius: 12,
-      margin: const EdgeInsets.only(top: 24, left: 24, right: 24),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      maxWidth: 400,
-      duration: const Duration(milliseconds: 1700),
-      isDismissible: true,
-      dismissDirection: DismissDirection.horizontal,
-      boxShadows: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.1),
-          blurRadius: 10,
-          offset: const Offset(0, 4),
+    // We use Get.dialog with top alignment to support "click anywhere to close"
+    Get.dialog(
+      GestureDetector(
+        onTap: () {
+          if (Get.isDialogOpen ?? false) Get.back();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 24,
+              left: 24,
+              right: 24,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    if (Get.isDialogOpen ?? false) Get.back();
+                  },
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, color: iconColor),
+                          const SizedBox(width: 16),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  title,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                if (messageText != null)
+                                  messageText
+                                else if (message != null && message.isNotEmpty)
+                                  Text(
+                                    message,
+                                    style: TextStyle(
+                                      color: textColor.withOpacity(0.8),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
+      barrierColor: Colors.transparent,
+      barrierDismissible: true,
     );
+
+    // Auto-close after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+    });
   }
 }

@@ -32,7 +32,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -41,53 +43,67 @@ class FinancialSettingsView extends GetView<SettingsController> {
           Container(
             key: markupSliderKey,
             child: _buildSettingRow(
-            title: 'Default Installment Markup (%)',
-            subtitle: 'Pre-fills markup when creating new installment sales',
-            isDark: isDark,
-            trailing: SizedBox(
-              width: 200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    '${settings.defaultMarkupPercentage.toInt()}%',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        trackHeight: 3,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                        activeTrackColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                        inactiveTrackColor: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withValues(alpha: 0.2),
-                        thumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-                      ),
-                      child: Slider(
-                        value: settings.defaultMarkupPercentage,
-                        min: 0,
-                        max: 100,
-                        divisions: 100,
-                        onChanged: (value) {
-                          settings.defaultMarkupPercentage = value;
-                          controller.settings.refresh();
-                          controller.saveSettings();
-                        },
-                        onChangeEnd: (value) {
-                          AppToast.showSuccess(title: 'Financial Settings', message: 'Default markup set to ${value.toInt()}%');
-                        },
+              title: 'Default Installment Markup (%)',
+              subtitle: 'Pre-fills markup when creating new installment sales',
+              isDark: isDark,
+              trailing: SizedBox(
+                width: 200,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${settings.defaultMarkupPercentage.toInt()}%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark
+                            ? AppColors.darkPrimary
+                            : AppColors.lightPrimary,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 7),
+                          activeTrackColor: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          inactiveTrackColor: (isDark
+                                  ? AppColors.darkPrimary
+                                  : AppColors.lightPrimary)
+                              .withValues(alpha: 0.2),
+                          thumbColor: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          overlayShape:
+                              const RoundSliderOverlayShape(overlayRadius: 14),
+                        ),
+                        child: Slider(
+                          value: settings.defaultMarkupPercentage,
+                          min: 0,
+                          max: 100,
+                          divisions: 100,
+                          onChanged: (value) {
+                            settings.defaultMarkupPercentage = value;
+                            controller.settings.refresh();
+                            controller.saveSettings();
+                          },
+                          onChangeEnd: (value) {
+                            AppToast.showSuccess(
+                                title: 'Financial Settings',
+                                message:
+                                    'Default markup set to ${value.toInt()}%');
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           ),
           _divider(isDark),
 
@@ -99,18 +115,30 @@ class FinancialSettingsView extends GetView<SettingsController> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                color: isDark
+                    ? AppColors.darkBackground
+                    : AppColors.lightBackground,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isDark ? AppColors.darkBorderInput : AppColors.lightBorder, width: 0.5),
+                border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorderInput
+                        : AppColors.lightBorder,
+                    width: 0.5),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
-                  value: ['Off', 'Nearest 10', 'Nearest 50', 'Nearest 100'].contains(settings.emiRounding) 
-                      ? settings.emiRounding 
+                  value: ['Off', 'Nearest 10', 'Nearest 50', 'Nearest 100']
+                          .contains(settings.emiRounding)
+                      ? settings.emiRounding
                       : 'Off',
-                  dropdownColor: isDark ? AppColors.darkCard : AppColors.lightSurface,
+                  dropdownColor:
+                      isDark ? AppColors.darkCard : AppColors.lightSurface,
                   isDense: true,
-                  style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary),
                   items: ['Off', 'Nearest 10', 'Nearest 50', 'Nearest 100']
                       .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                       .toList(),
@@ -119,7 +147,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                       settings.emiRounding = value;
                       controller.settings.refresh();
                       controller.saveSettings();
-                      AppToast.showSuccess(title: 'Financial Settings', message: 'EMI rounding set to $value');
+                      AppToast.showSuccess(
+                          title: 'Financial Settings',
+                          message: 'EMI rounding set to $value');
                     }
                   },
                 ),
@@ -132,18 +162,19 @@ class FinancialSettingsView extends GetView<SettingsController> {
           Container(
             key: lateFeeToggleKey,
             child: _buildSettingRow(
-            title: 'Automatic Late Fee',
-            subtitle: 'Apply penalty for overdue installments',
-            isDark: isDark,
-            trailing: Switch(
-              value: settings.automaticLateFeeEnabled,
-              activeThumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-              onChanged: (value) {
-                settings.automaticLateFeeEnabled = value;
-                controller.settings.refresh();
-                controller.saveSettings();
-              },
-            ),
+              title: 'Automatic Late Fee',
+              subtitle: 'Apply penalty for overdue installments',
+              isDark: isDark,
+              trailing: Switch(
+                value: settings.automaticLateFeeEnabled,
+                activeThumbColor:
+                    isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                onChanged: (value) {
+                  settings.automaticLateFeeEnabled = value;
+                  controller.settings.refresh();
+                  controller.saveSettings();
+                },
+              ),
             ),
           ),
 
@@ -164,7 +195,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                        color: isDark
+                            ? AppColors.darkPrimary
+                            : AppColors.lightPrimary,
                       ),
                     ),
                     const SizedBox(width: 4),
@@ -172,11 +205,20 @@ class FinancialSettingsView extends GetView<SettingsController> {
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 3,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                          activeTrackColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                          inactiveTrackColor: (isDark ? AppColors.darkPrimary : AppColors.lightPrimary).withValues(alpha: 0.2),
-                          thumbColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                          thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 7),
+                          activeTrackColor: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          inactiveTrackColor: (isDark
+                                  ? AppColors.darkPrimary
+                                  : AppColors.lightPrimary)
+                              .withValues(alpha: 0.2),
+                          thumbColor: isDark
+                              ? AppColors.darkPrimary
+                              : AppColors.lightPrimary,
+                          overlayShape:
+                              const RoundSliderOverlayShape(overlayRadius: 14),
                         ),
                         child: Slider(
                           value: settings.lateFeePercentage,
@@ -189,7 +231,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                             controller.saveSettings();
                           },
                           onChangeEnd: (value) {
-                            AppToast.showSuccess(title: 'Financial Settings', message: 'Late fee set to ${value.toInt()}%');
+                            AppToast.showSuccess(
+                                title: 'Financial Settings',
+                                message: 'Late fee set to ${value.toInt()}%');
                           },
                         ),
                       ),
@@ -210,13 +254,24 @@ class FinancialSettingsView extends GetView<SettingsController> {
               width: 240,
               child: TextFormField(
                 initialValue: settings.defaultExpenseCategories,
-                style: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                style: TextStyle(
+                    fontSize: 13,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary),
                 decoration: InputDecoration(
                   hintText: 'Rent, Salary, Bills...',
-                  hintStyle: TextStyle(fontSize: 13, color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                  hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted),
                   filled: true,
-                  fillColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  fillColor: isDark
+                      ? AppColors.darkBackground
+                      : AppColors.lightBackground,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -226,7 +281,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                   settings.defaultExpenseCategories = value;
                   controller.settings.refresh();
                   controller.saveSettings();
-                  AppToast.showSuccess(title: 'Financial Settings', message: 'Expense categories updated');
+                  AppToast.showSuccess(
+                      title: 'Financial Settings',
+                      message: 'Expense categories updated');
                 },
               ),
             ),
@@ -241,7 +298,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
   Widget _divider(bool isDark) {
     return Divider(
       height: 1,
-      color: isDark ? AppColors.darkBorder.withValues(alpha: 0.5) : AppColors.lightBorderLight,
+      color: isDark
+          ? AppColors.darkBorder.withValues(alpha: 0.5)
+          : AppColors.lightBorderLight,
     );
   }
 
@@ -264,7 +323,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -272,7 +333,9 @@ class FinancialSettingsView extends GetView<SettingsController> {
                   subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ],

@@ -17,40 +17,27 @@ class KpiDetailDialogs {
   // --- 1. Total Asset Value Dialog ---
   static Future<void> showAssetValueDialog(BuildContext context) async {
     final bikes = await _isar.bikes.filter().statusEqualTo(BikeStatusEnum.available).findAll();
-    
-    // Group by model
-    final Map<String, List<Bike>> groupedBikes = {};
-    for (var bike in bikes) {
-      if (!groupedBikes.containsKey(bike.model)) groupedBikes[bike.model] = [];
-      groupedBikes[bike.model]!.add(bike);
-    }
 
     final totalAssetValue = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
 
     _showDialog(
       context: context,
       title: 'Asset Value Breakdown',
-      content: groupedBikes.isEmpty 
+      content: bikes.isEmpty 
         ? _buildEmptyState('No available bikes in inventory.')
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTableHeader(['Horse Power', 'Count', 'Unit Price', 'Total Value']),
+              _buildTableHeader(['Model', 'Engine No.', 'Chassis No.', 'Value']),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: groupedBikes.entries.map((entry) {
-                      final model = entry.key;
-                      final count = entry.value.length;
-                      // Assume all bikes of same model have similar purchase price for simplicity
-                      final unitPrice = entry.value.first.purchasePrice; 
-                      final totalValue = count * unitPrice;
-                      
+                    children: bikes.map((bike) {
                       return _buildTableRow([
-                        model,
-                        '$count',
-                        PriceFormatter.formatPKR(unitPrice),
-                        PriceFormatter.formatPKR(totalValue),
+                        bike.model,
+                        bike.engineNumber,
+                        bike.chassisNumber,
+                        PriceFormatter.formatPKR(bike.purchasePrice),
                       ]);
                     }).toList(),
                   ),
@@ -66,13 +53,6 @@ class KpiDetailDialogs {
   // --- 2. Units In Stock Dialog ---
   static Future<void> showStockDialog(BuildContext context) async {
     final bikes = await _isar.bikes.filter().statusEqualTo(BikeStatusEnum.available).findAll();
-    
-    // Group by model
-    final Map<String, List<Bike>> groupedBikes = {};
-    for (var bike in bikes) {
-      if (!groupedBikes.containsKey(bike.model)) groupedBikes[bike.model] = [];
-      groupedBikes[bike.model]!.add(bike);
-    }
 
     final totalValue = bikes.fold<double>(0, (sum, b) => sum + b.purchasePrice);
 
@@ -84,21 +64,16 @@ class KpiDetailDialogs {
         : Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildTableHeader(['Horse Power', 'Units', 'Unit Price', 'Total Value']),
+              _buildTableHeader(['Model', 'Engine No.', 'Chassis No.', 'Value']),
               Flexible(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: groupedBikes.entries.map((entry) {
-                      final model = entry.key;
-                      final count = entry.value.length;
-                      final unitPrice = entry.value.first.purchasePrice;
-                      final totalModelValue = count * unitPrice;
-
+                    children: bikes.map((bike) {
                       return _buildTableRow([
-                        model,
-                        '$count',
-                        PriceFormatter.formatPKR(unitPrice),
-                        PriceFormatter.formatPKR(totalModelValue),
+                        bike.model,
+                        bike.engineNumber,
+                        bike.chassisNumber,
+                        PriceFormatter.formatPKR(bike.purchasePrice),
                       ]);
                     }).toList(),
                   ),

@@ -16,10 +16,14 @@ import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcom
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:local_notifier/local_notifier.dart';
 
 class DashboardController extends GetxController {
   final SalesService _salesService = SalesService();
   final IsarService _isarService = Get.find<IsarService>();
+
+  // Overdue Papers Dismissal State
+  static bool dismissOverduePapers = false;
 
   // Profile Settings
   final ownerName = RxnString();
@@ -352,50 +356,94 @@ class DashboardController extends GetxController {
 
   /// Check for overdue vehicle papers and notify
   Future<void> checkOverduePapers() async {
+    if (dismissOverduePapers) return;
+
     try {
       final isar = _isarService.isar;
       final now = DateTime.now();
+      final tomorrow = now.add(const Duration(days: 1));
       
       // Fetch all bikes to check paper statuses
       final bikes = await isar.bikes.where().findAll();
       
       int overdueDealerPapers = 0;
       int overdueCustomerPapers = 0;
+      int dueSoonDealerPapers = 0;
+      int dueSoonCustomerPapers = 0;
 
       for (var bike in bikes) {
-        if (!bike.isDealerPapersCollected && 
-            bike.dealerPapersPromisedDate != null && 
-            bike.dealerPapersPromisedDate!.isBefore(now)) {
-          overdueDealerPapers++;
+        // Dealer Papers
+        if (!bike.isDealerPapersCollected && bike.dealerPapersPromisedDate != null) {
+          if (bike.dealerPapersPromisedDate!.isBefore(now)) {
+            overdueDealerPapers++;
+          } else if (bike.dealerPapersPromisedDate!.isBefore(tomorrow)) {
+            dueSoonDealerPapers++;
+          }
         }
         
-        if (!bike.isCustomerPapersDelivered && 
-            bike.customerPapersPromisedDate != null && 
-            bike.customerPapersPromisedDate!.isBefore(now)) {
-          overdueCustomerPapers++;
+        // Customer Papers
+        if (!bike.isCustomerPapersDelivered && bike.customerPapersPromisedDate != null) {
+          if (bike.customerPapersPromisedDate!.isBefore(now)) {
+            overdueCustomerPapers++;
+          } else if (bike.customerPapersPromisedDate!.isBefore(tomorrow)) {
+            dueSoonCustomerPapers++;
+          }
         }
       }
 
-      if (overdueDealerPapers > 0 || overdueCustomerPapers > 0) {
+      final totalIssues = overdueDealerPapers + overdueCustomerPapers + dueSoonDealerPapers + dueSoonCustomerPapers;
+      if (totalIssues > 0) {
         String message = '';
+        if (overdueCustomerPapers > 0) message += '• $overdueCustomerPapers Customer Papers Overdue\n';
         if (overdueDealerPapers > 0) message += '• $overdueDealerPapers Dealer Papers Overdue\n';
-        if (overdueCustomerPapers > 0) message += '• $overdueCustomerPapers Customer Papers Overdue';
+        if (dueSoonCustomerPapers > 0) message += '• $dueSoonCustomerPapers Customer Papers Due Soon\n';
+        if (dueSoonDealerPapers > 0) message += '• $dueSoonDealerPapers Dealer Papers Due Soon';
+        
+        final title = (overdueDealerPapers + overdueCustomerPapers > 0) ? '⚠️ Vehicle Papers Overdue' : '⏰ Vehicle Papers Due Soon';
+
+        // Try to show OS-level notification
+        try {
+          if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+            final notification = LocalNotification(
+              title: title,
+              body: message.trim(),
+            );
+            notification.show();
+          }
+        } catch (e) {
+          debugPrint('Failed to show OS notification: $e');
+        }
         
         // Show as a warning notification after a short delay (so dashboard finishes opening)
         Future.delayed(const Duration(seconds: 2), () {
-          // Check if snackbar is open, optionally. GetX handles queuing if multiple.
+          if (Get.isSnackbarOpen) return;
           Get.snackbar(
-            '⚠️ Overdue Vehicle Papers',
+            (overdueDealerPapers + overdueCustomerPapers > 0) ? '⚠️ Vehicle Papers Overdue' : '⏰ Vehicle Papers Due Soon',
             message.trim(),
             snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.redAccent.shade700,
+            backgroundColor: (overdueDealerPapers + overdueCustomerPapers > 0) ? Colors.redAccent.shade700 : Colors.orange.shade700,
             colorText: Colors.white,
-            duration: const Duration(seconds: 8),
+            duration: const Duration(seconds: 15),
             icon: const Icon(LucideIcons.fileWarning, color: Colors.white, size: 28),
             margin: const EdgeInsets.all(16),
             borderRadius: 8,
             isDismissible: true,
             forwardAnimationCurve: Curves.easeOutBack,
+            mainButton: TextButton(
+              onPressed: () {
+                dismissOverduePapers = true;
+                Get.closeAllSnackbars();
+              },
+              child: const Text("Don't Show Again", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+            onTap: (snack) {
+              Get.closeAllSnackbars();
+              if (overdueCustomerPapers > 0 || dueSoonCustomerPapers > 0) {
+                Get.offNamed('/sales', arguments: {'filterCustomerPapers': 'Pending'});
+              } else {
+                Get.offNamed('/inventory', arguments: {'filterDealerPapers': 'Pending'});
+              }
+            },
           );
         });
       }
