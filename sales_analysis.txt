@@ -1,8 +1,0 @@
-﻿Analyzing 2 items...                                            
-
-   info - The imported package 'collection' isn't a dependency of the importing package - lib\app\features\customers\data\repositories\customer_repository.dart:2:8 - depend_on_referenced_packages
-warning - The value of the local variable 'witnessDataList' isn't used - lib\app\features\sales\domain\sales_service.dart:119:29 - unused_local_variable
-  error - The argument for the named parameter 'saleDate' was already specified - lib\app\features\sales\domain\sales_service.dart:176:7 - duplicate_named_argument
-  error - The getter 'payments' isn't defined for the type 'Isar' - lib\app\features\sales\domain\sales_service.dart:201:35 - undefined_getter
-warning - The left operand can't be null, so the right operand is never executed - lib\app\features\sales\domain\sales_service.dart:374:38 - dead_null_aware_expression
-

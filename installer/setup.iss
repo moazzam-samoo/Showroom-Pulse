@@ -1,12 +1,16 @@
 ; ============================================================
 ;  AL-TAHIR Showroom ERP - Inno Setup Script
-;  Version: 1.0.1
+;  Version: 1.0.2
 ;  Developed by: Creative District
 ;  Developers: Moazam Samoo & Tameer Ahmed Khyber
+;  
+;  v1.0.2 - Dynamic Device Licensing via Firebase Firestore
+;           First launch requires internet for one-time registration.
+;           After that, app works fully offline.
 ; ============================================================
 
 #define AppName      "AL-TAHIR Showroom"
-#define AppVersion   "1.0.1"
+#define AppVersion   "1.0.2"
 #define AppPublisher "Creative District"
 #define AppExeName   "tahir_showroom.exe"
 #define AppURL       "https://github.com/your-repo/tahir_showroom"
@@ -30,7 +34,7 @@ DisableProgramGroupPage=yes
 
 ; ---- Output ----
 OutputDir=C:\InnoSetup\Output
-OutputBaseFilename=ALTahirShowroom_Setup_v1.0.1
+OutputBaseFilename=ALTahirShowroom_Setup_v1.0.2
 
 ; ---- Compression ----
 Compression=lzma2/ultra
@@ -41,7 +45,7 @@ WizardStyle=modern
 ShowLanguageDialog=no
 
 ; ---- Version Info (helps reduce SmartScreen warnings) ----
-VersionInfoVersion=1.0.1.0
+VersionInfoVersion=1.0.2.0
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription=AL-TAHIR Showroom ERP Installer
 VersionInfoCopyright=Copyright (C) 2026 Creative District
@@ -122,11 +126,26 @@ begin
     DelTree(DirName, True, True, True);
 end;
 
-// On uninstall: ask user if they want to wipe ALL app data
+// On uninstall: allow selective cleanup for safer support workflows
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usUninstall then
   begin
+    if MsgBox(
+      'Do you want to reset ONLY activation/license cache?' + #13#10 +
+      '(Keeps database, customer records, and media files)' + #13#10 + #13#10 +
+      'Click YES to clear only license cache.' + #13#10 +
+      'Click NO to continue.',
+      mbConfirmation, MB_YESNO
+    ) = IDYES then
+    begin
+      // Clear only Flutter shared preferences used for activation cache.
+      DelTreeDir(ExpandConstant('{userappdata}\com.example\tahir_showroom'));
+      DelTreeDir(ExpandConstant('{userappdata}\com.example\AL-TAHIR Showroom'));
+      RemoveDir(ExpandConstant('{userappdata}\com.example'));
+      Exit;
+    end;
+
     if MsgBox(
       'Do you want to delete ALL application data?' + #13#10 +
       '(Database, customer records, media files, and settings)' + #13#10 + #13#10 +

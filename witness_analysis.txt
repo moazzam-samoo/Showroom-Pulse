@@ -1,7 +1,0 @@
-﻿Analyzing 2 items...                                            
-
-   info - The imported package 'collection' isn't a dependency of the importing package - lib\app\features\customers\data\repositories\customer_repository.dart:2:8 - depend_on_referenced_packages
-warning - Unused import: 'package:tahir_showroom/app/data/models/witness.dart' - lib\app\features\customers\presentation\widgets\transaction_details_dialog.dart:9:8 - unused_import
-  error - The name 'FileService' isn't a type, so it can't be used as a type argument - lib\app\features\customers\presentation\widgets\transaction_details_dialog.dart:162:48 - non_type_as_type_argument
-   info - Unnecessary use of 'toList' in a spread - lib\app\features\customers\presentation\widgets\transaction_details_dialog.dart:184:22 - unnecessary_to_list_in_spreads
-

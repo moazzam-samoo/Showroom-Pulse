@@ -1,0 +1,393 @@
+# Dynamic Device Licensing via Firebase Firestore
+
+## Problem
+
+The current licensing system uses a **hardcoded `Set<String>`** in [allowed_devices.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/allowed_devices.dart) to gate device access. Every time a new client device needs authorization:
+
+1. You must edit the source code
+2. Rebuild the app
+3. Reinstall via InnoSetup on the client machine
+
+**Goal:** Replace this with a **Firebase Firestore** collection so you can add/remove device UUIDs from the Firebase Console — no code changes, no reinstallation needed.
+
+---
+
+## Current Architecture
+
+```mermaid
+flowchart LR
+    A[main.dart] --> B[DeviceLicense.isDeviceAuthorized]
+    B --> C[getDeviceUuid - PowerShell]
+    B --> D[allowedDeviceIds - hardcoded Set]
+    C --> E{UUID in Set?}
+    D --> E
+    E -->|Yes| F[TahirShowroomApp]
+    E -->|No| G[UnauthorizedApp]
+```
+
+### Files Involved
+
+| File | Role |
+|------|------|
+| [allowed_devices.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/allowed_devices.dart) | Hardcoded `Set<String>` of authorized UUIDs |
+| [device_license.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/device_license.dart) | `DeviceLicense.isDeviceAuthorized()` — reads UUID, checks against set |
+| [main.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/main.dart#L54) | Calls the check at line 54, gates `runApp()` at line 88 |
+
+---
+
+## Proposed Architecture
+
+```mermaid
+flowchart TD
+    A[App Starts] --> B[Get Device UUID]
+    B --> C{Already cached as authorized?}
+    
+    C -->|Yes + Internet available| D["Silent background re-check Firebase"]
+    D -->|Still active| E[Launch App ✅]
+    D -->|Revoked!| F[Clear cache → Unauthorized ❌]
+    
+    C -->|Yes + No internet| E
+    
+    C -->|No cache yet| G{Internet available?}
+    G -->|Yes| H[Check Firebase]
+    H -->|UUID active| I["Cache: authorized=true PERMANENTLY"]
+    I --> E
+    H -->|UUID not found| J[Unauthorized ❌]
+    G -->|No| J
+```
+
+---
+
+## Design Decisions (Based on Your Answers)
+
+### ✅ Internet Required Only ONCE — For Initial Registration
+
+**How it works in simple words:**
+
+| Scenario | What Happens |
+|----------|-------------|
+| 🆕 **First time** app opens on a new device | Must have internet. Checks Firebase. If authorized → saves permanently |
+| 📴 **Every time after** (with or without internet) | App opens normally from cache. **No internet needed ever again** |
+| 🔌 Client's internet goes down for weeks/months | **No problem.** App keeps working. No disturbance at all |
+| 🗑️ Client uninstalls and reinstalls app | Cache is cleared → needs internet again for one-time re-verification |
+
+> [!NOTE]
+> This means the cache is **permanent** — it survives reboots, offline periods, anything. Only uninstalling the app clears it.
+
+### ✅ Revocation Works Opportunistically (Background Check)
+
+Even though internet is only required once, revocation still works:
+
+- Every time the app opens, **IF internet happens to be available**, it silently re-checks Firebase in the background
+- If you've set `active: false` → the cache gets updated → client is locked out
+- If no internet → the app just opens normally from cache, no delay, no disturbance
+- The background check has a **3-second timeout** — if Firebase doesn't respond fast, the app just opens from cache. Zero friction.
+
+**To revoke a device:**
+1. Set `active: false` in Firebase Console
+2. Next time the client opens the app **while connected to internet** → locked out
+3. If they have no internet, they can still use the app (but the moment they get internet and reopen, they're locked out)
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Firebase Project Setup Required:** You will need to create a Firebase project in the [Firebase Console](https://console.firebase.google.com/) and enable Firestore. I will guide you through this step-by-step during execution.
+
+> [!WARNING]
+> **Existing Installations:** After this update, any already-deployed installations will need to be updated with the new build (since it adds Firebase SDK). However, once updated, they will **never** need reinstallation again for license changes.
+
+---
+
+## Remaining Question
+
+> [!IMPORTANT]
+> **Do you already have a Firebase project**, or should I guide you through creating one from scratch?
+
+---
+
+## Proposed Changes
+
+### Component 1: Firebase Setup & Dependencies
+
+#### [MODIFY] [pubspec.yaml](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/pubspec.yaml)
+
+Add Firebase dependencies:
+
+```diff
+  # Local Desktop Notifications
+  local_notifier: ^0.1.6
+  tray_manager: ^0.5.2
+  smooth_page_indicator: ^2.0.1
++
++ # Firebase (Remote License Management)
++ firebase_core: ^3.13.0
++ cloud_firestore: ^5.6.9
+```
+
+---
+
+### Component 2: Firebase Configuration
+
+#### [NEW] lib/firebase_options.dart
+
+Auto-generated by `flutterfire configure` CLI. Contains Firebase project credentials for the Windows platform.
+
+---
+
+### Component 3: Firestore Schema
+
+A single Firestore collection: **`allowed_devices`**
+
+| Collection | Document ID | Fields |
+|-----------|-------------|--------|
+| `allowed_devices` | `{UUID}` | `label` (String), `addedAt` (Timestamp), `active` (bool) |
+
+**Example document:**
+```
+Collection: allowed_devices
+  Document ID: "E5B8A756-64CE-40C9-9846-745D225D9E8C"
+    label: "Moazzam's Device"
+    addedAt: April 26, 2026
+    active: true
+```
+
+**Why UUID as Document ID?** — Direct lookup is O(1), costs 1 Firestore read. Maximum efficiency.
+
+---
+
+### Component 4: License Service Rewrite
+
+#### [MODIFY] [device_license.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/device_license.dart)
+
+Replace the hardcoded check with Firebase + permanent cache:
+
+```dart
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Fetches the unique Motherboard UUID from the current Windows device
+/// using PowerShell. This UUID is permanent and unrelated to network adapters.
+///
+/// Returns the UUID string, or 'UNKNOWN_DEVICE_ID' on failure.
+Future<String> getDeviceUuid() async {
+  if (!Platform.isWindows) {
+    return 'UNSUPPORTED_PLATFORM';
+  }
+
+  try {
+    final result = await Process.run(
+      'powershell',
+      ['-NoProfile', '-Command', '(Get-CimInstance -Class Win32_ComputerSystemProduct).UUID'],
+      runInShell: true,
+    );
+
+    if (result.exitCode != 0) return 'UNKNOWN_DEVICE_ID';
+
+    final output = (result.stdout as String).trim();
+    if (output.isEmpty) return 'UNKNOWN_DEVICE_ID';
+
+    return output.toUpperCase();
+  } catch (_) {
+    return 'UNKNOWN_DEVICE_ID';
+  }
+}
+
+/// Device license gatekeeper — checks Firebase Firestore for first-time
+/// registration, then caches authorization permanently.
+///
+/// Strategy:
+///   - First launch: MUST have internet → checks Firebase → caches forever
+///   - Subsequent launches: uses cache (no internet needed)
+///   - If internet is available: silently re-checks Firebase (for revocation)
+///   - Cache persists until app is uninstalled
+class DeviceLicense {
+  DeviceLicense._();
+
+  static const _keyAuthorized = 'device_license_authorized';
+
+  static Future<({bool authorized, String deviceId})> isDeviceAuthorized() async {
+    final deviceId = await getDeviceUuid();
+    final prefs = await SharedPreferences.getInstance();
+    final cachedAuth = prefs.getBool(_keyAuthorized);
+
+    // ── CASE 1: Already cached (previously registered) ──
+    if (cachedAuth != null) {
+      // If cached as authorized, try a quick background re-check for revocation
+      if (cachedAuth) {
+        _backgroundRevocationCheck(deviceId, prefs);
+      }
+      return (authorized: cachedAuth, deviceId: deviceId);
+    }
+
+    // ── CASE 2: First time (no cache) — must check Firebase ──
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('allowed_devices')
+          .doc(deviceId)
+          .get()
+          .timeout(const Duration(seconds: 10));
+
+      final authorized = doc.exists && (doc.data()?['active'] == true);
+
+      // Cache the result permanently
+      await prefs.setBool(_keyAuthorized, authorized);
+
+      return (authorized: authorized, deviceId: deviceId);
+    } catch (_) {
+      // No internet on first launch → deny (must register online first)
+      return (authorized: false, deviceId: deviceId);
+    }
+  }
+
+  /// Silent background check — does NOT block app launch.
+  /// If Firebase says revoked, updates the cache so NEXT launch will deny.
+  static void _backgroundRevocationCheck(String deviceId, SharedPreferences prefs) {
+    // Fire-and-forget — runs in background, doesn't block the app
+    FirebaseFirestore.instance
+        .collection('allowed_devices')
+        .doc(deviceId)
+        .get()
+        .timeout(const Duration(seconds: 3))
+        .then((doc) {
+      final stillActive = doc.exists && (doc.data()?['active'] == true);
+      if (!stillActive) {
+        // Revoked! Update cache — next app launch will deny access
+        prefs.setBool(_keyAuthorized, false);
+      }
+    }).catchError((_) {
+      // No internet or timeout — do nothing, keep cached authorization
+    });
+  }
+}
+```
+
+**Key design decisions:**
+- **First launch** requires internet — 10-second timeout for initial registration
+- **Subsequent launches** — app opens instantly from cache, no internet needed ever
+- **Background revocation** — 3-second silent check, fire-and-forget. If revoked, updates cache so **next** app launch denies access. Current session is not interrupted.
+- **Cache is permanent** — only cleared by uninstalling the app (SharedPreferences is stored in AppData)
+
+#### [DELETE] [allowed_devices.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/app/core/license/allowed_devices.dart)
+
+Remove the hardcoded UUID file entirely. All authorization data now lives in Firestore.
+
+---
+
+### Component 5: Firebase Initialization in main.dart
+
+#### [MODIFY] [main.dart](file:///c:/Users/Moazzam%20Samoo/Desktop/Tahir%20Showroom/lib/main.dart)
+
+Add Firebase initialization **before** the license check:
+
+```diff
+  import 'app/core/license/device_license.dart';
+  import 'app/core/license/unauthorized_screen.dart';
++ import 'package:firebase_core/firebase_core.dart';
++ import 'firebase_options.dart';
+
+  void main(List<String> args) async {
+    WidgetsFlutterBinding.ensureInitialized();
+
++   // Initialize Firebase
++   await Firebase.initializeApp(
++     options: DefaultFirebaseOptions.currentPlatform,
++   );
+
+    // Initialize local notifier for OS-level alerts
+    await localNotifier.setup(
+```
+
+---
+
+### Component 6: Firestore Security Rules
+
+Set in Firebase Console → Firestore → Rules:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /allowed_devices/{deviceId} {
+      allow read: if true;   // App needs to read to verify license
+      allow write: if false;  // No one can write from the app — only via Console
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+---
+
+## Execution Steps (Ordered)
+
+| Step | Action | Time |
+|------|--------|------|
+| 1 | Create Firebase project + enable Firestore | ~5 min |
+| 2 | Install FlutterFire CLI & run `flutterfire configure` | ~3 min |
+| 3 | Add `firebase_core` + `cloud_firestore` to pubspec.yaml | ~2 min |
+| 4 | Run `flutter pub get` | ~1 min |
+| 5 | Delete `allowed_devices.dart` | ~1 min |
+| 6 | Rewrite `device_license.dart` with Firestore + permanent cache | ~3 min |
+| 7 | Update `main.dart` with Firebase init | ~1 min |
+| 8 | Add Firestore security rules via Firebase Console | ~2 min |
+| 9 | Seed Firestore with current UUID (`E5B8A756-64CE-40C9-9846-745D225D9E8C`) | ~1 min |
+| 10 | Build & test | ~5 min |
+
+**Total estimated time: ~25 minutes**
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Run `flutter analyze` to verify no compilation errors
+- Run `flutter build windows` to confirm the app builds successfully with Firebase
+
+### Manual Verification
+1. **✅ First-time auth:** Launch app with internet → UUID in Firestore → should authorize and cache
+2. **📴 Offline after auth:** Disconnect internet → relaunch → should open instantly from cache
+3. **🔒 Revocation:** Set `active: false` in Firebase → relaunch with internet → next launch should deny
+4. **🆕 New device:** On a device NOT in Firestore → should show Unauthorized screen with UUID
+5. **➕ Remote add:** Add that UUID to Firestore → relaunch → should authorize
+6. **🗑️ Uninstall/reinstall:** Uninstall app → reinstall → should require internet again for registration
+
+---
+
+## How You'll Manage Licenses (Day-to-Day)
+
+### Grant Access to a New Client
+```
+1. Client opens app → sees "Unauthorized" screen with their UUID
+2. Client sends you the UUID (copy button is right there)
+3. You open Firebase Console → Firestore → "allowed_devices"
+4. Click "Add Document" → paste UUID as Document ID
+5. Add fields: active = true, label = "Client Name"
+6. Client restarts app (with internet) → ✅ Access granted forever!
+```
+
+### Revoke Access from a Client
+```
+1. Open Firebase Console → Firestore → "allowed_devices"
+2. Find the client's UUID document
+3. Change "active" from true to false
+4. Next time client opens app with internet → background check catches it
+5. The FOLLOWING launch → ❌ Locked out
+```
+
+---
+
+## Summary of Benefits
+
+| Before (Hardcoded) | After (Firebase) |
+|---------------------|-----------------|
+| Edit source code to add device | Add UUID in Firebase Console (30 seconds) |
+| Rebuild entire app | No rebuild needed |
+| Reinstall on client machine | No reinstall needed |
+| Cannot revoke access | Set `active: false` → revoked on next online launch |
+| Internet needed every time | Internet needed **only once** for registration |
+| Offline = no disturbance | Offline = no disturbance (permanent cache) |
