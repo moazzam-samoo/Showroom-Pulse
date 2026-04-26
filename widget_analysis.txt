@@ -1,5 +1,0 @@
-﻿Analyzing 2 items...                                            
-
-  error - The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\app\features\customers\presentation\widgets\transaction_details_dialog.dart:86:57 - argument_type_not_assignable
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\app\features\customers\presentation\widgets\vehicle_card.dart:40:36 - deprecated_member_use
-
