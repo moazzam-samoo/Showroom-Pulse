@@ -33,7 +33,7 @@
 - 🌙 **Adaptive UI/UX**: State-of-the-art Glassmorphism UI, smooth micro-animations, and full Dark/Light mode support.
 - 🖨️ **Invoice & PDF Generation**: Built-in native print support for cash receipts, installment contracts, and refined system reports.
 - 🔒 **Backup & Recovery**: Automated `.tahir` ZIP backups via Isar database dumping.
-- 🛡️ **Hardware Security**: Device locking mechanisms via strict physical MAC address verification to prevent unauthorized duplication and execution.
+- 🛡️ **Hardware Security**: Device locking mechanisms via permanent Windows Motherboard UUID binding to securely prevent unauthorized duplication, bypassing unreliable network/MAC address changes.
 
 ---
 
@@ -109,7 +109,7 @@ flutter run -d windows
 
 ### Building for Production
 
-To compile a highly optimized, obfuscated, and release-ready Windows executable (which secures hardcoded lists like authorized MAC addresses):
+To compile a highly optimized, obfuscated, and release-ready Windows executable (which secures hardcoded lists like authorized Motherboard UUIDs):
 
 ```bash
 flutter build windows --release --obfuscate --split-debug-info=build/debug-info
@@ -125,11 +125,34 @@ Open `installer/setup.iss` in Inno Setup Compiler and compile it to generate a r
 ## 🔐 Security & Privacy Practices
 
 This software handles sensitive financial and customer metadata.
-- **Hardware Authorization (MAC Licensing)**: The application checks the system's physical MAC address during the startup sequence. Unauthorized devices are physically gated behind an inescapable lock screen protecting all local APIs from initializing.
+- **Hardware Authorization (UUID Binding)**: The application checks the system's permanent Windows Motherboard UUID during the startup sequence. This ensures 100% reliable hardware locking that doesn't break when network adapters (Wi-Fi/Ethernet) change. Unauthorized devices are physically gated behind an inescapable lock screen protecting all local APIs from initializing.
 - **No Hardcoded Credentials**: Administrative credentials are obfuscated and stored securely using `crypto` SHA-256 protocols. They are never kept statically in the source code.
 - **Binary Obfuscation**: Production binaries are compiled using Flutter's native obfuscation protocols (`--obfuscate`) to scramble reverse-engineering attempts of sensitive constants.
 - **Local Isolation**: All customer profiles and business ledgers are securely stored locally inside the application's secure application data directories using Isar indexing.
 - **DO NOT commit `*.isar` or `.tahir` backup files to version control.**
+
+---
+
+## 🚀 Future Roadmap (V2.0 & Beyond)
+
+We are actively planning the next evolution of the Al-Tahir Showroom ERP to move beyond offline operations and integrate cutting-edge technology. For detailed plans, see our [FUTURE_FEATURES.md](FUTURE_FEATURES.md) file. Upcoming highlights include:
+- **Platform Expansion**: Transitioning to a real-time cloud database to support a fully synchronized Android App and Web Dashboard.
+- **AI Integrations**: Predictive stock management based on historical sales and voice-controlled data entry.
+- **Automation**: Digital biometric signatures and AI-powered document scanning (OCR) for customer CNICs.
+- **Multi-Branch Management**: Centralized master dashboard so that one owner can handle multiple showroom branches from a single interface.
+
+---
+
+## 📄 License & Copyright
+
+This is a proprietary, closed-source application developed exclusively for **AL-TAHIR Showroom**. 
+Unauthorized copying, modification, distribution, or execution of this software, via any medium, is strictly prohibited. 
+For licensing inquiries, please contact the developers.
+
+## 📞 Support & Contact
+
+For technical support, bug reports, or system maintenance, please reach out to the **Creative District** development team:
+- **Developers**: Moazam Samoo & Tameer Ahmed Khyber
 
 ---
 
