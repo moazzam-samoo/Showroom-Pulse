@@ -100,7 +100,6 @@ class LicenseGateApp extends StatefulWidget {
 class _LicenseGateAppState extends State<LicenseGateApp>
     with WidgetsBindingObserver {
   ({bool authorized, String deviceId, bool needsInternet})? _license;
-  bool _checking = true;
   DateTime? _lastRecheckAt;
 
   @override
@@ -120,29 +119,38 @@ class _LicenseGateAppState extends State<LicenseGateApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     final last = _lastRecheckAt;
+    // Throttle re-checks to every 5 minutes to avoid unnecessary Firestore calls
     if (last != null &&
-        DateTime.now().difference(last) < const Duration(seconds: 10)) {
+        DateTime.now().difference(last) < const Duration(minutes: 5)) {
       return;
     }
     _checkLicense();
   }
 
   Future<void> _checkLicense() async {
-    setState(() {
-      _checking = true;
-    });
     final license = await DeviceLicense.isDeviceAuthorized();
     if (!mounted) return;
-    setState(() {
-      _license = license;
-      _checking = false;
+
+    // Only rebuild the widget tree if this is the initial check
+    // or if the authorization status actually changed (e.g. revoked remotely).
+    // This prevents destroying the running app on every window focus event.
+    final isInitialCheck = _license == null;
+    final statusChanged =
+        _license != null && _license!.authorized != license.authorized;
+
+    if (isInitialCheck || statusChanged) {
+      setState(() {
+        _license = license;
+        _lastRecheckAt = DateTime.now();
+      });
+    } else {
       _lastRecheckAt = DateTime.now();
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_checking || _license == null) {
+    if (_license == null) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
@@ -181,6 +189,15 @@ class _TahirShowroomAppState extends State<TahirShowroomApp>
     windowManager.addListener(this);
     trayManager.addListener(this);
     _initSystemTray();
+
+    // Initialize GetX config and bindings once in initState (not build)
+    Get.config(
+      enableLog: true,
+      defaultTransition: Transition.fadeIn,
+      defaultDurationTransition: const Duration(milliseconds: 300),
+    );
+    InitialBinding().dependencies();
+
     super.initState();
   }
 
@@ -249,14 +266,6 @@ class _TahirShowroomAppState extends State<TahirShowroomApp>
     // Manual setup replaces GetMaterialApp to add themeAnimationDuration: Duration.zero
     // which GetMaterialApp v4.7.3 doesn't expose. This prevents AnimatedTheme cross-fade
     // that causes GlobalKey collisions on Material ink renderers during theme switches.
-
-    // Initialize GetX config and bindings
-    Get.config(
-      enableLog: true,
-      defaultTransition: Transition.fadeIn,
-      defaultDurationTransition: const Duration(milliseconds: 300),
-    );
-    InitialBinding().dependencies();
 
     // Register pages with GetX
     final getPages = [
