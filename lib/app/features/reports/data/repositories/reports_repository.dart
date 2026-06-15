@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/data/models/bike.dart';
+import 'package:tahir_showroom/app/data/models/expense.dart';
 import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/data/models/sale.dart';
 
@@ -263,5 +264,60 @@ class ReportsRepository {
       trend.add(MapEntry(monthNames[i - 1], revenue));
     }
     return trend;
+  }
+
+  // ─── Expense CRUD ──────────────────────────────────────────
+
+  /// Get all expenses for a given period (optional month/year)
+  Future<List<Expense>> getExpensesInPeriod({int? month, int? year}) async {
+    if (month == null && year == null) {
+      return await _isar.expenses.where().sortByDateDesc().findAll();
+    }
+
+    final start = DateTime(year!, month ?? 1, 1);
+    final end = month != null 
+        ? DateTime(year, month + 1, 0, 23, 59, 59)
+        : DateTime(year, 12, 31, 23, 59, 59);
+
+    return await _isar.expenses
+        .filter()
+        .dateBetween(start, end)
+        .sortByDateDesc()
+        .findAll();
+  }
+
+  /// Get total expenses for a period
+  Future<double> getTotalExpenses({int? month, int? year}) async {
+    final expenses = await getExpensesInPeriod(month: month, year: year);
+    return expenses.fold<double>(0.0, (double sum, e) => sum + e.amount);
+  }
+
+  /// Get all unique category names (for dropdown)
+  Future<List<String>> getExpenseCategories() async {
+    final expenses = await _isar.expenses.where().findAll();
+    final categories = expenses.map((e) => e.category).toSet().toList();
+    categories.sort();
+    return categories;
+  }
+
+  /// Add a new expense
+  Future<void> addExpense(Expense expense) async {
+    await _isar.writeTxn(() async {
+      await _isar.expenses.put(expense);
+    });
+  }
+
+  /// Update an existing expense
+  Future<void> updateExpense(Expense expense) async {
+    await _isar.writeTxn(() async {
+      await _isar.expenses.put(expense);
+    });
+  }
+
+  /// Delete an expense by ID
+  Future<void> deleteExpense(int id) async {
+    await _isar.writeTxn(() async {
+      await _isar.expenses.delete(id);
+    });
   }
 }

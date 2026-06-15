@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+import 'package:tahir_showroom/app/data/models/expense.dart';
+import 'package:tahir_showroom/app/core/services/isar_service.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
 import 'package:tahir_showroom/app/features/reports/data/repositories/reports_repository.dart';
@@ -17,6 +19,7 @@ class ReportsController extends GetxController {
 
   // ─── Observable State ──────────────────────────────────────
   final isLoading = true.obs;
+  final selectedTab = 0.obs; // 0 = Reports, 1 = Revenue
 
   // Filter state
   final filterMode = ReportFilterMode.monthly.obs;
@@ -36,7 +39,9 @@ class ReportsController extends GetxController {
   final revenueChartFilter = 'Monthly'.obs; // 'Monthly' or 'Annual'
   final yearlyBreakdownData = <MapEntry<String, double>>[].obs; // For yearly PDF
 
-  // Removed legacy expenses lists
+  // Expenses
+  final expenses = <Expense>[].obs;
+  final expenseCategories = <String>[].obs;
 
   @override
   void onInit() {
@@ -66,6 +71,8 @@ class ReportsController extends GetxController {
         _repository.getMonthlyProfitTrend(6),
         _repository.getStockDistribution(),
         _repository.getProfitByBrand(month: month, year: year),
+        _repository.getExpensesInPeriod(month: month, year: year),
+        _repository.getExpenseCategories(),
         (mode == ReportFilterMode.monthly && revenueChartFilter.value == 'Monthly')
             ? _repository.getDailyRevenueTrend(selectedMonth.value, selectedYear.value)
             : _repository.getAnnualRevenueTrend(selectedYear.value),
@@ -79,9 +86,49 @@ class ReportsController extends GetxController {
       monthlyProfitData.assignAll(results[3] as List<MapEntry<String, double>>);
       stockDistribution.assignAll(results[4] as Map<String, int>);
       profitByBrand.assignAll(results[5] as Map<String, Map<String, double>>);
-      
-      revenueTrend.assignAll(results[6] as List<MapEntry<String, double>>);
-      yearlyBreakdownData.assignAll(results[7] as List<MapEntry<String, double>>);
+      expenses.assignAll(results[6] as List<Expense>);
+      expenseCategories.assignAll(results[7] as List<String>);
+      revenueTrend.assignAll(results[8] as List<MapEntry<String, double>>);
+      yearlyBreakdownData.assignAll(results[9] as List<MapEntry<String, double>>);
+
+      // Merge default categories from settings
+      try {
+        final settingsRepo = SettingsRepository(Get.find<IsarService>());
+        final settings = await settingsRepo.getSettings();
+        if (settings.defaultExpenseCategories.isNotEmpty) {
+          final defaults = settings.defaultExpenseCategories
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+          
+          bool addedNew = false;
+          for (final cat in defaults) {
+            if (!expenseCategories.contains(cat)) {
+              expenseCategories.add(cat);
+              addedNew = true;
+            }
+          }
+          if (addedNew) {
+            expenseCategories.sort();
+          }
+        }
+      } catch (e) {
+        debugPrint('Error merging default expense categories: $e');
+      }
+
+      // If still empty, provide basic defaults
+      if (expenseCategories.isEmpty) {
+        expenseCategories.assignAll([
+          'Rent',
+          'Salaries',
+          'Utilities',
+          'Marketing',
+          'Maintenance',
+          'Supplies',
+          'Other',
+        ]);
+      }
     } catch (e) {
       debugPrint('Error loading reports data: $e');
     } finally {
@@ -121,7 +168,22 @@ class ReportsController extends GetxController {
     loadData();
   }
 
-  // Removed legacy expense CRUD methods
+  // ─── Expense CRUD ──────────────────────────────────────────
+
+  Future<void> addExpense(Expense expense) async {
+    await _repository.addExpense(expense);
+    await loadData();
+  }
+
+  Future<void> updateExpense(Expense expense) async {
+    await _repository.updateExpense(expense);
+    await loadData();
+  }
+
+  Future<void> deleteExpense(int id) async {
+    await _repository.deleteExpense(id);
+    await loadData();
+  }
 
   // ─── PDF Download ──────────────────────────────────────────
 
@@ -138,16 +200,27 @@ class ReportsController extends GetxController {
       dateRangeLabel = 'All Time';
     }
 
-    // Generate Profit Report for Dashboard
-    path = await _pdfService.generateProfitReport(
-      dateRangeLabel: dateRangeLabel,
-      totalRevenue: totalRevenue.value,
-      totalExpenses: totalExpenses.value,
-      netProfit: netProfit.value,
-      profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
-      stockDistribution: Map<String, int>.from(stockDistribution),
-      yearlyBreakdown: mode == ReportFilterMode.yearly ? List<MapEntry<String, double>>.from(yearlyBreakdownData) : null,
-    );
+    if (selectedTab.value == 0) {
+      // Reports Tab → Profit Report
+      path = await _pdfService.generateProfitReport(
+        dateRangeLabel: dateRangeLabel,
+        totalRevenue: totalRevenue.value,
+        totalExpenses: totalExpenses.value,
+        netProfit: netProfit.value,
+        profitByBrand: Map<String, Map<String, double>>.from(profitByBrand),
+        stockDistribution: Map<String, int>.from(stockDistribution),
+        yearlyBreakdown: mode == ReportFilterMode.yearly ? List<MapEntry<String, double>>.from(yearlyBreakdownData) : null,
+      );
+    } else {
+      // Revenue Tab → Revenue & Expense Statement
+      path = await _pdfService.generateRevenueStatement(
+        dateRangeLabel: dateRangeLabel,
+        totalRevenue: totalRevenue.value,
+        totalExpenses: totalExpenses.value,
+        netProfit: netProfit.value,
+        expenses: List<Expense>.from(expenses),
+      );
+    }
 
     if (path != null) {
       AppToast.showSuccess(title: 'PDF Saved', message: 'Report saved to: $path');
