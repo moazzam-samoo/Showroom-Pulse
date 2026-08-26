@@ -128,9 +128,11 @@ class _LicenseGateAppState extends State<LicenseGateApp>
   }
 
   Future<void> _checkLicense() async {
-    setState(() {
-      _checking = true;
-    });
+    if (_license == null) {
+      setState(() {
+        _checking = true;
+      });
+    }
     final license = await DeviceLicense.isDeviceAuthorized();
     if (!mounted) return;
     setState(() {

@@ -11,6 +11,8 @@ import '../widgets/kpi_summary_cards.dart';
 import '../widgets/monthly_profit_chart.dart';
 import '../widgets/stock_distribution_chart.dart';
 import '../widgets/profit_summary_table.dart';
+import '../widgets/revenue_line_chart.dart';
+import '../widgets/expense_tracker.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_overlay.dart';
 import 'package:tahir_showroom/app/features/walkthrough/presentation/widgets/coach_mark_target.dart';
 import 'package:tahir_showroom/app/core/services/walkthrough_service.dart';
@@ -30,6 +32,8 @@ class _ReportsViewState extends State<ReportsView> {
   final GlobalKey _kpiSummaryKey = GlobalKey();
   final GlobalKey _chartsSectionKey = GlobalKey();
   final GlobalKey _profitSummaryTableKey = GlobalKey();
+  final GlobalKey _revenueLineChartKey = GlobalKey();
+  final GlobalKey _expenseTrackerKey = GlobalKey();
   
   bool _showCoachMarks = false;
 
@@ -101,7 +105,9 @@ class _ReportsViewState extends State<ReportsView> {
                       _buildHeader(isDark, controller),
                       // Content
                       Expanded(
-                        child: _buildReportsTab(isDark, controller, currencyFormat),
+                        child: Obx(() => controller.selectedTab.value == 0
+                            ? _buildReportsTab(isDark, controller, currencyFormat)
+                            : _buildRevenueTab(isDark, controller, currencyFormat)),
                       ),
                     ],
                   );
@@ -133,10 +139,26 @@ class _ReportsViewState extends State<ReportsView> {
                     description: 'Monthly profit bar chart and stock distribution donut chart.',
                     position: CoachMarkPosition.top,
                   ),
-                  CoachMarkTarget(
+                   CoachMarkTarget(
                     targetKey: _profitSummaryTableKey,
                     title: 'Brand-wise Profits',
                     description: 'Detailed breakdown of profit by brand in table format.',
+                    position: CoachMarkPosition.top,
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _revenueLineChartKey,
+                    title: 'Revenue Trends',
+                    description: 'Track revenue over time with interactive line chart filters.',
+                    position: CoachMarkPosition.bottom,
+                    onBeforeTarget: () async {
+                      // Switch to Revenue tab before showing this target
+                      Get.find<ReportsController>().selectedTab.value = 1;
+                    },
+                  ),
+                  CoachMarkTarget(
+                    targetKey: _expenseTrackerKey,
+                    title: 'Expense Management',
+                    description: 'Add, edit, and delete business expenses to track net profit vs total expenses.',
                     position: CoachMarkPosition.top,
                   ),
                 ],
@@ -172,7 +194,7 @@ class _ReportsViewState extends State<ReportsView> {
         children: [
           // Title
           Text(
-            'Reports & Analytics',
+            'Revenue & Reports',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -261,6 +283,20 @@ class _ReportsViewState extends State<ReportsView> {
             );
           }),
           const Spacer(),
+          // Tab Switcher
+          Obx(() => Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                _buildTabButton('Reports', 0, controller, isDark),
+                _buildTabButton('Revenue', 1, controller, isDark),
+              ],
+            ),
+          )),
+          const SizedBox(width: AppSpacing.md),
           // Download PDF
           FilledButton.icon(
             onPressed: () => _downloadReport(controller),
@@ -379,6 +415,67 @@ class _ReportsViewState extends State<ReportsView> {
             key: _profitSummaryTableKey,
             child: ProfitSummaryTable(
               data: controller.profitByBrand,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabButton(String label, int tabIndex, ReportsController controller, bool isDark) {
+    final isActive = controller.selectedTab.value == tabIndex;
+    return GestureDetector(
+      onTap: () => controller.selectedTab.value = tabIndex,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (isDark ? AppColors.darkPrimary : AppColors.lightPrimary)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isActive
+                ? Colors.white
+                : (isDark ? AppColors.darkTextMuted : AppColors.lightTextSecondary),
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Revenue Tab ─────────────────────────────────────────────
+  Widget _buildRevenueTab(bool isDark, ReportsController controller, NumberFormat currencyFormat) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        children: [
+          // Revenue Line Chart
+          Obx(() => Container(
+            key: _revenueLineChartKey,
+            child: RevenueLineChart(
+              data: controller.revenueTrend,
+              filter: controller.revenueChartFilter.value,
+              onFilterChanged: controller.changeRevenueChartFilter,
+            ),
+          )),
+          const SizedBox(height: AppSpacing.lg),
+          // Expense Tracker
+          Container(
+            key: _expenseTrackerKey,
+            child: ExpenseTracker(
+              expenses: controller.expenses,
+              categories: controller.expenseCategories,
+              onAdd: (expense) => controller.addExpense(expense),
+              onUpdate: (expense) => controller.updateExpense(expense),
+              onDelete: (id) => controller.deleteExpense(id),
+              totalExpenses: controller.totalExpenses.value,
+              totalRevenue: controller.totalRevenue.value,
+              netProfit: controller.netProfit.value,
             ),
           ),
         ],
