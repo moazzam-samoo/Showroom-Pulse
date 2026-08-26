@@ -25,8 +25,11 @@ import '../../data/models/investment.dart';
 
 /// BackupService — Handles database export and import operations
 ///
-/// V2 Format: JSON data + Media folder → single .tahir ZIP (~1-5 MB)
+/// V2 Format: JSON data + Media folder → single .showroompulse ZIP (~1-5 MB)
 /// V1 Legacy: Isar copyToFile + Media → .tahir ZIP (400+ MB)
+///
+/// Backups exported before the rebrand used the .tahir extension; the import
+/// picker still accepts those files for backward compatibility.
 ///
 /// V2 exports only the actual data as compressed JSON, eliminating
 /// Isar's pre-allocated empty space that caused 417 MB exports for 5 MB of data.
@@ -100,13 +103,13 @@ class BackupService {
 
       // 6. Let user pick save location
       final dateStamp = DateFormat('yyyy-MM-dd_HHmm').format(DateTime.now());
-      final defaultFileName = 'TahirShowroom_Backup_$dateStamp.tahir';
+      final defaultFileName = 'ShowroomPulse_Backup_$dateStamp.showroompulse';
 
       final savePath = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Backup File',
         fileName: defaultFileName,
         type: FileType.custom,
-        allowedExtensions: ['tahir'],
+        allowedExtensions: ['showroompulse'],
       );
 
       if (savePath == null) {
@@ -144,7 +147,7 @@ class BackupService {
       final result = await FilePicker.platform.pickFiles(
         dialogTitle: 'Select Backup File',
         type: FileType.custom,
-        allowedExtensions: ['tahir', 'zip'],
+        allowedExtensions: ['showroompulse', 'tahir', 'zip'],
       );
 
       if (result == null || result.files.single.path == null) return null;
@@ -864,7 +867,7 @@ class BackupService {
         ..lateFeePercentage = (m['lateFeePercentage'] as num?)?.toDouble() ?? 5.0
         ..cloudSyncEnabled = m['cloudSyncEnabled'] as bool? ?? false
         ..isDarkTheme = m['isDarkTheme'] as bool? ?? true
-        ..showroomName = m['showroomName'] as String? ?? 'AL-TAHIR Showroom'
+        ..showroomName = m['showroomName'] as String? ?? 'Showroom Pulse'
         ..showroomLogoPath = m['showroomLogoPath'] as String?
         ..showroomAddress = m['showroomAddress'] as String?
         ..showroomPhone = m['showroomPhone'] as String?
@@ -911,7 +914,7 @@ class BackupService {
     final isar = _isarService.isar;
 
     return {
-      'appName': 'AL-TAHIR Showroom',
+      'appName': 'Showroom Pulse',
       'appVersion': '1.0.0',
       'formatVersion': 2,
       'backupDate': DateTime.now().toIso8601String(),

@@ -170,7 +170,7 @@ class StatementService {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text(
-                      settings.showroomName.isNotEmpty ? settings.showroomName : 'AL-TAHIR Showroom',
+                      settings.showroomName.isNotEmpty ? settings.showroomName : 'Showroom Pulse',
                       style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.cyan700),
                     ),
                     pw.Text(
@@ -384,7 +384,7 @@ class StatementService {
           pw.Text('Witness Information', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 8),
           pw.Text(
-            'Witnesses are on file at AL-TAHIR Showroom.',
+            'Witnesses are on file at Showroom Pulse.',
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
           ),
         ],

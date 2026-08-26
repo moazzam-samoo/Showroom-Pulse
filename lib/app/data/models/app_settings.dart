@@ -27,7 +27,7 @@ class AppSettings {
   // -- NEW FIELDS FROM SETTINGS UI UPDATE --
 
   /// Showroom Name (General Settings)
-  String showroomName = 'AL-TAHIR Showroom';
+  String showroomName = 'Showroom Pulse';
 
   /// Showroom Logo path (General Settings)
   String? showroomLogoPath;

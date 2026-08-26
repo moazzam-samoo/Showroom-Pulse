@@ -261,7 +261,7 @@ encoder.close();
 
 ### Phase 5: Historical Media Batch Compression (Retroactive Optimization)
 
-Currently, the 456 MB historical V1 backup contains high-resolution (uncompressed) images. When imported, these images are extracted to the `TahirShowroom/Media/` directory at their original massive sizes. Phase 3 only compresses *newly* added images. To shrink the size of existing files from the 456 MB database, we need a one-time migration tool.
+Currently, the 456 MB historical V1 backup contains high-resolution (uncompressed) images. When imported, these images are extracted to the `ShowroomPulse/Media/` directory at their original massive sizes. Phase 3 only compresses *newly* added images. To shrink the size of existing files from the 456 MB database, we need a one-time migration tool.
 
 **Goal**: Batch process the entire existing `Media` directory, applying the new compression logic to all historical image files, overwriting them.
 
@@ -350,7 +350,7 @@ Add a UI trigger for this operation in the Database category inside the `Databas
 1. Run `flutter run -d windows` on dev machine
 2. Add test data, export, verify file size in explorer
 3. Import on a clean install, verify all data present
-4. Check `Documents\TahirShowroom\Checkpoints\` folder — should have max 2 files
+4. Check `Documents\ShowroomPulse\Checkpoints\` folder — should have max 2 files
 5. Deploy to client machine, have them export → verify dramatic size reduction
 
 ### Expected Results

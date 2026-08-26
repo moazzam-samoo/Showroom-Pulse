@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="assets/app_logo.jpeg" alt="AL-TAHIR Showroom Logo" width="200" style="border-radius:20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="assets/app_logo.jpeg" alt="Showroom Pulse Logo" width="200" style="border-radius:20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
   <br/>
-  <h1>🏍️ AL-TAHIR Showroom ERP</h1>
+  <h1>🏍️ Showroom Pulse ERP</h1>
   <img src="https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge" alt="Version 1.0.0" />
   <p>Comprehensive Automotive Inventory & Installment Management System</p>
 </div>
@@ -22,7 +22,7 @@
 
 ## 📌 Overview
 
-**AL-TAHIR Showroom** is a tailored, high-performance desktop application designed specifically for modern automotive and motorcycle dealerships. Built using **Flutter** and **Dart** for a buttery-smooth UI, and leveraging **C++** for native Windows integrations, this ERP system centralizes the complexities of inventory tracking, point-of-sale (POS) operations, and long-term installment accounting into one beautifully crafted interface.
+**Showroom Pulse** is a tailored, high-performance desktop application designed specifically for modern automotive and motorcycle dealerships. Built using **Flutter** and **Dart** for a buttery-smooth UI, and leveraging **C++** for native Windows integrations, this ERP system centralizes the complexities of inventory tracking, point-of-sale (POS) operations, and long-term installment accounting into one beautifully crafted interface.
 
 ## ✨ Key Features
 
@@ -118,7 +118,7 @@ The compiled `.exe` and associated DLL dependencies will be located in `build\wi
 
 #### Creating the Installer
 Once the production build is finished, use **Inno Setup** to package the application.
-Open `installer/setup.iss` in Inno Setup Compiler and compile it to generate a redistributable `ALTahirShowroom_Setup_v1.0.0.exe` file.
+Open `installer/setup.iss` in Inno Setup Compiler and compile it to generate a redistributable `ShowroomPulse_Setup_v1.0.3.exe` file.
 
 ---
 
@@ -135,7 +135,7 @@ This software handles sensitive financial and customer metadata.
 
 ## 🚀 Future Roadmap (V2.0 & Beyond)
 
-We are actively planning the next evolution of the Al-Tahir Showroom ERP to move beyond offline operations and integrate cutting-edge technology. For detailed plans, see our [FUTURE_FEATURES.md](FUTURE_FEATURES.md) file. Upcoming highlights include:
+We are actively planning the next evolution of the Showroom Pulse ERP to move beyond offline operations and integrate cutting-edge technology. For detailed plans, see our [FUTURE_FEATURES.md](FUTURE_FEATURES.md) file. Upcoming highlights include:
 - **Platform Expansion**: Transitioning to a real-time cloud database to support a fully synchronized Android App and Web Dashboard.
 - **AI Integrations**: Predictive stock management based on historical sales and voice-controlled data entry.
 - **Automation**: Digital biometric signatures and AI-powered document scanning (OCR) for customer CNICs.
@@ -145,7 +145,7 @@ We are actively planning the next evolution of the Al-Tahir Showroom ERP to move
 
 ## 📄 License & Copyright
 
-This is a proprietary, closed-source application developed exclusively for **AL-TAHIR Showroom**. 
+This is a proprietary, closed-source application developed exclusively for **Showroom Pulse**. 
 Unauthorized copying, modification, distribution, or execution of this software, via any medium, is strictly prohibited. 
 For licensing inquiries, please contact the developers.
 
@@ -157,7 +157,7 @@ For technical support, bug reports, or system maintenance, please reach out to t
 ---
 
 <p align="center">
-  <i>Developed specifically for AL-TAHIR Showroom operations.</i><br/>
+  <i>Developed specifically for Showroom Pulse operations.</i><br/>
   <b>Built and Created by Creative District.</b>
   <br/>
   Developers <b>Moazam Samoo</b> & <b>Tameer Ahmed Khyber</b>

@@ -47,7 +47,7 @@ void main(List<String> args) async {
 
   // Initialize local notifier for OS-level alerts
   await localNotifier.setup(
-    appName: 'AL-TAHIR Showroom',
+    appName: 'Showroom Pulse',
     shortcutPolicy: ShortcutPolicy.requireCreate,
   );
 
@@ -58,7 +58,7 @@ void main(List<String> args) async {
 
   await WindowsSingleInstance.ensureSingleInstance(
     args,
-    "ALTAHIRShowroomInstance",
+    "ShowroomPulseInstance",
     onSecondWindow: (args) async {
       await windowManager.show();
       await windowManager.focus();
@@ -75,7 +75,7 @@ void main(List<String> args) async {
     backgroundColor: Colors.transparent,
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.normal,
-    title: 'AL-TAHIR Showroom',
+    title: 'Showroom Pulse',
   );
 
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -193,7 +193,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp>
     );
 
     // Explicitly set tooltip to avoid garbled uninitialized memory text on Windows
-    await trayManager.setToolTip('AL-TAHIR Showroom');
+    await trayManager.setToolTip('Showroom Pulse');
 
     // Create tray context menu
     Menu menu = Menu(
@@ -334,7 +334,7 @@ class _TahirShowroomAppState extends State<TahirShowroomApp>
       init: Get.rootController,
       builder: (ctrl) => MaterialApp(
         navigatorKey: Get.key,
-        title: 'AL-TAHIR Showroom',
+        title: 'Showroom Pulse',
         debugShowCheckedModeBanner: false,
 
         // Theme
@@ -502,7 +502,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 24),
             // Title
             Text(
-              'AL-TAHIR Showroom',
+              'Showroom Pulse',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,

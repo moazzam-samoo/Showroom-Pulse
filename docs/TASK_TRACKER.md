@@ -1,4 +1,4 @@
-# Tahir Showroom ERP – Task Tracker
+# Showroom Pulse ERP – Task Tracker
 
 ## Phase 1: Core Foundation (`core/setup`) ✅ COMPLETE
 

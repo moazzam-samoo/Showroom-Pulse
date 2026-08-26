@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/file_service.dart';
@@ -217,7 +217,7 @@ class GeneralSettingsView extends GetView<SettingsController> {
             key: replayTourKey,
             child: _buildSettingRow(
             title: 'App Walkthrough',
-            subtitle: 'Restart the guided tour of AL-TAHIR Showroom',
+            subtitle: 'Restart the guided tour of Showroom Pulse',
             isDark: isDark,
             trailing: ElevatedButton.icon(
               icon: const Icon(LucideIcons.playCircle, size: 14),

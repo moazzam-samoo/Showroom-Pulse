@@ -1,6 +1,6 @@
-# AL-TAHIR Showroom ERP - Current Capabilities & Features
+# Showroom Pulse ERP - Current Capabilities & Features
 
-This document provides a comprehensive overview of the current operational capabilities of the Al-Tahir Showroom ERP system.
+This document provides a comprehensive overview of the current operational capabilities of the Showroom Pulse ERP system.
 
 ## 1. Inventory & Stock Management (Inventory Screen)
 - **Live Stock Tracking:** Monitor available units in real-time.

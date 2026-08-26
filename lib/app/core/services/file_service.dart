@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 
 /// FileService - Handles Windows file system operations
-/// 
-/// Creates and manages the TahirShowroom directory structure in Documents:
-/// TahirShowroom/
+///
+/// Creates and manages the ShowroomPulse directory structure in Documents:
+/// ShowroomPulse/
 /// ├── Database/
 /// └── Media/
 ///     ├── Bikes/
@@ -33,12 +33,41 @@ class FileService extends GetxService {
     // Get Documents directory
     final documentsDir = await getApplicationDocumentsDirectory();
     _documentsPath = documentsDir.path;
-    _rootPath = p.join(_documentsPath, 'TahirShowroom');
-    
+    _rootPath = await _resolveRootPath(_documentsPath);
+
     // Create directory structure
     await _createDirectoryStructure();
-    
+
     return this;
+  }
+
+  /// Resolves the app's root data folder, migrating from the legacy
+  /// "TahirShowroom" folder name to "ShowroomPulse" on first launch after
+  /// the rebrand. The migration is a same-volume directory rename (atomic,
+  /// instant regardless of database size). If it fails for any reason
+  /// (e.g. a locked file), we fall back to the legacy folder rather than
+  /// risk ever orphaning existing customer/sales data.
+  Future<String> _resolveRootPath(String documentsPath) async {
+    final newRoot = p.join(documentsPath, 'ShowroomPulse');
+    final legacyRoot = p.join(documentsPath, 'TahirShowroom');
+
+    if (await Directory(newRoot).exists()) {
+      return newRoot;
+    }
+
+    final legacyDir = Directory(legacyRoot);
+    if (await legacyDir.exists()) {
+      try {
+        await legacyDir.rename(newRoot);
+        debugPrint('FileService: Migrated data folder TahirShowroom -> ShowroomPulse');
+        return newRoot;
+      } catch (e) {
+        debugPrint('FileService: Migration to ShowroomPulse failed, staying on legacy folder — $e');
+        return legacyRoot;
+      }
+    }
+
+    return newRoot;
   }
 
   /// Creates the required directory structure if it doesn't exist

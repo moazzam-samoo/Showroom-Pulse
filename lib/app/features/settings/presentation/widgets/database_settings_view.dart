@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/services/isar_service.dart';
@@ -152,7 +152,7 @@ class DatabaseSettingsView extends GetView<SettingsController> {
           key: importDatabaseKey,
           child: _buildActionRow(
           title: 'Import Database Backup',
-          subtitle: 'Restore from a previously exported .tahir backup file',
+          subtitle: 'Restore from a previously exported .showroompulse (or legacy .tahir) backup file',
           buttonLabel: controller.isImporting.value ? 'Importing...' : 'Import Data',
           icon: LucideIcons.upload,
           isDark: isDark,

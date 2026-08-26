@@ -15,7 +15,7 @@ import 'package:tahir_showroom/app/data/models/installment_contract.dart';
 import 'package:tahir_showroom/app/features/dashboard/presentation/widgets/upcoming_installments.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';
 import 'package:tahir_showroom/app/features/investment/domain/investment_service.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:local_notifier/local_notifier.dart';
 
 class DashboardController extends GetxController {
@@ -28,7 +28,7 @@ class DashboardController extends GetxController {
   // Profile Settings
   final ownerName = RxnString();
   final ownerProfilePicPath = RxnString();
-  final showroomName = RxString('AL-TAHIR Showroom');
+  final showroomName = RxString('Showroom Pulse');
   final showroomAddress = RxnString();
   final showroomPhone = RxnString();
 

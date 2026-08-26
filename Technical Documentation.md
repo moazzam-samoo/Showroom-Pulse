@@ -1,4 +1,4 @@
-# **AL-TAHIR Showroom Management System - Technical Documentation**
+# **Showroom Pulse Management System - Technical Documentation**
 
 **Version:** 1.0
 
@@ -10,7 +10,7 @@
 
 ## **1\. Project Overview**
 
-**AL-TAHIR Showroom** is a specialized ERP solution for motorcycle dealerships. The system focuses on unique asset tracking (Engine/Chassis numbers) and a complex installment management engine with automated markup calculations.
+**Showroom Pulse** is a specialized ERP solution for motorcycle dealerships. The system focuses on unique asset tracking (Engine/Chassis numbers) and a complex installment management engine with automated markup calculations.
 
 **Core Philosophy:**
 
@@ -26,9 +26,9 @@ This is the **Critical Requirement** section. The application does not store dat
 
 The application must initialize and verify this structure on every launch.
 
-**Root Path:** C:\\Users\\\[CurrentUser\]\\Documents\\TahirShowroom\\
+**Root Path:** C:\\Users\\\[CurrentUser\]\\Documents\\ShowroomPulse\\
 
-TahirShowroom/  
+ShowroomPulse/  
 │  
 ├── Database/                  \# STRICTLY for Isar DB files  
 │   ├── default.isar           \# Main database file  
@@ -54,8 +54,8 @@ TahirShowroom/
 
 ### **2.2. Data Persistence Strategy**
 
-* **Initialization:** On app startup, the IsarService must check if C:\\Users\\...\\Documents\\TahirShowroom exists.  
-* **Backup:** The user can back up the system by simply copying the TahirShowroom folder to a USB drive.  
+* **Initialization:** On app startup, the IsarService must check if C:\\Users\\...\\Documents\\ShowroomPulse exists.  
+* **Backup:** The user can back up the system by simply copying the ShowroomPulse folder to a USB drive.  
 * **Restoration:** To restore, the user pastes the folder back into Documents. The app detects the existing database and media files automatically upon restart.
 
 ## **3\. Database Architecture (Isar)**
@@ -240,10 +240,10 @@ lib/
 This service abstracts the complexity of the Windows file system from the UI.
 
 class FileService {  
-  // Base Path: C:\\Users\\User\\Documents\\TahirShowroom\\  
+  // Base Path: C:\\Users\\User\\Documents\\ShowroomPulse\\  
     
   Future\<String\> getAppDirectory() async {  
-    // Logic to get Documents directory and append "TahirShowroom"  
+    // Logic to get Documents directory and append "ShowroomPulse"  
   }
 
   Future\<String\> saveCustomerImage(File image, String cnic, String type) async {  

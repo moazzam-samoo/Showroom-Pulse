@@ -1,6 +1,6 @@
-# 🚀 Future Development Roadmap & Features (Al-Tahir Showroom)
+# 🚀 Future Development Roadmap & Features (Showroom Pulse)
 
-This document outlines the strategic transition and future additions planned for the Al-Tahir Showroom ERP project to professionalize the architecture and maximize efficiency.
+This document outlines the strategic transition and future additions planned for the Showroom Pulse ERP project to professionalize the architecture and maximize efficiency.
 
 ## 🌟 1. Platform Expansion (The Online Ecosystem)
 Currently, the application is an offline, Windows-only executable. The ultimate goal is to transition to a fully synchronized, multi-platform online ecosystem.
@@ -15,7 +15,7 @@ Currently, the application is an offline, Windows-only executable. The ultimate 
 *   **Smart Autofill & Suggestions:** AI will learn from repetitive data entry. When you start typing a customer's details or a vehicle model, it will intelligently auto-complete the rest, reducing data entry time.
 
 ## 💡 3. Recommended Future Enhancements
-To make Al-Tahir Showroom a world-class, highly scalable ERP, consider adding these recommended features:
+To make Showroom Pulse a world-class, highly scalable ERP, consider adding these recommended features:
 
 ### 📱 Customer Engagement & Communications
 *   **WhatsApp & SMS Integration:** Automatically send installment due date reminders, digital payment receipts, and welcome messages to customers directly via WhatsApp API or SMS gateways.

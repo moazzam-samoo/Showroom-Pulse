@@ -17,8 +17,8 @@ import '../../data/models/expense.dart';
 import '../../data/models/investment.dart';
 
 /// IsarService - Handles Isar database operations
-/// 
-/// Database is stored in Documents/TahirShowroom/Database/
+///
+/// Database is stored in Documents/ShowroomPulse/Database/
 class IsarService extends GetxService {
   late Isar _isar;
   

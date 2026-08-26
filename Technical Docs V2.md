@@ -1,4 +1,4 @@
-# **Tahir Showroom Management System \- Technical Documentation**
+# **Showroom Pulse Management System \- Technical Documentation**
 
 **Version:** 2.0 (Updated with Procurement & Batch Logic)
 
@@ -10,19 +10,19 @@
 
 ## **1\. Project Overview**
 
-**AL-TAHIR Showroom** is a specialized ERP solution for motorcycle dealerships.
+**Showroom Pulse** is a specialized ERP solution for motorcycle dealerships.
 
 **Core Philosophy:**
 
 1. **Offline-First:** Runs without internet.  
-2. **Portable Data:** Critical requirement. User data lives in Documents/TahirShowroom/ for easy copy-paste backup.  
+2. **Portable Data:** Critical requirement. User data lives in Documents/ShowroomPulse/ for easy copy-paste backup.  
 3. **Asset Tracking:** Unique tracking via Engine/Chassis numbers.
 
 ## **2\. File System & Data Storage (Critical)**
 
-**Root Path:** C:\\Users\\\[CurrentUser\]\\Documents\\TahirShowroom\\
+**Root Path:** C:\\Users\\\[CurrentUser\]\\Documents\\ShowroomPulse\\
 
-TahirShowroom/  
+ShowroomPulse/  
 │  
 ├── Database/                  \# STRICTLY for Isar DB files  
 │   ├── default.isar  

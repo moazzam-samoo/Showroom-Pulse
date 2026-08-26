@@ -1,7 +1,7 @@
-# AL-TAHIR Showroom ERP - Senior Engineering Architecture & Flow Review
+# Showroom Pulse ERP - Senior Engineering Architecture & Flow Review
 
 ## Executive Summary
-This document presents the architectural blueprint and operational workflow of the AL-TAHIR Showroom Enterprise Resource Planning (ERP) system. Designed to mitigate the operational inefficiencies of manual showroom management, this system provides a centralized, offline-first digital infrastructure for inventory tracking, sales orchestration, customer relationship management (CRM), and advanced financial forecasting. 
+This document presents the architectural blueprint and operational workflow of the Showroom Pulse Enterprise Resource Planning (ERP) system. Designed to mitigate the operational inefficiencies of manual showroom management, this system provides a centralized, offline-first digital infrastructure for inventory tracking, sales orchestration, customer relationship management (CRM), and advanced financial forecasting. 
 
 Developed utilizing the Flutter framework for cross-platform desktop compilation, the application leverages GetX for reactive state management and the Isar NoSQL database for ultra-low latency, ACID-compliant local storage. The system enforces strict role-based access control (RBAC), cryptographic data security, and dynamic document generation, resulting in a highly resilient, enterprise-grade solution that optimizes vehicular asset valuation and streamlines operational throughput.
 
@@ -97,14 +97,14 @@ Developed utilizing the Flutter framework for cross-platform desktop compilation
 ### 1. Authentication & Security Portal
 ![Login Screen](./App%20UI/Dark%20Theme%20UI/Login%20Page.png)
 **Expanded Description & Component Usage Flow:**
-The Authentication Portal is the very first touchpoint for any administrator or staff member accessing the AL-TAHIR Showroom ERP. It features a clean, dark-themed, centralized login card designed to enforce strict security protocols.
-- **Logo & Title Area:** At the top of the login card sits a light blue circular logo containing a bicycle icon. Directly below this is the bold title "Tahir Showroom" accompanied by the descriptive subtitle "Inventory Management System".
+The Authentication Portal is the very first touchpoint for any administrator or staff member accessing the Showroom Pulse ERP. It features a clean, dark-themed, centralized login card designed to enforce strict security protocols.
+- **Logo & Title Area:** At the top of the login card sits a light blue circular logo containing a bicycle icon. Directly below this is the bold title "Showroom Pulse" accompanied by the descriptive subtitle "Inventory Management System".
 - **Username Input Field:** This is a mandatory text field clearly labeled "Username". Inside the input box, there is a user outline icon on the left and a placeholder text reading "Enter your username". This field acts as the primary identifier within the system.
 - **Password Input Field:** A secure, masked text field labeled "Password". It features a shield icon on the left side and placeholder text reading "Enter your password". As the user types, the characters are hidden to prevent shoulder surfing.
 - **Sign In Button / Authentication Flow:** A prominent, bright cyan button spanning the full width of the form containing the text "Sign In". Once the user has provided both credentials, they click this button to perform a cryptographic validation against the secure local database.
   - *Success Scenario:* If the system verifies the credentials perfectly, the user is instantly navigated to the **Executive Command Center (Dashboard)**.
   - *Error Handling:* If the credentials are incorrect, the system halts the login process and notifies the user to correct their inputs.
-- **Footer text:** At the very bottom of the login card, small copyright text reads "© 2024 Tahir Showroom. All rights reserved."
+- **Footer text:** At the very bottom of the login card, small copyright text reads "© 2024 Showroom Pulse. All rights reserved."
 
 **Technical Implementation:** The authentication portal serves as the primary security gateway, enforcing Role-Based Access Control (RBAC). It implements localized, zero-trust authentication by mathematically hashing user credentials via the `crypto` package, thereby ensuring systemic integrity even in air-gapped environments.
 

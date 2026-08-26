@@ -586,7 +586,7 @@ class UnauthorizedApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AL-TAHIR Showroom',
+      title: 'Showroom Pulse',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: AppColors.darkBackground,

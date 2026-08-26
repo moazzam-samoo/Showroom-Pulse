@@ -1,4 +1,4 @@
-# Tahir Showroom — Complete Software Analysis Report
+# Showroom Pulse — Complete Software Analysis Report
 
 **Version:** 1.0  
 **Date:** February 16, 2026  
@@ -26,7 +26,7 @@
 
 ## 1. What is This Project?
 
-**Tahir Showroom** is a specialized **ERP (Enterprise Resource Planning)** system built for **motorcycle dealerships** in Pakistan. It runs as a **Windows desktop application** — it does NOT need the internet to work.
+**Showroom Pulse** is a specialized **ERP (Enterprise Resource Planning)** system built for **motorcycle dealerships** in Pakistan. It runs as a **Windows desktop application** — it does NOT need the internet to work.
 
 ### What Problems Does It Solve?
 
@@ -38,12 +38,12 @@
 | Keeping records of customers and witnesses | Customer and Witness data models with CNIC-based folders |
 | Managing bike purchases from dealers/suppliers | Procurement module with batch tracking |
 | Generating financial statements (PDF) | Statement service with PDF/ZIP export |
-| Data backup & portability | All data stored in `Documents/TahirShowroom/` — just copy the folder |
+| Data backup & portability | All data stored in `Documents/ShowroomPulse/` — just copy the folder |
 
 ### Core Philosophy
 
 1. **Offline-First** — The app runs 100% without internet. All data is stored locally.
-2. **Portable Data** — The database and media files live in `C:\Users\[User]\Documents\TahirShowroom\`. To backup, just copy the folder. To restore, paste it back.
+2. **Portable Data** — The database and media files live in `C:\Users\[User]\Documents\ShowroomPulse\`. To backup, just copy the folder. To restore, paste it back.
 3. **Scalability** — Modular code structure allows adding new features (spare parts, service center, etc.) easily.
 
 ---
@@ -373,7 +373,7 @@ The project uses **Isar NoSQL database** with **10 collections** (tables):
 Instead of hiding data in `AppData` folders, the project uses a **user-accessible** directory:
 
 ```
-C:\Users\[User]\Documents\TahirShowroom\
+C:\Users\[User]\Documents\ShowroomPulse\
 │
 ├── Database/                    ← Isar database files
 │   └── default.isar
@@ -404,7 +404,7 @@ C:\Users\[User]\Documents\TahirShowroom\
 
 | Action | Steps |
 |--------|-------|
-| **Backup** | Copy `TahirShowroom` folder to USB drive |
+| **Backup** | Copy `ShowroomPulse` folder to USB drive |
 | **Restore** | Paste folder back into `Documents`. App detects it automatically on restart |
 | **Migration** | Copy folder to new computer — everything works |
 
@@ -708,7 +708,7 @@ C:\Users\[User]\Documents\TahirShowroom\
 
 **What it does:** Opens the Isar database with all 10 schema collections and provides access to the database instance throughout the app.
 
-- **init()** — Opens the database in `Documents/TahirShowroom/Database/`
+- **init()** — Opens the database in `Documents/ShowroomPulse/Database/`
 - **close()** — Closes the database connection
 - **clearAllData()** — Deletes all data (for testing/reset)
 
@@ -722,7 +722,7 @@ C:\Users\[User]\Documents\TahirShowroom\
 
 | Method | Purpose |
 |--------|---------|
-| `init()` | Creates the `TahirShowroom/Database/Media/Bikes/Customers/Suppliers` folder structure |
+| `init()` | Creates the `ShowroomPulse/Database/Media/Bikes/Customers/Suppliers` folder structure |
 | `saveBikeImage()` | Copies bike image to `Media/Bikes/[engineNumber].jpg` |
 | `saveCustomerImage()` | Saves profile/CNIC images to `Media/Customers/[CNIC]/` |
 | `saveWitnessImage()` | Saves witness images to `Media/Customers/[CNIC]/Witness/` |
@@ -763,7 +763,7 @@ C:\Users\[User]\Documents\TahirShowroom\
 
 **PDF Sections:**
 
-- Header with "Tahir Showroom" branding
+- Header with "Showroom Pulse" branding
 - Customer section (name, CNIC, phone)
 - Bike section (model, engine#, chassis#)
 - Contract summary (prices, markup, EMI, status)
@@ -909,7 +909,7 @@ The app has **two complete themes** — Dark (default) and Light.
 
 ### Project Summary
 
-**Tahir Showroom** is a well-structured, offline-first ERP system for motorcycle dealerships. It covers the complete business workflow from purchasing bikes from suppliers, managing inventory, selling via cash or installment, tracking payments, and generating statements. The codebase follows a clean feature-based architecture with proper separation of concerns using GetX.
+**Showroom Pulse** is a well-structured, offline-first ERP system for motorcycle dealerships. It covers the complete business workflow from purchasing bikes from suppliers, managing inventory, selling via cash or installment, tracking payments, and generating statements. The codebase follows a clean feature-based architecture with proper separation of concerns using GetX.
 
 ### Technology Stack Summary
 

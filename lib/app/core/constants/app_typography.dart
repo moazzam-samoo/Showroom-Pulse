@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// AL-TAHIR Showroom Typography System
+/// Showroom Pulse Typography System
 /// Based on UI_colors_and_design_file.md
 class AppTypography {
   AppTypography._();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/constants/app_radius.dart';
@@ -15,7 +15,7 @@ import '../controllers/login_controller.dart';
 /// Analyzed from: Dark Theme UI/Login Page.png
 /// Components:
 /// - Motorcycle icon in rounded container (cyan on dark, blue on light)
-/// - "AL-TAHIR Showroom" title
+/// - "Showroom Pulse" title
 /// - "Inventory Management System" subtitle
 /// - Username input with user icon
 /// - Password input with lock icon
@@ -62,7 +62,7 @@ class LoginCard extends GetView<LoginController> {
             
             // Title
             Text(
-              'AL-TAHIR Showroom',
+              'Showroom Pulse',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),

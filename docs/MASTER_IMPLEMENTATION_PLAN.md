@@ -1,4 +1,4 @@
-# Tahir Showroom ERP - Master Technical Documentation & Implementation Plan
+# Showroom Pulse ERP - Master Technical Documentation & Implementation Plan
 
 **Version:** 3.0 (Consolidated & Enhanced)
 **Date:** February 2026
@@ -10,11 +10,11 @@
 ## 📂 1. Data Saving Folder Structure (Critical)
 The system relies on a portable "Document-Based" architecture. All data lives in the user's `Documents` folder, making backup as simple as copying one folder.
 
-**Root Path:** `C:\Users\[User]\Documents\TahirShowroom\`
+**Root Path:** `C:\Users\[User]\Documents\ShowroomPulse\`
 
 ### 1.1 Folder Hierarchy Map
 ```text
-TahirShowroom/
+ShowroomPulse/
 │
 ├── Database/                  # 🟢 CRITICAL: Isar NoSQL DB files
 │   ├── default.isar           # Main database file
@@ -175,7 +175,7 @@ Run these scripts before every release:
 -   [ ] `dart test` - Verify `InstallmentCalculator` math.
 
 ### Manual Sanity Check
-1.  **Clean Install**: Delete `Documents/TahirShowroom/` and run app. Database should regenerate.
+1.  **Clean Install**: Delete `Documents/ShowroomPulse/` and run app. Database should regenerate.
 2.  **Sale Flow**:
     -   Add 1 Bike via Procurement.
     -   Sell Bike via New Sale (Installment).

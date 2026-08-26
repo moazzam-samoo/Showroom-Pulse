@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 
-/// AL-TAHIR Showroom Theme Configuration
+/// Showroom Pulse Theme Configuration
 /// Dark Theme is DEFAULT (Executive Command Center)
 /// Font Family: Segoe UI (primary), Roboto (fallback)
 class AppTheme {

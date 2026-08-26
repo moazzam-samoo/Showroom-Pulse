@@ -2,13 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/constants/app_spacing.dart';
 import 'package:tahir_showroom/app/core/utils/price_formatter.dart';
 import 'package:tahir_showroom/app/core/widgets/sidebar_navigation.dart';
 import 'package:tahir_showroom/app/features/auth/data/auth_service.dart';
+import 'package:tahir_showroom/app/features/settings/presentation/controllers/settings_controller.dart';
 import 'package:tahir_showroom/app/core/services/notification_service.dart';
 import 'package:tahir_showroom/app/core/services/theme_service.dart';
 import 'package:tahir_showroom/app/data/models/notification_alert.dart';
@@ -196,7 +197,7 @@ class _DashboardViewState extends State<DashboardView> {
                   CoachMarkTarget(
                     targetKey: _sidebarKey,
                     title: 'Navigation Menu',
-                    description: 'Access all modules of AL-TAHIR Showroom from here. Switch between sales, inventory, and customers seamlessly.',
+                    description: 'Access all modules of Showroom Pulse from here. Switch between sales, inventory, and customers seamlessly.',
                     position: CoachMarkPosition.right,
                   ),
                   CoachMarkTarget(
@@ -456,10 +457,15 @@ class _DashboardViewState extends State<DashboardView> {
               Obx(() {
                 final hasPic = controller.ownerProfilePicPath.value != null &&
                     File(controller.ownerProfilePicPath.value!).existsSync();
+                final displayName = controller.ownerName.value?.isNotEmpty == true
+                    ? controller.ownerName.value!
+                    : (authService.currentUser.value?.displayName ?? 'User');
 
-                return Tooltip(
-                  message: controller.ownerName.value ?? authService.currentUser.value?.displayName ?? 'User',
-                  child: Container(
+                return PopupMenuButton<String>(
+                  tooltip: displayName,
+                  offset: const Offset(0, 48),
+                  color: isDark ? AppColors.darkCard : Colors.white,
+                  icon: Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
@@ -476,11 +482,7 @@ class _DashboardViewState extends State<DashboardView> {
                         ? null
                         : Center(
                             child: Text(
-                              (controller.ownerName.value?.isNotEmpty == true
-                                      ? controller.ownerName.value!
-                                      : (authService.currentUser.value?.displayName ?? 'A'))
-                                  .substring(0, 1)
-                                  .toUpperCase(),
+                              displayName.substring(0, 1).toUpperCase(),
                               style: TextStyle(
                                 color: primaryColor,
                                 fontWeight: FontWeight.bold,
@@ -488,6 +490,37 @@ class _DashboardViewState extends State<DashboardView> {
                             ),
                           ),
                   ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Text(
+                        displayName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        ),
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.user,
+                              size: 16,
+                              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                          const SizedBox(width: 10),
+                          const Text('Profile Settings'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'profile') {
+                      Get.find<SettingsController>().changeCategory('Profile');
+                      Get.toNamed('/settings');
+                    }
+                  },
                 );
               }),
             ],

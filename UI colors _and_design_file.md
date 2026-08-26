@@ -1,7 +1,7 @@
 
 
 
-# Tahir Showroom Design System
+# Showroom Pulse Design System
 Windows 11 Fluent UI inspired design language for motorcycle dealership management.
 
 ---

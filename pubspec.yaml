@@ -1,5 +1,5 @@
 name: tahir_showroom
-description: Motorcycle Showroom ERP for Tahir Showroom
+description: Motorcycle Showroom Solution for All local Showrooms
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -14,7 +14,7 @@ dependencies:
   get: ^4.7.2
   
   # Icons
-  lucide_icons: ^0.257.0
+  lucide_icons_flutter: any
   
   # Path (for app data folder)
   path_provider: ^2.1.1
@@ -80,3 +80,4 @@ flutter:
   assets:
     - assets/app_icon.ico
     - assets/app_logo.jpeg
+    - assets/imcs_logo.jpg

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// AL-TAHIR Showroom Color System
+/// Showroom Pulse Color System
 /// Based on UI_colors_and_design_file.md
 ///
 /// Dark Theme is the DEFAULT (Executive Command Center)

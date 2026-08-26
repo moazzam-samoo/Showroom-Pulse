@@ -1,4 +1,4 @@
-/// AL-TAHIR Showroom Spacing System
+/// Showroom Pulse Spacing System
 /// Based on UI_colors_and_design_file.md
 class AppSpacing {
   AppSpacing._();

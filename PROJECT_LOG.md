@@ -1,6 +1,6 @@
-# AL-TAHIR Showroom – Project Log
+# Showroom Pulse – Project Log
 
-> **Project:** AL-TAHIR Showroom ERP  
+> **Project:** Showroom Pulse ERP  
 > **Platform:** Windows Desktop (Flutter)  
 > **Author:** Moazzam Samoo
 

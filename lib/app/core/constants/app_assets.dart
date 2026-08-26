@@ -1,4 +1,4 @@
-/// Centralized asset paths for AL-TAHIR Showroom app
+/// Centralized asset paths for Showroom Pulse app
 class AppAssets {
   AppAssets._();
 

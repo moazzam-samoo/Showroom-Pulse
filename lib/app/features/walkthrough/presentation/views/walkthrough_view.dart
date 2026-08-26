@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
@@ -43,7 +43,7 @@ class WalkthroughView extends GetView<WalkthroughController> {
                 onPageChanged: controller.onPageChanged,
                 children: [
                   IntroSlide(
-                    title: 'Welcome to AL-TAHIR Showroom',
+                    title: 'Welcome to Showroom Pulse',
                     description: 'Explore the next generation of showroom management. Fast, intuitive, and powerful.',
                     visualIcon: LucideIcons.layoutDashboard,
                     iconColor: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,

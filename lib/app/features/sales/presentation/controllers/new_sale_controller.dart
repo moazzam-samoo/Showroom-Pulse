@@ -21,7 +21,7 @@ import 'package:isar/isar.dart';
 import 'package:tahir_showroom/app/core/utils/form_navigation_manager.dart';
 import 'package:tahir_showroom/app/features/settings/data/repositories/settings_repository.dart';
 import 'package:tahir_showroom/app/core/services/report_pdf_service.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:tahir_showroom/app/core/widgets/app_toast.dart';
 import 'package:tahir_showroom/app/core/widgets/app_notification_dialog.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 
 // Intents
@@ -32,7 +32,7 @@ class AppDialog extends StatelessWidget {
   const AppDialog({
     super.key,
     required this.title,
-    this.subtitle = 'AL-TAHIR Showroom Management',
+    this.subtitle = 'Showroom Pulse Management',
     required this.child,
     this.onSubmit,
     this.onCancel,

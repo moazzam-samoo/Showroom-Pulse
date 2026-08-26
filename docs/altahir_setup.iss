@@ -1,9 +1,9 @@
 ; ============================================================
-;  AL-TAHIR Showroom ERP - Inno Setup Script
+;  Showroom Pulse ERP - Inno Setup Script
 ;  Version: 1.0.3
 ;  Developed by: Creative District
 ;  Developers: Moazam Samoo & Tameer Ahmed Khyber
-;  
+;
 ;  v1.0.3 - Restored Reports/Revenue tabs, fixed session
 ;           persistence on app minimize, fixed Windows taskbar
 ;           icon display, updated build paths.
@@ -12,7 +12,7 @@
 ;           After that, app works fully offline.
 ; ============================================================
 
-#define AppName      "AL-TAHIR Showroom"
+#define AppName      "Showroom Pulse"
 #define AppVersion   "1.0.3"
 #define AppPublisher "Creative District"
 #define AppExeName   "tahir_showroom.exe"
@@ -31,13 +31,13 @@ AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
 
 ; ---- Install Location ----
-DefaultDirName={pf}\ALTAHIRShowroom
+DefaultDirName={pf}\ShowroomPulse
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 
 ; ---- Output ----
 OutputDir=C:\InnoSetup\Output
-OutputBaseFilename=ALTahirShowroom_Setup_v1.0.3
+OutputBaseFilename=ShowroomPulse_Setup_v1.0.3
 
 ; ---- Compression ----
 Compression=lzma2/ultra
@@ -50,7 +50,7 @@ ShowLanguageDialog=no
 ; ---- Version Info (helps reduce SmartScreen warnings) ----
 VersionInfoVersion=1.0.3.0
 VersionInfoCompany={#AppPublisher}
-VersionInfoDescription=AL-TAHIR Showroom ERP Installer
+VersionInfoDescription=Showroom Pulse ERP Installer
 VersionInfoCopyright=Copyright (C) 2026 Creative District
 VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#AppVersion}
@@ -110,7 +110,7 @@ Name: "{autostartup}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: startu
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Runtime..."; Check: not VCRedistInstalled; Flags: waituntilterminated
 
 ; -- Launch app after install --
-Filename: "{app}\{#AppExeName}"; Description: "Launch AL-TAHIR Showroom ERP"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "Launch Showroom Pulse ERP"; Flags: nowait postinstall skipifsilent
 
 ; ============================================================
 [UninstallDelete]
@@ -146,8 +146,10 @@ begin
     ) = IDYES then
     begin
       // Clear only Flutter shared preferences used for activation cache.
+      // Covers both the pre-rebrand and current AppData folder names.
       DelTreeDir(ExpandConstant('{userappdata}\com.example\tahir_showroom'));
       DelTreeDir(ExpandConstant('{userappdata}\com.example\AL-TAHIR Showroom'));
+      DelTreeDir(ExpandConstant('{userappdata}\com.example\Showroom Pulse'));
       RemoveDir(ExpandConstant('{userappdata}\com.example'));
       Exit;
     end;
@@ -160,12 +162,17 @@ begin
       mbConfirmation, MB_YESNO
     ) = IDYES then
     begin
-      // 1. Delete Isar Database & Media (Documents\TahirShowroom\)
+      // 1. Delete Isar Database & Media. Covers both the pre-rebrand folder
+      //    name (TahirShowroom) and the current one (ShowroomPulse), since
+      //    the app migrates the folder on first launch but older installs
+      //    that never relaunched after an update may still be on the old name.
       DelTreeDir(ExpandConstant('{userdocs}\TahirShowroom'));
+      DelTreeDir(ExpandConstant('{userdocs}\ShowroomPulse'));
 
       // 2. Delete SharedPreferences (Flutter app data in AppData\Roaming)
       DelTreeDir(ExpandConstant('{userappdata}\com.example\tahir_showroom'));
       DelTreeDir(ExpandConstant('{userappdata}\com.example\AL-TAHIR Showroom'));
+      DelTreeDir(ExpandConstant('{userappdata}\com.example\Showroom Pulse'));
 
       // 3. Try to clean up parent com.example folder if empty
       RemoveDir(ExpandConstant('{userappdata}\com.example'));

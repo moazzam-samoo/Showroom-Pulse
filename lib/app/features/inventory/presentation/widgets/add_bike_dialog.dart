@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'package:tahir_showroom/app/core/constants/app_colors.dart';
 import 'package:tahir_showroom/app/core/widgets/app_dialog.dart';
@@ -293,7 +293,7 @@ class _AddBikeDialogState extends State<AddBikeDialog> {
 
     return AppDialog(
       title: 'Add New Motorcycle',
-      subtitle: 'AL-AL-TAHIR Showroom Inventory Management',
+      subtitle: 'Showroom Pulse Inventory Management',
       onSubmit: _handleSave, // Binds ENTER key to this
       actions: [
         Expanded(

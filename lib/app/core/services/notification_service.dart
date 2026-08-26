@@ -21,7 +21,7 @@ class NotificationService extends GetxService {
     if (_isInitialized) return;
     try {
       await localNotifier.setup(
-        appName: 'AL-TAHIR Showroom',
+        appName: 'Showroom Pulse',
         shortcutPolicy: ShortcutPolicy.requireCreate,
       );
       _isInitialized = true;

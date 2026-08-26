@@ -154,7 +154,7 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName
-                          : 'AL-TAHIR Showroom',
+                          : 'Showroom Pulse',
                       style: pw.TextStyle(
                           fontSize: 20,
                           fontWeight: pw.FontWeight.bold,
@@ -225,7 +225,7 @@ class ReportPdfService {
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.Text(
-              'AL-TAHIR Showroom - Confidential',
+              'Showroom Pulse - Confidential',
               style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
             ),
             pw.Text(
@@ -711,14 +711,14 @@ class ReportPdfService {
     
     // 1. Use User Configured Path
     if (settings.pdfDownloadLocation != null && settings.pdfDownloadLocation!.isNotEmpty) {
-      final customDir = Directory('${settings.pdfDownloadLocation}\\Al-Tahir Autos PDFs');
+      final customDir = Directory('${settings.pdfDownloadLocation}\\Showroom Pulse PDFs');
       if (!await customDir.exists()) await customDir.create(recursive: true);
       return customDir.path;
     }
 
     // 2. Default to Documents Path (User's specific request)
     final documentsPath = fileService.documentsPath;
-    final defaultDir = Directory('$documentsPath\\Al-Tahir Autos PDFs');
+    final defaultDir = Directory('$documentsPath\\Showroom Pulse PDFs');
     if (!await defaultDir.exists()) await defaultDir.create(recursive: true);
     return defaultDir.path;
   }
@@ -988,7 +988,7 @@ class ReportPdfService {
                     pw.Text(
                       settings.showroomName.isNotEmpty
                           ? settings.showroomName.toUpperCase()
-                          : 'AL-TAHIR Showroom',
+                          : 'Showroom Pulse',
                       style: pw.TextStyle(
                           fontSize: 24,
                           fontWeight: pw.FontWeight.bold,
