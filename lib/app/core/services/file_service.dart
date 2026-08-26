@@ -224,21 +224,41 @@ class FileService extends GetxService {
 
 
 
-  /// Get path to the showroom logo
-  Future<String> getShowroomLogoPath() async {
+  /// Get the Settings media folder (creating it if needed)
+  Future<Directory> _getSettingsMediaDir() async {
     final path = p.join(mediaPath, 'Settings');
     final directory = Directory(path);
     if (!await directory.exists()) {
       await directory.create(recursive: true);
     }
-    return p.join(path, 'logo.jpg');
+    return directory;
   }
 
-  /// Save showroom logo
-  Future<String?> saveShowroomLogo(File sourceFile) async {
+  /// Save showroom logo. Uses a unique, timestamped filename per upload
+  /// (instead of a fixed name) so Flutter's image cache always treats a
+  /// re-uploaded logo as a new image — a fixed filename gets silently
+  /// served from cache after being overwritten until the app restarts.
+  /// Pass [previousPath] to clean up the old logo file after a successful save.
+  Future<String?> saveShowroomLogo(File sourceFile, {String? previousPath}) async {
     try {
-      final logoPath = await getShowroomLogoPath();
+      final settingsDir = await _getSettingsMediaDir();
+      final ext = p.extension(sourceFile.path).isNotEmpty
+          ? p.extension(sourceFile.path)
+          : '.jpg';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final logoPath = p.join(settingsDir.path, 'logo_$timestamp$ext');
+
       final savedFile = await sourceFile.copy(logoPath);
+
+      if (previousPath != null && previousPath != savedFile.path) {
+        final oldFile = File(previousPath);
+        if (await oldFile.exists()) {
+          try {
+            await oldFile.delete();
+          } catch (_) {}
+        }
+      }
+
       return savedFile.path;
     } catch (e) {
       debugPrint('Error saving showroom logo: $e');

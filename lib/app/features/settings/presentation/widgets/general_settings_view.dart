@@ -259,7 +259,10 @@ class GeneralSettingsView extends GetView<SettingsController> {
     final File? pickedFile = await fileService.pickImage();
 
     if (pickedFile != null) {
-      final savedPath = await fileService.saveShowroomLogo(pickedFile);
+      final savedPath = await fileService.saveShowroomLogo(
+        pickedFile,
+        previousPath: settings.showroomLogoPath,
+      );
       if (savedPath != null) {
         settings.showroomLogoPath = savedPath;
         controller.settings.refresh();

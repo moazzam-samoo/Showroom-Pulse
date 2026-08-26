@@ -220,7 +220,8 @@ class DashboardController extends GetxController {
   }
 
   /// Upload a new profile picture using file picker
-  Future<void> uploadProfilePicture() async {
+  /// Returns true on success, false if cancelled or on failure.
+  Future<bool> uploadProfilePicture() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -263,9 +264,12 @@ class DashboardController extends GetxController {
             await _isarService.isar.appSettings.put(settings);
           });
         }
+        return true;
       }
+      return false;
     } catch (e) {
       Get.snackbar('Error', 'Failed to upload profile picture: $e');
+      return false;
     }
   }
 

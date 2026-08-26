@@ -4,10 +4,9 @@ import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/services/file_service.dart';
-import '../../../../core/widgets/app_notification_dialog.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../auth/data/auth_service.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../controllers/settings_controller.dart';
 
 class ProfileSettingsView extends GetView<SettingsController> {
@@ -429,26 +428,18 @@ class ProfileSettingsView extends GetView<SettingsController> {
   }
 
   Future<void> _handleProfilePicUpload(settings) async {
-    final fileService = Get.find<FileService>();
-    final File? pickedFile = await fileService.pickImage();
+    final dashboardController = Get.find<DashboardController>();
+    final success = await dashboardController.uploadProfilePicture();
 
-    if (pickedFile != null) {
-      // Re-using saveShowroomLogo logic, or ideally saveProfilePic logic.
-      // Assuming saveShowroomLogo saves an image to the documents temp/db directory.
-      // We'll use fileService.saveShowroomLogo for now to save the image file safely.
-      final savedPath = await fileService.saveShowroomLogo(pickedFile);
-      if (savedPath != null) {
-        settings.ownerProfilePicPath = savedPath;
-        controller.settings.refresh();
-        controller.saveSettings();
-        AppToast.showSuccess(
-            title: 'Profile Updated',
-            message: 'Profile picture saved successfully');
-      } else {
-        AppNotificationDialog.showError(
-            title: 'Error', message: 'Failed to save profile picture');
-      }
+    if (success) {
+      // Keep SettingsController's copy in sync so this screen's Obx reflects it too
+      settings.ownerProfilePicPath = dashboardController.ownerProfilePicPath.value;
+      controller.settings.refresh();
+      AppToast.showSuccess(
+          title: 'Profile Updated',
+          message: 'Profile picture saved successfully');
     }
+    // uploadProfilePicture() already shows its own error snackbar on failure
   }
 
   Widget _buildSettingInputRow({
